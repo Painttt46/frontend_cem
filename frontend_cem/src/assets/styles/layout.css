@@ -1,0 +1,186 @@
+.topbar {
+    width: 100%;
+}
+
+.container {
+    max-width: 100%;
+    margin-left: 2rem;
+    margin-right: 2rem;
+}
+
+
+.p-float-label {
+    margin-left: 8px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.prompt-light {
+  font-family: "Prompt", serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.prompt-regular {
+  font-family: "Prompt", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.prompt-medium {
+  font-family: "Prompt", serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.p-scrollpanel-content {
+    width: 100%;
+}
+
+.custom-data-cell-btn {
+    width: 2rem;
+    border-color: transparent;
+    background-color: transparent;
+}
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.topbar button {
+    margin-left: 8px;
+}
+
+.ml-8 {
+    margin-left: 8px;
+}
+
+.p-sortable-column-badge {
+    display: none;
+}
+
+a {
+    color: rgb(79, 79, 87) !important;
+    text-decoration: none !important;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+ol,
+ul {
+    padding-left: 0px;
+}
+
+select {
+    padding: 0.375rem 0.75rem;
+    background-color: var(--bs-border-bg);
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+    line-height: 1.5;
+}
+
+.column {
+    border: none !important;
+}
+
+.soc-container {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: none;
+    margin: 0px !important;
+    padding: 0px !important;
+    height: 100vh;
+    max-width: none;
+    width: 100% !important;
+}
+
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 2rem;
+    /* padding: 10px 20px; */
+    box-shadow: 5px 2px 2px rgba(0, 0, 0, 0.1);
+    /* width: 100%; */
+}
+
+.navbar-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #666;
+    /* or your avatar image */
+}
+
+.navbar-item {
+    font-size: 1rem;
+}
+
+.link {
+    color: #555 !important;
+}
+
+.link-separate {
+    color: #aaa;
+}
+
+li {
+    padding-top: 2px;
+    padding-left: 8px;
+}
+
+.sidebar {
+    width: 200px;
+}
+
+.p-password input {
+    width: 100% !important;
+}
+
+.text-center {
+    text-align: center !important;
+}
+.text-left {
+    text-align: left !important;
+}
+.text-right {
+    text-align: right !important;
+}
+
+.data-cell-btn {
+    width: 72px;
+}
+
+.flex {
+    display: flex;
+}
+
+.flex-column {
+    flex-direction: column !important;
+}
+
+:root {
+    --bs-dark-rgb: 33, 37, 41;
+}
+
+body{
+    position: fixed;
+    height: 100vh !important;
+}
+
+.bg-dark {
+    --bs-bg-opacity: 1;
+    background-color: rgba(var(--bs-dark-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.p-button .p-component .p-fileupload-choose {
+    border: none !important;
+}
