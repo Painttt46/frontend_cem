@@ -171,10 +171,7 @@ onMounted(async () => {
   await refreshPermissions()
 })
 
-const navigateTo = async (section) => {
-  // Refresh permissions before checking
-  await refreshPermissions()
-  
+const navigateTo = (section) => {
   let targetPath = ''
   
   // Map sections to paths
