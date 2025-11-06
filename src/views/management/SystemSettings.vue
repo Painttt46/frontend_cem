@@ -91,13 +91,29 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { usePermissions } from '@/composables/usePermissions'
+import { onMounted } from 'vue'
 
 const router = useRouter()
 const toast = useToast()
+const { hasAccess, refreshPermissions } = usePermissions()
 
-const navigateTo = (section) => {
+const navigateTo = async (section) => {
   if (section === 'role-permissions') {
-    router.push('/management/settings/role-permissions')
+    // Refresh permissions before checking access
+    await refreshPermissions()
+    
+    // Check if user has access to role-permissions
+    if (hasAccess('/management/settings/role-permissions')) {
+      router.push('/management/settings/role-permissions')
+    } else {
+      toast.add({
+        severity: 'warn',
+        summary: 'ไม่มีสิทธิ์',
+        detail: 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้',
+        life: 3000
+      })
+    }
   }
 }
 
@@ -109,6 +125,11 @@ const showComingSoon = () => {
     life: 3000
   })
 }
+
+onMounted(async () => {
+  // Refresh permissions when component mounts
+  await refreshPermissions()
+})
 </script>
 
 <style scoped>

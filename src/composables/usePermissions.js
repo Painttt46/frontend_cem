@@ -26,6 +26,11 @@ export function usePermissions() {
     }
   }
 
+  const refreshPermissions = async () => {
+    permissionsLoaded.value = false
+    return await loadPermissions()
+  }
+
   const hasAccess = (path) => {
     const role = localStorage.getItem('soc_role')
     
@@ -53,6 +58,7 @@ export function usePermissions() {
     permissions,
     permissionsLoaded,
     loadPermissions,
+    refreshPermissions,
     hasAccess,
     canAccessRoute,
     getFirstAccessibleRoute

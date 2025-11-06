@@ -165,39 +165,31 @@ import { usePermissions } from '@/composables/usePermissions'
 
 const router = useRouter()
 const toast = useToast()
-const { loadPermissions, hasAccess } = usePermissions()
+const { refreshPermissions, hasAccess } = usePermissions()
 
-onMounted(() => {
-  loadPermissions()
+onMounted(async () => {
+  await refreshPermissions()
 })
 
-const navigateTo = (section) => {
-  // Check user role
-  const userRole = localStorage.getItem('soc_role')
+const navigateTo = async (section) => {
+  // Refresh permissions before checking
+  await refreshPermissions()
   
-  if (userRole !== 'admin' && userRole !== 'superadmin') {
-    toast.add({
-      severity: 'error',
-      summary: 'ไม่มีสิทธิ์เข้าถึง',
-      detail: 'คุณไม่มีสิทธิ์เข้าถึงส่วนจัดการนี้',
-      life: 3000
-    })
-    return
-  }
-
-  // Navigate to management sections
+  let targetPath = ''
+  
+  // Map sections to paths
   switch (section) {
     case 'users':
-      router.push('/management/users')
+      targetPath = '/management/users'
       break
     case 'leave-management':
-      router.push('/management/leave')
+      targetPath = '/management/leave'
       break
     case 'task-management':
-      router.push('/management/tasks')
+      targetPath = '/management/tasks'
       break
     case 'settings':
-      router.push('/management/settings')
+      targetPath = '/management/settings'
       break
     case 'car-management':
     case 'departments':
@@ -209,7 +201,7 @@ const navigateTo = (section) => {
         detail: 'หน้านี้อยู่ระหว่างการพัฒนา',
         life: 3000
       })
-      break
+      return
     default:
       toast.add({
         severity: 'info',
@@ -217,6 +209,19 @@ const navigateTo = (section) => {
         detail: 'ฟีเจอร์นี้อยู่ระหว่างการพัฒนา',
         life: 3000
       })
+      return
+  }
+
+  // Check permission for the target path
+  if (hasAccess(targetPath)) {
+    router.push(targetPath)
+  } else {
+    toast.add({
+      severity: 'error',
+      summary: 'ไม่มีสิทธิ์เข้าถึง',
+      detail: 'คุณไม่มีสิทธิ์เข้าถึงส่วนจัดการนี้',
+      life: 3000
+    })
   }
 }
 </script>

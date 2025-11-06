@@ -140,14 +140,12 @@ router.beforeEach(async (to, from, next) => {
       return;
     }
 
-    // Check permissions for protected routes (except profile and login)
-    if (role && to.path !== '/profile' && to.path !== '/login' && to.path !== '/two-authentication') {
-      const { loadPermissions, canAccessRoute, permissionsLoaded } = usePermissions();
+    // Check permissions for protected routes (except profile, login, and settings)
+    if (role && to.path !== '/profile' && to.path !== '/login' && to.path !== '/two-authentication' && to.path !== '/management/settings') {
+      const { canAccessRoute, refreshPermissions } = usePermissions();
       
-      // Load permissions if not loaded yet
-      if (!permissionsLoaded.value) {
-        await loadPermissions();
-      }
+      // Always refresh permissions to get latest data
+      await refreshPermissions();
 
       // Check if user has access to this route
       if (!canAccessRoute(to.path)) {
