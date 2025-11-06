@@ -102,8 +102,6 @@
               <div class="action-buttons">
                 <Button icon="pi pi-pencil" size="small" severity="info" 
                         @click="editUser(slotProps.data)" v-tooltip="'แก้ไข'" />
-                <Button icon="pi pi-trash" size="small" severity="danger" 
-                        @click="deleteUser(slotProps.data)" v-tooltip="'ลบ'" />
               </div>
             </template>
           </Column>
@@ -186,12 +184,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useConfirm } from 'primevue/useconfirm'
 import { FilterMatchMode } from 'primevue/api'
 import axios from 'axios'
 
 const toast = useToast()
-const confirm = useConfirm()
 
 const users = ref([])
 const loading = ref(false)
@@ -322,34 +318,6 @@ const editUser = (user) => {
   userForm.value = { ...user }
   editMode.value = true
   showAddUser.value = true
-}
-
-const deleteUser = (user) => {
-  confirm.require({
-    message: `ต้องการลบผู้ใช้ ${user.firstname} ${user.lastname} หรือไม่?`,
-    header: 'ยืนยันการลบ',
-    icon: 'pi pi-exclamation-triangle',
-    accept: async () => {
-      try {
-        await axios.delete(`/api/users/${user.id}`)
-        
-        toast.add({
-          severity: 'success',
-          summary: 'สำเร็จ',
-          detail: 'ลบผู้ใช้เรียบร้อย',
-          life: 3000
-        })
-        loadUsers()
-      } catch (error) {
-        toast.add({
-          severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถลบผู้ใช้ได้',
-          life: 3000
-        })
-      }
-    }
-  })
 }
 
 const resetForm = () => {
