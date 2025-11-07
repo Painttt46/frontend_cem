@@ -29,7 +29,7 @@
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
           <template #body="slotProps">
             <Badge :value="getLeaveTypeLabel(slotProps.data.leave_type)"
-              :severity="getLeaveTypeSeverity(slotProps.data.leave_type)" />
+              :style="{ backgroundColor: getLeaveTypeColor(slotProps.data.leave_type), color: '#fff', fontWeight: 'bold' }" />
           </template>
         </Column>
 
@@ -184,8 +184,12 @@ export default {
       showWorkDetailsDialog: false,
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
-      selectedAttachments: []
+      selectedAttachments: [],
+      leaveTypes: []
     }
+  },
+  async mounted() {
+    await this.loadLeaveTypes()
   },
   computed: {
     filteredRecords() {
@@ -224,6 +228,18 @@ export default {
     })
   },
   methods: {
+    async loadLeaveTypes() {
+      try {
+        const response = await this.$http.get('/api/leave/leave-types')
+        this.leaveTypes = response.data
+      } catch (error) {
+        console.error('Error loading leave types:', error)
+      }
+    },
+    getLeaveTypeColor(type) {
+      const leaveType = this.leaveTypes.find(lt => lt.value === type)
+      return leaveType?.color || '#6c757d'
+    },
     canDeleteRequest(record) {
       // ตรวจสอบว่าเป็นคำขอของตัวเองและยัง pending
       const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
@@ -365,16 +381,6 @@ export default {
         other: 'ลาอื่นๆ'
       }
       return types[type] || type
-    },
-    getLeaveTypeSeverity(type) {
-      const severities = {
-        sick: 'danger',
-        personal: 'warning',
-        vacation: 'success',
-        maternity: 'info',
-        other: 'secondary'
-      }
-      return severities[type] || 'secondary'
     },
     getStatusSeverity(status) {
       const severities = {

@@ -100,23 +100,26 @@
             <div class="flex gap-2">
               <InputText v-model="newCategory" placeholder="ชื่อหมวดหมู่ใหม่" class="flex-1" />
               <Dropdown v-model="newCategoryIcon" :options="categoryIcons" 
-                        optionLabel="label" optionValue="value" placeholder="เลือก Icon" 
-                        class="icon-dropdown">
+                        optionLabel="label" placeholder="เลือกสีและหมวดหมู่" 
+                        class="icon-dropdown" style="min-width: 200px;">
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="icon-display">
-                    <span v-if="slotProps.value.startsWith('emoji:')" class="emoji">{{ slotProps.value.replace('emoji:', '') }}</span>
-                    <i v-else :class="slotProps.value"></i>
+                    <Badge :value="slotProps.value.label" 
+                           :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
                   </div>
-                  <span v-else>Icon</span>
+                  <span v-else>เลือกสีและหมวดหมู่</span>
                 </template>
                 <template #option="slotProps">
-                  <div class="icon-option">
-                    <span v-if="slotProps.option.value.startsWith('emoji:')" class="emoji">{{ slotProps.option.value.replace('emoji:', '') }}</span>
-                    <i v-else :class="slotProps.option.value"></i>
-                  </div>
+                  <Badge :value="slotProps.option.label" 
+                         :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
                 </template>
               </Dropdown>
               <Button icon="pi pi-plus" @click="addCategory" :disabled="!newCategory.trim() || !newCategoryIcon" />
+            </div>
+            <div class="color-preview" v-if="newCategoryIcon">
+              <span>ตัวอย่าง:</span>
+              <Badge :value="newCategory || 'หมวดหมู่ใหม่'" 
+                     :style="{ backgroundColor: newCategoryIcon.color, color: '#fff' }" />
             </div>
           </div>
         </div>
@@ -127,9 +130,7 @@
             <div v-for="(category, index) in categories" :key="category.value" 
                  class="category-item">
               <div class="category-info">
-                <span v-if="category.icon && category.icon.startsWith('emoji:')" class="emoji">{{ category.icon.replace('emoji:', '') }}</span>
-                <i v-else :class="category.icon || 'pi pi-tag'"></i>
-                <span>{{ category.label }}</span>
+                <Badge :value="category.label" :style="{ backgroundColor: category.color || '#6c757d', color: '#fff' }" />
               </div>
               <div class="item-actions">
                 <Button icon="pi pi-arrow-up" class="p-button-text p-button-sm" 
@@ -158,25 +159,30 @@
         <div class="add-section mb-4">
           <div class="flex flex-column gap-3">
             <div class="flex gap-2">
-              <InputText v-model="newStatus" placeholder="สถานะใหม่" class="flex-1" />
+              <InputText v-model="newStatus" placeholder="ชื่อสถานะใหม่" class="flex-1" />
               <Dropdown v-model="newStatusIcon" :options="statusIcons" 
-                        optionLabel="label" optionValue="value" placeholder="เลือก Icon" 
-                        class="icon-dropdown">
+                        optionLabel="label" placeholder="เลือกสีและไอคอน" 
+                        class="icon-dropdown" style="min-width: 200px;">
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="icon-display">
-                    <span v-if="slotProps.value.startsWith('emoji:')" class="emoji">{{ slotProps.value.replace('emoji:', '') }}</span>
-                    <i v-else :class="slotProps.value"></i>
+                    <Badge :value="slotProps.value.label" 
+                           :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
                   </div>
-                  <span v-else>Icon</span>
+                  <span v-else>เลือกสีและไอคอน</span>
                 </template>
                 <template #option="slotProps">
                   <div class="icon-option">
-                    <span v-if="slotProps.option.value.startsWith('emoji:')" class="emoji">{{ slotProps.option.value.replace('emoji:', '') }}</span>
-                    <i v-else :class="slotProps.option.value"></i>
+                    <Badge :value="slotProps.option.label" 
+                           :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
                   </div>
                 </template>
               </Dropdown>
               <Button icon="pi pi-plus" @click="addStatus" :disabled="!newStatus.trim() || !newStatusIcon" />
+            </div>
+            <div class="color-preview" v-if="newStatusIcon">
+              <span>ตัวอย่าง:</span>
+              <Badge :value="newStatus || 'สถานะใหม่'" 
+                     :style="{ backgroundColor: newStatusIcon.color, color: '#fff' }" />
             </div>
           </div>
         </div>
@@ -187,9 +193,7 @@
             <div v-for="(status, index) in workStatuses" :key="status.value" 
                  class="status-item">
               <div class="status-info">
-                <span v-if="status.icon && status.icon.startsWith('emoji:')" class="emoji">{{ status.icon.replace('emoji:', '') }}</span>
-                <i v-else :class="status.icon || 'pi pi-flag'"></i>
-                <span>{{ status.label }}</span>
+                <Badge :value="status.label" :style="{ backgroundColor: status.color || '#6c757d', color: '#fff' }" />
               </div>
               <div class="item-actions">
                 <Button icon="pi pi-arrow-up" class="p-button-text p-button-sm" 
@@ -216,179 +220,243 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import axios from 'axios'
 
 const toast = useToast()
+const http = axios.create({ baseURL: 'http://localhost:3001' })
 
 // Data
 const showCategoriesDialog = ref(false)
 const showStatusDialog = ref(false)
 const newCategory = ref('')
 const newStatus = ref('')
-const newCategoryIcon = ref('')
-const newStatusIcon = ref('')
+const newCategoryIcon = ref(null)
+const newStatusIcon = ref(null)
+
+// Categories and Status
+const categories = ref([])
+const workStatuses = ref([])
 
 // Icon Options
 const categoryIcons = ref([
-  { label: '💼', value: 'emoji:💼' },
-  { label: '💻', value: 'emoji:💻' },
-  { label: '🔧', value: 'emoji:🔧' },
-  { label: '👥', value: 'emoji:👥' },
-  { label: '📚', value: 'emoji:📚' },
-  { label: '🔍', value: 'emoji:🔍' },
-  { label: '📝', value: 'emoji:📝' },
-  { label: '👤', value: 'emoji:👤' },
-  { label: '💰', value: 'emoji:💰' },
-  { label: '📢', value: 'emoji:📢' },
-  { label: '🏠', value: 'emoji:🏠' },
-  { label: '🚗', value: 'emoji:🚗' },
-  { label: '📱', value: 'emoji:📱' },
-  { label: '🎯', value: 'emoji:🎯' },
-  { label: '📊', value: 'emoji:📊' },
-  { label: '🎨', value: 'emoji:🎨' },
-  { label: '🔒', value: 'emoji:🔒' },
-  { label: '🌐', value: 'emoji:🌐' },
-  { label: '📈', value: 'emoji:📈' },
-  { label: '🏆', value: 'emoji:🏆' }
+  { label: '💼 งานทั่วไป', value: 'emoji:💼', color: '#6366f1' },
+  { label: '💻 งานพัฒนา', value: 'emoji:💻', color: '#14b8a6' },
+  { label: '🔧 งานบำรุงรักษา', value: 'emoji:🔧', color: '#f97316' },
+  { label: '👥 งานทีม', value: 'emoji:👥', color: '#a855f7' },
+  { label: '📚 งานวิจัย', value: 'emoji:📚', color: '#06b6d4' },
+  { label: '🔍 งานตรวจสอบ', value: 'emoji:🔍', color: '#84cc16' },
+  { label: '📝 งานเอกสาร', value: 'emoji:📝', color: '#d946ef' },
+  { label: '👤 งานลูกค้า', value: 'emoji:👤', color: '#0ea5e9' },
+  { label: '💰 งานการเงิน', value: 'emoji:💰', color: '#22c55e' },
+  { label: '📢 งานประชาสัมพันธ์', value: 'emoji:📢', color: '#eab308' },
+  { label: '🏠 งานภายใน', value: 'emoji:🏠', color: '#64748b' },
+  { label: '🚗 งานขนส่ง', value: 'emoji:🚗', color: '#78716c' },
+  { label: '📱 งานดิจิทัล', value: 'emoji:📱', color: '#0891b2' },
+  { label: '🎯 งานเป้าหมาย', value: 'emoji:🎯', color: '#6366f1' },
+  { label: '📊 งานรายงาน', value: 'emoji:📊', color: '#14b8a6' },
+  { label: '🎨 งานออกแบบ', value: 'emoji:🎨', color: '#f97316' },
+  { label: '🔒 งานความปลอดภัย', value: 'emoji:🔒', color: '#a855f7' },
+  { label: '🌐 งานออนไลน์', value: 'emoji:🌐', color: '#06b6d4' },
+  { label: '📈 งานวิเคราะห์', value: 'emoji:📈', color: '#84cc16' },
+  { label: '🏆 งานพิเศษ', value: 'emoji:🏆', color: '#d946ef' }
 ])
 
 const statusIcons = ref([
-  { label: '⏳', value: 'emoji:⏳' },
-  { label: '🔄', value: 'emoji:🔄' },
-  { label: '✅', value: 'emoji:✅' },
-  { label: '⏸️', value: 'emoji:⏸️' },
-  { label: '❌', value: 'emoji:❌' },
-  { label: '⚠️', value: 'emoji:⚠️' },
-  { label: '📝', value: 'emoji:📝' },
-  { label: '🚀', value: 'emoji:🚀' },
-  { label: '🎯', value: 'emoji:🎯' },
-  { label: '💡', value: 'emoji:💡' },
-  { label: '🔥', value: 'emoji:🔥' },
-  { label: '⚡', value: 'emoji:⚡' },
-  { label: '🌟', value: 'emoji:🌟' },
-  { label: '🎉', value: 'emoji:🎉' },
-  { label: '🏁', value: 'emoji:🏁' },
-  { label: '🔔', value: 'emoji:🔔' },
-  { label: '📌', value: 'emoji:📌' },
-  { label: '💤', value: 'emoji:💤' },
-  { label: '🤔', value: 'emoji:🤔' },
-  { label: '🔒', value: 'emoji:🔒' }
-])
-
-// Categories and Status
-const categories = ref([
-  { label: 'งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼' },
-  { label: 'งานพัฒนา', value: 'งานพัฒนา', icon: 'emoji:💻' },
-  { label: 'งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧' }
-])
-
-const workStatuses = ref([
-  { label: 'รอดำเนินการ', value: 'pending', icon: 'emoji:⏳' },
-  { label: 'กำลังดำเนินการ', value: 'in_progress', icon: 'emoji:🔄' },
-  { label: 'เสร็จสิ้น', value: 'completed', icon: 'emoji:✅' },
-  { label: 'ระงับ', value: 'on_hold', icon: 'emoji:⏸️' }
+  { label: '⏳ รอดำเนินการ', value: 'emoji:⏳', color: '#f59e0b' },
+  { label: '🔄 กำลังดำเนินการ', value: 'emoji:🔄', color: '#3b82f6' },
+  { label: '✅ เสร็จสิ้น', value: 'emoji:✅', color: '#10b981' },
+  { label: '⏸️ ระงับ', value: 'emoji:⏸️', color: '#6c757d' },
+  { label: '❌ ยกเลิก', value: 'emoji:❌', color: '#ef4444' },
+  { label: '⚠️ เตือน', value: 'emoji:⚠️', color: '#f97316' },
+  { label: '📝 ร่าง', value: 'emoji:📝', color: '#84cc16' },
+  { label: '🚀 เร่งด่วน', value: 'emoji:🚀', color: '#ec4899' },
+  { label: '🎯 เป้าหมาย', value: 'emoji:🎯', color: '#8b5cf6' },
+  { label: '💡 ไอเดีย', value: 'emoji:💡', color: '#eab308' },
+  { label: '🔥 สำคัญ', value: 'emoji:🔥', color: '#dc2626' },
+  { label: '⚡ ด่วนมาก', value: 'emoji:⚡', color: '#f43f5e' },
+  { label: '🌟 พิเศษ', value: 'emoji:🌟', color: '#a855f7' },
+  { label: '🎉 สำเร็จ', value: 'emoji:🎉', color: '#22c55e' },
+  { label: '🏁 เสร็จสมบูรณ์', value: 'emoji:🏁', color: '#14b8a6' },
+  { label: '🔔 แจ้งเตือน', value: 'emoji:🔔', color: '#06b6d4' },
+  { label: '📌 ปักหมุด', value: 'emoji:📌', color: '#0ea5e9' },
+  { label: '💤 พักงาน', value: 'emoji:💤', color: '#64748b' },
+  { label: '🤔 รอพิจารณา', value: 'emoji:🤔', color: '#78716c' },
+  { label: '🔒 ล็อค', value: 'emoji:🔒', color: '#0891b2' }
 ])
 
 // Methods
-const addCategory = () => {
+const loadCategories = async () => {
+  try {
+    // Update labels for existing categories
+    await http.put('/api/settings/categories/update-labels')
+    
+    const response = await http.get('/api/settings/categories')
+    categories.value = response.data
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const loadStatuses = async () => {
+  try {
+    // Update colors for existing statuses
+    await http.put('/api/settings/statuses/update-colors')
+    
+    const response = await http.get('/api/settings/statuses')
+    workStatuses.value = response.data
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+const addCategory = async () => {
   if (newCategory.value.trim() && newCategoryIcon.value) {
-    categories.value.push({
-      label: newCategory.value.trim(),
-      value: newCategory.value.trim(),
-      icon: newCategoryIcon.value
-    })
-    newCategory.value = ''
-    newCategoryIcon.value = ''
-    saveCategoriesToStorage()
+    try {
+      const emoji = newCategoryIcon.value.value.replace('emoji:', '')
+      await http.post('/api/settings/categories', {
+        label: `${emoji} ${newCategory.value.trim()}`,
+        value: newCategory.value.trim().toLowerCase().replace(/\s+/g, '_'),
+        icon: newCategoryIcon.value.value,
+        color: newCategoryIcon.value.color
+      })
+      newCategory.value = ''
+      newCategoryIcon.value = null
+      await loadCategories()
+      window.dispatchEvent(new CustomEvent('categoriesUpdated'))
+      toast.add({
+        severity: 'success',
+        summary: 'สำเร็จ',
+        detail: 'เพิ่มหมวดหมู่เรียบร้อย',
+        life: 3000
+      })
+    } catch (error) {
+      toast.add({
+        severity: 'error',
+        summary: 'ข้อผิดพลาด',
+        detail: error.response?.data?.error || 'ไม่สามารถเพิ่มหมวดหมู่ได้',
+        life: 3000
+      })
+    }
+  }
+}
+
+const removeCategory = async (categoryValue) => {
+  try {
+    await http.delete(`/api/settings/categories/${categoryValue}`)
+    await loadCategories()
+    window.dispatchEvent(new CustomEvent('categoriesUpdated'))
     toast.add({
       severity: 'success',
       summary: 'สำเร็จ',
-      detail: 'เพิ่มหมวดหมู่เรียบร้อย',
+      detail: 'ลบหมวดหมู่เรียบร้อย',
+      life: 3000
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'ข้อผิดพลาด',
+      detail: 'ไม่สามารถลบหมวดหมู่ได้',
       life: 3000
     })
   }
 }
 
-const removeCategory = (categoryValue) => {
-  categories.value = categories.value.filter(cat => cat.value !== categoryValue)
-  saveCategoriesToStorage()
-  toast.add({
-    severity: 'success',
-    summary: 'สำเร็จ',
-    detail: 'ลบหมวดหมู่เรียบร้อย',
-    life: 3000
-  })
-}
-
-const moveCategoryUp = (index) => {
+const moveCategoryUp = async (index) => {
   if (index > 0) {
     const temp = categories.value[index]
     categories.value[index] = categories.value[index - 1]
     categories.value[index - 1] = temp
-    saveCategoriesToStorage()
+    await http.put('/api/settings/categories/reorder', { categories: categories.value })
+    window.dispatchEvent(new CustomEvent('categoriesUpdated'))
   }
 }
 
-const moveCategoryDown = (index) => {
+const moveCategoryDown = async (index) => {
   if (index < categories.value.length - 1) {
     const temp = categories.value[index]
     categories.value[index] = categories.value[index + 1]
     categories.value[index + 1] = temp
-    saveCategoriesToStorage()
+    await http.put('/api/settings/categories/reorder', { categories: categories.value })
+    window.dispatchEvent(new CustomEvent('categoriesUpdated'))
   }
 }
 
-const addStatus = () => {
+const addStatus = async () => {
   if (newStatus.value.trim() && newStatusIcon.value) {
-    workStatuses.value.push({
-      label: newStatus.value.trim(),
-      value: newStatus.value.trim().toLowerCase().replace(/\s+/g, '_'),
-      icon: newStatusIcon.value
-    })
-    newStatus.value = ''
-    newStatusIcon.value = ''
-    saveStatusesToStorage()
+    try {
+      const emoji = newStatusIcon.value.value.replace('emoji:', '')
+      await http.post('/api/settings/statuses', {
+        label: `${emoji} ${newStatus.value.trim()}`,
+        value: newStatus.value.trim().toLowerCase().replace(/\s+/g, '_'),
+        icon: newStatusIcon.value.value,
+        color: newStatusIcon.value.color
+      })
+      newStatus.value = ''
+      newStatusIcon.value = null
+      await loadStatuses()
+      window.dispatchEvent(new CustomEvent('statusesUpdated'))
+      toast.add({
+        severity: 'success',
+        summary: 'สำเร็จ',
+        detail: 'เพิ่มสถานะเรียบร้อย',
+        life: 3000
+      })
+    } catch (error) {
+      toast.add({
+        severity: 'error',
+        summary: 'ข้อผิดพลาด',
+        detail: error.response?.data?.error || 'ไม่สามารถเพิ่มสถานะได้',
+        life: 3000
+      })
+    }
+  }
+}
+
+const removeStatus = async (statusValue) => {
+  try {
+    await http.delete(`/api/settings/statuses/${statusValue}`)
+    await loadStatuses()
+    window.dispatchEvent(new CustomEvent('statusesUpdated'))
     toast.add({
       severity: 'success',
       summary: 'สำเร็จ',
-      detail: 'เพิ่มสถานะเรียบร้อย',
+      detail: 'ลบสถานะเรียบร้อย',
+      life: 3000
+    })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'ข้อผิดพลาด',
+      detail: 'ไม่สามารถลบสถานะได้',
       life: 3000
     })
   }
 }
 
-const removeStatus = (statusValue) => {
-  workStatuses.value = workStatuses.value.filter(status => status.value !== statusValue)
-  saveStatusesToStorage()
-  toast.add({
-    severity: 'success',
-    summary: 'สำเร็จ',
-    detail: 'ลบสถานะเรียบร้อย',
-    life: 3000
-  })
-}
-
-const moveStatusUp = (index) => {
+const moveStatusUp = async (index) => {
   if (index > 0) {
     const temp = workStatuses.value[index]
     workStatuses.value[index] = workStatuses.value[index - 1]
     workStatuses.value[index - 1] = temp
-    saveStatusesToStorage()
+    await http.put('/api/settings/statuses/reorder', { statuses: workStatuses.value })
+    window.dispatchEvent(new CustomEvent('statusesUpdated'))
   }
 }
 
-const moveStatusDown = (index) => {
+const moveStatusDown = async (index) => {
   if (index < workStatuses.value.length - 1) {
     const temp = workStatuses.value[index]
     workStatuses.value[index] = workStatuses.value[index + 1]
     workStatuses.value[index + 1] = temp
-    saveStatusesToStorage()
+    await http.put('/api/settings/statuses/reorder', { statuses: workStatuses.value })
+    window.dispatchEvent(new CustomEvent('statusesUpdated'))
   }
 }
 
 const closeCategoryDialog = () => {
   showCategoriesDialog.value = false
   newCategory.value = ''
-  newCategoryIcon.value = ''
+  newCategoryIcon.value = null
 }
 
 const closeStatusDialog = () => {
@@ -397,37 +465,9 @@ const closeStatusDialog = () => {
   newStatusIcon.value = ''
 }
 
-const saveCategoriesToStorage = () => {
-  localStorage.setItem('task_categories', JSON.stringify(categories.value))
-  // Dispatch event to notify other components
-  window.dispatchEvent(new CustomEvent('categoriesUpdated', { 
-    detail: categories.value 
-  }))
-}
-
-const saveStatusesToStorage = () => {
-  localStorage.setItem('work_statuses', JSON.stringify(workStatuses.value))
-  // Dispatch event to notify other components
-  window.dispatchEvent(new CustomEvent('statusesUpdated', { 
-    detail: workStatuses.value 
-  }))
-}
-
-const loadFromStorage = () => {
-  const savedCategories = localStorage.getItem('task_categories')
-  const savedStatuses = localStorage.getItem('work_statuses')
-  
-  if (savedCategories) {
-    categories.value = JSON.parse(savedCategories)
-  }
-  
-  if (savedStatuses) {
-    workStatuses.value = JSON.parse(savedStatuses)
-  }
-}
-
 onMounted(() => {
-  loadFromStorage()
+  loadCategories()
+  loadStatuses()
 })
 </script>
 
@@ -658,6 +698,20 @@ onMounted(() => {
 .category-info i,
 .status-info i {
   color: #4A90E2;
+}
+
+.color-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.color-preview span {
+  font-size: 0.9rem;
+  color: #495057;
 }
 
 /* Mobile Responsive */

@@ -64,21 +64,22 @@
           </template>
         </Column>
 
-        <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 150px;">
+        <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
               <Badge :value="getStatusLabel(slotProps.data.work_status)"
-                :severity="getStatusSeverity(slotProps.data.work_status)" />
+                :style="{ backgroundColor: getStatusColor(slotProps.data.work_status), color: '#fff' }" />
             </div>
           </template>
         </Column>
 
         <Column field="location" header="สถานที่" class="hide-mobile" />
 
-        <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 150px;">
+        <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="slotProps.data.category || 'งานทั่วไป'" :severity="getCategorySeverity(slotProps.data.category)" />
+              <Badge :value="getCategoryLabel(slotProps.data.category)" 
+                     :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff' }" />
             </div>
           </template>
         </Column>
@@ -177,7 +178,15 @@
         <div class="input-group">
           <label class="input-label">สถานะงาน *</label>
           <Dropdown v-model="editFormData.work_status" :options="statusOptions" optionLabel="label" optionValue="value"
-            class="corporate-dropdown" required />
+            class="corporate-dropdown" required>
+            <template #value="slotProps">
+              <span v-if="slotProps.value">{{ getStatusLabelFromOptions(slotProps.value) }}</span>
+              <span v-else>เลือกสถานะ</span>
+            </template>
+            <template #option="slotProps">
+              <span>{{ slotProps.option.label }}</span>
+            </template>
+          </Dropdown>
         </div>
 
         <div class="input-group full-width">
@@ -252,6 +261,7 @@ export default {
   mounted() {
     // Load status options from localStorage
     this.loadStatusOptions()
+    this.loadCategoryOptions()
 
     // Update current time every second for realtime button state
     setInterval(() => {
@@ -267,6 +277,11 @@ export default {
     // Listen for status updates from TaskManagement
     window.addEventListener('statusesUpdated', () => {
       this.loadStatusOptions()
+    })
+
+    // Listen for category updates
+    window.addEventListener('categoriesUpdated', () => {
+      this.loadCategoryOptions()
     })
   },
   
@@ -333,29 +348,40 @@ export default {
         existingFiles: [],
         newFiles: []
       },
-      statusOptions: []
+      statusOptions: [],
+      categoryOptions: []
     }
   },
   methods: {
     loadStatusOptions() {
-      const savedStatuses = localStorage.getItem('work_statuses')
-      if (savedStatuses) {
-        const statuses = JSON.parse(savedStatuses)
-        this.statusOptions = statuses.map(status => ({
-          label: status.icon && status.icon.startsWith('emoji:') 
-            ? `${status.icon.replace('emoji:', '')} ${status.label}`
-            : status.label,
-          value: status.value
-        }))
-      } else {
-        // Default statuses
-        this.statusOptions = [
-          { label: '⏳ รอดำเนินการ', value: 'pending' },
-          { label: '🔄 กำลังดำเนินการ', value: 'in_progress' },
-          { label: '✅ เสร็จสิ้น', value: 'completed' },
-          { label: '⏸️ ระงับ', value: 'on_hold' }
-        ]
-      }
+      this.$http.get('/api/settings/statuses')
+        .then(response => {
+          this.statusOptions = response.data.map(status => ({
+            label: status.label,
+            value: status.value,
+            color: status.color
+          }))
+        })
+        .catch(error => {
+          console.error('Error loading statuses:', error)
+          // Fallback to default
+          this.statusOptions = [
+            { label: '⏳ รอดำเนินการ', value: 'pending', color: '#f59e0b' },
+            { label: '🔄 กำลังดำเนินการ', value: 'in_progress', color: '#3b82f6' },
+            { label: '✅ เสร็จสิ้น', value: 'completed', color: '#10b981' },
+            { label: '⏸️ ระงับ', value: 'on_hold', color: '#6c757d' }
+          ]
+        })
+    },
+    loadCategoryOptions() {
+      this.$http.get('/api/settings/categories')
+        .then(response => {
+          this.categoryOptions = response.data
+        })
+        .catch(error => {
+          console.error('Error loading categories:', error)
+          this.categoryOptions = []
+        })
     },
     isEditDisabled(record) {
       if (!record || !record.work_date) {
@@ -441,26 +467,38 @@ export default {
       return time.toTimeString().split(' ')[0]
     },
     getStatusLabel(status) {
-      const savedStatuses = localStorage.getItem('work_statuses')
-      if (savedStatuses) {
-        const statuses = JSON.parse(savedStatuses)
-        const found = statuses.find(s => s.value === status)
-        if (found) {
-          return found.icon && found.icon.startsWith('emoji:')
-            ? `${found.icon.replace('emoji:', '')} ${found.label}`
-            : found.label
-        }
+      const statusMap = {
+        'completed': 'เสร็จสมบูรณ์',
+        'in_progress': 'อยู่ระหว่างดำเนินการ',
+        'pending': 'รอข้อมูล / อนุมัติ / อุปกรณ์'
       }
-      return status
+      const label = statusMap[status] || status
+      // Remove all emoji and special characters
+      return label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
     },
-    getStatusSeverity(status) {
-      const severityMap = {
-        'completed': 'success',
-        'in_progress': 'info',
-        'pending': 'warning',
-        'on_hold': 'secondary'
+    getStatusLabelFromOptions(value) {
+      const status = this.statusOptions.find(s => s.value === value)
+      if (status && status.label) {
+        // Remove all emoji and special characters
+        return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
       }
-      return severityMap[status] || 'secondary'
+      return value
+    },
+    getStatusColor(value) {
+      const status = this.statusOptions.find(s => s.value === value)
+      return status?.color || '#6c757d'
+    },
+    getCategoryLabel(value) {
+      const category = this.categoryOptions.find(c => c.value === value)
+      if (category && category.label) {
+        // Remove all emoji and special characters
+        return category.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      }
+      return value || 'งานทั่วไป'
+    },
+    getCategoryColor(value) {
+      const category = this.categoryOptions.find(c => c.value === value)
+      return category?.color || '#6c757d'
     },
     getCategorySeverity() {
       return 'contrast'
@@ -680,11 +718,17 @@ export default {
 }
 
 .badge-container :deep(.p-badge) {
-  white-space: normal;
-  word-wrap: break-word;
+  white-space: normal !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
   text-align: center;
   font-weight: 600;
   font-size: 0.9rem;
+  padding: 0.25rem 0.4rem !important;
+  line-height: 1.5 !important;
+  display: inline-block !important;
+  max-width: 100%;
+  height: auto !important;
 }
 
 .empty-state {

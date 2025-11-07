@@ -39,21 +39,13 @@
               <Dropdown id="workStatus" v-model="formData.workStatus" :options="statusOptions" optionLabel="label"
                 optionValue="value" class="corporate-dropdown" required>
                 <template #value="slotProps">
-                  <div v-if="slotProps.value" class="status-display">
-                    <span v-if="getStatusIcon(slotProps.value) && getStatusIcon(slotProps.value).startsWith('emoji:')" 
-                          class="emoji">{{ getStatusIcon(slotProps.value).replace('emoji:', '') }}</span>
-                    <i v-else :class="getStatusIcon(slotProps.value) || 'pi pi-flag'"></i>
-                    <span>{{ getStatusLabel(slotProps.value) }}</span>
-                  </div>
+                  <Badge v-if="slotProps.value" :value="getStatusLabelOnly(slotProps.value)" 
+                         :style="{ backgroundColor: getStatusColor(slotProps.value), color: '#fff' }" />
                   <span v-else>เลือกสถานะ</span>
                 </template>
                 <template #option="slotProps">
-                  <div class="status-option">
-                    <span v-if="slotProps.option.icon && slotProps.option.icon.startsWith('emoji:')" 
-                          class="emoji">{{ slotProps.option.icon.replace('emoji:', '') }}</span>
-                    <i v-else :class="slotProps.option.icon || 'pi pi-flag'"></i>
-                    <span>{{ slotProps.option.label }}</span>
-                  </div>
+                  <Badge :value="slotProps.option.label" 
+                         :style="{ backgroundColor: slotProps.option.color || '#6c757d', color: '#fff' }" />
                 </template>
               </Dropdown>
             </div>
@@ -493,18 +485,19 @@ export default {
     },
 
     loadStatusOptions() {
-      // โหลดสถานะจาก localStorage หรือใช้ค่าเริ่มต้น
-      const savedStatuses = localStorage.getItem('work_statuses')
-      if (savedStatuses) {
-        this.statusOptions = JSON.parse(savedStatuses)
-      } else {
-        // ค่าเริ่มต้น
-        this.statusOptions = [
-          { label: '✅ เสร็จสมบูรณ์', value: 'completed', icon: 'emoji:✅' },
-          { label: '🕗 อยู่ระหว่างดำเนินการ', value: 'in_progress', icon: 'emoji:🔄' },
-          { label: '⚠️ รอข้อมูล / อนุมัติ / อุปกรณ์', value: 'pending', icon: 'emoji:⏳' }
-        ]
-      }
+      this.$http.get('/api/settings/statuses')
+        .then(response => {
+          this.statusOptions = response.data
+        })
+        .catch(error => {
+          console.error(error)
+          // Fallback to default
+          this.statusOptions = [
+            { label: '✅ เสร็จสมบูรณ์', value: 'completed', icon: 'emoji:✅' },
+            { label: '🔄 อยู่ระหว่างดำเนินการ', value: 'in_progress', icon: 'emoji:🔄' },
+            { label: '⏳ รอข้อมูล / อนุมัติ / อุปกรณ์', value: 'pending', icon: 'emoji:⏳' }
+          ]
+        })
     },
 
     getStatusIcon(value) {
@@ -517,8 +510,19 @@ export default {
       return status ? status.label : value
     },
 
-    handleStatusesUpdate(event) {
-      this.statusOptions = event.detail || []
+    getStatusLabelOnly(value) {
+      const status = this.statusOptions.find(s => s.value === value)
+      return status ? status.label : value
+    },
+
+    getStatusColor(value) {
+      const status = this.statusOptions.find(s => s.value === value)
+      return status?.color || '#6c757d'
+    },
+
+    handleStatusesUpdate() {
+      // อัพเดทสถานะเมื่อมีการเปลี่ยนแปลงจาก Management > จัดการสถานะงาน
+      this.loadStatusOptions()
     }
   }
 }
@@ -1028,6 +1032,24 @@ export default {
 
 :deep(.p-divider) {
   margin: 1.5rem 0;
+}
+
+.status-display,
+.status-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-display .emoji,
+.status-option .emoji {
+  font-size: 16px;
+}
+
+.status-display i,
+.status-option i {
+  color: #4A90E2;
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {

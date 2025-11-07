@@ -34,7 +34,7 @@
             <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 120px">
               <template #header>
                 <div class="leave-type-header">
-                  <span>{{ type.label }}</span>
+                  <Badge :value="type.label" :style="{ backgroundColor: type.color, color: '#fff', fontWeight: 'bold' }" />
                   <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" />
                 </div>
               </template>
@@ -200,7 +200,7 @@ const confirmDeleteLeaveType = (type) => {
 
 const deleteLeaveType = async (leaveType) => {
   try {
-    await axios.delete(`/api/leave/leave-types/${leaveType}`)
+    await axios.delete(`/api/leave/leave-types/${encodeURIComponent(leaveType)}`)
 
     toast.add({
       severity: 'success',

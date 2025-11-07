@@ -14,7 +14,7 @@
         <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีงานที่เพิ่มไว้' }}</p>
       </div>
 
-      <DataTable v-else :value="filteredTasks" :paginator="true" :rows="10"
+      <DataTable v-else-if="categories.length > 0" :value="filteredTasks" :paginator="true" :rows="10"
         :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
         
         <Column field="id" header="รหัสงาน" :sortable="true">
@@ -56,9 +56,11 @@
           </template>
         </Column>
 
-        <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px;">
+        <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px; text-align: center;">
           <template #body="slotProps">
-            <Badge :value="slotProps.data.category || 'งานทั่วไป'" :severity="getCategorySeverity(slotProps.data.category)" class="category-badge" />
+            <Badge :value="getCategoryLabel(slotProps.data.category)" 
+                   :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff', fontWeight: 'bold' }" 
+                   class="category-badge" />
           </template>
         </Column>
 
@@ -110,9 +112,12 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="width: 100px;">
+        <Column header="สถานะ" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
-            <Badge :value="getStatusLabel(slotProps.data.status)" :severity="getStatusSeverity(slotProps.data.status)" />
+            <div class="badge-container">
+              <Badge :value="getStatusLabel(slotProps.data.status)" 
+                     :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
+            </div>
           </template>
         </Column>
 
@@ -237,8 +242,8 @@
               <td>{{ work.start_time }} - {{ work.end_time }}</td>
               <td class="text-center">{{ parseFloat(work.total_hours || 0).toFixed(1) }} ชม.</td>
               <td class="text-center">
-                <Badge :value="getWorkStatusLabel(work.work_status)" 
-                       :severity="getWorkStatusSeverity(work.work_status)" />
+                <Badge :value="getStatusLabel(work.work_status)" 
+                       :style="{ backgroundColor: getStatusColor(work.work_status), color: '#fff', fontWeight: 'bold' }" />
               </td>
               <td>{{ work.location || '-' }}</td>
               <td class="text-center">
@@ -308,20 +313,10 @@
                     optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
                     class="corporate-input" required>
             <template #value="slotProps">
-              <div v-if="slotProps.value" class="category-display">
-                <span v-if="getCategoryIcon(slotProps.value) && getCategoryIcon(slotProps.value).startsWith('emoji:')" 
-                      class="emoji">{{ getCategoryIcon(slotProps.value).replace('emoji:', '') }}</span>
-                <i v-else :class="getCategoryIcon(slotProps.value) || 'pi pi-tag'"></i>
-                <span>{{ getCategoryLabel(slotProps.value) }}</span>
-              </div>
+              <span v-if="slotProps.value">{{ getCategoryLabel(slotProps.value) }}</span>
             </template>
             <template #option="slotProps">
-              <div class="category-option">
-                <span v-if="slotProps.option.icon && slotProps.option.icon.startsWith('emoji:')" 
-                      class="emoji">{{ slotProps.option.icon.replace('emoji:', '') }}</span>
-                <i v-else :class="slotProps.option.icon || 'pi pi-tag'"></i>
-                <span>{{ slotProps.option.label }}</span>
-              </div>
+              <span>{{ slotProps.option.label }}</span>
             </template>
           </Dropdown>
         </div>
@@ -332,20 +327,10 @@
                     optionLabel="label" optionValue="value" placeholder="เลือกสถานะงาน" 
                     class="corporate-input">
             <template #value="slotProps">
-              <div v-if="slotProps.value" class="status-display">
-                <span v-if="getStatusIcon(slotProps.value) && getStatusIcon(slotProps.value).startsWith('emoji:')" 
-                      class="emoji">{{ getStatusIcon(slotProps.value).replace('emoji:', '') }}</span>
-                <i v-else :class="getStatusIcon(slotProps.value) || 'pi pi-circle'"></i>
-                <span>{{ getStatusLabel(slotProps.value) }}</span>
-              </div>
+              <span v-if="slotProps.value">{{ getStatusLabel(slotProps.value) }}</span>
             </template>
             <template #option="slotProps">
-              <div class="status-option">
-                <span v-if="slotProps.option.icon && slotProps.option.icon.startsWith('emoji:')" 
-                      class="emoji">{{ slotProps.option.icon.replace('emoji:', '') }}</span>
-                <i v-else :class="slotProps.option.icon || 'pi pi-circle'"></i>
-                <span>{{ slotProps.option.label }}</span>
-              </div>
+              <span>{{ slotProps.option.label }}</span>
             </template>
           </Dropdown>
         </div>
@@ -407,9 +392,8 @@ export default {
     this.$http = axios.create({
       baseURL: ''
     })
-    this.loadTasks()
   },
-  mounted() {
+  async mounted() {
     // Listen for task updates
     window.addEventListener('taskUpdated', this.handleTaskUpdate)
     window.addEventListener('workRecordUpdated', this.handleTaskUpdate)
@@ -417,9 +401,9 @@ export default {
     window.addEventListener('categoriesUpdated', this.handleCategoriesUpdate)
     window.addEventListener('statusesUpdated', this.handleStatusesUpdate)
     
-    // Load categories, statuses and tasks
-    this.loadCategoriesFromStorage()
-    this.loadStatusesFromStorage()
+    // Load categories and statuses first, then tasks
+    await this.loadCategoriesFromStorage()
+    await this.loadStatusesFromStorage()
     this.loadTasks()
   },
   beforeUnmount() {
@@ -530,30 +514,32 @@ export default {
     }
   },
   methods: {
-    loadCategoriesFromStorage() {
-      const saved = localStorage.getItem('task_categories')
-      if (saved) {
-        this.categories = JSON.parse(saved)
-      } else {
-        // Default categories same as TaskManagement
+    async loadCategoriesFromStorage() {
+      try {
+        const response = await this.$http.get('/api/settings/categories')
+        this.categories = response.data
+      } catch (error) {
+        console.error('Error loading categories:', error)
+        // Fallback to default
         this.categories = [
-          { label: 'งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼' },
-          { label: 'งานพัฒนา', value: 'งานพัฒนา', icon: 'emoji:💻' },
-          { label: 'งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧' }
+          { label: '💼 งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼', color: '#6366f1' },
+          { label: '💻 งานพัฒนา', value: 'งานพัฒนา', icon: 'emoji:💻', color: '#14b8a6' },
+          { label: '🔧 งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧', color: '#f97316' }
         ]
       }
     },
-    loadStatusesFromStorage() {
-      const saved = localStorage.getItem('work_statuses')
-      if (saved) {
-        this.workStatuses = JSON.parse(saved)
-      } else {
-        // Default statuses same as TaskManagement
+    async loadStatusesFromStorage() {
+      try {
+        const response = await this.$http.get('/api/settings/statuses')
+        this.workStatuses = response.data
+      } catch (error) {
+        console.error('Error loading statuses:', error)
+        // Fallback to default
         this.workStatuses = [
-          { label: 'รอดำเนินการ', value: 'pending', icon: 'emoji:⏳' },
-          { label: 'กำลังดำเนินการ', value: 'in_progress', icon: 'emoji:🔄' },
-          { label: 'เสร็จสิ้น', value: 'completed', icon: 'emoji:✅' },
-          { label: 'ระงับ', value: 'on_hold', icon: 'emoji:⏸️' }
+          { label: '⏳ รอดำเนินการ', value: 'pending', icon: 'emoji:⏳', color: '#f59e0b' },
+          { label: '🔄 กำลังดำเนินการ', value: 'in_progress', icon: 'emoji:🔄', color: '#3b82f6' },
+          { label: '✅ เสร็จสิ้น', value: 'completed', icon: 'emoji:✅', color: '#10b981' },
+          { label: '⏸️ ระงับ', value: 'on_hold', icon: 'emoji:⏸️', color: '#6c757d' }
         ]
       }
     },
@@ -563,7 +549,18 @@ export default {
     },
     getCategoryLabel(categoryValue) {
       const category = this.categories.find(cat => cat.value === categoryValue)
-      return category ? category.label : categoryValue
+      if (category && category.label) {
+        // Remove all emoji and special characters
+        return category.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      }
+      return categoryValue
+    },
+    getCategoryColor(categoryValue) {
+      if (!this.categories || this.categories.length === 0) {
+        return '#6c757d'
+      }
+      const category = this.categories.find(cat => cat.value === categoryValue)
+      return category && category.color ? category.color : '#6c757d'
     },
     getStatusIcon(statusValue) {
       const status = this.workStatuses.find(s => s.value === statusValue)
@@ -571,7 +568,15 @@ export default {
     },
     getStatusLabel(statusValue) {
       const status = this.workStatuses.find(s => s.value === statusValue)
-      return status ? status.label : statusValue
+      if (status && status.label) {
+        // Remove all emoji and special characters
+        return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      }
+      return statusValue
+    },
+    getStatusColor(statusValue) {
+      const status = this.workStatuses.find(s => s.value === statusValue)
+      return status?.color || '#6c757d'
     },
     async loadTasks() {
       try {
@@ -622,28 +627,6 @@ export default {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-    },
-    getStatusSeverity(status) {
-      const severities = {
-        'completed': 'success',
-        'in_progress': 'info', 
-        'pending': 'warning',
-        'on_hold': 'secondary'
-      }
-      return severities[status] || 'secondary'
-    },
-    getCategorySeverity(category) {
-      const severities = {
-        'งานทั่วไป': 'contrast',
-        'งานพัฒนาระบบ': 'info',
-        'งานบำรุงรักษา': 'warning',
-        'งานประชุม': 'success',
-        'งานฝึกอบรม': 'primary',
-        'งานวิจัย': 'danger',
-        'งานเอกสาร': 'secondary',
-        'งานลูกค้า': 'help'
-      }
-      return severities[category] || 'secondary'
     },
     editTask(task) {
       this.editFormData = {
@@ -732,11 +715,11 @@ export default {
       // Auto-refresh tasks when updated
       this.loadTasks()
     },
-    handleCategoriesUpdate(event) {
-      this.categories = event.detail || []
+    handleCategoriesUpdate() {
+      this.loadCategoriesFromStorage()
     },
-    handleStatusesUpdate(event) {
-      this.workStatuses = event.detail || []
+    handleStatusesUpdate() {
+      this.loadStatusesFromStorage()
     },
     async refreshData() {
       // Method for external refresh calls
@@ -777,24 +760,6 @@ export default {
       } catch (error) {
         return date
       }
-    },
-    getWorkStatusLabel(status) {
-      const statusMap = {
-        'completed': 'เสร็จสมบูรณ์',
-        'in_progress': 'กำลังดำเนินการ',
-        'pending': 'รอดำเนินการ',
-        'on_hold': 'ระงับ'
-      }
-      return statusMap[status] || status
-    },
-    getWorkStatusSeverity(status) {
-      const severities = {
-        'completed': 'success',
-        'in_progress': 'info',
-        'pending': 'warning',
-        'on_hold': 'secondary'
-      }
-      return severities[status] || 'secondary'
     },
     getTotalHours() {
       if (!this.taskWorks || this.taskWorks.length === 0) return '0.0'
@@ -1298,7 +1263,6 @@ export default {
   text-overflow: unset;
   max-width: none;
   width: auto;
-  background-color: #333 !important;
   color: white !important;
 }
 
@@ -1317,6 +1281,28 @@ export default {
     font-size: 0.7rem;
     padding: 0.3rem 0.5rem;
   }
+}
+
+.badge-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  min-height: 40px;
+}
+
+.badge-container :deep(.p-badge) {
+  white-space: normal !important;
+  word-break: keep-all !important;
+  overflow-wrap: break-word !important;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.4rem !important;
+  line-height: 1.5 !important;
+  display: inline-block !important;
+  max-width: 100%;
+  height: auto !important;
 }
 
 .category-display,

@@ -39,21 +39,11 @@
                       optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
                       class="corporate-input category-dropdown" required>
               <template #value="slotProps">
-                <div v-if="slotProps.value" class="category-item">
-                  <span v-if="getCategoryIcon(slotProps.value) && getCategoryIcon(slotProps.value).startsWith('emoji:')" 
-                        class="emoji">{{ getCategoryIcon(slotProps.value).replace('emoji:', '') }}</span>
-                  <i v-else :class="getCategoryIcon(slotProps.value)"></i>
-                  <span>{{ getCategoryLabel(slotProps.value) }}</span>
-                </div>
+                <span v-if="slotProps.value">{{ getCategoryLabel(slotProps.value) }}</span>
                 <span v-else>เลือกหมวดหมู่งาน</span>
               </template>
               <template #option="slotProps">
-                <div class="category-item">
-                  <span v-if="slotProps.option.icon && slotProps.option.icon.startsWith('emoji:')" 
-                        class="emoji">{{ slotProps.option.icon.replace('emoji:', '') }}</span>
-                  <i v-else :class="slotProps.option.icon"></i>
-                  <span>{{ slotProps.option.label }}</span>
-                </div>
+                <span>{{ slotProps.option.label }}</span>
               </template>
             </Dropdown>
           </div>
@@ -122,22 +112,19 @@ export default {
   },
   methods: {
     loadCategories() {
-      // โหลดหมวดหมู่จาก localStorage หรือใช้ค่าเริ่มต้น
-      const savedCategories = localStorage.getItem('task_categories')
-      if (savedCategories) {
-        const categories = JSON.parse(savedCategories)
-        this.categoryOptions = categories.map(cat => ({
-          ...cat,
-          icon: this.getDefaultIcon(cat.value)
-        }))
-      } else {
-        // ค่าเริ่มต้น
-        this.categoryOptions = [
-          { label: 'งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼' },
-          { label: 'งานพัฒนาระบบ', value: 'งานพัฒนาระบบ', icon: 'emoji:💻' },
-          { label: 'งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧' }
-        ]
-      }
+      this.$http.get('/api/settings/categories')
+        .then(response => {
+          this.categoryOptions = response.data
+        })
+        .catch(error => {
+          console.error(error)
+          // Fallback to default
+          this.categoryOptions = [
+            { label: '💼 งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼' },
+            { label: '💻 งานพัฒนาระบบ', value: 'งานพัฒนาระบบ', icon: 'emoji:💻' },
+            { label: '🔧 งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧' }
+          ]
+        })
     },
     getDefaultIcon(value) {
       const iconMap = {
