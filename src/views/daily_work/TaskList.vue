@@ -87,9 +87,17 @@
           </template>
         </Column>
 
-        <Column header="จัดการ" style="width: 80px;">
+        <Column header="จัดการ" style="width: 150px;">
           <template #body="slotProps">
             <div class="action-buttons">
+              <Button 
+                icon="pi pi-eye" 
+                size="small" 
+                severity="info" 
+                outlined
+                @click="viewTaskWorks(slotProps.data)"
+                v-tooltip="'ดูงานรายวัน'"
+              />
               <Button 
                 icon="pi pi-pencil" 
                 size="small" 
@@ -162,6 +170,111 @@
     </div>
     <div v-else class="no-files">
       <p>ไม่มีไฟล์แนบ</p>
+    </div>
+  </Dialog>
+
+  <!-- Task Works Dialog -->
+  <Dialog v-model:visible="taskWorksDialog" modal :header="`งานรายวันของโครงการ: ${selectedTask?.task_name || ''}`" 
+          :style="{ width: '90vw', maxWidth: '1200px' }" :draggable="false" position="center">
+    <div v-if="loadingWorks" class="loading-state">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+      <p>กำลังโหลดข้อมูล...</p>
+    </div>
+    
+    <div v-else-if="taskWorks.length === 0" class="empty-works">
+      <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+      <p>ยังไม่มีการลงงานรายวันสำหรับโครงการนี้</p>
+    </div>
+    
+    <div v-else class="works-container">
+      <div class="works-summary">
+        <div class="summary-item">
+          <i class="pi pi-calendar"></i>
+          <span>ทั้งหมด: <strong>{{ taskWorks.length }}</strong> รายการ</span>
+        </div>
+        <div class="summary-item">
+          <i class="pi pi-clock"></i>
+          <span>รวม: <strong>{{ getTotalHours() }}</strong> ชั่วโมง</span>
+        </div>
+      </div>
+      
+      <div class="works-filters">
+        <div class="filter-group">
+          <label>กรองตามสถานะ:</label>
+          <Dropdown v-model="workStatusFilter" :options="workStatusFilterOptions" 
+                    optionLabel="label" optionValue="value" placeholder="ทั้งหมด" 
+                    class="filter-dropdown" />
+        </div>
+        <div class="filter-group">
+          <label>เรียงตาม:</label>
+          <Dropdown v-model="workSortBy" :options="workSortOptions" 
+                    optionLabel="label" optionValue="value" 
+                    class="filter-dropdown" />
+        </div>
+      </div>
+      
+      <div class="works-table-wrapper">
+        <table class="works-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>วันที่</th>
+              <th>ผู้ปฏิบัติงาน</th>
+              <th>เวลา</th>
+              <th>ชั่วโมง</th>
+              <th>สถานะ</th>
+              <th>สถานที่</th>
+              <th>ไฟล์แนบ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="work in filteredAndSortedWorks" :key="work.id">
+              <td class="text-center">
+                <Badge :value="work.id" severity="info" />
+              </td>
+              <td>{{ formatDate(work.work_date) }}</td>
+              <td>{{ work.employee_name || 'ไม่ระบุ' }}</td>
+              <td>{{ work.start_time }} - {{ work.end_time }}</td>
+              <td class="text-center">{{ parseFloat(work.total_hours || 0).toFixed(1) }} ชม.</td>
+              <td class="text-center">
+                <Badge :value="getWorkStatusLabel(work.work_status)" 
+                       :severity="getWorkStatusSeverity(work.work_status)" />
+              </td>
+              <td>{{ work.location || '-' }}</td>
+              <td class="text-center">
+                <Button v-if="work.files && work.files.length > 0"
+                        icon="pi pi-paperclip" 
+                        :label="work.files.length.toString()"
+                        size="small" 
+                        severity="success" 
+                        outlined
+                        @click="showWorkFiles(work)"
+                        v-tooltip="`${work.files.length} ไฟล์`" />
+                <span v-else>-</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <template #footer>
+      <Button label="ปิด" icon="pi pi-times" @click="taskWorksDialog = false" />
+    </template>
+  </Dialog>
+
+  <!-- Work Files Dialog -->
+  <Dialog v-model:visible="workFilesDialog" modal header="ไฟล์แนบ" 
+          :style="{ width: '500px' }" :draggable="false">
+    <div v-if="selectedWorkFiles && selectedWorkFiles.length > 0" class="files-list">
+      <div v-for="(file, index) in selectedWorkFiles" :key="index" class="file-item">
+        <div class="file-info">
+          <i class="pi pi-file"></i>
+          <span class="file-name">{{ file }}</span>
+        </div>
+        <Button icon="pi pi-download" size="small" severity="success" outlined
+                @click="downloadWorkFile(file)" v-tooltip="'ดาวน์โหลด'" />
+      </div>
     </div>
   </Dialog>
 
@@ -325,6 +438,25 @@ export default {
       filesDialog: false,
       selectedTaskFiles: [],
       editDialog: false,
+      taskWorksDialog: false,
+      taskWorks: [],
+      loadingWorks: false,
+      workFilesDialog: false,
+      selectedWorkFiles: [],
+      workStatusFilter: null,
+      workSortBy: 'date_desc',
+      workStatusFilterOptions: [
+        { label: 'ทั้งหมด', value: null },
+        { label: 'เสร็จสมบูรณ์', value: 'completed' },
+        { label: 'กำลังดำเนินการ', value: 'in_progress' },
+        { label: 'รอดำเนินการ', value: 'pending' },
+        { label: 'ระงับ', value: 'on_hold' }
+      ],
+      workSortOptions: [
+        { label: 'วันที่ล่าสุด', value: 'date_desc' },
+        { label: 'วันที่เก่าสุด', value: 'date_asc' },
+        { label: 'สถานะ', value: 'status' }
+      ],
       editFormData: {
         id: null,
         task_name: '',
@@ -375,6 +507,26 @@ export default {
           return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
         })
       })
+    },
+    filteredAndSortedWorks() {
+      let works = [...this.taskWorks]
+      
+      // Filter by status
+      if (this.workStatusFilter) {
+        works = works.filter(work => work.work_status === this.workStatusFilter)
+      }
+      
+      // Sort
+      if (this.workSortBy === 'date_desc') {
+        works.sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
+      } else if (this.workSortBy === 'date_asc') {
+        works.sort((a, b) => new Date(a.work_date) - new Date(b.work_date))
+      } else if (this.workSortBy === 'status') {
+        const statusOrder = { 'completed': 1, 'in_progress': 2, 'pending': 3, 'on_hold': 4 }
+        works.sort((a, b) => (statusOrder[a.work_status] || 5) - (statusOrder[b.work_status] || 5))
+      }
+      
+      return works
     }
   },
   methods: {
@@ -589,6 +741,78 @@ export default {
     async refreshData() {
       // Method for external refresh calls
       await this.loadTasks()
+    },
+    async viewTaskWorks(task) {
+      this.selectedTask = task
+      this.taskWorks = []
+      this.loadingWorks = true
+      this.taskWorksDialog = true
+      this.workStatusFilter = null
+      this.workSortBy = 'date_desc'
+      
+      try {
+        const response = await this.$http.get(`/api/daily-work?task_id=${task.id}`)
+        this.taskWorks = response.data || []
+      } catch (error) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถโหลดข้อมูลงานรายวันได้',
+          life: 3000
+        })
+        this.taskWorks = []
+      } finally {
+        this.loadingWorks = false
+      }
+    },
+    formatDateTime(date) {
+      try {
+        return new Date(date).toLocaleString('th-TH', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      } catch (error) {
+        return date
+      }
+    },
+    getWorkStatusLabel(status) {
+      const statusMap = {
+        'completed': 'เสร็จสมบูรณ์',
+        'in_progress': 'กำลังดำเนินการ',
+        'pending': 'รอดำเนินการ',
+        'on_hold': 'ระงับ'
+      }
+      return statusMap[status] || status
+    },
+    getWorkStatusSeverity(status) {
+      const severities = {
+        'completed': 'success',
+        'in_progress': 'info',
+        'pending': 'warning',
+        'on_hold': 'secondary'
+      }
+      return severities[status] || 'secondary'
+    },
+    getTotalHours() {
+      if (!this.taskWorks || this.taskWorks.length === 0) return '0.0'
+      const total = this.taskWorks.reduce((sum, work) => sum + (parseFloat(work.total_hours) || 0), 0)
+      return total.toFixed(1)
+    },
+    showWorkFiles(work) {
+      this.selectedWorkFiles = work.files || []
+      this.workFilesDialog = true
+    },
+    downloadWorkFile(fileName) {
+      const link = document.createElement('a')
+      link.href = `/api/files/download/${fileName}`
+      link.download = fileName
+      link.target = '_blank'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }
   }
 }
@@ -901,6 +1125,151 @@ export default {
   display: flex;
   gap: 0.5rem;
   justify-content: center;
+}
+
+.loading-state,
+.empty-works {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+}
+
+.loading-state p,
+.empty-works p {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.works-container {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.works-summary {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.works-filters {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.filter-dropdown {
+  min-width: 180px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #495057;
+}
+
+.summary-item i {
+  color: #4A90E2;
+  font-size: 1.1rem;
+}
+
+.summary-item strong {
+  color: #4A90E2;
+  font-size: 1.1rem;
+}
+
+.works-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.works-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.works-table thead {
+  background: #f8f9fa;
+}
+
+.works-table th {
+  padding: 1rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #e9ecef;
+  white-space: nowrap;
+}
+
+.works-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f1f3f4;
+  color: #495057;
+}
+
+.works-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.works-table .text-center {
+  text-align: center;
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.file-info i {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  color: #495057;
+  word-break: break-all;
 }
 
 .description-preview {

@@ -88,8 +88,8 @@ export default {
       return localStorage.getItem('soc_user_id') || ''
     },
     isHROrAdmin() {
-      // Use permission-based check instead of role
-      return this.hasAccess('/leave_work/approve')
+      const role = this.currentUserRole.toLowerCase()
+      return role === 'hr' || role === 'admin'
     },
     canApproveLeave() {
       // ตรวจสอบ permission สำหรับการอนุมัติลาเท่านั้น

@@ -124,15 +124,23 @@
         <div class="list-section">
           <h4>หมวดหมู่ที่มีอยู่</h4>
           <div class="category-list">
-            <div v-for="category in categories" :key="category.value" 
+            <div v-for="(category, index) in categories" :key="category.value" 
                  class="category-item">
               <div class="category-info">
                 <span v-if="category.icon && category.icon.startsWith('emoji:')" class="emoji">{{ category.icon.replace('emoji:', '') }}</span>
                 <i v-else :class="category.icon || 'pi pi-tag'"></i>
                 <span>{{ category.label }}</span>
               </div>
-              <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" 
-                      @click="removeCategory(category.value)" />
+              <div class="item-actions">
+                <Button icon="pi pi-arrow-up" class="p-button-text p-button-sm" 
+                        @click="moveCategoryUp(index)" :disabled="index === 0" 
+                        v-tooltip="'เลื่อนขึ้น'" />
+                <Button icon="pi pi-arrow-down" class="p-button-text p-button-sm" 
+                        @click="moveCategoryDown(index)" :disabled="index === categories.length - 1" 
+                        v-tooltip="'เลื่อนลง'" />
+                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" 
+                        @click="removeCategory(category.value)" v-tooltip="'ลบ'" />
+              </div>
             </div>
           </div>
         </div>
@@ -176,15 +184,23 @@
         <div class="list-section">
           <h4>สถานะที่มีอยู่</h4>
           <div class="status-list">
-            <div v-for="status in workStatuses" :key="status.value" 
+            <div v-for="(status, index) in workStatuses" :key="status.value" 
                  class="status-item">
               <div class="status-info">
                 <span v-if="status.icon && status.icon.startsWith('emoji:')" class="emoji">{{ status.icon.replace('emoji:', '') }}</span>
                 <i v-else :class="status.icon || 'pi pi-flag'"></i>
                 <span>{{ status.label }}</span>
               </div>
-              <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" 
-                      @click="removeStatus(status.value)" />
+              <div class="item-actions">
+                <Button icon="pi pi-arrow-up" class="p-button-text p-button-sm" 
+                        @click="moveStatusUp(index)" :disabled="index === 0" 
+                        v-tooltip="'เลื่อนขึ้น'" />
+                <Button icon="pi pi-arrow-down" class="p-button-text p-button-sm" 
+                        @click="moveStatusDown(index)" :disabled="index === workStatuses.length - 1" 
+                        v-tooltip="'เลื่อนลง'" />
+                <Button icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" 
+                        @click="removeStatus(status.value)" v-tooltip="'ลบ'" />
+              </div>
             </div>
           </div>
         </div>
@@ -303,6 +319,24 @@ const removeCategory = (categoryValue) => {
   })
 }
 
+const moveCategoryUp = (index) => {
+  if (index > 0) {
+    const temp = categories.value[index]
+    categories.value[index] = categories.value[index - 1]
+    categories.value[index - 1] = temp
+    saveCategoriesToStorage()
+  }
+}
+
+const moveCategoryDown = (index) => {
+  if (index < categories.value.length - 1) {
+    const temp = categories.value[index]
+    categories.value[index] = categories.value[index + 1]
+    categories.value[index + 1] = temp
+    saveCategoriesToStorage()
+  }
+}
+
 const addStatus = () => {
   if (newStatus.value.trim() && newStatusIcon.value) {
     workStatuses.value.push({
@@ -331,6 +365,24 @@ const removeStatus = (statusValue) => {
     detail: 'ลบสถานะเรียบร้อย',
     life: 3000
   })
+}
+
+const moveStatusUp = (index) => {
+  if (index > 0) {
+    const temp = workStatuses.value[index]
+    workStatuses.value[index] = workStatuses.value[index - 1]
+    workStatuses.value[index - 1] = temp
+    saveStatusesToStorage()
+  }
+}
+
+const moveStatusDown = (index) => {
+  if (index < workStatuses.value.length - 1) {
+    const temp = workStatuses.value[index]
+    workStatuses.value[index] = workStatuses.value[index + 1]
+    workStatuses.value[index + 1] = temp
+    saveStatusesToStorage()
+  }
 }
 
 const closeCategoryDialog = () => {
@@ -590,6 +642,12 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
 }
 
 .status-info .emoji {

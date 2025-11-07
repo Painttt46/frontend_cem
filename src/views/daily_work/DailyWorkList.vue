@@ -17,13 +17,25 @@
       <DataTable v-else :value="filteredRecords" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
         responsiveLayout="scroll" class="history-table" stripedRows>
 
+        <Column field="id" header="ID" :sortable="true" style="width: 80px; text-align: center;">
+          <template #body="slotProps">
+            <Badge :value="slotProps.data.id" severity="info" />
+          </template>
+        </Column>
+
         <Column field="work_date" header="วันที่ลงงาน" :sortable="true">
           <template #body="slotProps">
             {{ formatDate(slotProps.data.work_date) }}
           </template>
         </Column>
 
-        <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true">
+        <Column field="start_time" header="เวลา" style="min-width: 120px;">
+          <template #body="slotProps">
+            {{ formatTime(slotProps.data.start_time) }} - {{ formatTime(slotProps.data.end_time) }}
+          </template>
+        </Column>
+
+        <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true" style="min-width: 150px;">
           <template #body="slotProps">
             <div class="employee-info">
               <div class="employee-name">{{ slotProps.data.employee_name || 'ไม่ระบุ' }}</div>
@@ -274,7 +286,9 @@ export default {
       const query = this.searchQuery.toLowerCase().trim()
       return records.filter(record => {
         const formattedDate = this.formatDate(record.work_date)
+        const timeRange = `${this.formatTime(record.start_time)} - ${this.formatTime(record.end_time)}`
         const searchableData = {
+          id: record.id || '',
           employee_name: record.employee_name || '',
           employee_position: record.employee_position || '',
           task_name: record.task_name || '',
@@ -284,8 +298,11 @@ export default {
           category: record.category || '',
           work_description: record.work_description || '',
           work_date: formattedDate,
-          start_time: this.formatTime(record.start_time),
-          end_time: this.formatTime(record.end_time)
+          start_time: record.start_time || '',
+          end_time: record.end_time || '',
+          start_time_short: this.formatTime(record.start_time),
+          end_time_short: this.formatTime(record.end_time),
+          time_range: timeRange
         }
         
         return Object.values(searchableData).some(value => {
@@ -390,11 +407,10 @@ export default {
       if (!date) return '-'
       try {
         const d = new Date(date)
-        return d.toLocaleDateString('th-TH', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
+        const day = String(d.getDate()).padStart(2, '0')
+        const month = String(d.getMonth() + 1).padStart(2, '0')
+        const year = d.getFullYear()
+        return `${day}/${month}/${year}`
       } catch (error) {
         return date
       }

@@ -165,28 +165,39 @@ import { usePermissions } from '@/composables/usePermissions'
 
 const router = useRouter()
 const toast = useToast()
-const { refreshPermissions, hasAccess } = usePermissions()
+const { loadPermissions, hasAccess } = usePermissions()
 
-onMounted(async () => {
-  await refreshPermissions()
+onMounted(() => {
+  loadPermissions()
 })
 
 const navigateTo = (section) => {
-  let targetPath = ''
+  // Check user role
+  const userRole = localStorage.getItem('soc_role')
   
-  // Map sections to paths
+  if (userRole !== 'admin' && userRole !== 'superadmin') {
+    toast.add({
+      severity: 'error',
+      summary: 'ไม่มีสิทธิ์เข้าถึง',
+      detail: 'คุณไม่มีสิทธิ์เข้าถึงส่วนจัดการนี้',
+      life: 3000
+    })
+    return
+  }
+
+  // Navigate to management sections
   switch (section) {
     case 'users':
-      targetPath = '/management/users'
+      router.push('/management/users')
       break
     case 'leave-management':
-      targetPath = '/management/leave'
+      router.push('/management/leave')
       break
     case 'task-management':
-      targetPath = '/management/tasks'
+      router.push('/management/tasks')
       break
     case 'settings':
-      targetPath = '/management/settings'
+      router.push('/management/settings')
       break
     case 'car-management':
     case 'departments':
@@ -198,7 +209,7 @@ const navigateTo = (section) => {
         detail: 'หน้านี้อยู่ระหว่างการพัฒนา',
         life: 3000
       })
-      return
+      break
     default:
       toast.add({
         severity: 'info',
@@ -206,19 +217,6 @@ const navigateTo = (section) => {
         detail: 'ฟีเจอร์นี้อยู่ระหว่างการพัฒนา',
         life: 3000
       })
-      return
-  }
-
-  // Check permission for the target path
-  if (hasAccess(targetPath)) {
-    router.push(targetPath)
-  } else {
-    toast.add({
-      severity: 'error',
-      summary: 'ไม่มีสิทธิ์เข้าถึง',
-      detail: 'คุณไม่มีสิทธิ์เข้าถึงส่วนจัดการนี้',
-      life: 3000
-    })
   }
 }
 </script>

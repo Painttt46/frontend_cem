@@ -18,67 +18,53 @@
     <!-- User Leave Quota Table -->
     <Card>
       <template #content>
-        <DataTable :value="users" :paginator="true" :rows="10" stripedRows class="p-datatable-sm">
-          <Column field="firstname" header="ชื่อ" :sortable="true">
-            <template #body="{ data }">
-              {{ data.firstname }} {{ data.lastname }}
-            </template>
-          </Column>
-          <Column field="department" header="แผนก" :sortable="true" />
-          <Column field="position" header="ตำแหน่ง" :sortable="true" />
-          <Column header="ลาป่วย" style="width: 150px">
-            <template #body="{ data }">
-              <div class="quota-cell">
-                <small>ใช้ไป: {{ data.sick_used || 0 }} วัน</small>
-                <small>คงเหลือ: {{ (data.sick_leave_quota || 30) - (data.sick_used || 0) }} วัน</small>
-              </div>
-            </template>
-          </Column>
-          <Column header="ลากิจ" style="width: 150px">
-            <template #body="{ data }">
-              <div class="quota-cell">
-                <small>ใช้ไป: {{ data.personal_used || 0 }} วัน</small>
-                <small>คงเหลือ: {{ (data.personal_leave_quota || 10) - (data.personal_used || 0) }} วัน</small>
-              </div>
-            </template>
-          </Column>
-          <Column header="ลาพักร้อน" style="width: 150px">
-            <template #body="{ data }">
-              <div class="quota-cell">
-                <small>ใช้ไป: {{ data.vacation_used || 0 }} วัน</small>
-                <small>คงเหลือ: {{ (data.vacation_leave_quota || 10) - (data.vacation_used || 0) }} วัน</small>
-              </div>
-            </template>
-          </Column>
-          <Column header="ตั้งค่าโควต้า" style="width: 120px">
-            <template #body="{ data }">
-              <Button icon="pi pi-cog" size="small" @click="openQuotaDialog(data)" />
-            </template>
-          </Column>
-        </DataTable>
+        <div class="table-header">
+          <h3>โควต้าการลาของพนักงาน</h3>
+          <Button label="เพิ่มประเภทการลา" icon="pi pi-plus" @click="showAddLeaveTypeDialog = true" />
+        </div>
+        <div class="table-wrapper">
+          <DataTable :value="users" :paginator="true" :rows="10" stripedRows class="p-datatable-sm" scrollable scrollHeight="600px">
+            <Column field="firstname" header="ชื่อ" :sortable="true" frozen style="min-width: 150px">
+              <template #body="{ data }">
+                {{ data.firstname }} {{ data.lastname }}
+              </template>
+            </Column>
+            <Column field="department" header="แผนก" :sortable="true" frozen style="min-width: 120px" />
+            <Column field="position" header="ตำแหน่ง" :sortable="true" frozen style="min-width: 120px" />
+            <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 120px">
+              <template #header>
+                <div class="leave-type-header">
+                  <span>{{ type.label }}</span>
+                  <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" />
+                </div>
+              </template>
+              <template #body="{ data }">
+                <div class="quota-cell">
+                  <small>โควต้า: {{ data[`${type.value}_quota`] || 0 }} วัน</small>
+                  <small>คงเหลือ: {{ data[`${type.value}_remaining`] || 0 }} วัน</small>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
       </template>
     </Card>
 
-    <!-- Quota Edit Dialog -->
-    <Dialog v-model:visible="showQuotaDialog" header="ตั้งค่าโควต้าการลา" :modal="true" :draggable="false" style="width: 500px">
-      <div class="quota-form" v-if="selectedUser">
-        <h4>{{ selectedUser.firstname }} {{ selectedUser.lastname }}</h4>
+    <!-- Add Leave Type Dialog -->
+    <Dialog v-model:visible="showAddLeaveTypeDialog" header="เพิ่มประเภทการลาใหม่" :modal="true" :draggable="false" style="width: 400px">
+      <div class="leave-type-form">
         <div class="field">
-          <label>ลาป่วย (วัน/ปี)</label>
-          <InputNumber v-model="selectedUser.sick_leave_quota" :min="0" :max="365" showButtons class="w-full" />
+          <label>ชื่อประเภทการลา *</label>
+          <InputText v-model="newLeaveTypeName" placeholder="เช่น ลาบวช, ลาอุปสมบท" class="w-full" />
         </div>
         <div class="field">
-          <label>ลากิจ (วัน/ปี)</label>
-          <InputNumber v-model="selectedUser.personal_leave_quota" :min="0" :max="365" showButtons class="w-full" />
-        </div>
-        <div class="field">
-          <label>ลาพักร้อน (วัน/ปี)</label>
-          <InputNumber v-model="selectedUser.vacation_leave_quota" :min="0" :max="365" showButtons class="w-full" />
+          <label>โควต้าเริ่มต้น (วัน/ปี) *</label>
+          <InputNumber v-model="newLeaveTypeQuota" :min="0" :max="365" showButtons class="w-full" />
         </div>
       </div>
       <template #footer>
-        <Button label="ยกเลิก" icon="pi pi-times" @click="showQuotaDialog = false" severity="secondary" />
-        <Button label="บันทึก" icon="pi pi-check" @click="saveQuota" :loading="saving" />
+        <Button label="ยกเลิก" icon="pi pi-times" @click="closeAddDialog" severity="secondary" />
+        <Button label="เพิ่ม" icon="pi pi-check" @click="addLeaveType" :loading="adding" />
       </template>
     </Dialog>
   </div>
@@ -87,60 +73,60 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import axios from 'axios'
+import InputNumber from 'primevue/inputnumber'
 
 const toast = useToast()
+const confirm = useConfirm()
 const users = ref([])
-const saving = ref(false)
-const showQuotaDialog = ref(false)
-const selectedUser = ref(null)
+const leaveTypes = ref([])
+const showAddLeaveTypeDialog = ref(false)
+const adding = ref(false)
+const newLeaveTypeName = ref('')
+const newLeaveTypeQuota = ref(0)
 
 onMounted(() => {
+  loadLeaveTypes()
   loadUsers()
 })
+
+const loadLeaveTypes = async () => {
+  try {
+    const response = await axios.get('/api/leave/leave-types')
+    leaveTypes.value = response.data
+  } catch (error) {
+    console.error('Error loading leave types:', error)
+  }
+}
 
 const loadUsers = async () => {
   try {
     const token = localStorage.getItem('soc_token')
-    const [usersRes, leaveRes] = await Promise.all([
-      axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      }),
-      axios.get('/api/leave', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-    ])
-    
-    // Calculate used leave days for each user
-    const leaveData = leaveRes.data
-    
-    users.value = usersRes.data.map(user => {
-      const userLeaves = leaveData.filter(leave => 
-        leave.user_id === user.id && leave.status === 'approved'
-      )
-      
-      const sick_used = userLeaves
-        .filter(l => l.leave_type === 'sick')
-        .reduce((sum, l) => sum + (parseFloat(l.days) || 0), 0)
-      
-      const personal_used = userLeaves
-        .filter(l => l.leave_type === 'personal')
-        .reduce((sum, l) => sum + (parseFloat(l.days) || 0), 0)
-      
-      const vacation_used = userLeaves
-        .filter(l => l.leave_type === 'vacation')
-        .reduce((sum, l) => sum + (parseFloat(l.days) || 0), 0)
-      
-      return {
-        ...user,
-        sick_leave_quota: user.sick_leave_quota || 30,
-        personal_leave_quota: user.personal_leave_quota || 10,
-        vacation_leave_quota: user.vacation_leave_quota || 10,
-        sick_used,
-        personal_used,
-        vacation_used
-      }
+    const usersRes = await axios.get('/api/users', {
+      headers: { Authorization: `Bearer ${token}` }
     })
+    
+    users.value = await Promise.all(usersRes.data.map(async (user) => {
+      try {
+        const quotaRes = await axios.get(`/api/leave/quota/${user.id}`)
+        const quotaData = quotaRes.data
+        
+        const userData = { ...user }
+        
+        // Add quota data for each leave type dynamically
+        for (const [leaveType, data] of Object.entries(quotaData)) {
+          userData[`${leaveType}_quota`] = data?.quota || 0
+          userData[`${leaveType}_used`] = data?.usedDays || 0
+          userData[`${leaveType}_remaining`] = data?.remainingDays || 0
+        }
+        
+        return userData
+      } catch (error) {
+        console.error(`Error loading quota for user ${user.id}:`, error)
+        return { ...user }
+      }
+    }))
   } catch (error) {
     toast.add({
       severity: 'error',
@@ -151,42 +137,88 @@ const loadUsers = async () => {
   }
 }
 
-const openQuotaDialog = (user) => {
-  selectedUser.value = { ...user }
-  showQuotaDialog.value = true
+const closeAddDialog = () => {
+  showAddLeaveTypeDialog.value = false
+  newLeaveTypeName.value = ''
+  newLeaveTypeQuota.value = 0
 }
 
-const saveQuota = async () => {
-  saving.value = true
+const addLeaveType = async () => {
+  if (!newLeaveTypeName.value.trim()) {
+    toast.add({
+      severity: 'error',
+      summary: 'ข้อผิดพลาด',
+      detail: 'กรุณากรอกชื่อประเภทการลา',
+      life: 3000
+    })
+    return
+  }
+
+  adding.value = true
   try {
-    const token = localStorage.getItem('soc_token')
-    
-    await axios.put(`/api/users/${selectedUser.value.id}/leave-quota`, {
-      sick_leave_quota: selectedUser.value.sick_leave_quota,
-      personal_leave_quota: selectedUser.value.personal_leave_quota,
-      vacation_leave_quota: selectedUser.value.vacation_leave_quota
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
+    await axios.post('/api/leave/leave-types', {
+      name: newLeaveTypeName.value.trim(),
+      default_quota: newLeaveTypeQuota.value
     })
 
     toast.add({
       severity: 'success',
       summary: 'สำเร็จ',
-      detail: 'บันทึกโควต้าการลาเรียบร้อยแล้ว',
+      detail: 'เพิ่มประเภทการลาใหม่เรียบร้อยแล้ว',
       life: 3000
     })
-    
-    showQuotaDialog.value = false
-    loadUsers()
+
+    closeAddDialog()
+    await loadLeaveTypes()
+    await loadUsers()
   } catch (error) {
+    console.error('Add leave type error:', error)
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
-      detail: 'ไม่สามารถบันทึกข้อมูลได้',
+      detail: error.response?.data?.error || 'ไม่สามารถเพิ่มประเภทการลาได้',
       life: 3000
     })
   } finally {
-    saving.value = false
+    adding.value = false
+  }
+}
+
+const confirmDeleteLeaveType = (type) => {
+  confirm.require({
+    message: `ต้องการลบประเภทการลา "${type.label}" ใช่หรือไม่?\n\nข้อมูลโควต้าของพนักงานทุกคนจะถูกลบด้วย`,
+    header: 'ยืนยันการลบ',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ลบ',
+    rejectLabel: 'ยกเลิก',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      deleteLeaveType(type.value)
+    }
+  })
+}
+
+const deleteLeaveType = async (leaveType) => {
+  try {
+    await axios.delete(`/api/leave/leave-types/${leaveType}`)
+
+    toast.add({
+      severity: 'success',
+      summary: 'สำเร็จ',
+      detail: 'ลบประเภทการลาเรียบร้อยแล้ว',
+      life: 3000
+    })
+
+    await loadLeaveTypes()
+    await loadUsers()
+  } catch (error) {
+    console.error('Delete leave type error:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'เกิดข้อผิดพลาด',
+      detail: error.response?.data?.error || 'ไม่สามารถลบประเภทการลาได้',
+      life: 3000
+    })
   }
 }
 </script>
@@ -244,6 +276,52 @@ const saveQuota = async () => {
   color: #2c3e50;
 }
 
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.table-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.leave-type-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.leave-type-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.leave-type-form .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leave-type-form label {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.leave-type-form small {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
 .quota-cell {
   display: flex;
   flex-direction: column;
@@ -253,29 +331,6 @@ const saveQuota = async () => {
 .quota-cell small {
   font-size: 0.85rem;
   color: #6c757d;
-}
-
-.quota-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem 0;
-}
-
-.quota-form h4 {
-  margin: 0 0 1rem 0;
-  color: #2c3e50;
-}
-
-.quota-form .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.quota-form label {
-  font-weight: 600;
-  color: #2c3e50;
 }
 
 @media (max-width: 768px) {
