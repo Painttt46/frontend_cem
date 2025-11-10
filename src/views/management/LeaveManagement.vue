@@ -102,9 +102,8 @@ const loadLeaveTypes = async () => {
 
 const loadUsers = async () => {
   try {
-    const token = localStorage.getItem('soc_token')
+    
     const usersRes = await axios.get('/api/users', {
-      headers: { Authorization: `Bearer ${token}` }
     })
     
     users.value = await Promise.all(usersRes.data.map(async (user) => {

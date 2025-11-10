@@ -130,12 +130,12 @@ const router = createRouter({
 
 // ✅ Route Guard ตรวจสอบการ Login และสิทธิ์การเข้าถึง
 router.beforeEach(async (to, from, next) => {
-  const token = localStorage.getItem("soc_token");
   const userId = localStorage.getItem("soc_user_id");
   const role = localStorage.getItem("soc_role");
 
   if (to.meta.requiresAuth) {
-    if (!token || !userId) {
+    // ตรวจสอบว่ามี userId (แทนการตรวจสอบ token)
+    if (!userId) {
       next("/login");
       return;
     }

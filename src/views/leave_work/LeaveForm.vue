@@ -384,7 +384,6 @@ export default {
         // Send to backend
         const response = await axios.post('/api/leave', leaveData, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('soc_token')}`
           }
         })
         

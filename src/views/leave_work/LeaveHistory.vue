@@ -264,7 +264,6 @@ export default {
       try {
         await this.$http.delete(`/api/leave/${id}`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('soc_token')}`
           }
         })
 

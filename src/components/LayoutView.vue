@@ -208,7 +208,6 @@ const currentDateTime = computed(() => {
 
 function fetchData() {
   axios.get('/user', {
-    headers: { Authorization: `Bearer ${localStorage.getItem("soc_token")}` }
   }).then(user_response => {
     users.value = user_response.data.data;
   });
@@ -265,10 +264,18 @@ const locationLogout = () => {
   window.location.href = "/login";
 };
 
-const logout = () => {
-  localStorage.clear();
-  sessionStorage.clear();
-  window.location.href = "/login";
+const logout = async () => {
+  try {
+    // เรียก API logout เพื่อ clear cookie
+    await axios.post('/api/auth/logout');
+  } catch (error) {
+    console.error('Logout error:', error);
+  } finally {
+    // Clear localStorage และ redirect
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/login";
+  }
 };
 const startCountdown = () => {
   countdownTimer = setInterval(() => {

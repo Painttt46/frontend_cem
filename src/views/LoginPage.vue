@@ -204,21 +204,17 @@ function auth(username, password) {
       loginStatus.value = "login-success";
 
       // Clear old data
-      localStorage.removeItem("soc_token");
-      localStorage.removeItem("soc_user");
-      localStorage.removeItem("soc_role");
-      localStorage.removeItem("soc_user_id");
-      localStorage.removeItem("soc_firstname");
-      localStorage.removeItem("soc_lastname");
+      localStorage.clear();
 
-      // Store new data
+      // Store user data (ไม่เก็บ token - ใช้ cookie แทน)
       localStorage.setItem("soc_user", response.data.username);
-      localStorage.setItem("soc_token", response.data.access_token);
       localStorage.setItem("soc_role", response.data.role);
       localStorage.setItem("soc_position", response.data.position);
       localStorage.setItem("soc_firstname", response.data.firstname);
       localStorage.setItem("soc_lastname", response.data.lastname);
       localStorage.setItem("soc_user_id", response.data.user);
+
+      // ไม่ต้องตั้งค่า axios header (ใช้ cookie อัตโนมัติ)
 
       // Navigate after showing success
       setTimeout(() => {

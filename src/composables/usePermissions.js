@@ -10,16 +10,17 @@ export function usePermissions() {
       const role = localStorage.getItem('soc_role')
       if (!role) return false
 
-      const token = localStorage.getItem('soc_token')
-      const response = await axios.get(`/api/role-permissions/${role}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      // ไม่ต้องส่ง Authorization header (ใช้ cookie อัตโนมัติ)
+      const response = await axios.get(`/api/role-permissions/${role}`)
 
       permissions.value = response.data.permissions || []
       permissionsLoaded.value = true
       return true
     } catch (error) {
       console.error('Error loading permissions:', error)
+      
+      // ถ้า token หมดอายุ - axios interceptor จะ handle
+      
       permissions.value = []
       permissionsLoaded.value = true
       return false
