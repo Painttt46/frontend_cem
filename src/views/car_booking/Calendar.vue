@@ -1,9 +1,6 @@
 <template>
   <Card>
     <template #content>
-
-
-
       <div class="calendar-header">
         <button @click="previousMonth" class="nav-btn">
           <i class="pi pi-chevron-left"></i>
@@ -250,14 +247,17 @@ export default {
       }
     },
     showCarDetails(date) {
-      const dateStr = date.toDateString()
-      const borrowRecord = this.records.find(r =>
-        r.status === 'active' &&
-        new Date(r.selected_date).toDateString() === dateStr
-      )
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
 
-      if (borrowRecord) {
-        this.selectedCarRecord = borrowRecord
+      const checkDate = new Date(date)
+      checkDate.setHours(0, 0, 0, 0)
+
+      if (checkDate.getTime() !== today.getTime()) return
+
+      const activeBooking = this.records.find(r => r.status === 'active')
+      if (activeBooking) {
+        this.selectedCarRecord = activeBooking
         this.showCarDialog = true
       }
     },
@@ -296,10 +296,10 @@ export default {
       // Find active booking
       const activeBooking = this.records.find(r => r.status === 'active')
       if (!activeBooking) return false
-      
+
       const borrowDate = new Date(activeBooking.selected_date)
       const today = new Date()
-      
+
       // If there's a return_date, use it as end date
       let endDate
       if (activeBooking.return_date) {
@@ -308,7 +308,7 @@ export default {
         // If no return date, only show up to today (no future dates)
         endDate = today
       }
-      
+
       // Show active status from borrow date to end date (but not beyond today)
       return date >= borrowDate && date <= endDate && date <= today
     },
@@ -321,45 +321,10 @@ export default {
 </script>
 
 <style scoped>
-/* แถบสถานะรถ */
-.car-status-bar {
-  margin-bottom: 1.5rem;
-}
-
 .status-card {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-}
-
-.status-card.available {
-  background: linear-gradient(135deg, #d4edda, #c3e6cb);
-  border: 2px solid #28a745;
-}
-
-.status-card.in-use {
-  background: linear-gradient(135deg, #fff3cd, #ffeaa7);
-  border: 2px solid #ffc107;
-}
-
-.status-content {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.5rem;
-}
-
-.status-icon {
-  font-size: 2rem;
-  color: #28a745;
-}
-
-.status-card.in-use .status-icon {
-  color: #ffc107;
-}
-
-.car-running {
-  animation: carMove 2s ease-in-out infinite;
 }
 
 @keyframes carMove {
@@ -588,7 +553,7 @@ export default {
 
 .car-indicator {
   position: absolute;
-  bottom: 1.8rem;
+  bottom: 2rem;
   left: 0;
   right: 0;
   overflow: visible;
