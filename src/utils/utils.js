@@ -58,17 +58,27 @@ function fetchAndExport(url, fileName) {
     }
     fetch(url, {
         method: "GET",
-        headers: {
-            "Authorization": `Bearer ${localStorage.getItem("soc_token")}`,
-        }
+        credentials: 'include' // ส่ง cookie อัตโนมัติ
     })
         .then(async (response) => {
+            // Check for token expiration
+            if (response.status === 401) {
+                const data = await response.json();
+                if (data.expired) {
+                    localStorage.clear();
+                    window.location.href = '/login';
+                    throw new Error('Token expired');
+                }
+            }
             var blob = await response.blob();
             blob = new Blob([blob]);
             return blob;
         })
         .then((blob) => {
             saveAs(blob, file_name);
+        })
+        .catch((error) => {
+            console.error('Export error:', error);
         });
 }
 

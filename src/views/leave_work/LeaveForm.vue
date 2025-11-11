@@ -173,6 +173,7 @@ export default {
     AutoComplete
   },
   async created() {
+    await this.loadLeaveTypes();
     await this.loadUsers();
     await this.loadQuotaData();
     // Initialize with limited users
@@ -193,13 +194,7 @@ export default {
         workDetails: '',
         attachments: []
       },
-      leaveTypes: [
-        { label: 'ลาป่วย', value: 'sick' },
-        { label: 'ลากิจ', value: 'personal' },
-        { label: 'ลาพักร้อน', value: 'vacation' },
-        { label: 'ลาคลอด', value: 'maternity' },
-        { label: 'ลาอื่นๆ', value: 'other' }
-      ],
+      leaveTypes: [],
       delegationOptions: [
         { label: 'ไม่มีการมอบหมายงาน', value: 'no' },
         { label: 'มีการมอบหมายงาน', value: 'yes' }
@@ -251,6 +246,20 @@ export default {
     }
   },
   methods: {
+    async loadLeaveTypes() {
+      try {
+        const response = await axios.get('/api/leave/leave-types');
+        this.leaveTypes = response.data;
+      } catch (error) {
+        console.error('Error loading leave types:', error);
+        // Fallback to default types if API fails
+        this.leaveTypes = [
+          { label: 'ลาป่วย', value: 'sick' },
+          { label: 'ลากิจ', value: 'personal' },
+          { label: 'ลาพักร้อน', value: 'vacation' }
+        ];
+      }
+    },
     optionDisabled(option) {
       return option.disabled;
     },
@@ -375,7 +384,6 @@ export default {
         // Send to backend
         const response = await axios.post('/api/leave', leaveData, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('soc_token')}`
           }
         })
         
@@ -411,8 +419,10 @@ export default {
       if (this.formData.startDateTime && this.formData.endDateTime) {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
-        const diffTime = Math.abs(end - start)
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+        start.setHours(0, 0, 0, 0)
+        end.setHours(0, 0, 0, 0)
+        const diffTime = end - start
+        return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
       }
       return 0
     },

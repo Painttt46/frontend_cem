@@ -30,24 +30,10 @@
                   <Password v-model="password" :feedback="false" id="password" toggle-mask="" :invalid="isPasswordValid"
                     placeholder="Password" class="w-100" />
                 </InputGroup>
-                <!-- <FloatLabel>
-                  <Password
-                    v-model="password"
-                    :feedback="false"
-                    id="password"
-                    toggle-mask=""
-                    :invalid="isPasswordValid"
-                    class="w-100"
-                  />
-                  <label for="password">รหัสผ่าน</label>
-                </FloatLabel> -->
               </div>
               <div style="text-align: center">
-                <Button type="submit" label="เข้าสู่ระบบ" 
-                        :icon="loginIcon" 
-                        :loading="isLoggingIn"
-                        class="login-btn w-100 mt-4" 
-                        :class="loginStatus" />
+                <Button type="submit" label="เข้าสู่ระบบ" :icon="loginIcon" :loading="isLoggingIn"
+                  class="login-btn w-100 mt-4" :class="loginStatus" />
                 <div class="mt-3">
                   <a href="#" @click.prevent="showForgotPassword" class="text-white text-decoration-none">
                     <i class="pi pi-question-circle me-1"></i>
@@ -63,9 +49,8 @@
   </div>
 
   <!-- Forgot Password Dialog -->
-  <Dialog v-model:visible="showForgotDialog" header="" 
-          :style="{width: '400px', maxWidth: '90vw'}" modal :draggable="false" position="center"
-          class="forgot-password-dialog">
+  <Dialog v-model:visible="showForgotDialog" header="" :style="{ width: '400px', maxWidth: '90vw' }" modal
+    :draggable="false" position="center" class="forgot-password-dialog">
     <template #header>
       <div class="dialog-header">
         <div class="header-icon">
@@ -74,31 +59,26 @@
         <h3>ลืมรหัสผ่าน</h3>
       </div>
     </template>
-    
+
     <div class="dialog-body">
       <div class="input-wrapper">
         <div class="input-icon">
           <i class="pi pi-envelope"></i>
         </div>
-        <InputText id="forgot-email" v-model="forgotEmail" 
-                   placeholder="กรอกอีเมลของคุณ" 
-                   class="w-full email-input" type="email" />
+        <InputText id="forgot-email" v-model="forgotEmail" placeholder="กรอกอีเมลของคุณ" class="w-full email-input"
+          type="email" />
       </div>
       <div class="info-text">
         <i class="pi pi-info-circle"></i>
         <span>เราจะส่ง Username และ Password ใหม่ไปให้คุณ</span>
       </div>
     </div>
-    
+
     <template #footer>
       <div class="dialog-footer">
-        <Button label="ยกเลิก" 
-                class="p-button-outlined p-button-secondary cancel-btn" 
-                @click="closeForgotDialog" />
-        <Button label="ส่ง" icon="pi pi-send" 
-                class="send-btn"
-                @click="sendPasswordReset" :loading="sendingEmail" 
-                :disabled="!forgotEmail" />
+        <Button label="ยกเลิก" class="p-button-outlined p-button-secondary cancel-btn" @click="closeForgotDialog" />
+        <Button label="ส่ง" icon="pi pi-send" class="send-btn" @click="sendPasswordReset" :loading="sendingEmail"
+          :disabled="!forgotEmail" />
       </div>
     </template>
   </Dialog>
@@ -155,12 +135,12 @@ const sendPasswordReset = async () => {
   }
 
   sendingEmail.value = true;
-  
+
   try {
     const response = await axios.post('/api/auth/forgot-password', {
       email: forgotEmail.value
     });
-    
+
     if (response.data.fallback) {
       // แสดงข้อมูลเมื่อส่งอีเมลไม่ได้
       const userData = response.data.userData;
@@ -179,17 +159,17 @@ const sendPasswordReset = async () => {
         life: 5000
       });
     }
-    
+
     closeForgotDialog();
   } catch (error) {
     let errorMessage = 'เกิดข้อผิดพลาด';
-    
+
     if (error.response?.status === 404) {
       errorMessage = 'ไม่พบอีเมลในระบบ กรุณาตรวจสอบอีเมลหรือติดต่อผู้ดูแลระบบ';
     } else {
       errorMessage = error.response?.data?.error || 'ไม่สามารถส่งข้อมูลได้';
     }
-    
+
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
@@ -209,7 +189,7 @@ function auth(username, password) {
   isLoggingIn.value = true;
   loginIcon.value = "";
   loginStatus.value = "";
-  
+
   var data = {
     username: username,
     password: password,
@@ -222,7 +202,7 @@ function auth(username, password) {
       // Show success icon
       loginIcon.value = "pi pi-check";
       loginStatus.value = "login-success";
-      
+
       // Clear old data
       localStorage.removeItem("soc_token");
       localStorage.removeItem("soc_user");
@@ -249,13 +229,13 @@ function auth(username, password) {
       // Show error icon
       loginIcon.value = "pi pi-times";
       loginStatus.value = "login-error";
-      
+
       setTimeout(() => {
         isLoggingIn.value = false;
         loginIcon.value = "";
         loginStatus.value = "";
       }, 1500);
-      
+
       if (auth_error.message == "Network Error") {
         toast.add({
           severity: "error",
@@ -290,7 +270,7 @@ body {
 .bg-card {
   background: rgb(0, 212, 255);
   background: linear-gradient(45deg, rgba(0, 212, 255, 1) 0%, rgba(11, 3, 45, 1) 100%);
-  /* background-image: url(https://images.unsplash.com/photo-1619204715997-1367fe5812f1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1889&q=80); */
+
   background-image: url('../assets/images/LoginBG.jpg');
   background-size: cover;
   background-position: center;
@@ -343,7 +323,7 @@ body {
   background: white !important;
   border-radius: 50% !important;
   color: #333 !important;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .forgot-password-dialog .p-dialog-header-close:hover {
@@ -363,63 +343,64 @@ body {
     margin: 0 5vw !important;
     max-height: 50vh !important;
   }
-  
+
   .dialog-header {
     padding: 10px 15px 8px !important;
   }
-  
+
   .header-icon {
     width: 25px !important;
     height: 25px !important;
     margin-right: 8px !important;
   }
-  
+
   .header-icon i {
     font-size: 12px !important;
   }
-  
+
   .dialog-header h3 {
     font-size: 14px !important;
   }
-  
+
   .dialog-body {
     padding: 15px 0 !important;
   }
-  
+
   .input-wrapper {
     margin-bottom: 12px !important;
   }
-  
+
   .input-icon {
     left: 10px !important;
     font-size: 12px !important;
   }
-  
+
   .email-input {
     padding: 10px 12px 10px 35px !important;
     font-size: 13px !important;
   }
-  
+
   .info-text {
     padding: 10px 12px !important;
     font-size: 11px !important;
     gap: 6px !important;
   }
-  
+
   .info-text i {
     font-size: 12px !important;
   }
-  
+
   .dialog-footer {
     padding-top: 15px !important;
     gap: 8px !important;
   }
-  
-  .cancel-btn, .send-btn {
+
+  .cancel-btn,
+  .send-btn {
     padding: 10px 15px !important;
     font-size: 12px !important;
   }
-  
+
   .forgot-password-dialog .p-dialog-header-close {
     width: 24px !important;
     height: 24px !important;

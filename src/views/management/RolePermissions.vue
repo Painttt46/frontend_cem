@@ -139,9 +139,8 @@ onMounted(async () => {
 
 const loadRoles = async () => {
   try {
-    const token = localStorage.getItem('soc_token')
+    
     const response = await axios.get('/api/users/roles', {
-      headers: { Authorization: `Bearer ${token}` }
     })
     
     roles.value = response.data.roles.map(role => ({
@@ -168,9 +167,8 @@ watch(selectedRole, async (newRole) => {
 
 const loadPermissions = async (role) => {
   try {
-    const token = localStorage.getItem('soc_token')
+    
     const response = await axios.get(`/api/role-permissions/${role}`, {
-      headers: { Authorization: `Bearer ${token}` }
     })
     
     if (response.data.permissions) {
@@ -292,7 +290,7 @@ const addPermission = () => {
 const savePermissions = async () => {
   saving.value = true
   try {
-    const token = localStorage.getItem('soc_token')
+    
     const permissions = pages.value.map(page => ({
       role: selectedRole.value,
       page_path: page.path,
@@ -303,7 +301,6 @@ const savePermissions = async () => {
 
     await axios.post('/api/role-permissions', 
       { permissions },
-      { headers: { Authorization: `Bearer ${token}` } }
     )
 
     toast.add({

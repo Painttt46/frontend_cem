@@ -133,10 +133,8 @@ var position = ref();
 var department = ref();
 function fetchData() {
   const currentUserId = localStorage.getItem('soc_user_id');
-  const token = localStorage.getItem("soc_token");
   
-  
-  if (!currentUserId || !token) {
+  if (!currentUserId) {
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -149,93 +147,44 @@ function fetchData() {
   
   loading.value = true;
   
-  
-  // Test server connection first
-  fetch('/api/test')
-    .then(response => response.json())
-    .then(() => {
-      return fetch('/api/users', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-    })
-    .catch(() => {
-      return fetch('/api/users', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-    })
+  // Use axios
+  window.axios.get('/api/users')
     .then(response => {
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(users => {
-    const userData = users.find(user => user.id == currentUserId);
-    
-    if (!userData) {
+      const users = response.data;
+      const userData = users.find(user => user.id == currentUserId);
+      
+      if (!userData) {
+        toast.add({
+          severity: 'error',
+          summary: 'ข้อผิดพลาด',
+          detail: 'ไม่พบข้อมูลผู้ใช้',
+          life: 3000
+        });
+        loading.value = false;
+        return;
+      }
+      
+      username.value = userData.username;
+      email.value = userData.email;
+      firstName.value = userData.firstname;
+      lastName.value = userData.lastname;
+      employeeId.value = userData.employee_id;
+      role.value = { name: userData.role };
+      position.value = userData.position;
+      department.value = userData.department;
+      id.value = userData.id;
+      loading.value = false;
+    })
+    .catch(error => {
+      console.error('Error fetching user data:', error);
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
-        detail: 'ไม่พบข้อมูลผู้ใช้',
+        detail: 'ไม่สามารถโหลดข้อมูลผู้ใช้ได้',
         life: 3000
       });
       loading.value = false;
-      return;
-    }
-    
-    username.value = userData.username;
-    email.value = userData.email;
-    firstName.value = userData.firstname;
-    lastName.value = userData.lastname;
-    employeeId.value = userData.employee_id;
-    role.value = { name: userData.role };
-    position.value = userData.position;
-    department.value = userData.department;
-    id.value = userData.id;
-    loading.value = false;
-  })
-  .catch(() => {
-    // Fallback: ใช้ mock data ถ้า API ไม่ทำงาน
-    const mockUserData = {
-      id: currentUserId,
-      username: 'user' + currentUserId,
-      firstname: 'ชื่อ',
-      lastname: 'นามสกุล',
-      email: 'user@example.com',
-      employee_id: 'EMP' + currentUserId,
-      role: 'user',
-      position: 'ตำแหน่ง',
-      department: 'แผนก'
-    };
-    
-    username.value = mockUserData.username;
-    email.value = mockUserData.email;
-    firstName.value = mockUserData.firstname;
-    lastName.value = mockUserData.lastname;
-    employeeId.value = mockUserData.employee_id;
-    role.value = { name: mockUserData.role };
-    position.value = mockUserData.position;
-    department.value = mockUserData.department;
-    id.value = mockUserData.id;
-    
-    loading.value = false;
-    
-    toast.add({
-      severity: 'warn',
-      summary: 'แจ้งเตือน',
-      detail: 'ไม่สามารถเชื่อมต่อ API ได้ กำลังใช้ข้อมูลจำลอง',
-      life: 5000
     });
-  });
 }
 
 function updateUser() {
@@ -252,7 +201,6 @@ function updateUser() {
 
   window.axios.put(`/api/users/${id.value}`, data, {
     headers: {
-      Authorization: `Bearer ${localStorage.getItem("soc_token")}`
     }
   }).then(() => {
     toast.add({
@@ -313,7 +261,6 @@ function changePassword() {
   
   window.axios.put(`/api/users/${id.value}/password`, data, {
       headers: {
-          Authorization: `Bearer ${localStorage.getItem("soc_token")}`
       }
   })
       // eslint-disable-next-line

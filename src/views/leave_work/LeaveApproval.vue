@@ -22,7 +22,7 @@
         
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
           <template #body="slotProps">
-            <Badge :value="getLeaveTypeLabel(slotProps.data.leave_type)" :severity="getLeaveTypeSeverity(slotProps.data.leave_type)" />
+            <Badge :value="getLeaveTypeLabel(slotProps.data.leave_type)" :style="{ backgroundColor: getLeaveTypeColor(slotProps.data.leave_type), color: '#fff', fontWeight: 'bold' }" />
           </template>
         </Column>
 
@@ -179,20 +179,46 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'LeaveApproval',
   props: {
     records: Array
+  },
+  created() {
+    this.$http = axios.create({
+      baseURL: process.env.VUE_APP_API_URL || ''
+    })
   },
   data() {
     return {
       showWorkDetailsDialog: false,
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
-      selectedAttachments: []
+      selectedAttachments: [],
+      leaveTypes: []
     }
   },
+  async mounted() {
+    await this.loadLeaveTypes()
+  },
   methods: {
+    async loadLeaveTypes() {
+      try {
+        const response = await this.$http.get('/api/leave/leave-types')
+        this.leaveTypes = response.data
+        console.log('Leave types loaded:', this.leaveTypes)
+      } catch (error) {
+        console.error('Error loading leave types:', error)
+      }
+    },
+    getLeaveTypeColor(type) {
+      const leaveType = this.leaveTypes.find(lt => lt.value === type)
+      const color = leaveType?.color || '#6c757d'
+      console.log('Getting color for type:', type, 'found:', leaveType, 'color:', color)
+      return color
+    },
     showWorkDetails(workDetails) {
       this.selectedWorkDetails = workDetails
       this.showWorkDetailsDialog = true
@@ -278,16 +304,6 @@ export default {
       }
       return types[type] || type
     },
-    getLeaveTypeSeverity(type) {
-      const severities = {
-        sick: 'danger',
-        personal: 'warning',
-        vacation: 'success',
-        maternity: 'info',
-        other: 'secondary'
-      }
-      return severities[type] || 'secondary'
-    }
   }
 }
 </script>
