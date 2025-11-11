@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# 1. คัดลอกเฉพาะไฟล์ dependencies ก่อน (เพื่อ cache install)
+COPY package*.json ./
+
+# 2. ติดตั้ง dependencies ทั้งหมด (รวม devDependencies)
+RUN npm install
+
+# 3. คัดลอกซอร์สโค้ดทั้งหมดเข้ามา
+COPY . .
+
+# เปิดพอร์ต Vue CLI
+EXPOSE 3000
+
+# 4. คำสั่งรัน Vue CLI server
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
