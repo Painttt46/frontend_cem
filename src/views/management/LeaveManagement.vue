@@ -22,23 +22,8 @@
           <h3>โควต้าการลาของพนักงาน</h3>
           <Button label="เพิ่มประเภทการลา" icon="pi pi-plus" @click="showAddLeaveTypeDialog = true" />
         </div>
-        
-        <!-- Search and Filter -->
-        <div class="filters-section">
-          <IconField iconPosition="left" class="search-field">
-            <InputIcon class="pi pi-search" />
-            <InputText v-model="searchQuery" placeholder="ค้นหาชื่อ, แผนก, ตำแหน่ง..." class="w-full" />
-          </IconField>
-          
-          <Dropdown v-model="selectedDepartment" :options="departments" optionLabel="label" optionValue="value" 
-                    placeholder="ทุกแผนก" class="filter-dropdown" showClear />
-          
-          <Dropdown v-model="selectedPosition" :options="positions" optionLabel="label" optionValue="value" 
-                    placeholder="ทุกตำแหน่ง" class="filter-dropdown" showClear />
-        </div>
-        
         <div class="table-wrapper">
-          <DataTable :value="filteredUsers" :paginator="true" :rows="10" stripedRows class="p-datatable-sm" scrollable scrollHeight="600px">
+          <DataTable :value="users" :paginator="true" :rows="10" stripedRows class="p-datatable-sm" scrollable scrollHeight="600px">
             <Column field="firstname" header="ชื่อ" :sortable="true" frozen style="min-width: 150px">
               <template #body="{ data }">
                 {{ data.firstname }} {{ data.lastname }}
@@ -46,7 +31,7 @@
             </Column>
             <Column field="department" header="แผนก" :sortable="true" frozen style="min-width: 120px" />
             <Column field="position" header="ตำแหน่ง" :sortable="true" frozen style="min-width: 120px" />
-            <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 150px">
+            <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 120px">
               <template #header>
                 <div class="leave-type-header">
                   <Badge :value="type.label" :style="{ backgroundColor: type.color, color: '#fff', fontWeight: 'bold' }" />
@@ -55,12 +40,8 @@
               </template>
               <template #body="{ data }">
                 <div class="quota-cell">
-                  <div class="quota-row">
-                    <small>โควต้า:</small>
-                    <span class="quota-value">{{ data[`${type.value}_quota`] || 0 }} วัน</span>
-                    <Button icon="pi pi-pencil" size="small" text @click="editQuota(data, type)" />
-                  </div>
-                  <small class="remaining">คงเหลือ: {{ data[`${type.value}_remaining`] || 0 }} วัน</small>
+                  <small>โควต้า: {{ data[`${type.value}_quota`] || 0 }} วัน</small>
+                  <small>คงเหลือ: {{ data[`${type.value}_remaining`] || 0 }} วัน</small>
                 </div>
               </template>
             </Column>
@@ -86,106 +67,24 @@
         <Button label="เพิ่ม" icon="pi pi-check" @click="addLeaveType" :loading="adding" />
       </template>
     </Dialog>
-    
-    <!-- Edit Quota Dialog -->
-    <Dialog v-model:visible="showEditQuotaDialog" header="แก้ไขโควต้าการลา" :modal="true" :draggable="false" style="width: 450px">
-      <div class="edit-quota-form" v-if="editingUser">
-        <div class="user-info">
-          <i class="pi pi-user"></i>
-          <div>
-            <h4>{{ editingUser.firstname }} {{ editingUser.lastname }}</h4>
-            <small>{{ editingUser.department }} - {{ editingUser.position }}</small>
-          </div>
-        </div>
-        
-        <Divider />
-        
-        <div class="field">
-          <label>ประเภทการลา</label>
-          <Badge :value="editingLeaveType?.label" :style="{ backgroundColor: editingLeaveType?.color, color: '#fff' }" />
-        </div>
-        
-        <div class="field">
-          <label>โควต้าทั้งหมด (วัน/ปี) *</label>
-          <InputNumber v-model="newQuota" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" />
-          <small class="field-hint">ปัจจุบัน: {{ currentQuota }} วัน</small>
-        </div>
-        
-        <div class="field">
-          <label>โควต้าคงเหลือ (วัน) *</label>
-          <InputNumber v-model="newRemaining" :min="0" :max="newQuota" showButtons class="w-full" suffix=" วัน" />
-          <small class="field-hint">ปัจจุบัน: {{ currentRemaining }} วัน</small>
-        </div>
-      </div>
-      <template #footer>
-        <Button label="ยกเลิก" icon="pi pi-times" @click="closeEditDialog" severity="secondary" />
-        <Button label="บันทึก" icon="pi pi-check" @click="saveQuota" :loading="saving" />
-      </template>
-    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from 'axios'
 import InputNumber from 'primevue/inputnumber'
-import Divider from 'primevue/divider'
 
 const toast = useToast()
 const confirm = useConfirm()
 const users = ref([])
 const leaveTypes = ref([])
 const showAddLeaveTypeDialog = ref(false)
-const showEditQuotaDialog = ref(false)
 const adding = ref(false)
-const saving = ref(false)
 const newLeaveTypeName = ref('')
 const newLeaveTypeQuota = ref(0)
-
-// Filter states
-const searchQuery = ref('')
-const selectedDepartment = ref(null)
-const selectedPosition = ref(null)
-const departments = ref([])
-const positions = ref([])
-
-// Edit quota states
-const editingUser = ref(null)
-const editingLeaveType = ref(null)
-const currentQuota = ref(0)
-const currentRemaining = ref(0)
-const newQuota = ref(0)
-const newRemaining = ref(0)
-
-// Computed filtered users
-const filteredUsers = computed(() => {
-  let filtered = users.value
-
-  // Search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(user => 
-      user.firstname?.toLowerCase().includes(query) ||
-      user.lastname?.toLowerCase().includes(query) ||
-      user.department?.toLowerCase().includes(query) ||
-      user.position?.toLowerCase().includes(query)
-    )
-  }
-
-  // Department filter
-  if (selectedDepartment.value) {
-    filtered = filtered.filter(user => user.department === selectedDepartment.value)
-  }
-
-  // Position filter
-  if (selectedPosition.value) {
-    filtered = filtered.filter(user => user.position === selectedPosition.value)
-  }
-
-  return filtered
-})
 
 onMounted(() => {
   loadLeaveTypes()
@@ -203,7 +102,9 @@ const loadLeaveTypes = async () => {
 
 const loadUsers = async () => {
   try {
-    const usersRes = await axios.get('/api/users')
+    
+    const usersRes = await axios.get('/api/users', {
+    })
     
     users.value = await Promise.all(usersRes.data.map(async (user) => {
       try {
@@ -225,9 +126,6 @@ const loadUsers = async () => {
         return { ...user }
       }
     }))
-    
-    // Extract unique departments and positions
-    extractFilters()
   } catch (error) {
     toast.add({
       severity: 'error',
@@ -235,86 +133,6 @@ const loadUsers = async () => {
       detail: 'ไม่สามารถโหลดข้อมูลได้',
       life: 3000
     })
-  }
-}
-
-const extractFilters = () => {
-  // Extract unique departments
-  const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))]
-  departments.value = depts.map(d => ({ label: d, value: d }))
-  
-  // Extract unique positions
-  const pos = [...new Set(users.value.map(u => u.position).filter(Boolean))]
-  positions.value = pos.map(p => ({ label: p, value: p }))
-}
-
-const editQuota = (user, leaveType) => {
-  editingUser.value = user
-  editingLeaveType.value = leaveType
-  currentQuota.value = user[`${leaveType.value}_quota`] || 0
-  currentRemaining.value = user[`${leaveType.value}_remaining`] || 0
-  newQuota.value = currentQuota.value
-  newRemaining.value = currentRemaining.value
-  showEditQuotaDialog.value = true
-}
-
-const closeEditDialog = () => {
-  showEditQuotaDialog.value = false
-  editingUser.value = null
-  editingLeaveType.value = null
-  currentQuota.value = 0
-  currentRemaining.value = 0
-  newQuota.value = 0
-  newRemaining.value = 0
-}
-
-const saveQuota = async () => {
-  if (newQuota.value === currentQuota.value && newRemaining.value === currentRemaining.value) {
-    toast.add({
-      severity: 'info',
-      summary: 'ไม่มีการเปลี่ยนแปลง',
-      detail: 'โควต้าไม่ได้เปลี่ยนแปลง',
-      life: 3000
-    })
-    return
-  }
-
-  if (newRemaining.value > newQuota.value) {
-    toast.add({
-      severity: 'error',
-      summary: 'ข้อผิดพลาด',
-      detail: 'โควต้าคงเหลือต้องไม่เกินโควต้าทั้งหมด',
-      life: 3000
-    })
-    return
-  }
-
-  saving.value = true
-  try {
-    await axios.put(`/api/leave/quota/${editingUser.value.id}/${editingLeaveType.value.value}`, {
-      quota: newQuota.value,
-      remaining: newRemaining.value
-    })
-
-    toast.add({
-      severity: 'success',
-      summary: 'สำเร็จ',
-      detail: 'แก้ไขโควต้าเรียบร้อยแล้ว',
-      life: 3000
-    })
-
-    closeEditDialog()
-    await loadUsers()
-  } catch (error) {
-    console.error('Save quota error:', error)
-    toast.add({
-      severity: 'error',
-      summary: 'เกิดข้อผิดพลาด',
-      detail: error.response?.data?.error || 'ไม่สามารถแก้ไขโควต้าได้',
-      life: 3000
-    })
-  } finally {
-    saving.value = false
   }
 }
 
@@ -457,19 +275,16 @@ const deleteLeaveType = async (leaveType) => {
   color: #2c3e50;
 }
 
-.filters-section {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.search-field {
-  width: 100%;
-}
-
-.filter-dropdown {
-  width: 100%;
+.table-header h3 {
+  margin: 0;
+  color: #2c3e50;
 }
 
 .table-wrapper {
@@ -481,84 +296,6 @@ const deleteLeaveType = async (leaveType) => {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-}
-
-.quota-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.quota-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.quota-row small {
-  font-size: 0.85rem;
-  color: #6c757d;
-  min-width: 60px;
-}
-
-.quota-value {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 0.9rem;
-}
-
-.remaining {
-  font-size: 0.85rem;
-  color: #6c757d;
-  padding-left: 60px;
-}
-
-.edit-quota-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem 0;
-}
-
-.edit-quota-form .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.edit-quota-form label {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.field-hint {
-  color: #6c757d;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.user-info i {
-  font-size: 2rem;
-  color: #4A90E2;
-}
-
-.user-info h4 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 1.1rem;
-}
-
-.user-info small {
-  color: #6c757d;
 }
 
 .leave-type-form {
@@ -608,10 +345,6 @@ const deleteLeaveType = async (leaveType) => {
 
   .table-header button {
     width: 100%;
-  }
-  
-  .filters-section {
-    grid-template-columns: 1fr;
   }
 }
 </style>
