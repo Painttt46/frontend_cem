@@ -16,6 +16,7 @@ import DailyWorkManagement from '../views/management/DailyWorkManagement.vue';
 import SystemSettings from '../views/management/SystemSettings.vue';
 import RolePermissions from '../views/management/RolePermissions.vue';
 import LeaveManagement from '../views/management/LeaveManagement.vue';
+import Dashboard from '../views/management/Dashboard.vue';
 
 const routes = [
   {
@@ -112,6 +113,12 @@ const routes = [
     name: 'leave-management',
     component: LeaveManagement,
     meta: { requiresAuth: true, title: 'จัดการการลางาน - Gent-CEM' },
+  },
+  {
+    path: '/management/dashboard',
+    name: 'dashboard',
+    component: Dashboard,
+    meta: { requiresAuth: true, title: 'Dashboard - Gent-CEM' },
   },
   {
     path: '/:pathMatch(.*)*',

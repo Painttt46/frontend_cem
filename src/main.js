@@ -45,7 +45,7 @@ axios.defaults.withCredentials = true; // สำคัญ! ส่ง cookie อ�
 axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && error.response?.data?.expired) {
+    if (error.response?.status === 401) {
       localStorage.clear();
       window.location.href = '/login';
     }

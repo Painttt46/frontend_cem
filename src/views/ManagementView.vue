@@ -18,6 +18,23 @@
 
     <!-- Management Grid -->
     <div class="management-grid">
+      <!-- Dashboard -->
+      <Card v-if="hasAccess('/management/dashboard')" class="management-card" @click="navigateTo('dashboard')">
+        <template #content>
+          <div class="card-content">
+            <div class="card-header">
+              <i class="pi pi-chart-bar card-icon"></i>
+              <Badge value="Active" severity="success" class="status-badge" />
+            </div>
+            <h3>Dashboard</h3>
+            <p>รายงานสถิติและภาพรวมของระบบ</p>
+            <div class="card-footer">
+              <i class="pi pi-arrow-right"></i>
+            </div>
+          </div>
+        </template>
+      </Card>
+
       <!-- User Management -->
       <Card v-if="hasAccess('/management/users')" class="management-card" @click="navigateTo('users')">
         <template #content>
@@ -187,6 +204,9 @@ const navigateTo = (section) => {
 
   // Navigate to management sections
   switch (section) {
+    case 'dashboard':
+      router.push('/management/dashboard')
+      break
     case 'users':
       router.push('/management/users')
       break
