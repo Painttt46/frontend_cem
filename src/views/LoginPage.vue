@@ -190,6 +190,15 @@ function auth(username, password) {
   loginIcon.value = "";
   loginStatus.value = "";
 
+  // Clear old data before login attempt
+  localStorage.removeItem("soc_token");
+  localStorage.removeItem("soc_user");
+  localStorage.removeItem("soc_role");
+  localStorage.removeItem("soc_user_id");
+  localStorage.removeItem("soc_firstname");
+  localStorage.removeItem("soc_lastname");
+  localStorage.removeItem("soc_position");
+
   var data = {
     username: username,
     password: password,
@@ -202,14 +211,6 @@ function auth(username, password) {
       // Show success icon
       loginIcon.value = "pi pi-check";
       loginStatus.value = "login-success";
-
-      // Clear old data
-      localStorage.removeItem("soc_token");
-      localStorage.removeItem("soc_user");
-      localStorage.removeItem("soc_role");
-      localStorage.removeItem("soc_user_id");
-      localStorage.removeItem("soc_firstname");
-      localStorage.removeItem("soc_lastname");
 
       // Store new data
       localStorage.setItem("soc_user", response.data.username);
@@ -236,28 +237,22 @@ function auth(username, password) {
         loginStatus.value = "";
       }, 1500);
 
+      let errorDetail = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+
       if (auth_error.message == "Network Error") {
-        toast.add({
-          severity: "error",
-          summary: "เกิดข้อผิดพลาด",
-          detail: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้",
-          life: 3000,
-        });
+        errorDetail = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
       } else if (auth_error.message.includes("timeout")) {
-        toast.add({
-          severity: "error",
-          summary: "เกิดข้อผิดพลาด",
-          detail: "หมดเวลาการเชื่อมต่อ",
-          life: 3000,
-        });
-      } else {
-        toast.add({
-          severity: "error",
-          summary: "เข้าสู่ระบบไม่สำเร็จ",
-          detail: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
-          life: 3000,
-        });
+        errorDetail = "หมดเวลาการเชื่อมต่อ";
+      } else if (auth_error.response?.data?.error === "Account is disabled") {
+        errorDetail = "บัญชีถูกปิดการใช้งาน กรุณาติดต่อผู้ดูแลระบบ";
       }
+
+      toast.add({
+        severity: "error",
+        summary: "เข้าสู่ระบบไม่สำเร็จ",
+        detail: errorDetail,
+        life: 3000,
+      });
     });
 }
 </script>
