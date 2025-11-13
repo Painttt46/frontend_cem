@@ -3,7 +3,7 @@ import { createApp } from 'vue';
 import App from './App.vue';
 import router from './router';
 import store from './store';
-import axios from 'axios';
+import axios from './utils/axiosConfig';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
@@ -34,24 +34,6 @@ import Textarea from 'primevue/textarea';
 import Tooltip from 'primevue/tooltip';
 
 import {nextTick} from 'vue';
-
-// Configure axios base URL and credentials
-axios.defaults.baseURL = 'http://localhost:3001';
-axios.defaults.withCredentials = true; // สำคัญ! ส่ง cookie อัตโนมัติ
-
-// ไม่ต้องตั้งค่า Authorization header แล้ว (ใช้ cookie)
-
-// Configure axios interceptor for token expiration
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.clear();
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
 
 window.axios = axios;
 

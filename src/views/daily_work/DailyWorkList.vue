@@ -241,6 +241,9 @@
 <script>
 import axios from 'axios'
 
+import { addDays } from '@/utils/dateUtils'
+import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
+
 export default {
   name: 'DailyWorkList',
   emits: ['refresh-data'],
@@ -391,15 +394,14 @@ export default {
       // วันที่ลงงาน
       const workDate = new Date(record.work_date)
 
-      // กำหนดเวลาล็อก = 08:00 ของวันถัดไป
-      const cutoff = new Date(workDate)
-      cutoff.setDate(cutoff.getDate() + 1)
-      cutoff.setHours(8, 0, 0, 0)
+      // กำหนดเวลาล็อก = EDIT_CUTOFF_HOUR ของวันถัดไป
+      const cutoff = addDays(workDate, 1)
+      cutoff.setHours(EDIT_CUTOFF_HOUR, 0, 0, 0)
 
       // เวลาปัจจุบัน
       const now = new Date()
 
-      // ปิดการแก้ไขหลัง 08:00 ของวันถัดไป
+      // ปิดการแก้ไขหลัง EDIT_CUTOFF_HOUR ของวันถัดไป
       return now > cutoff
     },
 

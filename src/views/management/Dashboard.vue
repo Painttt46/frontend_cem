@@ -20,7 +20,24 @@
 
     <!-- Summary Cards -->
     <div class="summary-grid mb-4">
-      <Card class="summary-card">
+      <!-- Loading Skeleton -->
+      <template v-if="loading">
+        <Card v-for="i in 8" :key="i" class="summary-card">
+          <template #content>
+            <div class="summary-content">
+              <div class="skeleton skeleton-icon"></div>
+              <div class="summary-info">
+                <div class="skeleton skeleton-text" style="width: 60px; height: 32px;"></div>
+                <div class="skeleton skeleton-text" style="width: 120px; height: 16px; margin-top: 8px;"></div>
+              </div>
+            </div>
+          </template>
+        </Card>
+      </template>
+      
+      <!-- Actual Data -->
+      <template v-else>
+        <Card class="summary-card">
         <template #content>
           <div class="summary-content">
             <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
@@ -115,6 +132,7 @@
           </div>
         </template>
       </Card>
+      </template>
     </div>
 
     <!-- Charts -->
@@ -186,11 +204,13 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
-import { useToast } from 'primevue/usetoast'
+import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from 'axios'
+import userService from '@/services/userService'
+import dailyWorkService from '@/services/dailyWorkService'
 
-const toast = useToast()
+const { handleError } = useErrorHandler()
 const loading = ref(false)
 const leaveTypeColors = ref({})
 
@@ -226,25 +246,28 @@ const loadLeaveTypeColors = async () => {
     })
     leaveTypeColors.value = colorMap
   } catch (error) {
-    console.error('Error loading leave type colors:', error)
+    handleError(error, {
+      customMessage: 'ไม่สามารถโหลดสีประเภทการลาได้',
+      showToast: false // ไม่แสดง toast เพราะไม่สำคัญมาก
+    })
   }
 }
 
 const loadData = async () => {
   loading.value = true
+  
   try {
-    // เพิ่ม timestamp เพื่อป้องกัน cache
-    const timestamp = new Date().getTime()
+    // ใช้ service layer พร้อม cache
     const [users, leaves, cars, tasks, dailyWork] = await Promise.all([
-      axios.get(`/api/users?_t=${timestamp}`),
-      axios.get(`/api/leave?_t=${timestamp}`),
-      axios.get(`/api/car-booking?_t=${timestamp}`),
-      axios.get(`/api/tasks?_t=${timestamp}`),
-      axios.get(`/api/daily-work?_t=${timestamp}`)
+      userService.getUsers(),  // มี cache 5 นาที
+      axios.get('/api/leave').then(r => r.data),
+      axios.get('/api/car-booking').then(r => r.data),
+      axios.get('/api/tasks').then(r => r.data),
+      dailyWorkService.getDailyWork()  // มี cache 2 นาที
     ])
 
     // Calculate stats
-    const activeUsers = users.data.filter(u => u.is_active)
+    const activeUsers = users.filter(u => u.is_active)
     stats.value.totalUsers = activeUsers.length
     
     const today = new Date().toISOString().split('T')[0]
@@ -260,7 +283,7 @@ const loadData = async () => {
     }
     
     // Get unique user IDs who have approved leave today
-    const todayLeavesUsers = leaves.data.filter(l => {
+    const todayLeavesUsers = leaves.filter(l => {
       if (l.status !== 'approved') return false
       if (!l.start_datetime || !l.end_datetime) return false
       
@@ -280,26 +303,26 @@ const loadData = async () => {
     stats.value.todayLeaves = uniqueUserIds.length
     
     // พนักงานที่ทำงานวันนี้ = คนที่ลงงานรายวันวันนี้
-    const todayWorkUsers = dailyWork.data.filter(w => {
+    const todayWorkUsers = dailyWork.filter(w => {
       const workDate = w.work_date?.split('T')[0]
       return workDate === today
     })
     const uniqueWorkUserIds = [...new Set(todayWorkUsers.map(w => w.user_id))]
     stats.value.workingToday = uniqueWorkUserIds.length
     
-    stats.value.activeCars = cars.data.filter(c => c.status === 'active').length
-    stats.value.activeTasks = tasks.data.filter(t => t.status !== 'completed' && t.status !== 'done').length
-    stats.value.completedTasks = tasks.data.filter(t => t.status === 'completed' || t.status === 'done').length
+    stats.value.activeCars = cars.filter(c => c.status === 'active').length
+    stats.value.activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'done').length
+    stats.value.completedTasks = tasks.filter(t => t.status === 'completed' || t.status === 'done').length
     
     // งานที่ครบกำหนดสัปดาห์นี้
-    stats.value.dueSoon = tasks.data.filter(t => {
+    stats.value.dueSoon = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
       return endDate >= todayDate && endDate <= weekFromNow && (t.status !== 'completed' && t.status !== 'done')
     }).length
     
     // งานที่เลยกำหนด
-    stats.value.overdue = tasks.data.filter(t => {
+    stats.value.overdue = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
       return endDate < todayDate && (t.status !== 'completed' && t.status !== 'done')
@@ -309,13 +332,13 @@ const loadData = async () => {
     const currentYear = new Date().getFullYear()
     const userWorkData = {}
     
-    dailyWork.data.forEach(w => {
+    dailyWork.forEach(w => {
       const workYear = new Date(w.work_date).getFullYear()
       if (workYear !== currentYear) return
       
       const userId = w.user_id
       if (!userWorkData[userId]) {
-        const user = users.data.find(u => u.id === userId)
+        const user = users.find(u => u.id === userId)
         userWorkData[userId] = {
           userName: user ? `${user.firstname} ${user.lastname}` : 'N/A',
           department: user?.department || 'N/A',
@@ -367,9 +390,11 @@ const loadData = async () => {
     }).sort((a, b) => b.totalHours - a.totalHours)
 
     await nextTick()
-    renderCharts(leaves.data, tasks.data)
+    renderCharts(leaves, tasks)
   } catch (error) {
-    toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: 'ไม่สามารถโหลดข้อมูลได้', life: 3000 })
+    handleError(error, {
+      customMessage: 'ไม่สามารถโหลดข้อมูล Dashboard ได้ กรุณาลองใหม่อีกครั้ง'
+    })
   } finally {
     loading.value = false
   }
@@ -588,6 +613,32 @@ canvas {
   margin: 0 0 1rem 0;
   color: #2c3e50;
   font-size: 1rem;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+.skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-text {
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @media (max-width: 768px) {

@@ -1,22 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { usePermissions } from '@/composables/usePermissions'
 
-import LoginPage from '../views/LoginPage.vue';
-import TwoFAAuthPage from '../views/TwoFAAuthPage.vue';
-import ProfileView from '../views/profile/ProfileView.vue';
-import CarBookingHome from '../views/car_booking/car_booking.vue';
-import LeaveWork from '../views/leave_work/LeaveWork.vue';
-import DailyWork from '../views/daily_work/DailyWork.vue';
-import Projects from '../views/projects/Projects.vue';
-import ManagementView from '../views/ManagementView.vue';
-import UserManagement from '../views/management/UserManagement.vue';
-import TaskManagement from '../views/management/TaskManagement.vue';
-import ProjectsView from '../views/management/ProjectsView.vue';
-import DailyWorkManagement from '../views/management/DailyWorkManagement.vue';
-import SystemSettings from '../views/management/SystemSettings.vue';
-import RolePermissions from '../views/management/RolePermissions.vue';
-import LeaveManagement from '../views/management/LeaveManagement.vue';
-import Dashboard from '../views/management/Dashboard.vue';
+// Lazy load components
+const LoginPage = () => import('../views/LoginPage.vue')
+const TwoFAAuthPage = () => import('../views/TwoFAAuthPage.vue')
+const ProfileView = () => import('../views/profile/ProfileView.vue')
+const CarBookingHome = () => import('../views/car_booking/car_booking.vue')
+const LeaveWork = () => import('../views/leave_work/LeaveWork.vue')
+const DailyWork = () => import('../views/daily_work/DailyWork.vue')
+const Projects = () => import('../views/projects/Projects.vue')
+const ManagementView = () => import('../views/ManagementView.vue')
+const UserManagement = () => import('../views/management/UserManagement.vue')
+const TaskManagement = () => import('../views/management/TaskManagement.vue')
+const ProjectsView = () => import('../views/management/ProjectsView.vue')
+const DailyWorkManagement = () => import('../views/management/DailyWorkManagement.vue')
+const SystemSettings = () => import('../views/management/SystemSettings.vue')
+const RolePermissions = () => import('../views/management/RolePermissions.vue')
+const LeaveManagement = () => import('../views/management/LeaveManagement.vue')
+const Dashboard = () => import('../views/management/Dashboard.vue')
 
 const routes = [
   {
