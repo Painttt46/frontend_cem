@@ -28,7 +28,13 @@
           </template>
         </Column>
 
-        <Column field="borrowRecord.name" header="ผู้ใช้" :sortable="true" />
+        <Column field="borrowRecord.name" header="ผู้ใช้" :sortable="true">
+          <template #body="slotProps">
+            <span class="clickable-name" @click="showUserInfo(slotProps.data.borrowRecord.user_id)">
+              {{ slotProps.data.borrowRecord.name }}
+            </span>
+          </template>
+        </Column>
         <Column field="borrowRecord.time" header="เวลาใช้" />
         <Column field="borrowRecord.location" header="สถานที่" />
         <Column field="borrowRecord.project" header="โครงการ" />
@@ -53,7 +59,12 @@
 
         <Column header="ผู้คืน">
           <template #body="slotProps">
-            {{ slotProps.data.returned ? slotProps.data.returnRecord.name : '-' }}
+            <span v-if="slotProps.data.returned && slotProps.data.returnRecord.name" 
+                  class="clickable-name" 
+                  @click="showUserInfo(slotProps.data.returnRecord.user_id)">
+              {{ slotProps.data.returnRecord.name }}
+            </span>
+            <span v-else>-</span>
           </template>
         </Column>
 
@@ -122,9 +133,11 @@
   <!-- Colleagues Dialog -->
   <Dialog v-model:visible="showColleaguesModal" modal header="รายชื่อผู้ร่วมงาน" :style="{ width: '600px' }" :draggable="false">
     <div class="colleagues-list">
-      <div v-for="(colleague, index) in selectedColleagues" :key="index" class="colleague-card">
+      <div v-for="(colleague, index) in selectedColleagues" :key="index" class="colleague-card clickable-card" @click="showColleagueInfo(colleague)">
         <div class="colleague-details">
-          <div class="colleague-name">{{ getColleagueName(colleague) }}</div>
+          <div class="colleague-name">
+            {{ getColleagueName(colleague) }}
+          </div>
           <div v-if="getColleaguePosition(colleague) || getColleagueDepartment(colleague)" class="colleague-info">
             <span v-if="getColleaguePosition(colleague)" class="position">{{ getColleaguePosition(colleague) }}</span>
             <span v-if="getColleagueDepartment(colleague)" class="department">{{ getColleagueDepartment(colleague) }}</span>
@@ -140,11 +153,18 @@
       <p>{{ selectedDescription }}</p>
     </div>
   </Dialog>
+
+  <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" :userName="selectedUserName" />
 </template>
 
 <script>
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
+
 export default {
   name: 'CarHistory',
+  components: {
+    UserInfoDialog
+  },
   props: {
     records: Array
   },
@@ -154,7 +174,10 @@ export default {
       showColleaguesModal: false,
       selectedColleagues: [],
       showDescriptionModal: false,
-      selectedDescription: ''
+      selectedDescription: '',
+      showUserDialog: false,
+      selectedUserId: null,
+      selectedUserName: null
     }
   },
   computed: {
@@ -248,6 +271,37 @@ export default {
     }
   },
   methods: {
+    showUserInfo(userId) {
+      if (userId) {
+        this.selectedUserId = userId
+        this.showUserDialog = true
+      }
+    },
+
+    showColleagueInfo(colleague) {
+      // colleague อาจเป็น object {id, name, value} หรือ string (ชื่อ)
+      if (typeof colleague === 'object') {
+        // ถ้ามี id ใช้ id
+        if (colleague.id) {
+          this.selectedUserId = colleague.id
+          this.showUserDialog = true
+        } else {
+          // ถ้าไม่มี id ใช้ name หรือ value
+          const name = colleague.name || colleague.value
+          if (name) {
+            this.selectedUserId = null
+            this.selectedUserName = name
+            this.showUserDialog = true
+          }
+        }
+      } else if (typeof colleague === 'string') {
+        // ถ้าเป็น string ค้นหาจากชื่อ
+        this.selectedUserId = null
+        this.selectedUserName = colleague
+        this.showUserDialog = true
+      }
+    },
+
     showColleaguesDialog(colleagues) {
       this.selectedColleagues = colleagues || []
       this.showColleaguesModal = true
@@ -385,18 +439,24 @@ export default {
 .colleague-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.25rem;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
   background: #f8f9fa;
   border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border-radius: 8px;
   transition: all 0.2s ease;
 }
 
-.colleague-card:hover {
-  background: #e9ecef;
-  transform: translateY(-1px);
+.clickable-card {
+  cursor: pointer;
 }
+
+.clickable-card:hover {
+  background: #e3f2fd;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+}
+
 
 .colleague-avatar {
   width: 50px;
@@ -572,5 +632,17 @@ export default {
 .no-description {
   color: #6c757d;
   font-style: italic;
+}
+
+.clickable-name {
+  cursor: pointer;
+  color: #667eea;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #764ba2;
+  text-decoration: underline;
 }
 </style>

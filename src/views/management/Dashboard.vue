@@ -159,7 +159,13 @@
         <DataTable :value="workStatistics" :loading="loading" paginator :rows="10" sortField="totalHours" :sortOrder="-1"
                    :expandedRows="expandedRows">
           <Column :expander="true" style="width: 3rem" />
-          <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px" />
+          <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
+            <template #body="{ data }">
+              <span class="clickable-name" @click="selectedUserId = data.userId; showUserDialog = true">
+                {{ data.userName }}
+              </span>
+            </template>
+          </Column>
           <Column field="department" header="แผนก" sortable style="min-width: 120px" />
           <Column field="totalHours" header="รวมชั่วโมง" sortable style="min-width: 120px">
             <template #body="{ data }">
@@ -200,6 +206,8 @@
       </template>
     </Card>
   </div>
+
+  <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false" :userId="selectedUserId" />
 </template>
 
 <script setup>
@@ -209,10 +217,14 @@ import { Chart } from 'chart.js/auto'
 import axios from 'axios'
 import userService from '@/services/userService'
 import dailyWorkService from '@/services/dailyWorkService'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 const { handleError } = useErrorHandler()
 const loading = ref(false)
 const leaveTypeColors = ref({})
+const showUserDialog = ref(false)
+const selectedUserId = ref(null)
+
 
 const stats = ref({
   totalUsers: 0,
@@ -336,11 +348,16 @@ const loadData = async () => {
       if (workYear !== currentYear) return
       
       const userId = w.user_id
+      if (!userId) return // ข้ามถ้าไม่มี userId
+      
       if (!userWorkData[userId]) {
         const user = activeUsers.find(u => u.id === userId)
+        if (!user) return // ข้ามถ้าไม่เจอ user ใน activeUsers
+        
         userWorkData[userId] = {
-          userName: user ? `${user.firstname} ${user.lastname}` : 'N/A',
-          department: user?.department || 'N/A',
+          userId: userId,
+          userName: `${user.firstname} ${user.lastname}`,
+          department: user.department || 'N/A',
           totalHours: 0,
           taskCount: 0,
           taskHours: {} // เก็บชั่วโมงของแต่ละงาน
@@ -379,6 +396,7 @@ const loadData = async () => {
         .sort((a, b) => b.hours - a.hours)
       
       return {
+        userId: data.userId,
         userName: data.userName,
         department: data.department,
         totalHours: data.totalHours,
@@ -490,6 +508,18 @@ const renderCharts = (leaves, tasks) => {
 </script>
 
 <style scoped>
+.clickable-name {
+  cursor: pointer;
+  color: #667eea;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
 .dashboard-container {
   padding: 1rem;
   max-width: 1400px;

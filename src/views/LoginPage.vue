@@ -223,7 +223,11 @@ function auth(username, password) {
 
       // Navigate after showing success
       setTimeout(() => {
-        router.push("/daily_work");
+        isLoggingIn.value = false;
+        router.push("/daily_work").catch(err => {
+          console.error('Navigation error:', err);
+          isLoggingIn.value = false;
+        });
       }, 800);
     })
     .catch(function (auth_error) {

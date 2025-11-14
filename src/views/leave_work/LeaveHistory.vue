@@ -23,7 +23,13 @@
           </template>
         </Column>
 
-        <Column field="user_name" header="ชื่อ-นามสกุล" :sortable="true" />
+        <Column field="user_name" header="ชื่อ-นามสกุล" :sortable="true">
+          <template #body="slotProps">
+            <span class="clickable-name" @click="showUserInfo(slotProps.data.user_name, slotProps.data.user_id)">
+              {{ slotProps.data.user_name }}
+            </span>
+          </template>
+        </Column>
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true" />
 
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
@@ -114,7 +120,7 @@
           <template #body="slotProps">
             <div v-if="slotProps.data.approved_by" class="approver-info">
               <i class="pi pi-user-check"></i>
-              <span>{{ slotProps.data.approved_by }}</span>
+              <span class="clickable-name" @click="showApproverInfo(slotProps.data.approved_by)">{{ slotProps.data.approved_by }}</span>
             </div>
             <span v-else class="no-approver">-</span>
           </template>
@@ -166,13 +172,24 @@
       <Button label="ปิด" icon="pi pi-times" @click="showAttachmentsDialog = false" />
     </template>
   </Dialog>
+
+  <!-- User Info Dialog -->
+  <UserInfoDialog 
+    v-model:visible="showUserInfoDialog" 
+    :user-name="selectedUserName"
+    :user-id="selectedUserId"
+  />
 </template>
 
 <script>
 import axios from 'axios'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 export default {
   name: 'LeaveHistory',
+  components: {
+    UserInfoDialog
+  },
   emits: ['view-attachments', 'request-deleted'],
   inject: ['$confirm', '$toast'],
   props: {
@@ -185,7 +202,10 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
-      leaveTypes: []
+      leaveTypes: [],
+      showUserInfoDialog: false,
+      selectedUserName: '',
+      selectedUserId: null
     }
   },
   async mounted() {
@@ -403,6 +423,21 @@ export default {
     },
     viewAttachments(attachments) {
       this.$emit('view-attachments', attachments)
+    },
+
+    showUserInfo(userName, userId) {
+      this.selectedUserName = userName
+      this.selectedUserId = userId
+      this.showUserInfoDialog = true
+    },
+
+    showApproverInfo(approverInfo) {
+      // approved_by format: "ชื่อ นามสกุล (ตำแหน่ง)"
+      // แยกเอาแค่ชื่อออกมา
+      const approverName = approverInfo.split('(')[0].trim()
+      this.selectedUserName = approverName
+      this.selectedUserId = null
+      this.showUserInfoDialog = true
     }
   }
 }
@@ -655,6 +690,18 @@ export default {
   border-radius: 20px !important;
   padding: 0.5rem 0.75rem !important;
   font-size: 0.875rem !important;
+}
+
+.clickable-name {
+  color: #4A90E2;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 .no-delegation {

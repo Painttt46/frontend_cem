@@ -38,7 +38,9 @@
         <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true" style="min-width: 150px;">
           <template #body="slotProps">
             <div class="employee-info">
-              <div class="employee-name">{{ slotProps.data.employee_name || 'ไม่ระบุ' }}</div>
+              <div class="employee-name clickable-name" @click="showUserInfo(slotProps.data.user_id)">
+                {{ slotProps.data.employee_name || 'ไม่ระบุ' }}
+              </div>
             </div>
           </template>
         </Column>
@@ -236,16 +238,22 @@
       </div>
     </form>
   </Dialog>
+
+  <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
 </template>
 
 <script>
 import axios from 'axios'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 import { addDays } from '@/utils/dateUtils'
 import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
 
 export default {
   name: 'DailyWorkList',
+  components: {
+    UserInfoDialog
+  },
   emits: ['refresh-data'],
   props: {
     records: {
@@ -352,10 +360,18 @@ export default {
         newFiles: []
       },
       statusOptions: [],
-      categoryOptions: []
+      categoryOptions: [],
+      showUserDialog: false,
+      selectedUserId: null
     }
   },
   methods: {
+    showUserInfo(userId) {
+      if (userId) {
+        this.selectedUserId = userId
+        this.showUserDialog = true
+      }
+    },
     loadStatusOptions() {
       this.$http.get('/api/settings/statuses')
         .then(response => {
@@ -786,6 +802,17 @@ export default {
   font-weight: 600;
   color: #495057;
   font-size: 0.9rem;
+}
+
+.clickable-name {
+  cursor: pointer;
+  color: #667eea;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #764ba2;
+  text-decoration: underline;
 }
 
 .position-text {

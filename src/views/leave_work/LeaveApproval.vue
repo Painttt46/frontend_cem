@@ -17,7 +17,13 @@
           </template>
         </Column>
 
-        <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true" />
+        <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true">
+          <template #body="slotProps">
+            <span class="clickable-name" @click="showUserInfo(slotProps.data.user_id)">
+              {{ slotProps.data.employee_name }}
+            </span>
+          </template>
+        </Column>
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true" />
         
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
@@ -176,13 +182,19 @@
       <Button label="ปิด" icon="pi pi-times" @click="showAttachmentsDialog = false" />
     </template>
   </Dialog>
+
+  <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
 </template>
 
 <script>
 import axios from 'axios'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 export default {
   name: 'LeaveApproval',
+  components: {
+    UserInfoDialog
+  },
   props: {
     records: Array
   },
@@ -197,27 +209,32 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
-      leaveTypes: []
+      leaveTypes: [],
+      showUserDialog: false,
+      selectedUserId: null
     }
   },
   async mounted() {
     await this.loadLeaveTypes()
   },
   methods: {
+    showUserInfo(userId) {
+      if (userId) {
+        this.selectedUserId = userId
+        this.showUserDialog = true
+      }
+    },
     async loadLeaveTypes() {
       try {
         const response = await this.$http.get('/api/leave/leave-types')
         this.leaveTypes = response.data
-        console.log('Leave types loaded:', this.leaveTypes)
       } catch (error) {
         console.error('Error loading leave types:', error)
       }
     },
     getLeaveTypeColor(type) {
       const leaveType = this.leaveTypes.find(lt => lt.value === type)
-      const color = leaveType?.color || '#6c757d'
-      console.log('Getting color for type:', type, 'found:', leaveType, 'color:', color)
-      return color
+      return leaveType?.color || '#6c757d'
     },
     showWorkDetails(workDetails) {
       this.selectedWorkDetails = workDetails
@@ -589,5 +606,17 @@ export default {
     width: 2rem;
     height: 2rem;
   }
+}
+
+.clickable-name {
+  cursor: pointer;
+  color: #667eea;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #764ba2;
+  text-decoration: underline;
 }
 </style>
