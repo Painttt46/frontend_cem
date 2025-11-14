@@ -258,8 +258,8 @@ const loadData = async () => {
   
   try {
     // ใช้ service layer พร้อม cache
-    const [users, leaves, cars, tasks, dailyWork] = await Promise.all([
-      userService.getUsers(),  // มี cache 5 นาที
+    const [activeUsers, leaves, cars, tasks, dailyWork] = await Promise.all([
+      userService.getActiveUsers(),  // มี cache 5 นาที + filter is_active
       axios.get('/api/leave').then(r => r.data),
       axios.get('/api/car-booking').then(r => r.data),
       axios.get('/api/tasks').then(r => r.data),
@@ -267,7 +267,6 @@ const loadData = async () => {
     ])
 
     // Calculate stats
-    const activeUsers = users.filter(u => u.is_active)
     stats.value.totalUsers = activeUsers.length
     
     const today = new Date().toISOString().split('T')[0]
@@ -338,7 +337,7 @@ const loadData = async () => {
       
       const userId = w.user_id
       if (!userWorkData[userId]) {
-        const user = users.find(u => u.id === userId)
+        const user = activeUsers.find(u => u.id === userId)
         userWorkData[userId] = {
           userName: user ? `${user.firstname} ${user.lastname}` : 'N/A',
           department: user?.department || 'N/A',

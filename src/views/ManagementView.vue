@@ -120,23 +120,6 @@
         </template>
       </Card>
 
-      <!-- Reports -->
-      <Card class="management-card" @click="navigateTo('reports')">
-        <template #content>
-          <div class="card-content">
-            <div class="card-header">
-              <i class="pi pi-chart-bar card-icon"></i>
-              <Badge value="Coming Soon" severity="warning" class="status-badge" />
-            </div>
-            <h3>รายงาน</h3>
-            <p>รายงานสถิติ การใช้งาน และประสิทธิภาพ</p>
-            <div class="card-footer">
-              <i class="pi pi-arrow-right"></i>
-            </div>
-          </div>
-        </template>
-      </Card>
-
       <!-- System Settings -->
       <Card v-if="hasAccess('/management/settings')" class="management-card" @click="navigateTo('settings')">
         <template #content>

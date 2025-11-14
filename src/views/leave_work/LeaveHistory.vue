@@ -23,7 +23,7 @@
           </template>
         </Column>
 
-        <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true" />
+        <Column field="user_name" header="ชื่อ-นามสกุล" :sortable="true" />
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true" />
 
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
