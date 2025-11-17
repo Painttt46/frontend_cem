@@ -172,9 +172,24 @@ const loadPermissions = async (role) => {
     })
     
     if (response.data.permissions) {
+      // Update existing pages
       pages.value.forEach(page => {
         const permission = response.data.permissions.find(p => p.page_path === page.path)
         page.hasAccess = permission ? permission.has_access : false
+      })
+      
+      // Add new permissions from database that don't exist in pages
+      response.data.permissions.forEach(permission => {
+        const existingPage = pages.value.find(p => p.page_path === permission.page_path)
+        if (!existingPage) {
+          pages.value.push({
+            id: permission.id,
+            name: permission.page_name,
+            path: permission.page_path,
+            icon: permission.page_icon || 'pi pi-circle',
+            hasAccess: permission.has_access
+          })
+        }
       })
     }
   } catch (error) {

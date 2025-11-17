@@ -158,13 +158,13 @@ export default {
       },
       records: [],
       currentTime: new Date(),
+      serverTimeOffset: 0,
       currentBookingData: null,
       showImageModal: false,
       selectedImages: [],
       showFullImageModal: false,
       fullSizeImage: '',
-      teamsWebhookUrl: 'YOUR_TEAMS_WEBHOOK_URL_HERE', // Replace with actual webhook URL
-      // Track which bookings have been notified as active
+      teamsWebhookUrl: 'YOUR_TEAMS_WEBHOOK_URL_HERE',
       notifiedActiveBookings: new Set()
     }
   },
@@ -269,22 +269,43 @@ export default {
     }
   },
   mounted() {
+    this.syncServerTime()
+    
     setInterval(() => {
-      this.currentTime = new Date()
+      this.currentTime = new Date(Date.now() + this.serverTimeOffset)
     }, 1000)
     
-    // Auto refresh data every 30 seconds
     setInterval(() => {
       this.loadRecords()
     }, 30000)
+    
+    setInterval(() => {
+      this.syncServerTime()
+    }, 300000)
   },
   created() {
     this.$http = axios.create({
-      baseURL: ''
+      baseURL: '',
+      headers: {
+        'X-Timezone': 'Asia/Bangkok'
+      }
     })
     this.loadRecords()
   },
   methods: {
+    async syncServerTime() {
+      try {
+        const response = await axios.get('/api/server-time')
+        const serverTime = new Date(response.data.serverTime)
+        const clientTime = new Date()
+        this.serverTimeOffset = serverTime.getTime() - clientTime.getTime()
+        this.currentTime = new Date(Date.now() + this.serverTimeOffset)
+        console.log('[Time Sync] Server time:', serverTime.toLocaleString('th-TH'))
+        console.log('[Time Sync] Offset:', this.serverTimeOffset, 'ms')
+      } catch (error) {
+        console.error('Failed to sync server time:', error)
+      }
+    },
     getCurrentUserName() {
       const firstName = localStorage.getItem('soc_firstname') || ''
       const lastName = localStorage.getItem('soc_lastname') || ''
@@ -312,12 +333,12 @@ export default {
       this.activeForm = 'borrow'
     },
     showReturnForm() {
-      this.selectedDate = new Date()
+      this.selectedDate = new Date(Date.now() + this.serverTimeOffset)
       this.showForm = true
       this.activeForm = 'return'
     },
     showCancelForm() {
-      this.selectedDate = new Date()
+      this.selectedDate = new Date(Date.now() + this.serverTimeOffset)
       this.showForm = true
       this.activeForm = 'cancel'
     },
@@ -389,9 +410,11 @@ export default {
     },
     formatDateForDB(date) {
       const d = new Date(date)
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
+      // Convert to Bangkok timezone
+      const bangkokTime = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Bangkok' }))
+      const year = bangkokTime.getFullYear()
+      const month = String(bangkokTime.getMonth() + 1).padStart(2, '0')
+      const day = String(bangkokTime.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     },
     async handleAdditionalImageUpload(event, bookingId) {
@@ -415,7 +438,7 @@ export default {
             name: file.name,
             src: base64,
             type: 'เพิ่มเติม',
-            timestamp: new Date().toLocaleString('th-TH')
+            timestamp: new Date(Date.now() + this.serverTimeOffset).toLocaleString('th-TH')
           })
         }
 
@@ -496,9 +519,7 @@ export default {
       }
     },
     async submitReturn() {
-      // Get borrowId from form or component reference
       const borrowId = this.returnForm.borrowId || this.$refs.bookingForm?.selectedReturnBorrow
-
 
       if (!borrowId) {
         this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกการแจ้งใช้รถที่ต้องการคืน', life: 3000 })
@@ -510,7 +531,8 @@ export default {
         const lastName = localStorage.getItem('soc_lastname') || ''
         const currentUserName = `${firstName} ${lastName}`.trim()
 
-        const currentTime = this.currentTime.toLocaleTimeString('th-TH', {
+        const bangkokTime = new Date(Date.now() + this.serverTimeOffset)
+        const currentTime = bangkokTime.toLocaleTimeString('th-TH', {
           hour: '2-digit',
           minute: '2-digit',
           hour12: false
@@ -521,17 +543,11 @@ export default {
           return_location: this.returnForm.location,
           return_description: this.returnForm.discription,
           return_time: currentTime,
-          return_date: this.formatDateForDB(new Date())
+          return_date: this.formatDateForDB(bangkokTime)
         }
-
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
 
-        // If we get here, the API call was successful
-        await this.loadRecords()
-        this.closeForm()
-
-        // If we get here, the API call was successful
         await this.loadRecords()
         this.closeForm()
 
@@ -607,7 +623,7 @@ export default {
             name: file.name,
             src: base64,
             type: 'เพิ่มเติม',
-            timestamp: new Date().toLocaleString('th-TH')
+            timestamp: new Date(Date.now() + this.serverTimeOffset).toLocaleString('th-TH')
           })
         }
 

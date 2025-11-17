@@ -140,10 +140,41 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userId = localStorage.getItem("soc_user_id");
   const role = localStorage.getItem("soc_role");
+  const token = localStorage.getItem("soc_token");
 
   if (to.meta.requiresAuth) {
-    // ตรวจสอบว่ามี userId (แทนการตรวจสอบ token)
-    if (!userId) {
+    // ตรวจสอบว่ามี userId และ token
+    if (!userId || !token) {
+      // Clear all auth data
+      localStorage.clear();
+      sessionStorage.clear();
+      next("/login");
+      return;
+    }
+
+    // Check if token is expired (decode JWT without verification)
+    try {
+      const tokenParts = token.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        const expirationTime = payload.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        
+        if (currentTime >= expirationTime) {
+          // Token expired - clear all auth data
+          localStorage.clear();
+          sessionStorage.clear();
+          document.cookie.split(";").forEach((c) => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+          });
+          next("/login");
+          return;
+        }
+      }
+    } catch (e) {
+      // Invalid token format - clear and redirect
+      localStorage.clear();
+      sessionStorage.clear();
       next("/login");
       return;
     }

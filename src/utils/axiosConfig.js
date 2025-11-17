@@ -34,10 +34,25 @@ axios.interceptors.response.use(
       
       switch (status) {
         case 401:
-          // Unauthorized - redirect to login
+          // Unauthorized - clear all auth data and redirect to login
           localStorage.clear()
-          router.push('/login')
-          error.userMessage = 'กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+          sessionStorage.clear()
+          // Clear all cookies
+          document.cookie.split(";").forEach((c) => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+          })
+          
+          // Show message if token expired
+          if (data.expired) {
+            error.userMessage = 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+          } else {
+            error.userMessage = 'กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+          }
+          
+          // Redirect to login
+          if (router.currentRoute.value.path !== '/login') {
+            router.push('/login')
+          }
           break
           
         case 403:
