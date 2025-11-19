@@ -1,21 +1,14 @@
 <template>
   <Card class="history-card">
     <template #content>
-      <!-- Search Box -->
-      <div class="search-box mb-3">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="ค้นหา..." class="w-full" />
-        </IconField>
-      </div>
-
-      <div v-if="filteredTasks.length === 0" class="empty-state">
+      <div v-if="tasks.length === 0" class="empty-state">
         <i class="pi pi-briefcase" style="font-size: 4rem; color: #ccc;"></i>
-        <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีงานที่เพิ่มไว้' }}</p>
+        <p>ยังไม่มีงานที่เพิ่มไว้</p>
       </div>
 
-      <DataTable v-else-if="categories.length > 0" :value="filteredTasks" :paginator="true" :rows="10"
-        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else-if="categories.length > 0" :data="enrichedTasks" 
+        :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" 
+        responsiveLayout="scroll" class="history-table" stripedRows>
         
         <Column field="id" header="รหัสงาน" :sortable="true">
           <template #body="slotProps">
@@ -131,7 +124,7 @@
 
         <Column header="ไฟล์แนบ" style="width: 80px;">
         </Column>
-      </DataTable>
+      </EnhancedDataTable>
     </template>
   </Card>
 
@@ -391,9 +384,13 @@
 
 <script>
 import axios from 'axios'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
   name: 'TaskList',
+  components: {
+    EnhancedDataTable
+  },
   created() {
     this.$http = axios.create({
       baseURL: ''
@@ -421,7 +418,6 @@ export default {
   },
   data() {
     return {
-      searchQuery: '',
       tasks: [],
       detailDialog: false,
       selectedTask: null,
@@ -475,30 +471,13 @@ export default {
     }
   },
   computed: {
-    filteredTasks() {
-      const tasks = this.tasks || []
-      if (!this.searchQuery) return tasks
-
-      const query = this.searchQuery.toLowerCase().trim()
-      return tasks.filter(task => {
-        const searchableData = {
-          id: task.id || '',
-          task_name: task.task_name || '',
-          so_number: task.so_number || '',
-          contract_number: task.contract_number || '',
-          sale_owner: task.sale_owner || '',
-          description: task.description || '',
-          category: task.category || '',
-          status: task.status || '',
-          created_by: task.created_by || ''
-        }
-        
-        return Object.values(searchableData).some(value => {
-          if (value === null || value === undefined) return false
-          const strValue = String(value).toLowerCase()
-          return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
-        })
-      })
+    enrichedTasks() {
+      // Add status and category labels to tasks for better search
+      return this.tasks.map(task => ({
+        ...task,
+        statusLabel: this.getStatusLabel(task.status),
+        categoryLabel: this.getCategoryLabel(task.category)
+      }))
     },
     filteredAndSortedWorks() {
       let works = [...this.taskWorks]

@@ -1,21 +1,13 @@
 <template>
   <Card class="history-card">
     <template #content>
-      <!-- Search Box -->
-      <div class="search-box mb-3">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="ค้นหา..." class="w-full" />
-        </IconField>
-      </div>
-
-      <div v-if="filteredRecords.length === 0" class="empty-state">
+      <div v-if="records.length === 0" class="empty-state">
         <i class="pi pi-calendar-times" style="font-size: 4rem; color: #ccc;"></i>
-        <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูลการลางาน' }}</p>
+        <p>ยังไม่มีข้อมูลการลางาน</p>
       </div>
 
-      <DataTable v-else :value="filteredRecords" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
-        responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
+        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
 
         <Column field="id" header="รหัสคำขอ" :sortable="true">
           <template #body="slotProps">
@@ -131,7 +123,7 @@
             {{ formatDateTime(slotProps.data.created_at) }}
           </template>
         </Column>
-      </DataTable>
+      </EnhancedDataTable>
     </template>
   </Card>
 
@@ -184,11 +176,13 @@
 <script>
 import axios from 'axios'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
   name: 'LeaveHistory',
   components: {
-    UserInfoDialog
+    UserInfoDialog,
+    EnhancedDataTable
   },
   emits: ['view-attachments', 'request-deleted'],
   inject: ['$confirm', '$toast'],
@@ -197,7 +191,6 @@ export default {
   },
   data() {
     return {
-      searchQuery: '',
       showWorkDetailsDialog: false,
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
@@ -210,37 +203,6 @@ export default {
   },
   async mounted() {
     await this.loadLeaveTypes()
-  },
-  computed: {
-    filteredRecords() {
-      const records = this.records || []
-      if (!this.searchQuery) return records
-
-      const query = this.searchQuery.toLowerCase().trim()
-      return records.filter(record => {
-        const searchableData = {
-          id: `#${record.id}` || '',
-          request_id: record.id || '',
-          employee_name: record.employee_name || '',
-          employee_position: record.employee_position || '',
-          leave_type: this.getLeaveTypeLabel(record.leave_type) || '',
-          start_datetime: this.formatDateTime(record.start_datetime) || '',
-          end_datetime: this.formatDateTime(record.end_datetime) || '',
-          total_days: record.total_days || '',
-          delegate_name: record.delegate_name || '',
-          delegate_position: record.delegate_position || '',
-          work_details: record.work_details || '',
-          reason: record.reason || '',
-          status: record.status || ''
-        }
-        
-        return Object.values(searchableData).some(value => {
-          if (value === null || value === undefined) return false
-          const strValue = String(value).toLowerCase()
-          return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
-        })
-      })
-    }
   },
   created() {
     this.$http = axios.create({

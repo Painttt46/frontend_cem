@@ -1,20 +1,12 @@
 <template>
   <Card class="history-card">
     <template #content>
-      <!-- Search Box -->
-      <div class="search-box mb-3">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="ค้นหา..." class="w-full" />
-        </IconField>
-      </div>
-
-      <div v-if="filteredRecords.length === 0" class="empty-state">
+      <div v-if="groupedRecordsWithDuration.length === 0" class="empty-state">
         <i class="pi pi-car" style="font-size: 4rem; color: #ccc;"></i>
-        <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูลการใช้รถ' }}</p>
+        <p>ยังไม่มีข้อมูลการใช้รถ</p>
       </div>
 
-      <DataTable v-else :value="filteredRecords" :paginator="true" :rows="10"
+      <EnhancedDataTable v-else :value="groupedRecordsWithDuration" :paginator="true" :rows="10"
         :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
         <Column field="id" header="Ticket ID" :sortable="true">
           <template #body="slotProps">
@@ -126,7 +118,7 @@
             <Badge v-else value="ยังไม่คืน" severity="warning" icon="pi pi-clock" />
           </template>
         </Column>
-      </DataTable>
+      </EnhancedDataTable>
     </template>
   </Card>
 
@@ -159,18 +151,19 @@
 
 <script>
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
   name: 'CarHistory',
   components: {
-    UserInfoDialog
+    UserInfoDialog,
+    EnhancedDataTable
   },
   props: {
     records: Array
   },
   data() {
     return {
-      searchQuery: '',
       showColleaguesModal: false,
       selectedColleagues: [],
       showDescriptionModal: false,
@@ -231,42 +224,6 @@ export default {
           }
         }
         return { ...group, duration }
-      })
-    },
-    filteredRecords() {
-      const records = this.groupedRecordsWithDuration || []
-      if (!this.searchQuery) return records
-
-      const query = this.searchQuery.toLowerCase().trim()
-      return records.filter(record => {
-        const formattedDate = this.formatDate(record.borrowDate)
-        
-        // รวมชื่อผู้ร่วมงานทั้งหมด
-        const colleaguesNames = record.borrowRecord?.colleagues 
-          ? record.borrowRecord.colleagues.map(c => c.name).join(' ') 
-          : ''
-        
-        const searchableData = {
-          id: record.id || '',
-          license: record.license || '',
-          borrower_name: record.borrowRecord?.name || '',
-          borrow_time: record.borrowRecord?.time || '',
-          borrow_location: record.borrowRecord?.location || '',
-          project: record.borrowRecord?.project || '',
-          description: record.borrowRecord?.description || '',
-          colleagues: colleaguesNames,
-          returner_name: record.returnRecord?.name || '',
-          return_time: record.returnRecord?.time || '',
-          return_location: record.returnRecord?.location || '',
-          duration: record.duration || '',
-          borrow_date: formattedDate
-        }
-        
-        return Object.values(searchableData).some(value => {
-          if (value === null || value === undefined) return false
-          const strValue = String(value).toLowerCase()
-          return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
-        })
       })
     }
   },

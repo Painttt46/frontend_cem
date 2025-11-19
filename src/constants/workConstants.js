@@ -1,3 +1,5 @@
+import { isCompleted, isActive } from '@/utils/statusHelper'
+
 /**
  * Work Status Constants
  */
@@ -30,6 +32,11 @@ export const WORK_STATUS_COLORS = {
   [WORK_STATUS.DONE]: '#10b981',
   [WORK_STATUS.CANCELLED]: '#ef4444'
 }
+
+/**
+ * Check if status is completed (using helper)
+ */
+export { isCompleted, isActive }
 
 /**
  * Edit cutoff time (hours)

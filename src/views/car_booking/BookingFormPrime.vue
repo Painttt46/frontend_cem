@@ -225,6 +225,7 @@
 import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
 import axios from 'axios'
+import { isActive } from '@/utils/statusHelper'
 
 export default {
   name: 'BookingFormPrime',
@@ -312,7 +313,7 @@ export default {
         const response = await this.$http.get('/api/tasks')
         if (response.data && Array.isArray(response.data)) {
           this.projectOptions = response.data
-            .filter(task => task.status !== 'completed')
+            .filter(task => isActive(task.status))
             .map(task => ({
               label: task.task_name,
               value: task.task_name

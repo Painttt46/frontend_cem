@@ -194,6 +194,7 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 
 import { isRequired, isValidTimeRange, getValidationMessage } from '@/utils/validation'
+import { isActive } from '@/utils/statusHelper'
 
 export default {
   name: 'DailyWorkForm',
@@ -343,7 +344,7 @@ export default {
       try {
         const response = await this.$http.get('/api/tasks')
         // กรองเฉพาะ task ที่ไม่ complete
-        const availableTasks = response.data.filter(task => task.status !== 'completed')
+        const availableTasks = response.data.filter(task => isActive(task.status))
 
         this.tasks = availableTasks.map(task => ({
           ...task,

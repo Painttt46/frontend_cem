@@ -135,21 +135,34 @@
       </template>
     </div>
 
-    <!-- Charts -->
-    <div class="charts-grid mb-4">
-      <Card class="chart-card">
-        <template #content>
-          <h3>จำนวนวันลาของพนักงาน (รายปี)</h3>
-          <canvas ref="leaveChart"></canvas>
-        </template>
-      </Card>
+    <!-- Charts with Swipe Support -->
+    <div class="charts-container mb-4">
+      <div class="charts-wrapper" 
+           ref="chartsWrapper"
+           @touchstart="handleTouchStart"
+           @touchmove="handleTouchMove"
+           @touchend="handleTouchEnd">
+        <Card class="chart-card" :class="{ active: currentChart === 0 }">
+          <template #content>
+            <h3>จำนวนวันลาของพนักงาน (รายปี)</h3>
+            <canvas ref="leaveChart"></canvas>
+          </template>
+        </Card>
 
-      <Card class="chart-card">
-        <template #content>
-          <h3>สถานะงาน</h3>
-          <canvas ref="taskChart"></canvas>
-        </template>
-      </Card>
+        <Card class="chart-card" :class="{ active: currentChart === 1 }">
+          <template #content>
+            <h3>สถานะงาน</h3>
+            <canvas ref="taskChart"></canvas>
+          </template>
+        </Card>
+      </div>
+      
+      <!-- Chart Navigation Dots (Mobile) -->
+      <div class="chart-dots">
+        <span v-for="i in 2" :key="i" 
+              :class="{ active: currentChart === i - 1 }"
+              @click="currentChart = i - 1"></span>
+      </div>
     </div>
 
     <!-- Work Statistics -->
@@ -211,19 +224,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from 'axios'
 import userService from '@/services/userService'
 import dailyWorkService from '@/services/dailyWorkService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import { isCompleted, isActive } from '@/utils/statusHelper'
 
 const { handleError } = useErrorHandler()
 const loading = ref(false)
 const leaveTypeColors = ref({})
 const showUserDialog = ref(false)
 const selectedUserId = ref(null)
+
+// Swipe functionality
+const currentChart = ref(0)
+const chartsWrapper = ref(null)
+let touchStartX = 0
+let touchEndX = 0
 
 
 const stats = ref({
@@ -247,6 +267,35 @@ let taskChartInstance = null
 onMounted(() => {
   loadLeaveTypeColors()
   loadData()
+})
+
+// Swipe handlers
+const handleTouchStart = (e) => {
+  touchStartX = e.touches[0].clientX
+}
+
+const handleTouchMove = (e) => {
+  touchEndX = e.touches[0].clientX
+}
+
+const handleTouchEnd = () => {
+  const diff = touchStartX - touchEndX
+  const threshold = 50
+  
+  if (Math.abs(diff) > threshold) {
+    if (diff > 0 && currentChart.value < 1) {
+      currentChart.value++
+    } else if (diff < 0 && currentChart.value > 0) {
+      currentChart.value--
+    }
+  }
+}
+
+// Watch chart changes for smooth transition
+watch(currentChart, (newVal) => {
+  if (chartsWrapper.value) {
+    chartsWrapper.value.style.transform = `translateX(-${newVal * 100}%)`
+  }
 })
 
 const loadLeaveTypeColors = async () => {
@@ -322,21 +371,21 @@ const loadData = async () => {
     stats.value.workingToday = uniqueWorkUserIds.length
     
     stats.value.activeCars = cars.filter(c => c.status === 'active').length
-    stats.value.activeTasks = tasks.filter(t => t.status !== 'completed' && t.status !== 'done').length
-    stats.value.completedTasks = tasks.filter(t => t.status === 'completed' || t.status === 'done').length
+    stats.value.activeTasks = tasks.filter(t => isActive(t.status)).length
+    stats.value.completedTasks = tasks.filter(t => isCompleted(t.status)).length
     
     // งานที่ครบกำหนดสัปดาห์นี้
     stats.value.dueSoon = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
-      return endDate >= todayDate && endDate <= weekFromNow && (t.status !== 'completed' && t.status !== 'done')
+      return endDate >= todayDate && endDate <= weekFromNow && isActive(t.status)
     }).length
     
     // งานที่เลยกำหนด
     stats.value.overdue = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
-      return endDate < todayDate && (t.status !== 'completed' && t.status !== 'done')
+      return endDate < todayDate && isActive(t.status)
     }).length
 
     // Work Statistics - คำนวณเวลาทำงานของแต่ละคน (รายปี)
@@ -579,47 +628,29 @@ const renderCharts = (leaves, tasks) => {
   gap: 1rem;
 }
 
-.summary-card {
-  border: 1px solid #e9ecef;
-  transition: all 0.3s;
+/* Charts Container with Swipe */
+.charts-container {
+  position: relative;
+  overflow: hidden;
 }
 
-.summary-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-}
-
-.summary-content {
+.charts-wrapper {
   display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.summary-icon {
-  font-size: 2.5rem;
-}
-
-.summary-info h3 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 600;
-}
-
-.summary-info p {
-  margin: 0;
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-.charts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1rem;
+  transition: transform 0.3s ease-out;
+  touch-action: pan-y;
 }
 
 .chart-card {
+  flex: 0 0 100%;
+  min-width: 100%;
   border: 1px solid #e9ecef;
   min-height: 350px;
+  opacity: 0.5;
+  transition: opacity 0.3s;
+}
+
+.chart-card.active {
+  opacity: 1;
 }
 
 .chart-card h3 {
@@ -630,6 +661,112 @@ const renderCharts = (leaves, tasks) => {
 
 canvas {
   max-height: 300px;
+}
+
+.chart-dots {
+  display: none;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.chart-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d1d5db;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.chart-dots span.active {
+  background: #4A90E2;
+  width: 24px;
+  border-radius: 4px;
+}
+
+/* Desktop: Show grid */
+@media (min-width: 769px) {
+  .charts-wrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .chart-card {
+    flex: none;
+    min-width: auto;
+    opacity: 1;
+  }
+}
+
+/* Mobile: Show swipe */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .summary-card {
+    padding: 0.5rem;
+  }
+  
+  .summary-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .summary-icon {
+    font-size: 1.8rem;
+  }
+  
+  .summary-info h3 {
+    font-size: 1.5rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.75rem;
+  }
+  
+  .chart-dots {
+    display: flex;
+  }
+  
+  .header-title h1 {
+    font-size: 1.2rem;
+  }
+  
+  .header-icon {
+    font-size: 1.2rem;
+  }
+  
+  /* Hide table columns on mobile */
+  :deep(.p-datatable-wrapper) {
+    overflow-x: auto;
+  }
+  
+  :deep(.p-datatable) {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-content {
+    padding: 0.5rem;
+  }
+  
+  .back-btn {
+    padding: 0.4rem !important;
+  }
 }
 
 .task-breakdown {
@@ -671,12 +808,140 @@ canvas {
 }
 
 @media (max-width: 768px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
+  .dashboard-container {
+    padding: 0.75rem;
   }
   
-  .charts-grid {
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .summary-card:hover {
+    transform: none;
+  }
+  
+  .summary-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .summary-icon {
+    font-size: 2rem;
+  }
+  
+  .summary-info h3 {
+    font-size: 1.5rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.8rem;
+  }
+  
+  .chart-dots {
+    display: flex;
+  }
+  
+  .header-title h1 {
+    font-size: 1.25rem;
+  }
+  
+  .header-icon {
+    font-size: 1.25rem;
+  }
+  
+  :deep(.p-datatable-wrapper) {
+    overflow-x: auto;
+  }
+  
+  :deep(.p-datatable) {
+    font-size: 0.9rem;
+  }
+  
+  :deep(.p-datatable .p-column-title) {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .summary-grid {
     grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .header-content {
+    padding: 0.5rem;
+  }
+  
+  .header-left {
+    gap: 0.5rem;
+  }
+  
+  .header-title {
+    gap: 0.5rem;
+  }
+  
+  .header-title h1 {
+    font-size: 1.1rem;
+  }
+  
+  .header-icon {
+    font-size: 1.1rem;
+  }
+  
+  .back-btn {
+    padding: 0.4rem !important;
+  }
+  
+  .summary-icon {
+    font-size: 1.8rem;
+  }
+  
+  .summary-info h3 {
+    font-size: 1.3rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.75rem;
+  }
+  
+  .chart-card {
+    min-height: 300px;
+  }
+  
+  canvas {
+    max-height: 250px;
+  }
+  
+  :deep(.p-datatable) {
+    font-size: 0.8rem;
+  }
+  
+  :deep(.p-datatable .p-column-title) {
+    font-size: 0.75rem;
+  }
+  
+  :deep(.p-paginator) {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-info h3 {
+    font-size: 1.2rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.7rem;
+  }
+  
+  .header-title h1 {
+    font-size: 1rem;
   }
 }
 </style>
