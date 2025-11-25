@@ -30,7 +30,8 @@
 
           <div class="input-group">
             <label for="projectEndDate" class="input-label">สิ้นสุดโครงการ</label>
-            <Calendar id="projectEndDate" v-model="formData.projectEndDate" dateFormat="dd/mm/yy" class="corporate-input" />
+            <Calendar id="projectEndDate" v-model="formData.projectEndDate" dateFormat="dd/mm/yy" 
+                      :minDate="formData.projectStartDate" class="corporate-input" />
           </div>
 
           <div class="input-group">
@@ -101,7 +102,7 @@ export default {
         projectStartDate: null,
         projectEndDate: null,
         description: '',
-        category: 'งานทั่วไป',
+        category: '',
         files: []
       },
       categoryOptions: []
@@ -115,6 +116,10 @@ export default {
       this.$http.get('/api/settings/categories')
         .then(response => {
           this.categoryOptions = response.data
+          // Set default to first category
+          if (this.categoryOptions.length > 0 && !this.formData.category) {
+            this.formData.category = this.categoryOptions[0].value
+          }
         })
         .catch(error => {
           console.error(error)
@@ -124,6 +129,9 @@ export default {
             { label: '💻 งานพัฒนาระบบ', value: 'งานพัฒนาระบบ', icon: 'emoji:💻' },
             { label: '🔧 งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧' }
           ]
+          if (this.categoryOptions.length > 0 && !this.formData.category) {
+            this.formData.category = this.categoryOptions[0].value
+          }
         })
     },
     getDefaultIcon(value) {
@@ -175,13 +183,23 @@ export default {
       try {
         const uploadedFiles = await this.uploadFiles()
         
+        // Format dates to YYYY-MM-DD (local date only, no time)
+        const formatDate = (date) => {
+          if (!date) return null
+          const d = new Date(date)
+          const year = d.getFullYear()
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const day = String(d.getDate()).padStart(2, '0')
+          return `${year}-${month}-${day}`
+        }
+        
         const taskData = {
           task_name: this.formData.taskName,
           so_number: this.formData.soNumber,
           contract_number: this.formData.contractNumber,
           sale_owner: this.formData.saleOwner,
-          project_start_date: this.formData.projectStartDate,
-          project_end_date: this.formData.projectEndDate,
+          project_start_date: formatDate(this.formData.projectStartDate),
+          project_end_date: formatDate(this.formData.projectEndDate),
           description: this.formData.description,
           category: this.formData.category,
           files: uploadedFiles
@@ -224,7 +242,7 @@ export default {
         projectStartDate: null,
         projectEndDate: null,
         description: '',
-        category: 'งานทั่วไป',
+        category: this.categoryOptions.length > 0 ? this.categoryOptions[0].value : '',
         files: []
       }
       const fileInput = document.getElementById('fileUpload')

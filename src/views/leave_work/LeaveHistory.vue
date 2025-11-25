@@ -1,21 +1,13 @@
 <template>
   <Card class="history-card">
     <template #content>
-      <!-- Search Box -->
-      <div class="search-box mb-3">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="ค้นหา..." class="w-full" />
-        </IconField>
-      </div>
-
-      <div v-if="filteredRecords.length === 0" class="empty-state">
+      <div v-if="records.length === 0" class="empty-state">
         <i class="pi pi-calendar-times" style="font-size: 4rem; color: #ccc;"></i>
-        <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูลการลางาน' }}</p>
+        <p>ยังไม่มีข้อมูลการลางาน</p>
       </div>
 
-      <DataTable v-else :value="filteredRecords" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
-        responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
+        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
 
         <Column field="id" header="รหัสคำขอ" :sortable="true">
           <template #body="slotProps">
@@ -23,7 +15,13 @@
           </template>
         </Column>
 
-        <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true" />
+        <Column field="user_name" header="ชื่อ-นามสกุล" :sortable="true">
+          <template #body="slotProps">
+            <span class="clickable-name" @click="showUserInfo(slotProps.data.user_name, slotProps.data.user_id)">
+              {{ slotProps.data.user_name }}
+            </span>
+          </template>
+        </Column>
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true" />
 
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
@@ -114,7 +112,7 @@
           <template #body="slotProps">
             <div v-if="slotProps.data.approved_by" class="approver-info">
               <i class="pi pi-user-check"></i>
-              <span>{{ slotProps.data.approved_by }}</span>
+              <span class="clickable-name" @click="showApproverInfo(slotProps.data.approved_by)">{{ slotProps.data.approved_by }}</span>
             </div>
             <span v-else class="no-approver">-</span>
           </template>
@@ -125,7 +123,7 @@
             {{ formatDateTime(slotProps.data.created_at) }}
           </template>
         </Column>
-      </DataTable>
+      </EnhancedDataTable>
     </template>
   </Card>
 
@@ -166,13 +164,26 @@
       <Button label="ปิด" icon="pi pi-times" @click="showAttachmentsDialog = false" />
     </template>
   </Dialog>
+
+  <!-- User Info Dialog -->
+  <UserInfoDialog 
+    v-model:visible="showUserInfoDialog" 
+    :user-name="selectedUserName"
+    :user-id="selectedUserId"
+  />
 </template>
 
 <script>
 import axios from 'axios'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
   name: 'LeaveHistory',
+  components: {
+    UserInfoDialog,
+    EnhancedDataTable
+  },
   emits: ['view-attachments', 'request-deleted'],
   inject: ['$confirm', '$toast'],
   props: {
@@ -180,47 +191,18 @@ export default {
   },
   data() {
     return {
-      searchQuery: '',
       showWorkDetailsDialog: false,
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
-      leaveTypes: []
+      leaveTypes: [],
+      showUserInfoDialog: false,
+      selectedUserName: '',
+      selectedUserId: null
     }
   },
   async mounted() {
     await this.loadLeaveTypes()
-  },
-  computed: {
-    filteredRecords() {
-      const records = this.records || []
-      if (!this.searchQuery) return records
-
-      const query = this.searchQuery.toLowerCase().trim()
-      return records.filter(record => {
-        const searchableData = {
-          id: `#${record.id}` || '',
-          request_id: record.id || '',
-          employee_name: record.employee_name || '',
-          employee_position: record.employee_position || '',
-          leave_type: this.getLeaveTypeLabel(record.leave_type) || '',
-          start_datetime: this.formatDateTime(record.start_datetime) || '',
-          end_datetime: this.formatDateTime(record.end_datetime) || '',
-          total_days: record.total_days || '',
-          delegate_name: record.delegate_name || '',
-          delegate_position: record.delegate_position || '',
-          work_details: record.work_details || '',
-          reason: record.reason || '',
-          status: record.status || ''
-        }
-        
-        return Object.values(searchableData).some(value => {
-          if (value === null || value === undefined) return false
-          const strValue = String(value).toLowerCase()
-          return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
-        })
-      })
-    }
   },
   created() {
     this.$http = axios.create({
@@ -403,6 +385,21 @@ export default {
     },
     viewAttachments(attachments) {
       this.$emit('view-attachments', attachments)
+    },
+
+    showUserInfo(userName, userId) {
+      this.selectedUserName = userName
+      this.selectedUserId = userId
+      this.showUserInfoDialog = true
+    },
+
+    showApproverInfo(approverInfo) {
+      // approved_by format: "ชื่อ นามสกุล (ตำแหน่ง)"
+      // แยกเอาแค่ชื่อออกมา
+      const approverName = approverInfo.split('(')[0].trim()
+      this.selectedUserName = approverName
+      this.selectedUserId = null
+      this.showUserInfoDialog = true
     }
   }
 }
@@ -655,6 +652,18 @@ export default {
   border-radius: 20px !important;
   padding: 0.5rem 0.75rem !important;
   font-size: 0.875rem !important;
+}
+
+.clickable-name {
+  color: #4A90E2;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #2563eb;
+  text-decoration: underline;
 }
 
 .no-delegation {

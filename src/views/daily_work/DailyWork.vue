@@ -5,7 +5,7 @@
     <Card class="header-card">
       <template #header>
         <div class="main-header">
-          <h1><i class="pi pi-calendar"></i> ระบบลงงานรายวัน</h1>
+          <h1><i class="pi pi-calendar"></i> ระบบลงตารางงาน</h1>
         </div>
       </template>
     </Card>
@@ -13,14 +13,14 @@
     <div class="main-content">
       <div class="tab-action-buttons">
         <Button @click="showWorkForm" class="work-btn" icon="pi pi-clock" raised>
-          <span class="btn-text">ลงงานวันนี้</span>
+          <span class="btn-text">ลงตารางงาน</span>
         </Button>
       </div>
       <DailyWorkList ref="workList" :records="workRecords" @refresh-data="loadWorkRecords" />
     </div>
 
     <!-- Work Form Dialog -->
-    <Dialog v-model:visible="showWorkDialog" modal header="ลงงานวันนี้" :style="{ width: '95vw', height: '90vh' }" :draggable="false">
+    <Dialog v-model:visible="showWorkDialog" modal header="ลงตารางงาน" :style="{ width: '95vw', height: '90vh' }" :draggable="false">
       <DailyWorkForm ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
     </Dialog>
   </div>

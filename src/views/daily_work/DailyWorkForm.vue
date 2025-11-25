@@ -193,6 +193,9 @@ import Checkbox from 'primevue/checkbox'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 
+import { isRequired, isValidTimeRange, getValidationMessage } from '@/utils/validation'
+import { isActive } from '@/utils/statusHelper'
+
 export default {
   name: 'DailyWorkForm',
   components: {
@@ -341,7 +344,7 @@ export default {
       try {
         const response = await this.$http.get('/api/tasks')
         // กรองเฉพาะ task ที่ไม่ complete
-        const availableTasks = response.data.filter(task => task.status !== 'completed')
+        const availableTasks = response.data.filter(task => isActive(task.status))
 
         this.tasks = availableTasks.map(task => ({
           ...task,
@@ -379,36 +382,34 @@ export default {
       // Task changed
     },
     async submitForm() {
-      if (!this.formData.taskId) {
+      if (!isRequired(this.formData.taskId)) {
         this.$toast.add({
           severity: 'error',
           summary: 'ข้อผิดพลาด',
-          detail: 'กรุณาเลือกงาน',
+          detail: getValidationMessage('งาน', 'required'),
           life: 3000
         })
         return
       }
 
-      if (!this.formData.workStatus) {
+      if (!isRequired(this.formData.workStatus)) {
         this.$toast.add({
           severity: 'error',
           summary: 'ข้อมูลไม่ครบถ้วน',
-          detail: 'กรุณาเลือกสถานะงาน',
+          detail: getValidationMessage('สถานะงาน', 'required'),
           life: 3000
         })
         return
       }
 
-      if (this.formData.startTime && this.formData.endTime) {
-        if (new Date(this.formData.endTime) <= new Date(this.formData.startTime)) {
-          this.$toast.add({
-            severity: 'error',
-            summary: 'ข้อผิดพลาด',
-            detail: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มงาน',
-            life: 3000
-          })
-          return
-        }
+      if (!isValidTimeRange(this.formData.startTime, this.formData.endTime)) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ข้อผิดพลาด',
+          detail: getValidationMessage('เวลา', 'timeRange'),
+          life: 3000
+        })
+        return
       }
 
       try {
@@ -462,12 +463,6 @@ export default {
         return Math.max(0, (end - start) / (1000 * 60 * 60))
       }
       return 0
-    },
-    formatDate(date) {
-      return date ? date.toISOString().split('T')[0] : null
-    },
-    formatTime(time) {
-      return time ? time.toTimeString().split(' ')[0] : null
     },
     resetForm() {
       this.formData = {
