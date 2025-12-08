@@ -1,21 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { usePermissions } from '@/composables/usePermissions'
 
-import LoginPage from '../views/LoginPage.vue';
-import TwoFAAuthPage from '../views/TwoFAAuthPage.vue';
-import ProfileView from '../views/profile/ProfileView.vue';
-import CarBookingHome from '../views/car_booking/car_booking.vue';
-import LeaveWork from '../views/leave_work/LeaveWork.vue';
-import DailyWork from '../views/daily_work/DailyWork.vue';
-import Projects from '../views/projects/Projects.vue';
-import ManagementView from '../views/ManagementView.vue';
-import UserManagement from '../views/management/UserManagement.vue';
-import TaskManagement from '../views/management/TaskManagement.vue';
-import ProjectsView from '../views/management/ProjectsView.vue';
-import DailyWorkManagement from '../views/management/DailyWorkManagement.vue';
-import SystemSettings from '../views/management/SystemSettings.vue';
-import RolePermissions from '../views/management/RolePermissions.vue';
-import LeaveManagement from '../views/management/LeaveManagement.vue';
+// Lazy load components
+const LoginPage = () => import('../views/LoginPage.vue')
+const TwoFAAuthPage = () => import('../views/TwoFAAuthPage.vue')
+const ProfileView = () => import('../views/profile/ProfileView.vue')
+const CarBookingHome = () => import('../views/car_booking/car_booking.vue')
+const LeaveWork = () => import('../views/leave_work/LeaveWork.vue')
+const DailyWork = () => import('../views/daily_work/DailyWork.vue')
+const Projects = () => import('../views/projects/Projects.vue')
+const ManagementView = () => import('../views/ManagementView.vue')
+const UserManagement = () => import('../views/management/UserManagement.vue')
+const TaskManagement = () => import('../views/management/TaskManagement.vue')
+const ProjectsView = () => import('../views/management/ProjectsView.vue')
+const DailyWorkManagement = () => import('../views/management/DailyWorkManagement.vue')
+const SystemSettings = () => import('../views/management/SystemSettings.vue')
+const RolePermissions = () => import('../views/management/RolePermissions.vue')
+const LeaveManagement = () => import('../views/management/LeaveManagement.vue')
+const Dashboard = () => import('../views/management/Dashboard.vue')
 
 const routes = [
   {
@@ -114,6 +116,12 @@ const routes = [
     meta: { requiresAuth: true, title: 'จัดการการลางาน - Gent-CEM' },
   },
   {
+    path: '/management/dashboard',
+    name: 'dashboard',
+    component: Dashboard,
+    meta: { requiresAuth: true, title: 'Dashboard - Gent-CEM' },
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: () => {
       // Redirect to home for any undefined routes
@@ -132,10 +140,41 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userId = localStorage.getItem("soc_user_id");
   const role = localStorage.getItem("soc_role");
+  const token = localStorage.getItem("soc_token");
 
   if (to.meta.requiresAuth) {
-    // ตรวจสอบว่ามี userId (แทนการตรวจสอบ token)
-    if (!userId) {
+    // ตรวจสอบว่ามี userId และ token
+    if (!userId || !token) {
+      // Clear all auth data
+      localStorage.clear();
+      sessionStorage.clear();
+      next("/login");
+      return;
+    }
+
+    // Check if token is expired (decode JWT without verification)
+    try {
+      const tokenParts = token.split('.');
+      if (tokenParts.length === 3) {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        const expirationTime = payload.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        
+        if (currentTime >= expirationTime) {
+          // Token expired - clear all auth data
+          localStorage.clear();
+          sessionStorage.clear();
+          document.cookie.split(";").forEach((c) => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+          });
+          next("/login");
+          return;
+        }
+      }
+    } catch (e) {
+      // Invalid token format - clear and redirect
+      localStorage.clear();
+      sessionStorage.clear();
       next("/login");
       return;
     }

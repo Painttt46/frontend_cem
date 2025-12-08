@@ -271,9 +271,16 @@ const logout = async () => {
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
-    // Clear localStorage และ redirect
+    // Clear localStorage และ sessionStorage
     localStorage.clear();
     sessionStorage.clear();
+    
+    // Clear all cookies
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+    });
+    
+    // Redirect
     window.location.href = "/login";
   }
 };

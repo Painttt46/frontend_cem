@@ -1,21 +1,14 @@
 <template>
   <Card class="history-card">
     <template #content>
-      <!-- Search Box -->
-      <div class="search-box mb-3">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="ค้นหา..." class="w-full" />
-        </IconField>
-      </div>
-
-      <div v-if="filteredTasks.length === 0" class="empty-state">
+      <div v-if="tasks.length === 0" class="empty-state">
         <i class="pi pi-briefcase" style="font-size: 4rem; color: #ccc;"></i>
-        <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีงานที่เพิ่มไว้' }}</p>
+        <p>ยังไม่มีงานที่เพิ่มไว้</p>
       </div>
 
-      <DataTable v-else-if="categories.length > 0" :value="filteredTasks" :paginator="true" :rows="10"
-        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else-if="categories.length > 0" :data="enrichedTasks" 
+        :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" 
+        responsiveLayout="scroll" class="history-table" stripedRows>
         
         <Column field="id" header="รหัสงาน" :sortable="true">
           <template #body="slotProps">
@@ -64,9 +57,9 @@
           </template>
         </Column>
 
-        <Column field="created_at" header="วันเริ่มโครงการ" :sortable="true">
+        <Column field="project_start_date" header="วันเริ่มโครงการ" :sortable="true">
           <template #body="slotProps">
-            {{ formatDate(slotProps.data.created_at) }}
+            {{ slotProps.data.project_start_date ? formatDate(slotProps.data.project_start_date) : '-' }}
           </template>
         </Column>
 
@@ -89,7 +82,16 @@
           </template>
         </Column>
 
-        <Column header="จัดการ" style="width: 150px;">
+        <Column header="สถานะ" style="text-align: center; min-width: 140px;">
+          <template #body="slotProps">
+            <div class="badge-container">
+              <Badge :value="getStatusLabel(slotProps.data.status)" 
+                     :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
+            </div>
+          </template>
+        </Column>
+
+        <Column header="จัดการ" style="width: 200px;">
           <template #body="slotProps">
             <div class="action-buttons">
               <Button 
@@ -108,35 +110,21 @@
                 @click="editTask(slotProps.data)"
                 v-tooltip="'แก้ไข'"
               />
-            </div>
-          </template>
-        </Column>
-
-        <Column header="สถานะ" style="text-align: center; min-width: 140px;">
-          <template #body="slotProps">
-            <div class="badge-container">
-              <Badge :value="getStatusLabel(slotProps.data.status)" 
-                     :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
+              <Button 
+                icon="pi pi-trash" 
+                size="small" 
+                severity="danger" 
+                outlined
+                @click="confirmDeleteTask(slotProps.data)"
+                v-tooltip="'ลบ'"
+              />
             </div>
           </template>
         </Column>
 
         <Column header="ไฟล์แนบ" style="width: 80px;">
-          <template #body="slotProps">
-            <div v-if="hasFiles(slotProps.data)" class="attachments-info">
-              <Button 
-                icon="pi pi-paperclip" 
-                size="small" 
-                severity="info" 
-                outlined
-                @click="downloadTaskFiles(slotProps.data)"
-                v-tooltip="`${slotProps.data.files.length} ไฟล์`"
-              />
-            </div>
-            <span v-else class="no-files">-</span>
-          </template>
         </Column>
-      </DataTable>
+      </EnhancedDataTable>
     </template>
   </Card>
 
@@ -308,6 +296,17 @@
         </div>
 
         <div class="input-group">
+          <label class="input-label">วันเริ่มโครงการ</label>
+          <Calendar v-model="editFormData.project_start_date" dateFormat="dd/mm/yy" class="corporate-input" />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">วันสิ้นสุดโครงการ</label>
+          <Calendar v-model="editFormData.project_end_date" dateFormat="dd/mm/yy" 
+                    :minDate="editFormData.project_start_date" class="corporate-input" />
+        </div>
+
+        <div class="input-group">
           <label class="input-label">หมวดหมู่งาน *</label>
           <Dropdown v-model="editFormData.category" :options="categories" 
                     optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
@@ -385,9 +384,13 @@
 
 <script>
 import axios from 'axios'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
   name: 'TaskList',
+  components: {
+    EnhancedDataTable
+  },
   created() {
     this.$http = axios.create({
       baseURL: ''
@@ -415,7 +418,6 @@ export default {
   },
   data() {
     return {
-      searchQuery: '',
       tasks: [],
       detailDialog: false,
       selectedTask: null,
@@ -449,6 +451,8 @@ export default {
         sale_owner: '',
         description: '',
         category: 'งานทั่วไป',
+        project_start_date: null,
+        project_end_date: null,
         existingFiles: [],
         newFiles: []
       },
@@ -467,30 +471,13 @@ export default {
     }
   },
   computed: {
-    filteredTasks() {
-      const tasks = this.tasks || []
-      if (!this.searchQuery) return tasks
-
-      const query = this.searchQuery.toLowerCase().trim()
-      return tasks.filter(task => {
-        const searchableData = {
-          id: task.id || '',
-          task_name: task.task_name || '',
-          so_number: task.so_number || '',
-          contract_number: task.contract_number || '',
-          sale_owner: task.sale_owner || '',
-          description: task.description || '',
-          category: task.category || '',
-          status: task.status || '',
-          created_by: task.created_by || ''
-        }
-        
-        return Object.values(searchableData).some(value => {
-          if (value === null || value === undefined) return false
-          const strValue = String(value).toLowerCase()
-          return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
-        })
-      })
+    enrichedTasks() {
+      // Add status and category labels to tasks for better search
+      return this.tasks.map(task => ({
+        ...task,
+        statusLabel: this.getStatusLabel(task.status),
+        categoryLabel: this.getCategoryLabel(task.category)
+      }))
     },
     filteredAndSortedWorks() {
       let works = [...this.taskWorks]
@@ -514,6 +501,42 @@ export default {
     }
   },
   methods: {
+    confirmDeleteTask(task) {
+      this.$confirm.require({
+        message: `คุณต้องการลบงาน "${task.task_name}" ใช่หรือไม่?`,
+        header: 'ยืนยันการลบ',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'ลบ',
+        rejectLabel: 'ยกเลิก',
+        acceptClass: 'p-button-danger',
+        accept: () => {
+          this.deleteTask(task.id)
+        }
+      })
+    },
+    async deleteTask(taskId) {
+      try {
+        await this.$http.delete(`/api/tasks/${taskId}`)
+        
+        this.$toast.add({
+          severity: 'success',
+          summary: 'สำเร็จ',
+          detail: 'ลบงานเรียบร้อยแล้ว',
+          life: 3000
+        })
+        
+        this.loadTasks()
+        window.dispatchEvent(new CustomEvent('taskUpdated'))
+      } catch (error) {
+        console.error('Error deleting task:', error)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: error.response?.data?.error || 'ไม่สามารถลบงานได้',
+          life: 5000
+        })
+      }
+    },
     async loadCategoriesFromStorage() {
       try {
         const response = await this.$http.get('/api/settings/categories')
@@ -596,6 +619,16 @@ export default {
     formatDate(date) {
       if (!date) return '-'
       try {
+        // For date-only strings (YYYY-MM-DD), parse manually to avoid timezone issues
+        if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [year, month, day] = date.split('-')
+          const d = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+          return d.toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+        }
         return new Date(date).toLocaleDateString('th-TH', {
           year: 'numeric',
           month: 'long',
@@ -629,6 +662,17 @@ export default {
       document.body.removeChild(link)
     },
     editTask(task) {
+      // Parse dates from string to Date object
+      const parseDate = (dateStr) => {
+        if (!dateStr) return null
+        if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+          const [year, month, day] = dateStr.split('-')
+          // Create date at noon to avoid timezone issues
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0)
+        }
+        return new Date(dateStr)
+      }
+      
       this.editFormData = {
         id: task.id,
         task_name: task.task_name,
@@ -638,6 +682,8 @@ export default {
         description: task.description || '',
         category: task.category || 'งานทั่วไป',
         status: task.status || 'pending',
+        project_start_date: parseDate(task.project_start_date),
+        project_end_date: parseDate(task.project_end_date),
         existingFiles: [...(task.files || [])],
         newFiles: []
       }
@@ -678,8 +724,20 @@ export default {
         // รวมไฟล์เดิมกับไฟล์ใหม่
         const allFiles = [...this.editFormData.existingFiles, ...newUploadedFiles]
         
+        // Format dates to YYYY-MM-DD
+        const formatDate = (date) => {
+          if (!date) return null
+          const d = new Date(date)
+          const year = d.getFullYear()
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const day = String(d.getDate()).padStart(2, '0')
+          return `${year}-${month}-${day}`
+        }
+        
         const updateData = {
           ...this.editFormData,
+          project_start_date: formatDate(this.editFormData.project_start_date),
+          project_end_date: formatDate(this.editFormData.project_end_date),
           files: allFiles
         }
         delete updateData.existingFiles

@@ -130,7 +130,8 @@ export default {
         this.leaveRecords = response.data.map(record => {
           return {
             ...record,
-            name: record.employee_name,
+            employee_name: record.user_name, // เพิ่ม mapping
+            name: record.user_name,
             role: record.employee_role,
             leaveType: this.getLeaveTypeLabel(record.leave_type),
             startDate: this.formatDate(record.start_datetime),

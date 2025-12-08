@@ -1,21 +1,13 @@
 <template>
   <Card class="history-card">
     <template #content>
-      <!-- Search Box -->
-      <div class="search-box mb-3">
-        <IconField iconPosition="left">
-          <InputIcon class="pi pi-search" />
-          <InputText v-model="searchQuery" placeholder="ค้นหา..." class="w-full" />
-        </IconField>
-      </div>
-
-      <div v-if="filteredRecords.length === 0" class="empty-state">
+      <div v-if="records.length === 0" class="empty-state">
         <i class="pi pi-calendar-clock" style="font-size: 4rem; color: #ccc;"></i>
-        <p>{{ searchQuery ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูลการลงงาน' }}</p>
+        <p>ยังไม่มีข้อมูลการลงงาน</p>
       </div>
 
-      <DataTable v-else :value="filteredRecords" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
-        responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
+        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
 
         <Column field="id" header="ID" :sortable="true" style="width: 80px; text-align: center;">
           <template #body="slotProps">
@@ -38,7 +30,9 @@
         <Column field="employee_name" header="ชื่อ-นามสกุล" :sortable="true" style="min-width: 150px;">
           <template #body="slotProps">
             <div class="employee-info">
-              <div class="employee-name">{{ slotProps.data.employee_name || 'ไม่ระบุ' }}</div>
+              <div class="employee-name clickable-name" @click="showUserInfo(slotProps.data.user_id)">
+                {{ slotProps.data.employee_name || 'ไม่ระบุ' }}
+              </div>
             </div>
           </template>
         </Column>
@@ -120,7 +114,7 @@
             <span v-else class="no-files">-</span>
           </template>
         </Column>
-      </DataTable>
+      </EnhancedDataTable>
     </template>
   </Card>
 
@@ -236,13 +230,24 @@
       </div>
     </form>
   </Dialog>
+
+  <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
 </template>
 
 <script>
 import axios from 'axios'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
+
+import { addDays } from '@/utils/dateUtils'
+import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
 
 export default {
   name: 'DailyWorkList',
+  components: {
+    UserInfoDialog,
+    EnhancedDataTable
+  },
   emits: ['refresh-data'],
   props: {
     records: {
@@ -293,44 +298,10 @@ export default {
   computed: {
     workRecords() {
       return this.records && this.records.length > 0 ? this.records : this.localRecords
-    },
-    filteredRecords() {
-      const records = this.workRecords || []
-      if (!this.searchQuery) return records
-
-      const query = this.searchQuery.toLowerCase().trim()
-      return records.filter(record => {
-        const formattedDate = this.formatDate(record.work_date)
-        const timeRange = `${this.formatTime(record.start_time)} - ${this.formatTime(record.end_time)}`
-        const searchableData = {
-          id: record.id || '',
-          employee_name: record.employee_name || '',
-          employee_position: record.employee_position || '',
-          task_name: record.task_name || '',
-          so_number: record.so_number || '',
-          work_status: record.work_status || '',
-          location: record.location || '',
-          category: record.category || '',
-          work_description: record.work_description || '',
-          work_date: formattedDate,
-          start_time: record.start_time || '',
-          end_time: record.end_time || '',
-          start_time_short: this.formatTime(record.start_time),
-          end_time_short: this.formatTime(record.end_time),
-          time_range: timeRange
-        }
-        
-        return Object.values(searchableData).some(value => {
-          if (value === null || value === undefined) return false
-          const strValue = String(value).toLowerCase()
-          return strValue.includes(query) || strValue.replace(/\s/g, '').includes(query.replace(/\s/g, ''))
-        })
-      })
     }
   },
   data() {
     return {
-      searchQuery: '',
       localRecords: [],
       detailDialog: false,
       selectedRecord: null,
@@ -349,10 +320,18 @@ export default {
         newFiles: []
       },
       statusOptions: [],
-      categoryOptions: []
+      categoryOptions: [],
+      showUserDialog: false,
+      selectedUserId: null
     }
   },
   methods: {
+    showUserInfo(userId) {
+      if (userId) {
+        this.selectedUserId = userId
+        this.showUserDialog = true
+      }
+    },
     loadStatusOptions() {
       this.$http.get('/api/settings/statuses')
         .then(response => {
@@ -391,15 +370,14 @@ export default {
       // วันที่ลงงาน
       const workDate = new Date(record.work_date)
 
-      // กำหนดเวลาล็อก = 08:00 ของวันถัดไป
-      const cutoff = new Date(workDate)
-      cutoff.setDate(cutoff.getDate() + 1)
-      cutoff.setHours(8, 0, 0, 0)
+      // กำหนดเวลาล็อก = EDIT_CUTOFF_HOUR ของวันถัดไป
+      const cutoff = addDays(workDate, 1)
+      cutoff.setHours(EDIT_CUTOFF_HOUR, 0, 0, 0)
 
       // เวลาปัจจุบัน
       const now = new Date()
 
-      // ปิดการแก้ไขหลัง 08:00 ของวันถัดไป
+      // ปิดการแก้ไขหลัง EDIT_CUTOFF_HOUR ของวันถัดไป
       return now > cutoff
     },
 
@@ -784,6 +762,17 @@ export default {
   font-weight: 600;
   color: #495057;
   font-size: 0.9rem;
+}
+
+.clickable-name {
+  cursor: pointer;
+  color: #667eea;
+  transition: all 0.2s;
+}
+
+.clickable-name:hover {
+  color: #764ba2;
+  text-decoration: underline;
 }
 
 .position-text {
