@@ -227,7 +227,7 @@
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import userService from '@/services/userService'
 import dailyWorkService from '@/services/dailyWorkService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'

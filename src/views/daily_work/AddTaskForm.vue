@@ -83,7 +83,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'AddTaskForm',

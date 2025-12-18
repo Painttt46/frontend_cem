@@ -44,6 +44,7 @@ router.afterEach((to) => {
     });
 });
 
+
 const app = createApp(App);
 app.use(store);
 app.use(router);
@@ -78,5 +79,7 @@ app.component('Textarea', Textarea);
 app.directive('Tooltip', Tooltip);
 app.use(ConfirmationService);
 app.use(ToastService);
+
+app.config.globalProperties.$http = axios;
 
 app.mount("#app");
