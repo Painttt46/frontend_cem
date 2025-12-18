@@ -284,12 +284,7 @@ export default {
     }, 300000)
   },
   created() {
-    this.$http = axios.create({
-      baseURL: '',
-      headers: {
-        'X-Timezone': 'Asia/Bangkok'
-      }
-    })
+    this.$http = axios
     this.loadRecords()
   },
   methods: {

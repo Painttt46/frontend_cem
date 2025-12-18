@@ -262,9 +262,7 @@ export default {
     }
   },
   async created() {
-    this.$http = axios.create({
-      baseURL: process.env.VUE_APP_API_URL || ''
-    });
+    this.$http = axios
     await this.loadUsers();
     await this.loadProjects();
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);

@@ -204,9 +204,7 @@ export default {
     Button
   },
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
     this.loadTasks()
     this.loadUsers()
   },

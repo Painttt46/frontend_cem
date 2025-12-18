@@ -88,9 +88,7 @@ import axios from '@/utils/axiosConfig'
 export default {
   name: 'AddTaskForm',
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
   },
   data() {
     return {
@@ -123,12 +121,6 @@ export default {
         })
         .catch(error => {
           console.error(error)
-          // Fallback to default
-          this.categoryOptions = [
-            { label: '💼 งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼' },
-            { label: '💻 งานพัฒนาระบบ', value: 'งานพัฒนาระบบ', icon: 'emoji:💻' },
-            { label: '🔧 งานบำรุงรักษา', value: 'งานบำรุงรักษา', icon: 'emoji:🔧' }
-          ]
           if (this.categoryOptions.length > 0 && !this.formData.category) {
             this.formData.category = this.categoryOptions[0].value
           }
