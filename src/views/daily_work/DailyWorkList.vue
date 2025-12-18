@@ -235,7 +235,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
@@ -256,9 +256,7 @@ export default {
     }
   },
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
     if (!this.records || this.records.length === 0) {
       this.loadWorkRecords()
     }

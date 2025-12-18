@@ -98,7 +98,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import axios from '@/utils/axiosConfig';
 import router from '@/router';
 /* eslint-disable */
 import InputText from 'primevue/inputtext';

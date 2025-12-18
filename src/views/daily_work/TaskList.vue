@@ -383,7 +383,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
@@ -392,9 +392,7 @@ export default {
     EnhancedDataTable
   },
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
   },
   async mounted() {
     // Listen for task updates

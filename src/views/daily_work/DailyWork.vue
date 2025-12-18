@@ -29,7 +29,7 @@
 <script>
 import DailyWorkForm from './DailyWorkForm.vue'
 import DailyWorkList from './DailyWorkList.vue'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'DailyWork',

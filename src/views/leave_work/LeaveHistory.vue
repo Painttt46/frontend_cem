@@ -174,7 +174,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
@@ -205,9 +205,7 @@ export default {
     await this.loadLeaveTypes()
   },
   created() {
-    this.$http = axios.create({
-      baseURL: process.env.VUE_APP_API_URL || ''
-    })
+    this.$http = axios
   },
   methods: {
     async loadLeaveTypes() {

@@ -122,7 +122,7 @@
 import Calendar from './Calendar.vue'
 import History from './History.vue'
 import BookingFormPrime from './BookingFormPrime.vue'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 
 export default {
   components: {

@@ -129,7 +129,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
 

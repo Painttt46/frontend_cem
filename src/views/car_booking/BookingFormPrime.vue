@@ -224,7 +224,7 @@
 <script>
 import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import { isActive } from '@/utils/statusHelper'
 
 export default {
