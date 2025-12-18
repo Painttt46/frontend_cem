@@ -180,7 +180,7 @@ const loadPermissions = async (role) => {
       
       // Add new permissions from database that don't exist in pages
       response.data.permissions.forEach(permission => {
-        const existingPage = pages.value.find(p => p.page_path === permission.page_path)
+        const existingPage = pages.value.find(p => p.path === permission.page_path)
         if (!existingPage) {
           pages.value.push({
             id: permission.id,
