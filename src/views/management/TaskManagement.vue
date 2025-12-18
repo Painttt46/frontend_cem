@@ -223,7 +223,7 @@ import { useToast } from 'primevue/usetoast'
 import axios from '@/utils/axiosConfig'
 
 const toast = useToast()
-const http = axios.create({ baseURL: 'http://localhost:3001' })
+const http = axios
 
 // Data
 const showCategoriesDialog = ref(false)
