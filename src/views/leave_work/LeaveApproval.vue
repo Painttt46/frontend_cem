@@ -286,22 +286,28 @@ export default {
     },
     formatDateTime(datetime) {
       if (!datetime) return '-'
-      return new Date(datetime).toLocaleString('th-TH', {
+      const date = new Date(datetime)
+      if (!datetime.includes('Z') && !datetime.includes('+')) {
+        date.setHours(date.getHours() + 7)
+      }
+      return date.toLocaleString('th-TH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'Asia/Bangkok'
+        minute: '2-digit'
       })
     },
 
     formatDate(datetime) {
       if (!datetime) return '-'
-      return new Date(datetime).toLocaleDateString('th-TH', {
+      const date = new Date(datetime)
+      if (!datetime.includes('Z') && !datetime.includes('+')) {
+        date.setHours(date.getHours() + 7)
+      }
+      return date.toLocaleDateString('th-TH', {
         day: '2-digit',
-        month: '2-digit',
-        timeZone: 'Asia/Bangkok'
+        month: '2-digit'
       })
     },
     calculateDays(startDateTime, endDateTime) {

@@ -267,7 +267,11 @@ export default {
 
     formatDate(dateTime) {
       if (!dateTime) return ''
-      return new Date(dateTime).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' })
+      const date = new Date(dateTime)
+      if (!dateTime.includes('Z') && !dateTime.includes('+')) {
+        date.setHours(date.getHours() + 7)
+      }
+      return date.toLocaleDateString('th-TH')
     }
   },
 
