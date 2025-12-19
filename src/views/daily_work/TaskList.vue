@@ -656,15 +656,28 @@ export default {
         this.filesDialog = true
       }
     },
-    downloadFile(fileName) {
-      // Create download link
-      const link = document.createElement('a')
-      link.href = `/api/files/download/${fileName}`
-      link.download = fileName
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    async downloadFile(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, {
+          responseType: 'blob'
+        })
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName.split('-').slice(2).join('-') || fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Download error:', error)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
+          life: 3000
+        })
+      }
     },
     editTask(task) {
       // Parse dates from string to Date object
