@@ -6,6 +6,14 @@ services:
     container_name: frontend-cem
     environment:
       - TZ=Asia/Bangkok
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
     ports:
-      - "8080:80"
+      - "3000:80"
     restart: unless-stopped
+    networks:
+      - backend_cem_default
+
+networks:
+  backend_cem_default:
+    external: true

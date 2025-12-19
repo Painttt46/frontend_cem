@@ -103,7 +103,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -180,7 +180,7 @@ const loadPermissions = async (role) => {
       
       // Add new permissions from database that don't exist in pages
       response.data.permissions.forEach(permission => {
-        const existingPage = pages.value.find(p => p.page_path === permission.page_path)
+        const existingPage = pages.value.find(p => p.path === permission.page_path)
         if (!existingPage) {
           pages.value.push({
             id: permission.id,

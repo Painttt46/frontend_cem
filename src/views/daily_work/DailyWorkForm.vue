@@ -6,9 +6,9 @@
         <form @submit.prevent="submitForm" class="daily-work-form">
           <div class="form-grid">
             <div class="input-group">
-              <label for="taskId" class="input-label">เลือกงาน *</label>
+              <label for="taskId" class="input-label">เลือกโครงการ *</label>
               <Dropdown id="taskId" v-model="formData.taskId" :options="tasks" optionLabel="display" optionValue="id"
-                class="corporate-dropdown" required placeholder="เลือกงานที่ต้องการลงเวลา" @change="onTaskChange" />
+                class="corporate-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange" />
             </div>
 
             <div class="input-group">
@@ -188,7 +188,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import Checkbox from 'primevue/checkbox'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
@@ -204,9 +204,7 @@ export default {
     Button
   },
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
     this.loadTasks()
     this.loadUsers()
   },
@@ -348,7 +346,7 @@ export default {
 
         this.tasks = availableTasks.map(task => ({
           ...task,
-          display: `${task.task_name} ${task.so_number ? `(SO: ${task.so_number})` : ''}`
+          display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
       } catch (error) {
         console.error(error)
@@ -448,13 +446,29 @@ export default {
         this.$emit('submit-work')
         this.resetForm()
       } catch (error) {
+        console.error('Submit error:', error)
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-          life: 3000
+          detail: error.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+          life: 5000
         })
       }
+    },
+    formatDate(date) {
+      if (!date) return null
+      const d = new Date(date)
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    },
+    formatTime(date) {
+      if (!date) return null
+      const d = new Date(date)
+      const hours = String(d.getHours()).padStart(2, '0')
+      const minutes = String(d.getMinutes()).padStart(2, '0')
+      return `${hours}:${minutes}`
     },
     calculateTotalHours() {
       if (this.formData.startTime && this.formData.endTime) {

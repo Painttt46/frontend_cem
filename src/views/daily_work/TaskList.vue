@@ -85,8 +85,10 @@
         <Column header="สถานะ" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="getStatusLabel(slotProps.data.status)" 
+              <Badge v-if="slotProps.data.status && workStatuses.find(s => s.value === slotProps.data.status)" 
+                     :value="getStatusLabel(slotProps.data.status)" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
+              <span v-else class="no-status">-</span>
             </div>
           </template>
         </Column>
@@ -123,6 +125,13 @@
         </Column>
 
         <Column header="ไฟล์แนบ" style="width: 80px;">
+          <template #body="slotProps">
+            <div v-if="hasFiles(slotProps.data)" class="attachments-info">
+              <Button icon="pi pi-paperclip" size="small" severity="info" outlined
+                @click="downloadTaskFiles(slotProps.data)" v-tooltip="`${slotProps.data.files.length} ไฟล์`" />
+            </div>
+            <span v-else class="no-files">-</span>
+          </template>
         </Column>
       </EnhancedDataTable>
     </template>
@@ -144,7 +153,7 @@
   </div>
 
   <!-- Files Dialog -->
-  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }">
+  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }" :draggable="false">
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
@@ -383,7 +392,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
@@ -392,9 +401,7 @@ export default {
     EnhancedDataTable
   },
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
   },
   async mounted() {
     // Listen for task updates
@@ -554,6 +561,7 @@ export default {
     async loadStatusesFromStorage() {
       try {
         const response = await this.$http.get('/api/settings/statuses')
+        console.log('Loaded statuses:', response.data)
         this.workStatuses = response.data
       } catch (error) {
         console.error('Error loading statuses:', error)
@@ -590,16 +598,18 @@ export default {
       return status ? status.icon : 'pi pi-circle'
     },
     getStatusLabel(statusValue) {
+      if (!statusValue) return '-'
       const status = this.workStatuses.find(s => s.value === statusValue)
       if (status && status.label) {
         // Remove all emoji and special characters
         return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
       }
-      return statusValue
+      return '-'
     },
     getStatusColor(statusValue) {
+      if (!statusValue) return '#9e9e9e'
       const status = this.workStatuses.find(s => s.value === statusValue)
-      return status?.color || '#6c757d'
+      return status?.color || '#9e9e9e'
     },
     async loadTasks() {
       try {
@@ -651,15 +661,28 @@ export default {
         this.filesDialog = true
       }
     },
-    downloadFile(fileName) {
-      // Create download link
-      const link = document.createElement('a')
-      link.href = `/api/files/download/${fileName}`
-      link.download = fileName
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    async downloadFile(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, {
+          responseType: 'blob'
+        })
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName.split('-').slice(2).join('-') || fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Download error:', error)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
+          life: 3000
+        })
+      }
     },
     editTask(task) {
       // Parse dates from string to Date object
@@ -1305,7 +1328,8 @@ export default {
   justify-content: center;
 }
 
-.no-files {
+.no-files,
+.no-status {
   display: flex;
   justify-content: center;
   align-items: center;

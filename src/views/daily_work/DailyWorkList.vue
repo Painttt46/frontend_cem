@@ -53,7 +53,7 @@
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>
-              <div v-if="slotProps.data.so_number" class="so-number">SO: {{ slotProps.data.so_number }}</div>
+              <div v-if="slotProps.data.so_number" class="so-number">{{ slotProps.data.so_number }}</div>
             </div>
           </template>
         </Column>
@@ -134,7 +134,7 @@
   </div>
 
   <!-- Files Dialog -->
-  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }">
+  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }" :draggable="false">
     <div v-if="selectedRecordFiles && selectedRecordFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedRecordFiles" :key="index" class="file-item">
         <div class="file-info">
@@ -235,7 +235,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
@@ -256,9 +256,7 @@ export default {
     }
   },
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
     if (!this.records || this.records.length === 0) {
       this.loadWorkRecords()
     }
@@ -490,15 +488,28 @@ export default {
         this.filesDialog = true
       }
     },
-    downloadFile(fileName) {
-      // Create download link
-      const link = document.createElement('a')
-      link.href = `/api/files/download/${fileName}`
-      link.download = fileName
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    async downloadFile(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, {
+          responseType: 'blob'
+        })
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName.split('-').slice(2).join('-') || fileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('Download error:', error)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
+          life: 3000
+        })
+      }
     },
     editRecord(record) {
 

@@ -135,7 +135,7 @@
               />
             </div>
             <div class="input-group full-width">
-              <label for="delegateContact" class="input-label">ช่องทางติดต่อ *</label>
+              <label for="delegateContact" class="input-label">ช่องทางติดต่อผู้รับผิดชอบงานเเทน *</label>
               <InputText id="delegateContact" v-model="formData.delegateContact"
                 placeholder="เบอร์โทร, อีเมล, หรือช่องทางอื่นๆ" required class="corporate-input" />
             </div>
@@ -164,7 +164,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import AutoComplete from 'primevue/autocomplete'
 
 export default {

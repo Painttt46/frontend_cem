@@ -53,7 +53,7 @@ import LeaveApproval from './LeaveApproval.vue'
 import { useConfirm } from 'primevue/useconfirm'
 import { useToast } from 'primevue/usetoast'
 import { usePermissions } from '@/composables/usePermissions'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'LeaveWork',
@@ -272,9 +272,7 @@ export default {
   },
 
   created() {
-    this.$http = axios.create({
-      baseURL: ''
-    })
+    this.$http = axios
   },
 
   mounted() {

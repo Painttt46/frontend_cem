@@ -187,7 +187,7 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 export default {
@@ -199,9 +199,7 @@ export default {
     records: Array
   },
   created() {
-    this.$http = axios.create({
-      baseURL: process.env.VUE_APP_API_URL || ''
-    })
+    this.$http = axios
   },
   data() {
     return {

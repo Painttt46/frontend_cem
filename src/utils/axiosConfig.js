@@ -2,13 +2,18 @@ import axios from 'axios'
 import router from '@/router'
 
 // Configure axios defaults
-axios.defaults.baseURL = 'http://localhost:3001'
+axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
 axios.defaults.timeout = 30000 // 30 seconds
 
 // Request interceptor
 axios.interceptors.request.use(
   (config) => {
+    // Add token to Authorization header
+    const token = localStorage.getItem('soc_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     // Add timestamp to prevent caching
     config.params = {
       ...config.params,

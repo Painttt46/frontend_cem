@@ -185,7 +185,7 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode } from 'primevue/api'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 
 const toast = useToast()
 

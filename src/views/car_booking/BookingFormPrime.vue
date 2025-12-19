@@ -102,6 +102,13 @@
                 :label="borrowForm.images?.length > 0 ? `เลือกแล้ว ${borrowForm.images.length} รูป` : 'เลือกรูปภาพ'"
                 icon="pi pi-upload" severity="secondary" outlined @click="$refs.borrowFileInput.click()" />
             </div>
+            <div v-if="borrowForm.images?.length > 0" class="image-preview-list">
+              <div v-for="(image, index) in borrowForm.images" :key="index" class="image-preview-item">
+                <img :src="getImagePreview(image)" alt="preview" class="preview-img" />
+                <Button icon="pi pi-times" severity="danger" size="small" rounded 
+                  @click="$emit('remove-image', index, 'borrow')" class="remove-btn" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -172,6 +179,13 @@
                 :label="returnForm.images?.length > 0 ? `เลือกแล้ว ${returnForm.images.length} รูป` : 'เลือกรูปภาพ'"
                 icon="pi pi-upload" severity="secondary" outlined @click="$refs.returnFileInput.click()" />
             </div>
+            <div v-if="returnForm.images?.length > 0" class="image-preview-list">
+              <div v-for="(image, index) in returnForm.images" :key="index" class="image-preview-item">
+                <img :src="getImagePreview(image)" alt="preview" class="preview-img" />
+                <Button icon="pi pi-times" severity="danger" size="small" rounded 
+                  @click="$emit('remove-image', index, 'return')" class="remove-btn" />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -224,7 +238,7 @@
 <script>
 import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
-import axios from 'axios'
+import axios from '@/utils/axiosConfig'
 import { isActive } from '@/utils/statusHelper'
 
 export default {
@@ -233,7 +247,7 @@ export default {
     AutoComplete,
     Dropdown
   },
-  emits: ['close-form', 'submit-borrow', 'submit-return', 'submit-cancel', 'handle-image-upload', 'update-borrow-form', 'updateReturnForm', 'update-cancel-form'],
+  emits: ['close-form', 'submit-borrow', 'submit-return', 'submit-cancel', 'handle-image-upload', 'remove-image', 'update-borrow-form', 'updateReturnForm', 'update-cancel-form'],
   props: {
     showForm: Boolean,
     selectedDate: Date,
@@ -262,9 +276,7 @@ export default {
     }
   },
   async created() {
-    this.$http = axios.create({
-      baseURL: process.env.VUE_APP_API_URL || ''
-    });
+    this.$http = axios
     await this.loadUsers();
     await this.loadProjects();
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
@@ -308,6 +320,12 @@ export default {
     }
   },
   methods: {
+    getImagePreview(image) {
+      if (image instanceof File) {
+        return URL.createObjectURL(image)
+      }
+      return image
+    },
     async loadProjects() {
       try {
         const response = await this.$http.get('/api/tasks')
@@ -643,6 +661,35 @@ export default {
 
 .file-input {
   display: none;
+}
+
+.image-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.image-preview-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px !important;
+  height: 24px !important;
 }
 
 .form-actions {

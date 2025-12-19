@@ -86,7 +86,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from 'axios';
+import axios from '@/utils/axiosConfig';
 import router from "@/router";
 
 import InputText from "primevue/inputtext";
@@ -141,17 +141,7 @@ const sendPasswordReset = async () => {
       email: forgotEmail.value
     });
 
-    if (response.data.fallback) {
-      // แสดงข้อมูลเมื่อส่งอีเมลไม่ได้
-      const userData = response.data.userData;
-      toast.add({
-        severity: 'warn',
-        summary: 'ไม่สามารถส่งอีเมลได้',
-        detail: `Username: ${userData.username}\nรหัสผ่าน: ${userData.password}\n(ระบบอีเมลขัดข้อง)`,
-        life: 15000
-      });
-    } else {
-      // ส่งอีเมลสำเร็จ
+    if (response.data.success) {
       toast.add({
         severity: 'success',
         summary: 'ส่งอีเมลสำเร็จ',
