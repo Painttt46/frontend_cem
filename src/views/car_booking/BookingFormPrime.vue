@@ -96,17 +96,18 @@
           <div class="file-upload-section">
             <label class="upload-label">รูปภาพ</label>
             <div class="file-upload-wrapper">
-              <input ref="borrowFileInput" @change="$emit('handle-image-upload', $event, 'borrow')" type="file"
-                accept="image/*" multiple class="file-input" id="borrowImages">
+              <input ref="borrowFileInput" @change="handleBorrowUpload" type="file"
+                accept="image/*" multiple class="file-input">
               <Button type="button"
                 :label="borrowForm.images?.length > 0 ? `เลือกแล้ว ${borrowForm.images.length} รูป` : 'เลือกรูปภาพ'"
-                icon="pi pi-upload" severity="secondary" outlined @click="$refs.borrowFileInput.click()" />
+                icon="pi pi-upload" severity="secondary" outlined @click="triggerBorrowUpload" />
             </div>
             <div v-if="borrowForm.images?.length > 0" class="image-preview-list">
               <div v-for="(image, index) in borrowForm.images" :key="index" class="image-preview-item">
                 <img :src="getImagePreview(image)" alt="preview" class="preview-img" />
-                <Button icon="pi pi-times" severity="danger" size="small" rounded 
-                  @click="$emit('remove-image', index, 'borrow')" class="remove-btn" />
+                <span class="remove-btn" @click="$emit('remove-image', index, 'borrow')">
+                  <i class="pi pi-times"></i>
+                </span>
               </div>
             </div>
           </div>
@@ -173,17 +174,18 @@
           <div class="file-upload-section">
             <label class="upload-label">รูปภาพ</label>
             <div class="file-upload-wrapper">
-              <input ref="returnFileInput" @change="$emit('handle-image-upload', $event, 'return')" type="file"
-                accept="image/*" multiple class="file-input" id="returnImages">
+              <input ref="returnFileInput" @change="handleReturnUpload" type="file"
+                accept="image/*" multiple class="file-input">
               <Button type="button"
                 :label="returnForm.images?.length > 0 ? `เลือกแล้ว ${returnForm.images.length} รูป` : 'เลือกรูปภาพ'"
-                icon="pi pi-upload" severity="secondary" outlined @click="$refs.returnFileInput.click()" />
+                icon="pi pi-upload" severity="secondary" outlined @click="triggerReturnUpload" />
             </div>
             <div v-if="returnForm.images?.length > 0" class="image-preview-list">
               <div v-for="(image, index) in returnForm.images" :key="index" class="image-preview-item">
                 <img :src="getImagePreview(image)" alt="preview" class="preview-img" />
-                <Button icon="pi pi-times" severity="danger" size="small" rounded 
-                  @click="$emit('remove-image', index, 'return')" class="remove-btn" />
+                <span class="remove-btn" @click="$emit('remove-image', index, 'return')">
+                  <i class="pi pi-times"></i>
+                </span>
               </div>
             </div>
           </div>
@@ -325,6 +327,22 @@ export default {
         return URL.createObjectURL(image)
       }
       return image
+    },
+    triggerBorrowUpload() {
+      this.$refs.borrowFileInput.value = ''
+      this.$refs.borrowFileInput.click()
+    },
+    triggerReturnUpload() {
+      this.$refs.returnFileInput.value = ''
+      this.$refs.returnFileInput.click()
+    },
+    handleBorrowUpload(event) {
+      this.$emit('handle-image-upload', event, 'borrow')
+      event.target.value = ''
+    },
+    handleReturnUpload(event) {
+      this.$emit('handle-image-upload', event, 'return')
+      event.target.value = ''
     },
     async loadProjects() {
       try {
@@ -684,12 +702,24 @@ export default {
   border: 1px solid #dee2e6;
 }
 
-.remove-btn {
+.image-preview-list .remove-btn {
   position: absolute;
   top: -8px;
   right: -8px;
-  width: 24px !important;
-  height: 24px !important;
+  width: 22px;
+  height: 22px;
+  background: #ef4444;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 12px;
+}
+
+.image-preview-list .remove-btn:hover {
+  background: #dc2626;
 }
 
 .form-actions {
