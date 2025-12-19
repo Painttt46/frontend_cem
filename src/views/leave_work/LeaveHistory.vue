@@ -331,7 +331,8 @@ export default {
       return new Date(date).toLocaleDateString('th-TH', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
       })
     },
     formatDateTime(datetime) {
@@ -341,7 +342,8 @@ export default {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
     calculateDays(startDateTime, endDateTime) {

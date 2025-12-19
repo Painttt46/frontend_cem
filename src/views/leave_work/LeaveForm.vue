@@ -425,8 +425,15 @@ export default {
         const end = new Date(this.formData.endDateTime)
         start.setHours(0, 0, 0, 0)
         end.setHours(0, 0, 0, 0)
-        const diffTime = end - start
-        return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
+        
+        let count = 0
+        const current = new Date(start)
+        while (current <= end) {
+          const day = current.getDay()
+          if (day !== 0 && day !== 6) count++
+          current.setDate(current.getDate() + 1)
+        }
+        return count
       }
       return 0
     },

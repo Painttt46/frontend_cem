@@ -140,7 +140,7 @@
   </Card>
 
   <!-- Work Details Dialog -->
-  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" style="width: 50rem;">
+  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" style="width: 50rem;" :draggable="false">
     <div class="work-details-content">
       <p>{{ selectedWorkDetails }}</p>
     </div>
@@ -150,7 +150,7 @@
   </Dialog>
 
   <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" style="width: 60rem;">
+  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" style="width: 60rem;" :draggable="false">
     <div class="attachments-content">
       <div v-if="selectedAttachments.length === 0" class="no-attachments">
         <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
@@ -291,7 +291,8 @@ export default {
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
 
@@ -299,7 +300,8 @@ export default {
       if (!datetime) return '-'
       return new Date(datetime).toLocaleDateString('th-TH', {
         day: '2-digit',
-        month: '2-digit'
+        month: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
     calculateDays(startDateTime, endDateTime) {

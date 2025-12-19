@@ -136,7 +136,7 @@ export default {
             leaveType: this.getLeaveTypeLabel(record.leave_type),
             startDate: this.formatDate(record.start_datetime),
             endDate: this.formatDate(record.end_datetime),
-            submittedAt: new Date(record.created_at).toLocaleString('th-TH')
+            submittedAt: new Date(record.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
           }
         })
       } catch (error) {
@@ -267,7 +267,7 @@ export default {
 
     formatDate(dateTime) {
       if (!dateTime) return ''
-      return new Date(dateTime).toLocaleDateString('th-TH')
+      return new Date(dateTime).toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' })
     }
   },
 
