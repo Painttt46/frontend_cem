@@ -103,6 +103,16 @@
                 {{ selectedCarRecord.project || 'ไม่ระบุ' }}
               </div>
             </div>
+
+            <div v-if="selectedCarRecord.colleagues?.length > 0" class="detail-row">
+              <div class="detail-label">
+                <i class="pi pi-users"></i>
+                ผู้ร่วมงาน
+              </div>
+              <div class="detail-value">
+                {{ formatColleagues(selectedCarRecord.colleagues) }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -231,6 +241,10 @@ export default {
     }
   },
   methods: {
+    formatColleagues(colleagues) {
+      if (!colleagues?.length) return '-'
+      return colleagues.map(c => typeof c === 'object' ? (c.name || c.value) : c).join(', ')
+    },
     previousMonth() {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1)
     },

@@ -53,7 +53,7 @@
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.name" 
                   class="clickable-name" 
-                  @click="showUserInfo(slotProps.data.returnRecord.user_id)">
+                  @click="showUserByName(slotProps.data.returnRecord.name)">
               {{ slotProps.data.returnRecord.name }}
             </span>
             <span v-else>-</span>
@@ -235,6 +235,13 @@ export default {
     showUserInfo(userId) {
       if (userId) {
         this.selectedUserId = userId
+        this.showUserDialog = true
+      }
+    },
+    showUserByName(name) {
+      if (name) {
+        this.selectedUserId = null
+        this.selectedUserName = name
         this.showUserDialog = true
       }
     },
