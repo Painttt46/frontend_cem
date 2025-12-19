@@ -357,6 +357,19 @@ export default {
         this.returnForm.images.splice(index, 1)
       }
     },
+    async convertImagesToBase64(images) {
+      const promises = images.map(img => {
+        if (img instanceof File) {
+          return new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.readAsDataURL(img)
+          })
+        }
+        return Promise.resolve(img)
+      })
+      return Promise.all(promises)
+    },
     openImageModal(imageSrc) {
       this.selectedImages = [{ src: imageSrc, type: 'รูปภาพ' }]
       this.showImageModal = true
@@ -465,6 +478,7 @@ export default {
     },
     async submitBorrow() {
       try {
+        const images = await this.convertImagesToBase64(this.borrowForm.images || [])
         const borrowData = {
           type: 'borrow',
           location: this.borrowForm.location,
@@ -474,7 +488,7 @@ export default {
           time: this.borrowForm.time,
           license: 'FXAG-2032',
           colleagues: this.borrowForm.colleagues || [],
-          images: this.borrowForm.images || [],
+          images,
           user_id: localStorage.getItem('soc_user_id')
         }
 
@@ -530,12 +544,14 @@ export default {
           hour12: false
         })
 
+        const images = await this.convertImagesToBase64(this.returnForm.images || [])
         const returnData = {
           return_name: currentUserName,
           return_location: this.returnForm.location,
           return_description: this.returnForm.discription,
           return_time: currentTime,
-          return_date: this.formatDateForDB(bangkokTime)
+          return_date: this.formatDateForDB(bangkokTime),
+          images
         }
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
@@ -960,20 +976,20 @@ export default {
 
 .images-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 120px));
+  gap: 0.5rem;
+  padding: 0.5rem;
 }
 
 .image-container {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 100px;
 }
 
 .grid-image {
   width: 100%;
-  height: 200px;
+  height: 100px;
   object-fit: cover;
   border-radius: 6px;
   border: 1px solid #e9ecef;

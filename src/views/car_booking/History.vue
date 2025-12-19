@@ -180,17 +180,21 @@ export default {
       const borrowRecords = this.records.filter(r => r && r.status !== undefined)
       const groups = borrowRecords.map(borrow => {
         const returned = borrow.status === 'returned'
+        const imgs = borrow.images || {}
+        const borrowImages = Array.isArray(imgs) ? imgs : (imgs.borrow || [])
+        const returnImages = imgs.return || []
         return {
           id: borrow.id,
           license: borrow.license,
           borrowDate: borrow.selected_date,
-          borrowRecord: borrow,
+          borrowRecord: { ...borrow, images: borrowImages },
           returnRecord: returned ? {
             name: borrow.return_name,
             location: borrow.return_location,
             time: borrow.return_time,
             date: borrow.return_date,
-            created_at: borrow.updated_at
+            created_at: borrow.updated_at,
+            images: returnImages
           } : null,
           returned: returned
         }
