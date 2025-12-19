@@ -123,6 +123,13 @@
         </Column>
 
         <Column header="ไฟล์แนบ" style="width: 80px;">
+          <template #body="slotProps">
+            <div v-if="hasFiles(slotProps.data)" class="attachments-info">
+              <Button icon="pi pi-paperclip" size="small" severity="info" outlined
+                @click="downloadTaskFiles(slotProps.data)" v-tooltip="`${slotProps.data.files.length} ไฟล์`" />
+            </div>
+            <span v-else class="no-files">-</span>
+          </template>
         </Column>
       </EnhancedDataTable>
     </template>
