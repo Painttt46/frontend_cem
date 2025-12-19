@@ -338,10 +338,7 @@ export default {
     formatDateTime(datetime) {
       if (!datetime) return '-'
       const date = new Date(datetime)
-      // ถ้าไม่มี timezone info ให้บวก 7 ชม.
-      if (!datetime.includes('Z') && !datetime.includes('+')) {
-        date.setHours(date.getHours() + 7)
-      }
+      date.setHours(date.getHours() + 7)
       return date.toLocaleString('th-TH', {
         year: 'numeric',
         month: 'short',

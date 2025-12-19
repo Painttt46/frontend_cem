@@ -268,9 +268,7 @@ export default {
     formatDate(dateTime) {
       if (!dateTime) return ''
       const date = new Date(dateTime)
-      if (!dateTime.includes('Z') && !dateTime.includes('+')) {
-        date.setHours(date.getHours() + 7)
-      }
+      date.setHours(date.getHours() + 7)
       return date.toLocaleDateString('th-TH')
     }
   },
