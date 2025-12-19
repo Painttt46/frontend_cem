@@ -224,13 +224,17 @@ export default {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        // Set time to start of day for accurate day calculation
         start.setHours(0, 0, 0, 0)
         end.setHours(0, 0, 0, 0)
         
-        const diffTime = end - start
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
-        return diffDays + ' วัน'
+        let count = 0
+        const current = new Date(start)
+        while (current <= end) {
+          const day = current.getDay()
+          if (day !== 0 && day !== 6) count++ // ไม่นับ อาทิตย์(0) และ เสาร์(6)
+          current.setDate(current.getDate() + 1)
+        }
+        return count + ' วัน'
       }
       return '0 วัน'
     },

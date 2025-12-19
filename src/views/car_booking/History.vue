@@ -338,10 +338,10 @@ export default {
     viewImages(data) {
       const images = []
       if (data.borrowRecord.images?.length > 0) {
-        images.push(...data.borrowRecord.images.map(img => ({ src: img, type: 'ใช้' })))
+        images.push(...data.borrowRecord.images.map(img => ({ src: img, type: 'ใช้รถ' })))
       }
       if (data.returned && data.returnRecord.images?.length > 0) {
-        images.push(...data.returnRecord.images.map(img => ({ src: img, type: 'คืน' })))
+        images.push(...data.returnRecord.images.map(img => ({ src: img, type: 'คืนรถ' })))
       }
       this.$emit('view-images', images, data)
     },
