@@ -446,11 +446,12 @@ export default {
         this.$emit('submit-work')
         this.resetForm()
       } catch (error) {
+        console.error('Submit error:', error)
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
-          life: 3000
+          detail: error.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+          life: 5000
         })
       }
     },

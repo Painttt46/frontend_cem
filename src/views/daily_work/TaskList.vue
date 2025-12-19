@@ -595,6 +595,7 @@ export default {
       return status ? status.icon : 'pi pi-circle'
     },
     getStatusLabel(statusValue) {
+      if (!statusValue) return '-'
       const status = this.workStatuses.find(s => s.value === statusValue)
       if (status && status.label) {
         // Remove all emoji and special characters
@@ -603,6 +604,7 @@ export default {
       return statusValue
     },
     getStatusColor(statusValue) {
+      if (!statusValue) return '#9e9e9e'
       const status = this.workStatuses.find(s => s.value === statusValue)
       return status?.color || '#6c757d'
     },
