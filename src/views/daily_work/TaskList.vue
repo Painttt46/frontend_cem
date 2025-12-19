@@ -85,7 +85,7 @@
         <Column header="สถานะ" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge v-if="slotProps.data.status" 
+              <Badge v-if="slotProps.data.status && workStatuses.find(s => s.value === slotProps.data.status)" 
                      :value="getStatusLabel(slotProps.data.status)" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
               <span v-else class="no-status">-</span>
@@ -561,6 +561,7 @@ export default {
     async loadStatusesFromStorage() {
       try {
         const response = await this.$http.get('/api/settings/statuses')
+        console.log('Loaded statuses:', response.data)
         this.workStatuses = response.data
       } catch (error) {
         console.error('Error loading statuses:', error)
@@ -603,12 +604,12 @@ export default {
         // Remove all emoji and special characters
         return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
       }
-      return statusValue
+      return '-'
     },
     getStatusColor(statusValue) {
       if (!statusValue) return '#9e9e9e'
       const status = this.workStatuses.find(s => s.value === statusValue)
-      return status?.color || '#6c757d'
+      return status?.color || '#9e9e9e'
     },
     async loadTasks() {
       try {
