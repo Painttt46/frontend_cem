@@ -6,9 +6,9 @@
         <form @submit.prevent="submitForm" class="daily-work-form">
           <div class="form-grid">
             <div class="input-group">
-              <label for="taskId" class="input-label">เลือกงาน *</label>
+              <label for="taskId" class="input-label">เลือกโครงการ *</label>
               <Dropdown id="taskId" v-model="formData.taskId" :options="tasks" optionLabel="display" optionValue="id"
-                class="corporate-dropdown" required placeholder="เลือกงานที่ต้องการลงเวลา" @change="onTaskChange" />
+                class="corporate-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange" />
             </div>
 
             <div class="input-group">
@@ -346,7 +346,7 @@ export default {
 
         this.tasks = availableTasks.map(task => ({
           ...task,
-          display: `${task.task_name} ${task.so_number ? `(SO: ${task.so_number})` : ''}`
+          display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
       } catch (error) {
         console.error(error)

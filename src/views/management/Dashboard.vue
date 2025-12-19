@@ -91,7 +91,7 @@
             <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
             <div class="summary-info">
               <h3>{{ stats.dueSoon }}</h3>
-              <p>งานครบกำหนดสัปดาห์นี้</p>
+              <p>โครงการครบกำหนดสัปดาห์นี้</p>
             </div>
           </div>
         </template>
@@ -103,7 +103,7 @@
             <i class="pi pi-exclamation-triangle summary-icon" style="color: #ef4444"></i>
             <div class="summary-info">
               <h3>{{ stats.overdue }}</h3>
-              <p>งานเลยกำหนด</p>
+              <p>โครงการที่พ้นกําหนดระยะเวลาตามสัญญา</p>
             </div>
           </div>
         </template>
@@ -115,7 +115,7 @@
             <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
             <div class="summary-info">
               <h3>{{ stats.activeTasks }}</h3>
-              <p>งานกำลังดำเนินการ</p>
+              <p>โครงการที่กำลังดำเนินการ</p>
             </div>
           </div>
         </template>
@@ -127,7 +127,7 @@
             <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
             <div class="summary-info">
               <h3>{{ stats.completedTasks }}</h3>
-              <p>งานเสร็จสิ้น</p>
+              <p>โครงการเสร็จสิ้น</p>
             </div>
           </div>
         </template>
@@ -180,17 +180,17 @@
             </template>
           </Column>
           <Column field="department" header="แผนก" sortable style="min-width: 120px" />
+          <Column field="taskCount" header="จำนวนงาน" sortable style="min-width: 100px" />
           <Column field="totalHours" header="รวมชั่วโมง" sortable style="min-width: 120px">
             <template #body="{ data }">
               <span style="font-weight: 600; color: #4A90E2">{{ data.totalHours.toFixed(1) }} ชม.</span>
             </template>
           </Column>
-          <Column field="taskCount" header="จำนวนงาน" sortable style="min-width: 100px" />
-          <Column field="avgHoursPerTask" header="เฉลี่ย/งาน" sortable style="min-width: 100px">
+          <!-- <Column field="avgHoursPerTask" header="เฉลี่ย/งาน" sortable style="min-width: 100px">
             <template #body="{ data }">
               {{ data.avgHoursPerTask.toFixed(1) }} ชม.
             </template>
-          </Column>
+          </Column> -->
           
           <template #expansion="{ data }">
             <div class="task-breakdown">

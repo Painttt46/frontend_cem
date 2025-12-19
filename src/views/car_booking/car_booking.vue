@@ -67,7 +67,7 @@
       :available-borrows="availableBorrows" :pending-borrows="pendingBorrows" :current-return-time="currentReturnTime"
       :selected-borrow-project="selectedBorrowProject" :selected-borrow-description="selectedBorrowDescription" @close-form="closeForm" @submit-borrow="submitBorrow"
       @submit-return="submitReturn" @submit-cancel="submitCancel" @handle-image-upload="handleImageUpload"
-      @update-borrow-form="updateBorrowForm" @updateReturnForm="updateReturnForm"
+      @remove-image="removeImage" @update-borrow-form="updateBorrowForm" @updateReturnForm="updateReturnForm"
       @update-cancel-form="updateCancelForm" />
 
     <!-- Image Modal -->
@@ -344,21 +344,18 @@ export default {
     },
     handleImageUpload(event, formType) {
       const files = Array.from(event.target.files)
-      const images = []
-      files.forEach(file => {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          images.push(e.target.result)
-          if (images.length === files.length) {
-            if (formType === 'borrow') {
-              this.borrowForm.images = images
-            } else {
-              this.returnForm.images = images
-            }
-          }
-        }
-        reader.readAsDataURL(file)
-      })
+      if (formType === 'borrow') {
+        this.borrowForm.images = [...(this.borrowForm.images || []), ...files]
+      } else {
+        this.returnForm.images = [...(this.returnForm.images || []), ...files]
+      }
+    },
+    removeImage(index, formType) {
+      if (formType === 'borrow') {
+        this.borrowForm.images.splice(index, 1)
+      } else {
+        this.returnForm.images.splice(index, 1)
+      }
     },
     openImageModal(imageSrc) {
       this.selectedImages = [{ src: imageSrc, type: 'รูปภาพ' }]

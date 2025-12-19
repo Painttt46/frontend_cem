@@ -53,7 +53,7 @@
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>
-              <div v-if="slotProps.data.so_number" class="so-number">SO: {{ slotProps.data.so_number }}</div>
+              <div v-if="slotProps.data.so_number" class="so-number">{{ slotProps.data.so_number }}</div>
             </div>
           </template>
         </Column>
