@@ -85,8 +85,10 @@
         <Column header="สถานะ" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="getStatusLabel(slotProps.data.status)" 
+              <Badge v-if="slotProps.data.status" 
+                     :value="getStatusLabel(slotProps.data.status)" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
+              <span v-else class="no-status">-</span>
             </div>
           </template>
         </Column>
@@ -1325,7 +1327,8 @@ export default {
   justify-content: center;
 }
 
-.no-files {
+.no-files,
+.no-status {
   display: flex;
   justify-content: center;
   align-items: center;
