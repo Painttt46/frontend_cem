@@ -101,7 +101,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import { upperCase } from "@/App.vue";
+// import { upperCase } from "@/App.vue";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
