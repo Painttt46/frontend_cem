@@ -22,7 +22,7 @@
   </Dialog>
   <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100vw">
+  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100%">
     <div class="row" style="height: 100%">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
@@ -432,7 +432,7 @@ h4 {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 100vw;
+    width: 100%;
     z-index: 999;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     transform: translateX(0);

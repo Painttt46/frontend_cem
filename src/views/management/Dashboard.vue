@@ -637,7 +637,6 @@ const renderCharts = (leaves, tasks) => {
 .charts-wrapper {
   display: flex;
   transition: transform 0.3s ease-out;
-  touch-action: pan-y;
 }
 
 .chart-card {
