@@ -19,21 +19,21 @@ canvas {
 }
 
 .prompt-light {
-  font-family: "Prompt", serif;
-  font-weight: 300;
-  font-style: normal;
+    font-family: "Prompt", serif;
+    font-weight: 300;
+    font-style: normal;
 }
 
 .prompt-regular {
-  font-family: "Prompt", serif;
-  font-weight: 400;
-  font-style: normal;
+    font-family: "Prompt", serif;
+    font-weight: 400;
+    font-style: normal;
 }
 
 .prompt-medium {
-  font-family: "Prompt", serif;
-  font-weight: 500;
-  font-style: normal;
+    font-family: "Prompt", serif;
+    font-weight: 500;
+    font-style: normal;
 }
 
 .p-scrollpanel-content {
@@ -45,10 +45,16 @@ canvas {
     border-color: transparent;
     background-color: transparent;
 }
-.row {
-    display: flex;
-    flex-wrap: wrap;
+
+.main-scroll {
+    width: 100%;
+    height: calc(100vh - 16px);
 }
+
+.p-scrollpanel-content {
+    padding-right: 0 !important;
+}
+
 
 .topbar button {
     margin-left: 8px;
@@ -148,9 +154,11 @@ li {
 .text-center {
     text-align: center !important;
 }
+
 .text-left {
     text-align: left !important;
 }
+
 .text-right {
     text-align: right !important;
 }
@@ -171,7 +179,7 @@ li {
     --bs-dark-rgb: 33, 37, 41;
 }
 
-body{
+body {
     position: fixed;
     height: 100vh !important;
 }

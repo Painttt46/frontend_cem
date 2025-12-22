@@ -23,15 +23,15 @@
   <!-- Dialog Session หมดอายุ -->
 
   <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100vw">
-    <div class="row" style="height: 100%">
+    <div class="row g-0" style="height: 100%">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
         :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
         :v-tooltip="sidebarVisible ? 'ซ่อนเมนู' : 'แสดงเมนู'" />
 
-      <Dialog v-model:visible="visible" header="Setting" 
-        :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" 
-        :position="position" :modal="true" :draggable="false">
+      <Dialog v-model:visible="visible" header="Setting"
+        :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" :position="position"
+        :modal="true" :draggable="false">
         <div class="flex align-items-center gap-3 mb-3 mt-3">
           <router-link to="/profile" @click="visible = false" class="nav-link">
             <h5>
@@ -127,15 +127,10 @@
         </div>
       </div>
 
-      <div :class="mainContentClass" style="height: 100%">
-        <div class="pt-1 pb-3 container-fluid h-100">
+      <div :class="mainContentClass + ' p-0'" style="height: 100%">
+        <div class="h-100 p-0">
           <div class="main-content-wrapper">
-            <ScrollPanel style="
-                width: 100%;
-                height: calc(100vh);
-                padding-right: 2rem;
-                padding-bottom: 2rem;
-              ">
+            <ScrollPanel class="main-scroll">
               <RouterView />
             </ScrollPanel>
           </div>
@@ -223,7 +218,7 @@ onMounted(() => {
   window.addEventListener("mousemove", resetTimer);
   window.addEventListener("keydown", resetTimer);
   window.addEventListener("resize", updateIsMobile);
-  
+
   soc_user_id.value = localStorage.getItem("soc_user_id");
   soc_user.value = localStorage.getItem("soc_user");
   soc_role.value = localStorage.getItem("soc_role");
@@ -274,12 +269,12 @@ const logout = async () => {
     // Clear localStorage และ sessionStorage
     localStorage.clear();
     sessionStorage.clear();
-    
+
     // Clear all cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     });
-    
+
     // Redirect
     window.location.href = "/login";
   }
@@ -320,6 +315,7 @@ const startCountdown = () => {
   height: 40px !important;
 
 }
+
 :root {
   --toggle-btn-right: 1rem;
   /* ตำแหน่งเมื่อ sidebar เปิด */
