@@ -53,9 +53,9 @@ export default {
 
 <style scoped>
 .projects-container {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  max-width: 100%;
+  margin: 0;
   background: #f8f9fa;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
