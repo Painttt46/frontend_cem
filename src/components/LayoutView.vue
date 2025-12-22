@@ -20,123 +20,82 @@
       <Button label="OK" class="p-button-danger" @click="locationLogout" />
     </template>
   </Dialog>
-  <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100vw">
-    <div class="row g-0" style="height: 100%">
-      <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
-      <Button @click="toggleSidebar" class="sidebar-toggle-btn"
-        :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
-        :v-tooltip="sidebarVisible ? 'ซ่อนเมนู' : 'แสดงเมนู'" />
-
-      <Dialog v-model:visible="visible" header="Setting"
-        :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" :position="position"
-        :modal="true" :draggable="false">
-        <div class="flex align-items-center gap-3 mb-3 mt-3">
-          <router-link to="/profile" @click="visible = false" class="nav-link">
-            <h5>
-              <i class="pi pi-megaphone px-2" style="font-size: 1.5rem"></i>Profile
-            </h5>
-          </router-link>
-        </div>
-        <div class="flex align-items-center gap-3 mb-3">
-          <router-link to="/login" @click="logout" class="nav-link">
-            <h5>
-              <i class="pi pi-sign-out px-2" style="font-size: 1.2rem"></i>Logout
-            </h5>
-          </router-link>
-        </div>
-        <div class="flex justify-content-end dialog-footer">
-          <Button type="button" label="Cancel" severity="danger" @click="visible = false"></Button>
-        </div>
-      </Dialog>
-
-      <div v-show="sidebarVisible" class="col-3 col-sm-3 col-md-2 col-lg-2 col-xl-2 bg-light p-0 sidebar-column">
-        <div class="p-4 sidebar-container" style="height: 100%; padding-top: 0px !important">
-          <div class="logo-section">
-            <img src="@/assets/images/GENT.png" alt="GENT Logo" style="max-width: 150px; height: auto;" />
-          </div>
-
-          <div class="datetime-section">
-            <div class="datetime-display">
-              <i class="pi pi-calendar"></i>
-              <span>{{ currentDateTime }}</span>
-            </div>
-          </div>
-
-          <ul class="nav-menu">
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/car_booking')">
-              <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-car px-2" style="font-size: 1.5rem"></i>เเจ้งใช้รถ
-                </h5>
-              </router-link>
-            </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/leave_work')">
-              <router-link to="/leave_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-sign-out px-2" style="font-size: 1.5rem"></i>ลางาน
-                </h5>
-              </router-link>
-            </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/daily_work')">
-              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-calendar px-2" style="font-size: 1.5rem"></i>ลงงานรายวัน
-                </h5>
-              </router-link>
-            </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/projects')">
-              <router-link to="/projects" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-briefcase px-2" style="font-size: 1.5rem"></i>โครงการ
-                </h5>
-              </router-link>
-            </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/management')">
-              <router-link to="/management" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-cog px-2" style="font-size: 1.5rem"></i>จัดการระบบ
-                </h5>
-              </router-link>
-            </li>
-          </ul>
-          <div class="nav-item ml-2"
-            style="width: 100%; color: white; vertical-align: bottom; display: flex; justify-content: center;">
-            <Button @click="openPosition('bottom')" style="
-                width: 80%;
-                min-width: 8rem;
-                color: white;
-                background: linear-gradient(135deg, #4A90E2, #D73527);
-                border: none;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 8px 16px;
-              " class="setting-button">
-              <h5 style="margin: 0; display: flex; align-items: center; justify-content: center;">
-                <i class="pi pi-cog px-2" style="font-size: 1.2rem"></i>Setting
-              </h5>
-            </Button>
-            <!-- <router-link to="/login" class="nav-link"><h5><i class="pi pi-sign-out px-2" style="font-size: 1.2rem;"></i>Logout</h5></router-link> -->
-            <!-- <router-link to="/login" class="btn btn-danger" style="width: 100%;">ออกจากระบบ</router-link> -->
-          </div>
-        </div>
-      </div>
-
-      <div :class="mainContentClass + ' p-0'" style="height: 100%">
-        <div class="h-100 p-0">
-          <div class="main-content-wrapper">
-            <ScrollPanel class="main-scroll">
-              <RouterView />
-            </ScrollPanel>
-          </div>
-        </div>
-      </div>
+  <Dialog v-model:visible="visible" header="Setting"
+    :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw' }" 
+    :position="position" :modal="true" :draggable="false">
+    <div class="flex align-items-center gap-3 mb-3 mt-3">
+      <router-link to="/profile" @click="visible = false" class="nav-link">
+        <h5><i class="pi pi-megaphone px-2" style="font-size: 1.5rem"></i>Profile</h5>
+      </router-link>
     </div>
+    <div class="flex align-items-center gap-3 mb-3">
+      <router-link to="/login" @click="logout" class="nav-link">
+        <h5><i class="pi pi-sign-out px-2" style="font-size: 1.2rem"></i>Logout</h5>
+      </router-link>
+    </div>
+    <div class="flex justify-content-end dialog-footer">
+      <Button type="button" label="Cancel" severity="danger" @click="visible = false"></Button>
+    </div>
+  </Dialog>
+
+  <div class="layout-wrapper" :class="{ 'sidebar-collapsed': !sidebarVisible }">
+    <!-- Toggle Button -->
+    <Button @click="toggleSidebar" class="sidebar-toggle-btn"
+      :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" 
+      severity="secondary" text />
+
+    <!-- Sidebar -->
+    <aside v-show="sidebarVisible" class="sidebar">
+      <div class="sidebar-content">
+        <div class="logo-section">
+          <img src="@/assets/images/GENT.png" alt="GENT Logo" />
+        </div>
+
+        <div class="datetime-section">
+          <div class="datetime-display">
+            <i class="pi pi-calendar"></i>
+            <span>{{ currentDateTime }}</span>
+          </div>
+        </div>
+
+        <nav class="nav-menu">
+          <router-link v-if="hasAccess('/daily_work')" to="/daily_work" 
+            @click="closeSidebarOnMobile" class="nav-item" active-class="active">
+            <i class="pi pi-calendar"></i><span>ลงงานรายวัน</span>
+          </router-link>
+          <router-link v-if="hasAccess('/car_booking')" to="/car_booking" 
+            @click="closeSidebarOnMobile" class="nav-item" active-class="active">
+            <i class="pi pi-car"></i><span>เเจ้งใช้รถ</span>
+          </router-link>
+          <router-link v-if="hasAccess('/leave_work')" to="/leave_work" 
+            @click="closeSidebarOnMobile" class="nav-item" active-class="active">
+            <i class="pi pi-sign-out"></i><span>ลางาน</span>
+          </router-link>
+          <router-link v-if="hasAccess('/projects')" to="/projects" 
+            @click="closeSidebarOnMobile" class="nav-item" active-class="active">
+            <i class="pi pi-briefcase"></i><span>โครงการ</span>
+          </router-link>
+          <router-link v-if="hasAccess('/management')" to="/management" 
+            @click="closeSidebarOnMobile" class="nav-item" active-class="active">
+            <i class="pi pi-cog"></i><span>จัดการระบบ</span>
+          </router-link>
+        </nav>
+
+        <div class="sidebar-footer">
+          <Button @click="openPosition('bottom')" class="setting-button">
+            <i class="pi pi-cog"></i><span>Setting</span>
+          </Button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <ScrollPanel class="content-scroll">
+        <RouterView />
+      </ScrollPanel>
+    </main>
   </div>
 </template>
 
@@ -172,44 +131,25 @@ const closeSidebarOnMobile = () => {
 
 const updateIsMobile = () => {
   isMobile.value = window.innerWidth <= 768;
+  if (window.innerWidth <= 768) {
+    sidebarVisible.value = false;
+  }
 };
 
-const mainContentClass = computed(() => {
-  return sidebarVisible.value
-    ? 'col-9 col-sm-9 col-md-10 col-lg-10 col-xl-10'
-    : 'col-12';
-});
-
-var soc_user_id = ref();
-var soc_user = ref();
-var soc_user_firstLetter = ref();
-var soc_role = ref();
-var soc_firstname = ref();
-var soc_lastname = ref();
-
-var users = ref();
 var currentTime = ref(new Date());
 
 const currentDateTime = computed(() => {
   return currentTime.value.toLocaleString('th-TH', {
     year: 'numeric',
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
+    minute: '2-digit'
   })
 });
 
-function fetchData() {
-  axios.get('/user', {
-  }).then(user_response => {
-    users.value = user_response.data.data;
-  });
-}
-
 const resetTimer = () => {
-  timeout.value = 300; // รีเซ็ตเวลาเป็น 5 นาที
+  timeout.value = 300;
 };
 
 onMounted(() => {
@@ -218,21 +158,11 @@ onMounted(() => {
   window.addEventListener("mousemove", resetTimer);
   window.addEventListener("keydown", resetTimer);
   window.addEventListener("resize", updateIsMobile);
+  updateIsMobile();
 
-  soc_user_id.value = localStorage.getItem("soc_user_id");
-  soc_user.value = localStorage.getItem("soc_user");
-  soc_role.value = localStorage.getItem("soc_role");
-  soc_firstname.value = localStorage.getItem("soc_firstname") || "No data";
-  soc_lastname.value = localStorage.getItem("soc_lastname") || "No data";
-  if (soc_user.value != null) {
-    soc_user_firstLetter.value = upperCase(soc_user.value.charAt(0));
-  }
-
-  // Update time every second
   setInterval(() => {
     currentTime.value = new Date();
   }, 1000);
-  fetchData
 });
 
 onUnmounted(() => {
@@ -242,17 +172,13 @@ onUnmounted(() => {
   window.removeEventListener("resize", updateIsMobile);
 });
 
-const showSessionDialog = () => {
-  sessionDialog.value = true
-};
-
-const timeout = ref(300) // 5 นาที (300 วินาที)
-let countdownTimer = null; // ✅ กำหนดตัวแปรให้อยู่ภายนอก
+const timeout = ref(300);
+let countdownTimer = null;
 
 const reloadTab = () => {
-  // Don't clear localStorage immediately, let user choose
-  showSessionDialog.value = true;
+  sessionDialog.value = true;
 };
+
 const locationLogout = () => {
   localStorage.clear();
   sessionStorage.clear();
@@ -261,24 +187,19 @@ const locationLogout = () => {
 
 const logout = async () => {
   try {
-    // เรียก API logout เพื่อ clear cookie
     await axios.post('/api/auth/logout');
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
-    // Clear localStorage และ sessionStorage
     localStorage.clear();
     sessionStorage.clear();
-
-    // Clear all cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     });
-
-    // Redirect
     window.location.href = "/login";
   }
 };
+
 const startCountdown = () => {
   countdownTimer = setInterval(() => {
     timeout.value--;
@@ -291,75 +212,45 @@ const startCountdown = () => {
 </script>
 
 <style scoped>
-.dialog-footer {
-  margin-bottom: 1rem;
+.layout-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
 }
 
-.p-menuitem-link span {
-  color: black !important;
-}
-
-.sidebar-toggle-btn {
-  position: fixed;
-  top: 0.5rem;
-  right: var(--toggle-btn-right);
-  left: var(--toggle-btn-left);
-  z-index: 1000;
-  background: linear-gradient(135deg, #4A90E2, #D73527) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3) !important;
-  transition: all 0.3s ease !important;
-  width: 40px !important;
-  height: 40px !important;
-
-}
-
-:root {
-  --toggle-btn-right: 1rem;
-  /* ตำแหน่งเมื่อ sidebar เปิด */
-  --toggle-btn-left: auto;
-}
-
-.sidebar-hidden {
-  --toggle-btn-right: auto;
-  /* ตำแหน่งเมื่อ sidebar ปิด */
-  --toggle-btn-left: 1rem;
-}
-
-.sidebar-toggle-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
-}
-
-.main-content-wrapper {
-  width: 100%;
-  height: 100%;
-  padding: 0 1rem;
-  margin-left: 2rem;
-  margin-right: 1rem;
-}
-
-.sidebar-column {
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
   transition: all 0.3s ease;
 }
 
-.sidebar-container {
+.sidebar-content {
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding: 1rem;
 }
 
 .logo-section {
   text-align: center;
-  padding: 1.5rem 0;
+  padding: 1rem 0;
   border-bottom: 1px solid #e9ecef;
   margin-bottom: 1rem;
 }
 
+.logo-section img {
+  max-width: 120px;
+  height: auto;
+}
+
 .datetime-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .datetime-display {
@@ -367,86 +258,161 @@ const startCountdown = () => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   font-weight: 500;
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
-  padding: 0.75rem;
-  border-radius: 10px;
-  margin: 0 0.5rem;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+  padding: 0.5rem;
+  border-radius: 8px;
 }
 
 .nav-menu {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   overflow-y: auto;
 }
 
-h1,
-h2,
-h3,
-h4 {
-  color: black !important;
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #495057;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
 }
 
-.nav-link.active {
+.nav-item:hover {
+  background: #e9ecef;
+}
+
+.nav-item.active {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white !important;
-  border-radius: 8px;
-  border-radius: 5px;
-  padding: 2px;
-  font-size: 20px;
 }
 
-.setting-button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+.nav-item i {
+  font-size: 1.1rem;
+  width: 24px;
 }
 
-.setting-button:active {
-  transform: translateY(0) !important;
+.sidebar-footer {
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
 }
 
-/* Responsive - ทุก device ที่หน้าจอเล็ก */
-@media (max-width: 768px) {
+.setting-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #4A90E2, #D73527) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+.content-scroll {
+  width: 100%;
+  height: 100vh;
+}
+
+.content-scroll :deep(.p-scrollpanel-content) {
+  padding: 0.5rem;
+  width: 100%;
+}
+
+/* Toggle Button */
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 0.5rem;
+  left: 225px;
+  z-index: 1001;
+  background: linear-gradient(135deg, #4A90E2, #D73527) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  width: 36px !important;
+  height: 36px !important;
+  transition: all 0.3s ease !important;
+}
+
+.sidebar-collapsed .sidebar-toggle-btn {
+  left: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 200px;
+    min-width: 200px;
+  }
   .sidebar-toggle-btn {
-    top: 0.5rem;
+    left: 205px;
   }
+}
 
-  :root {
-    --toggle-btn-right: 0.5rem;
-    --toggle-btn-left: auto;
-  }
-
-  .sidebar-hidden {
-    --toggle-btn-right: auto;
-    --toggle-btn-left: 0.5rem;
-  }
-
-  .sidebar-column {
+@media (max-width: 768px) {
+  .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
-    width: 100vw;
-    z-index: 999;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    transform: translateX(0);
-    transition: transform 0.3s ease;
+    width: 260px;
+    z-index: 1000;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
   }
-
-  .main-content-wrapper {
-    padding: 0 0.5rem;
-    margin-left: 0;
-    margin-right: 0;
-    width: calc(100% + 3.3rem);
+  
+  .sidebar-toggle-btn {
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+  
+  .layout-wrapper:not(.sidebar-collapsed) .sidebar-toggle-btn {
+    left: 265px;
+  }
+  
+  .main-content {
+    width: 100%;
+  }
+  
+  .content-scroll :deep(.p-scrollpanel-content) {
+    padding: 0.5rem;
+    padding-top: 3rem;
   }
 }
 
-/* ซ่อน sidebar เมื่อหน้าจอเล็ก */
-@media (max-width: 768px) {
-  .sidebar-hidden .sidebar-column {
-    transform: translateX(-100%);
+@media (max-width: 480px) {
+  .sidebar {
+    width: 100vw;
+  }
+  
+  .layout-wrapper:not(.sidebar-collapsed) .sidebar-toggle-btn {
+    left: calc(100vw - 50px);
+  }
+  
+  .logo-section img {
+    max-width: 100px;
+  }
+  
+  .nav-item {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
   }
 }
 </style>
