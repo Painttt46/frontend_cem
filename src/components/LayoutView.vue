@@ -128,13 +128,13 @@
       </div>
 
       <div :class="mainContentClass" style="height: 100%">
-        <div class="pt-1 pb-3 container-fluid h-100">
+        <div class="pt-1 pb-3 h-100" style="padding-left: 0; padding-right: 0;">
           <div class="main-content-wrapper">
             <ScrollPanel style="
                 width: 100%;
                 height: calc(100vh);
-                padding-right: 2rem;
-                padding-bottom: 2rem;
+                padding-right: 0.5rem;
+                padding-bottom: 1rem;
               ">
               <RouterView />
             </ScrollPanel>
@@ -340,9 +340,8 @@ const startCountdown = () => {
 .main-content-wrapper {
   width: 100%;
   height: 100%;
-  padding: 0 1rem;
-  margin-left: 2rem;
-  margin-right: 1rem;
+  padding: 0;
+  margin: 0;
 }
 
 .sidebar-column {
@@ -440,10 +439,9 @@ h4 {
   }
 
   .main-content-wrapper {
-    padding: 0 0.5rem;
-    margin-left: 0;
-    margin-right: 0;
-    width: calc(100% + 3.3rem);
+    padding: 0;
+    margin: 0;
+    width: 100%;
   }
 }
 
