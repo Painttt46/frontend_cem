@@ -142,60 +142,55 @@ router.beforeEach(async (to, from, next) => {
   const role = localStorage.getItem("soc_role");
   const token = localStorage.getItem("soc_token");
 
+  // ถ้าไปหน้า login แต่มี token อยู่แล้ว → redirect ไป daily_work
+  if (to.path === '/login' && token && userId) {
+    next("/daily_work");
+    return;
+  }
+
   if (to.meta.requiresAuth) {
-    // ตรวจสอบว่ามี userId และ token
     if (!userId || !token) {
-      // Clear all auth data
       localStorage.clear();
       sessionStorage.clear();
       next("/login");
       return;
     }
 
-    // Check if token is expired (decode JWT without verification)
+    // Check if token is expired
     try {
       const tokenParts = token.split('.');
       if (tokenParts.length === 3) {
         const payload = JSON.parse(atob(tokenParts[1]));
-        const expirationTime = payload.exp * 1000; // Convert to milliseconds
-        const currentTime = Date.now();
-        
-        if (currentTime >= expirationTime) {
-          // Token expired - clear all auth data
+        if (Date.now() >= payload.exp * 1000) {
           localStorage.clear();
           sessionStorage.clear();
-          document.cookie.split(";").forEach((c) => {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
-          });
           next("/login");
           return;
         }
       }
     } catch (e) {
-      // Invalid token format - clear and redirect
       localStorage.clear();
       sessionStorage.clear();
       next("/login");
       return;
     }
 
-    // Check permissions for protected routes (except profile and login)
-    if (role && to.path !== '/profile' && to.path !== '/login' && to.path !== '/two-authentication') {
+    // Skip permission check for basic pages (fix race condition after login)
+    const skipPermissionCheck = ['/profile', '/login', '/two-authentication', '/daily_work'];
+    if (role && !skipPermissionCheck.includes(to.path)) {
       const { loadPermissions, canAccessRoute, permissionsLoaded } = usePermissions();
-      
-      // Load permissions if not loaded yet
+
       if (!permissionsLoaded.value) {
-        await loadPermissions();
+        const loaded = await loadPermissions();
+        // ถ้า load ไม่สำเร็จ ให้ผ่านไปก่อน (ไม่ block user)
+        if (!loaded) {
+          next();
+          return;
+        }
       }
 
-      // Check if user has access to this route
       if (!canAccessRoute(to.path)) {
-        // Redirect back to previous page or home
-        if (from.path && from.path !== to.path) {
-          next(from.path);
-        } else {
-          next("/daily_work");
-        }
+        next("/daily_work");
         return;
       }
     }
