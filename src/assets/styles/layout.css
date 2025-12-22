@@ -4,8 +4,10 @@
 
 .container {
     max-width: 100%;
-    margin-left: 2rem;
-    margin-right: 2rem;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 
@@ -183,4 +185,22 @@ body{
 
 .p-button .p-component .p-fileupload-choose {
     border: none !important;
+}
+
+
+.container-fluid {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+}
+
+.p-card {
+    margin: 0 !important;
+}
+
+.p-card .p-card-body {
+    padding: 0.75rem !important;
+}
+
+.p-card .p-card-content {
+    padding: 0 !important;
 }
