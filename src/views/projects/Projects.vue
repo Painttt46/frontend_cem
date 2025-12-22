@@ -1,22 +1,25 @@
 <template>
-  <div class="projects-page">
+  <div class="projects-container">
     <Toast />
     
-    <div class="page-header">
-      <h1><i class="pi pi-briefcase"></i> โครงการ</h1>
-    </div>
+    <Card class="header-card">
+      <template #header>
+        <div class="main-header">
+          <h1><i class="pi pi-briefcase"></i> โครงการ</h1>
+        </div>
+      </template>
+    </Card>
 
-    <div class="page-content">
-      <div class="action-bar">
-        <Button @click="showTaskDialog = true" class="add-btn" icon="pi pi-plus-circle">
-          <span>เพิ่มงาน</span>
+    <div class="main-content">
+      <div class="tab-action-buttons">
+        <Button @click="showTaskDialog = true" class="task-btn" icon="pi pi-plus-circle" raised>
+          <span class="btn-text">เพิ่มงาน</span>
         </Button>
       </div>
       <TaskList ref="taskList" />
     </div>
 
-    <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มงาน" 
-      :style="{ width: '95vw', maxWidth: '1200px' }" :draggable="false">
+    <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มงาน" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
       <AddTaskForm @task-added="handleTaskAdded" @close-form="showTaskDialog = false" />
     </Dialog>
   </div>
@@ -49,94 +52,182 @@ export default {
 </script>
 
 <style scoped>
-.projects-page {
-  width: 100%;
-  min-height: 100%;
+.projects-container {
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
   background: #f8f9fa;
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.page-header {
+.header-card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
+}
+
+.header-card :deep(.p-card-body) {
+  padding: 0;
+}
+
+.header-card :deep(.p-card-content) {
+  padding: 0;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: 12px;
+  border-radius: 15px 15px 0 0;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  overflow: hidden;
+  min-height: 80px;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
-.page-header h1 {
+.main-header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.page-header i {
-  font-size: 1.25rem;
+.main-header i {
+  font-size: 1.5rem;
 }
 
-.page-content {
+.main-content {
   background: white;
   border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
 }
 
-.action-bar {
-  margin-bottom: 1rem;
+.tab-action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  margin-top: 0rem;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
-.add-btn {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
+.task-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
   border: none !important;
   color: white !important;
-  padding: 0.75rem 1.5rem !important;
+  padding: 1rem 2rem !important;
   font-weight: 600 !important;
-  border-radius: 8px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 0.5rem !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+  min-width: 180px !important;
+  font-size: 1rem !important;
 }
 
-.add-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+.task-btn:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6) !important;
+}
+
+.btn-text {
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  letter-spacing: 0.5px;
 }
 
 @media (max-width: 768px) {
-  .page-header {
+  .projects-container {
     padding: 1rem;
-    margin-bottom: 0.75rem;
   }
-  
-  .page-header h1 {
+
+  .main-header {
+    padding: 1.5rem;
+    min-height: 60px;
+  }
+
+  .main-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .main-header i {
     font-size: 1.25rem;
   }
-  
-  .page-content {
-    padding: 0.75rem;
+
+  .main-content {
+    padding: 1rem;
   }
-  
-  .add-btn {
+
+  .tab-action-buttons {
+    flex-direction: column;
+    margin-bottom: 1rem;
+  }
+
+  .task-btn {
     width: 100%;
-    justify-content: center !important;
+    min-width: auto !important;
+    padding: 0.875rem 1.5rem !important;
+  }
+
+  .btn-text {
+    font-size: 0.9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .page-header {
-    padding: 0.75rem;
-    border-radius: 8px;
-  }
-  
-  .page-header h1 {
-    font-size: 1.1rem;
-  }
-  
-  .page-content {
+  .projects-container {
     padding: 0.5rem;
-    border-radius: 8px;
+  }
+
+  .main-header {
+    padding: 1rem;
+    min-height: 50px;
+  }
+
+  .main-header h1 {
+    font-size: 1.25rem;
+    gap: 0.5rem;
+  }
+
+  .main-header i {
+    font-size: 1rem;
+  }
+
+  .main-content {
+    padding: 0.75rem;
+  }
+
+  .task-btn {
+    padding: 0.75rem 1.25rem !important;
+    font-size: 0.9rem !important;
+  }
+
+  .btn-text {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .main-header {
+    padding: 1rem;
+    min-height: 50px;
+  }
+
+  .main-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .main-content {
+    padding: 1rem;
   }
 }
 </style>
