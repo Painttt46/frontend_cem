@@ -9,6 +9,13 @@ axios.defaults.timeout = 30000 // 30 seconds
 // Request interceptor
 axios.interceptors.request.use(
   (config) => {
+    // ไม่ส่ง request ถ้าอยู่หน้า login (ยกเว้น login API)
+    if (router.currentRoute.value.path === '/login' && !config.url?.includes('/auth/login')) {
+      const error = new Error('Request cancelled - on login page')
+      error.silent = true
+      return Promise.reject(error)
+    }
+    
     // Add token to Authorization header
     const token = localStorage.getItem('soc_token')
     if (token) {
@@ -47,17 +54,11 @@ axios.interceptors.response.use(
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
           })
           
-          // Show message if token expired
-          if (data.expired) {
-            error.userMessage = 'เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
-          } else {
-            error.userMessage = 'กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
-          }
-          
           // Redirect to login
           if (router.currentRoute.value.path !== '/login') {
             router.push('/login')
           }
+          error.silent = true
           break
           
         case 403:
@@ -100,19 +101,24 @@ axios.interceptors.response.use(
       } else {
         error.userMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
       }
+    } else if (error.silent) {
+      // Silent error - don't log
+      return Promise.reject(error)
     } else {
       // Something else happened
       error.userMessage = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     }
     
     // Log error for debugging
-    console.error('API Error:', {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      message: error.message,
-      userMessage: error.userMessage
-    })
+    if (!error.silent) {
+      console.error('API Error:', {
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+        message: error.message,
+        userMessage: error.userMessage
+      })
+    }
     
     return Promise.reject(error)
   }
