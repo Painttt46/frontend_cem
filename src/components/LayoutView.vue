@@ -29,9 +29,9 @@
         :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
         :v-tooltip="sidebarVisible ? 'ซ่อนเมนู' : 'แสดงเมนู'" />
 
-      <Dialog v-model:visible="visible" header="Setting"
-        :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" :position="position"
-        :modal="true" :draggable="false">
+      <Dialog v-model:visible="visible" header="Setting" 
+        :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" 
+        :position="position" :modal="true" :draggable="false">
         <div class="flex align-items-center gap-3 mb-3 mt-3">
           <router-link to="/profile" @click="visible = false" class="nav-link">
             <h5>
@@ -126,14 +126,21 @@
           </div>
         </div>
       </div>
-      <div :class="mainContentClass" class="main-col">
-        <div class="main-content">
-          <ScrollPanel class="main-scroll">
-            <RouterView />
-          </ScrollPanel>
+
+      <div :class="mainContentClass" style="height: 100%">
+        <div class="pt-1 pb-3 container-fluid h-100">
+          <div class="main-content-wrapper">
+            <ScrollPanel style="
+                width: 100%;
+                height: calc(100vh);
+                padding-right: 2rem;
+                padding-bottom: 2rem;
+              ">
+              <RouterView />
+            </ScrollPanel>
+          </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
@@ -216,7 +223,7 @@ onMounted(() => {
   window.addEventListener("mousemove", resetTimer);
   window.addEventListener("keydown", resetTimer);
   window.addEventListener("resize", updateIsMobile);
-
+  
   soc_user_id.value = localStorage.getItem("soc_user_id");
   soc_user.value = localStorage.getItem("soc_user");
   soc_role.value = localStorage.getItem("soc_role");
@@ -267,12 +274,12 @@ const logout = async () => {
     // Clear localStorage และ sessionStorage
     localStorage.clear();
     sessionStorage.clear();
-
+    
     // Clear all cookies
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
     });
-
+    
     // Redirect
     window.location.href = "/login";
   }
@@ -313,7 +320,6 @@ const startCountdown = () => {
   height: 40px !important;
 
 }
-
 :root {
   --toggle-btn-right: 1rem;
   /* ตำแหน่งเมื่อ sidebar เปิด */
@@ -334,8 +340,9 @@ const startCountdown = () => {
 .main-content-wrapper {
   width: 100%;
   height: 100%;
-  padding: 0;
-  margin: 0;
+  padding: 0 1rem;
+  margin-left: 2rem;
+  margin-right: 1rem;
 }
 
 .sidebar-column {
@@ -433,9 +440,10 @@ h4 {
   }
 
   .main-content-wrapper {
-    padding: 0;
-    margin: 0;
-    width: 100%;
+    padding: 0 0.5rem;
+    margin-left: 0;
+    margin-right: 0;
+    width: calc(100% + 3.3rem);
   }
 }
 
@@ -443,38 +451,6 @@ h4 {
 @media (max-width: 768px) {
   .sidebar-hidden .sidebar-column {
     transform: translateX(-100%);
-  }
-}
-
-/* คุมคอลัมน์ฝั่งเนื้อหาให้เต็มความสูง */
-.main-col {
-  height: 100%;
-}
-
-/* คุม “ขอบซ้าย-ขวา” ของทุกหน้าในระบบ (ยกเว้น login) */
-.main-content {
-  height: 100%;
-  width: 100%;
-  padding: 8px 8px;
-  /* ปรับระยะขอบรวมของทุกหน้า */
-  box-sizing: border-box;
-}
-
-/* ScrollPanel ให้เต็มพื้นที่ และไม่บีบซ้าย/ขวาเกิน */
-.main-scroll {
-  width: 100%;
-  height: calc(100vh - 24px);
-  /* เผื่อ padding ของ main-content */
-}
-
-/* มือถือ: ลด padding ให้พอดี */
-@media (max-width: 768px) {
-  .main-content {
-    padding: 10px 10px;
-  }
-
-  .main-scroll {
-    height: calc(100vh - 20px);
   }
 }
 </style>

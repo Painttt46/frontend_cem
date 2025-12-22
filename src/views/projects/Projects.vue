@@ -53,9 +53,9 @@ export default {
 
 <style scoped>
 .projects-container {
-  padding: 0.5rem;
-  max-width: 100%;
-  margin: 0;
+  padding: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
   background: #f8f9fa;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -107,7 +107,7 @@ export default {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 1rem;
+  padding: 2rem;
 }
 
 .tab-action-buttons {
