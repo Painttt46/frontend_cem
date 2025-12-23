@@ -645,11 +645,11 @@ export default {
         window.dispatchEvent(new CustomEvent('workRecordUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))
 
-      } catch { // ignore
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถแก้ไขรายการงานได้',
+          detail: err.response?.data?.error || 'ไม่สามารถแก้ไขรายการงานได้',
           life: 5000
         })
       }
