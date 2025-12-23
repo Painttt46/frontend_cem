@@ -30,12 +30,12 @@
     </div>
 
     <!-- Leave Form Dialog -->
-    <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', maxWidth: '900px' }" :draggable="false">
+    <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', maxWidth: '900px' }" class="leave-dialog" :draggable="false">
       <LeaveForm @submit-leave="submitLeave" @close-form="showLeaveDialog = false" />
     </Dialog>
 
     <!-- Approval Dialog -->
-    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px', height: '96vh' }" class="approval-dialog" :draggable="false">
+    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
       <LeaveApproval 
         :records="pendingLeaveRecords" 
         @approve-leave="approveLeave" 
@@ -525,15 +525,16 @@ export default {
     gap: 0.75rem;
   }
 }
+:deep(.leave-dialog.p-dialog),
 :deep(.approval-dialog.p-dialog) {
-  width: 98vw !important;
-  max-width: 1600px !important;
-  height: 96vh !important;
-  max-height: 96vh !important;
+  height: auto !important;
+  max-height: 95vh !important;
 }
 
+:deep(.leave-dialog .p-dialog-content),
 :deep(.approval-dialog .p-dialog-content) {
-  height: calc(96vh - 80px) !important;
-  max-height: calc(96vh - 80px) !important;
+  height: auto !important;
+  max-height: calc(95vh - 80px) !important;
+  overflow-y: auto !important;
 }
 </style>

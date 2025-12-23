@@ -206,31 +206,31 @@ body {
 
 /* PrimeVue Dialog Responsive */
 .p-dialog {
-  width: 95vw !important;
-  max-width: 1400px !important;
-  max-height: 90vh !important;
-  margin: 0 auto !important;
+  width: 95vw;
+  max-width: 1400px;
+  max-height: 90vh;
+  margin: 0 auto;
 }
 
 .p-dialog .p-dialog-content {
-  max-height: calc(90vh - 100px) !important;
-  overflow-y: auto !important;
+  max-height: calc(90vh - 100px);
+  overflow-y: auto;
 }
 
 @media (max-width: 768px) {
   .p-dialog {
-    width: 98vw !important;
-    height: 95vh !important;
-    max-height: 95vh !important;
+    width: 98vw;
+    height: 95vh;
+    max-height: 95vh;
   }
   
   .p-dialog .p-dialog-content {
-    padding: 1rem !important;
-    max-height: calc(95vh - 100px) !important;
+    padding: 1rem;
+    max-height: calc(95vh - 100px);
   }
   
   .p-dialog .p-dialog-header {
-    padding: 1rem !important;
+    padding: 1rem;
   }
 }
 
