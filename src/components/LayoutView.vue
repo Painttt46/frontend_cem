@@ -454,7 +454,20 @@ h4 {
 }
 
 /* ซ่อน scrollbar ของ ScrollPanel */
-:deep(.p-scrollpanel-bar-y) {
+:deep(.p-scrollpanel-bar-y),
+:deep(.p-scrollpanel-bar) {
+  display: none !important;
+  width: 0 !important;
+  opacity: 0 !important;
+}
+
+:deep(.p-scrollpanel-content) {
+  overflow: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+:deep(.p-scrollpanel-content)::-webkit-scrollbar {
   display: none !important;
 }
 </style>

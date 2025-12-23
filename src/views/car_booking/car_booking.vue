@@ -722,12 +722,14 @@ export default {
 
 .app-container {
   padding: 1rem;
+  padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
   margin-left: 0.5%;
   background: #e5e7eb;
-  min-height: 100vh;
+  height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
 }
 
 .main-tabs {
