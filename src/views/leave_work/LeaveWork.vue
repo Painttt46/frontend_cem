@@ -116,13 +116,30 @@ export default {
       )
     },
     pendingLeaveCount() {
-      return this.pendingLeaveRecords.length
+      // นับเฉพาะ records ที่ user สามารถ approve ได้
+      if (this.approverLevel === 0) return 0
+      if (this.approverLevel === 3) return this.pendingLeaveRecords.length
+      
+      return this.pendingLeaveRecords.filter(record => {
+        if (this.approverLevel === 1 && record.status === 'pending') return true
+        if (this.approverLevel === 2 && record.status === 'pending_level2') return true
+        return false
+      }).length
     }
   },
   methods: {
     async checkLeaveApprover() {
       try {
         const userId = localStorage.getItem('soc_user_id')
+        const role = localStorage.getItem('soc_role')?.toLowerCase()
+        
+        // Admin มีสิทธิ์ทั้งสอง level
+        if (role === 'admin') {
+          this.isLeaveApprover = true
+          this.approverLevel = 3
+          return
+        }
+        
         if (!userId) return
         
         const response = await this.$http.get('/api/settings/leave-approval')
