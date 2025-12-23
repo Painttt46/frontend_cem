@@ -797,4 +797,24 @@ export default {
     font-size: 0.8rem;
   }
 }
+.status-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-actions .p-badge {
+  font-size: 0.85rem;
+  padding: 0.35rem 0.65rem;
+}
+
+.status-actions .p-button {
+  width: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+}
+
+.status-actions .p-button .p-button-icon {
+  font-size: 0.9rem;
+}
 </style>
