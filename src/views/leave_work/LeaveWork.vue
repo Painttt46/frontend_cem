@@ -35,7 +35,7 @@
     </Dialog>
 
     <!-- Approval Dialog -->
-    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px', height: '90vh' }" :draggable="false">
+    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px', height: '90vh' }" class="approval-dialog" :draggable="false">
       <LeaveApproval 
         :records="pendingLeaveRecords" 
         @approve-leave="approveLeave" 
@@ -524,5 +524,10 @@ export default {
   .action-buttons {
     gap: 0.75rem;
   }
+}
+:deep(.approval-dialog.p-dialog) {
+  width: 98vw !important;
+  max-width: 1600px !important;
+  height: 95vh !important;
 }
 </style>
