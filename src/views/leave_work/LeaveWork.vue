@@ -108,7 +108,9 @@ export default {
       return filtered
     },
     pendingLeaveRecords() {
-      return this.filteredLeaveRecords.filter(record => record.status === 'pending')
+      return this.filteredLeaveRecords.filter(record => 
+        record.status === 'pending' || record.status === 'pending_level2'
+      )
     },
     pendingLeaveCount() {
       return this.pendingLeaveRecords.length
@@ -162,8 +164,21 @@ export default {
     },
 
     async approveLeave(leaveId) {
+      // Get current leave request to check its status
+      const leaveRequest = this.pendingLeaveRecords.find(r => r.id === leaveId)
+      const currentStatus = leaveRequest?.status || 'pending'
+      
+      // Determine approval level based on current status
+      let approvalLevel = 1
+      let confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - HR)'
+      
+      if (currentStatus === 'pending_level2') {
+        approvalLevel = 2
+        confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - ผู้บริหาร)'
+      }
+
       this.$confirm.require({
-        message: 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่?',
+        message: confirmMessage,
         header: 'ยืนยันการอนุมัติ',
         icon: 'pi pi-check-circle',
         acceptClass: 'p-button-success',
@@ -179,7 +194,8 @@ export default {
             
             await this.$http.put(`/api/leave/${leaveId}/status`, {
               status: 'approved',
-              approved_by: approverInfo
+              approved_by: approverInfo,
+              approval_level: approvalLevel
             })
             
             await this.loadLeaveRecords()
@@ -187,7 +203,7 @@ export default {
             this.$toast.add({
               severity: 'success',
               summary: 'สำเร็จ',
-              detail: 'อนุมัติการลาเรียบร้อย',
+              detail: approvalLevel === 1 ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอผู้บริหารอนุมัติ' : 'อนุมัติการลาเรียบร้อย',
               life: 3000
             })
           } catch (error) {

@@ -367,6 +367,7 @@ export default {
     getStatusSeverity(status) {
       const severities = {
         'pending': 'warning',
+        'pending_level2': 'info',
         'approved': 'success',
         'rejected': 'danger',
         'รอการอนุมัติ': 'warning',
@@ -378,7 +379,8 @@ export default {
 
     getStatusLabel(status) {
       const statusMap = {
-        'pending': 'รอการอนุมัติ',
+        'pending': 'รอ HR อนุมัติ',
+        'pending_level2': 'รอผู้บริหารอนุมัติ',
         'approved': 'อนุมัติแล้ว',
         'rejected': 'ปฏิเสธ'
       }

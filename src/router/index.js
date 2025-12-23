@@ -16,6 +16,7 @@ const ProjectsView = () => import('../views/management/ProjectsView.vue')
 const DailyWorkManagement = () => import('../views/management/DailyWorkManagement.vue')
 const SystemSettings = () => import('../views/management/SystemSettings.vue')
 const RolePermissions = () => import('../views/management/RolePermissions.vue')
+const LeaveApprovalSettings = () => import('../views/management/LeaveApprovalSettings.vue')
 const LeaveManagement = () => import('../views/management/LeaveManagement.vue')
 const Dashboard = () => import('../views/management/Dashboard.vue')
 
@@ -108,6 +109,12 @@ const routes = [
     name: 'role-permissions',
     component: RolePermissions,
     meta: { requiresAuth: true, title: 'จัดการสิทธิ์การเข้าถึง - Gent-CEM' },
+  },
+  {
+    path: '/management/settings/leave-approval',
+    name: 'leave-approval-settings',
+    component: LeaveApprovalSettings,
+    meta: { requiresAuth: true, title: 'ตั้งค่าผู้อนุมัติการลา - Gent-CEM' },
   },
   {
     path: '/management/leave',

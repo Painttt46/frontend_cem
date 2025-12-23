@@ -35,6 +35,23 @@
       </Card>
 
       <!-- Notifications -->
+      <Card class="setting-card" @click="navigateTo('leave-approval')">
+        <template #content>
+          <div class="card-content">
+            <div class="card-header">
+              <i class="pi pi-users card-icon"></i>
+              <Badge value="Active" severity="success" />
+            </div>
+            <h3>ตั้งค่าผู้อนุมัติการลา</h3>
+            <p>กำหนดผู้รับ Email และสิทธิ์อนุมัติการลา 2 ขั้นตอน</p>
+            <div class="card-footer">
+              <i class="pi pi-arrow-right"></i>
+            </div>
+          </div>
+        </template>
+      </Card>
+
+      <!-- Notifications -->
       <Card class="setting-card" @click="showComingSoon">
         <template #content>
           <div class="card-content">
@@ -98,6 +115,8 @@ const toast = useToast()
 const navigateTo = (section) => {
   if (section === 'role-permissions') {
     router.push('/management/settings/role-permissions')
+  } else if (section === 'leave-approval') {
+    router.push('/management/settings/leave-approval')
   }
 }
 
