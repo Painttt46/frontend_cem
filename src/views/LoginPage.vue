@@ -125,6 +125,10 @@ const closeForgotDialog = () => {
 };
 
 const sendPasswordReset = async () => {
+  console.log('sendPasswordReset called');
+  console.log('forgotEmail:', forgotEmail.value);
+  console.log('sendingEmail:', sendingEmail.value);
+  
   if (!forgotEmail.value) {
     toast.add({
       severity: 'warn',
@@ -136,11 +140,14 @@ const sendPasswordReset = async () => {
   }
 
   sendingEmail.value = true;
+  console.log('Sending request...');
 
   try {
     const response = await axios.post('/api/auth/forgot-password', {
       email: forgotEmail.value
     });
+    
+    console.log('Response:', response.data);
 
     if (response.data.success) {
       toast.add({
@@ -153,6 +160,7 @@ const sendPasswordReset = async () => {
 
     closeForgotDialog();
   } catch (error) {
+    console.error('Error:', error);
     let errorMessage = 'เกิดข้อผิดพลาด';
 
     if (error.response?.status === 404) {
