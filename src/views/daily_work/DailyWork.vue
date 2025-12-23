@@ -164,10 +164,11 @@ export default {
 
 <style scoped>
 .daily-work-container {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 1rem;
+  max-width: 100%;
   margin: 0 auto;
-  background: #f8f9fa;
+  margin-left: 6rem;
+  background: #e5e7eb;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
