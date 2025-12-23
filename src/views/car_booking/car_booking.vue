@@ -189,15 +189,8 @@ export default {
         // Must be active status (past borrow time, not returned)
         if (r.status !== 'active') return false
 
-        // Check if current user is authorized to return this booking
-        const isBorrower = r.name === currentUserName
-        const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
-          r.colleagues.some(colleague => {
-            const colleagueName = typeof colleague === 'string' ? colleague : colleague?.name
-            return colleagueName === currentUserName
-          })
-
-        return isBorrower || isColleague
+        // Only borrower can return
+        return r.name === currentUserName
       })
     },
     pendingBorrows() {
@@ -946,23 +939,31 @@ export default {
 }
 
 .borrow-section {
-  border: 2px solid #28a745;
+  border: 2px solid #dc3545;
 }
 
 .borrow-section .section-header {
+  background: #f8d7da;
+  color: #721c24;
+  border-bottom: 1px solid #f5c6cb;
+}
+
+.borrow-section .grid-image {
+  border: 3px solid #dc3545;
+}
+
+.return-section {
+  border: 2px solid #28a745;
+}
+
+.return-section .section-header {
   background: #d4edda;
   color: #155724;
   border-bottom: 1px solid #c3e6cb;
 }
 
-.return-section {
-  border: 2px solid #ffc107;
-}
-
-.return-section .section-header {
-  background: #fff3cd;
-  color: #856404;
-  border-bottom: 1px solid #ffeaa7;
+.return-section .grid-image {
+  border: 3px solid #28a745;
 }
 
 .section-header {

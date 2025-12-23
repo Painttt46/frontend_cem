@@ -123,14 +123,18 @@
                   <i class="pi pi-check-circle"></i>
                   <Badge value="HR" severity="info" />
                 </div>
-                <span class="approver-text">{{ slotProps.data.approved_by_level1 }}</span>
+                <span class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
+                  {{ slotProps.data.approved_by_level1 }}
+                </span>
               </div>
               <div v-if="slotProps.data.approved_by_level2" class="approver-item">
                 <div class="approver-badge-wrapper">
                   <i class="pi pi-check-circle"></i>
                   <Badge value="ผู้บริหาร" severity="success" />
                 </div>
-                <span class="approver-text">{{ slotProps.data.approved_by_level2 }}</span>
+                <span class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
+                  {{ slotProps.data.approved_by_level2 }}
+                </span>
               </div>
               <span v-if="!slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">
                 <i class="pi pi-clock"></i> รอการอนุมัติ
