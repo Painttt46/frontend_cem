@@ -535,7 +535,7 @@ export default {
         this.loadTasks()
         window.dispatchEvent(new CustomEvent('taskUpdated'))
       } catch (error) {
-        console.error('Error deleting task:', error)
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -549,7 +549,7 @@ export default {
         const response = await this.$http.get('/api/settings/categories')
         this.categories = response.data
       } catch (error) {
-        console.error('Error loading categories:', error)
+        
         // Fallback to default
         this.categories = [
           { label: '💼 งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼', color: '#6366f1' },
@@ -561,10 +561,10 @@ export default {
     async loadStatusesFromStorage() {
       try {
         const response = await this.$http.get('/api/settings/statuses')
-        console.log('Loaded statuses:', response.data)
+        
         this.workStatuses = response.data
       } catch (error) {
-        console.error('Error loading statuses:', error)
+        
         // Fallback to default
         this.workStatuses = [
           { label: '⏳ รอดำเนินการ', value: 'pending', icon: 'emoji:⏳', color: '#f59e0b' },
@@ -675,7 +675,7 @@ export default {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
       } catch (error) {
-        console.error('Download error:', error)
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',

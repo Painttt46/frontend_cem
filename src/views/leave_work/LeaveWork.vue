@@ -161,7 +161,7 @@ export default {
           this.approverLevel = 0
         }
       } catch (error) {
-        console.error('Error checking leave approver:', error)
+        
       }
     },
     showLeaveForm() {

@@ -340,7 +340,7 @@ export default {
           }))
         })
         .catch(error => {
-          console.error('Error loading statuses:', error)
+          
           // Fallback to default
           this.statusOptions = [
             { label: '⏳ รอดำเนินการ', value: 'pending', color: '#f59e0b' },
@@ -356,7 +356,7 @@ export default {
           this.categoryOptions = response.data
         })
         .catch(error => {
-          console.error('Error loading categories:', error)
+          
           this.categoryOptions = []
         })
     },
@@ -502,7 +502,7 @@ export default {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
       } catch (error) {
-        console.error('Download error:', error)
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',

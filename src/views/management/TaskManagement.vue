@@ -293,7 +293,7 @@ const loadCategories = async () => {
     const response = await http.get('/api/settings/categories')
     categories.value = response.data
   } catch (error) {
-    console.error(error)
+    
   }
 }
 
@@ -305,7 +305,7 @@ const loadStatuses = async () => {
     const response = await http.get('/api/settings/statuses')
     workStatuses.value = response.data
   } catch (error) {
-    console.error(error)
+    
   }
 }
 

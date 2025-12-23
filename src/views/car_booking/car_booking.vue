@@ -295,10 +295,10 @@ export default {
         const clientTime = new Date()
         this.serverTimeOffset = serverTime.getTime() - clientTime.getTime()
         this.currentTime = new Date(Date.now() + this.serverTimeOffset)
-        console.log('[Time Sync] Server time:', serverTime.toLocaleString('th-TH'))
-        console.log('[Time Sync] Offset:', this.serverTimeOffset, 'ms')
+        
+        
       } catch (error) {
-        console.error('Failed to sync server time:', error)
+        
       }
     },
     getCurrentUserName() {

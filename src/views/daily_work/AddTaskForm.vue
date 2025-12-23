@@ -120,7 +120,7 @@ export default {
           }
         })
         .catch(error => {
-          console.error(error)
+          
           if (this.categoryOptions.length > 0 && !this.formData.category) {
             this.formData.category = this.categoryOptions[0].value
           }

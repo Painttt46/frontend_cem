@@ -105,7 +105,7 @@ export default {
           })
         }
       } catch (error) {
-        console.error('Error loading user info:', error)
+        
       } finally {
         this.loading = false
       }

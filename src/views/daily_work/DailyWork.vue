@@ -79,7 +79,7 @@ export default {
             localStorage.setItem('allCompleteNotificationSent', 'true')
           }
         } catch (error) {
-          console.error(error)
+          
         }
       }
     },

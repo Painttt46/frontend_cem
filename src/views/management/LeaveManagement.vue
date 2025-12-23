@@ -197,7 +197,7 @@ const loadLeaveTypes = async () => {
     const response = await axios.get('/api/leave/leave-types')
     leaveTypes.value = response.data
   } catch (error) {
-    console.error('Error loading leave types:', error)
+    
   }
 }
 
@@ -221,7 +221,7 @@ const loadUsers = async () => {
         
         return userData
       } catch (error) {
-        console.error(`Error loading quota for user ${user.id}:`, error)
+        
         return { ...user }
       }
     }))
@@ -306,7 +306,7 @@ const saveQuota = async () => {
     closeEditDialog()
     await loadUsers()
   } catch (error) {
-    console.error('Save quota error:', error)
+    
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
@@ -353,7 +353,7 @@ const addLeaveType = async () => {
     await loadLeaveTypes()
     await loadUsers()
   } catch (error) {
-    console.error('Add leave type error:', error)
+    
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
@@ -393,7 +393,7 @@ const deleteLeaveType = async (leaveType) => {
     await loadLeaveTypes()
     await loadUsers()
   } catch (error) {
-    console.error('Delete leave type error:', error)
+    
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',

@@ -38,12 +38,6 @@ export function useErrorHandler() {
       })
     }
 
-    // Log to console for debugging
-    console.error('Error handled:', {
-      message,
-      originalError: err
-    })
-
     return message
   }
 

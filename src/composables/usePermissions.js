@@ -17,7 +17,7 @@ export function usePermissions() {
       permissionsLoaded.value = true
       return true
     } catch (error) {
-      console.error('Error loading permissions:', error)
+      
       
       // ถ้า token หมดอายุ - axios interceptor จะ handle
       

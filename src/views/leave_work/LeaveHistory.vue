@@ -234,7 +234,7 @@ export default {
         const response = await this.$http.get('/api/leave/leave-types')
         this.leaveTypes = response.data
       } catch (error) {
-        console.error('Error loading leave types:', error)
+        
       }
     },
     getLeaveTypeColor(type) {

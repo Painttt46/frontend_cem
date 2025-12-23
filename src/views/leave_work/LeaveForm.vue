@@ -255,7 +255,7 @@ export default {
         const response = await axios.get('/api/leave/leave-types');
         this.leaveTypes = response.data;
       } catch (error) {
-        console.error('Error loading leave types:', error);
+        
         // Fallback to default types if API fails
         this.leaveTypes = [
           { label: 'ลาป่วย', value: 'sick' },

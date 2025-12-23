@@ -265,7 +265,7 @@ export default {
         }))
         this.attendeeOptions = this.users
       } catch (error) {
-        console.error(error)
+        
       }
     },
 
@@ -349,7 +349,7 @@ export default {
           display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
       } catch (error) {
-        console.error(error)
+        
       }
     },
     handleFileUpload(event) {
@@ -446,7 +446,7 @@ export default {
         this.$emit('submit-work')
         this.resetForm()
       } catch (error) {
-        console.error('Submit error:', error)
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -499,7 +499,7 @@ export default {
           this.statusOptions = response.data
         })
         .catch(error => {
-          console.error(error)
+          
           // Fallback to default
           this.statusOptions = [
             { label: '✅ เสร็จสมบูรณ์', value: 'completed', icon: 'emoji:✅' },

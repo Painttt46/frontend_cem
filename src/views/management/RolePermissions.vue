@@ -148,7 +148,7 @@ const loadRoles = async () => {
       value: role
     }))
   } catch (error) {
-    console.error('Error loading roles:', error)
+    
     // Fallback to default roles
     roles.value = [
       { label: 'Superadmin', value: 'superadmin' },

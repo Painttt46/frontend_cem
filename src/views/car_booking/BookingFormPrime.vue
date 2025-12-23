@@ -356,7 +356,7 @@ export default {
             }))
         }
       } catch (error) {
-        console.error(error)
+        
       }
     },
     async loadUsers() {
@@ -377,7 +377,7 @@ export default {
           this.filteredUsers = this.users.slice(0, this.maxDisplayUsers)
         }
       } catch (error) {
-        console.error(error)
+        
       }
     },
 

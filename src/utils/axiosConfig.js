@@ -9,8 +9,8 @@ axios.defaults.timeout = 30000 // 30 seconds
 // Request interceptor
 axios.interceptors.request.use(
   (config) => {
-    // ไม่ส่ง request ถ้าอยู่หน้า login (ยกเว้น login API)
-    if (router.currentRoute.value.path === '/login' && !config.url?.includes('/auth/login')) {
+    // ไม่ส่ง request ถ้าอยู่หน้า login (ยกเว้น auth API)
+    if (router.currentRoute.value.path === '/login' && !config.url?.includes('/auth/')) {
       const error = new Error('Request cancelled - on login page')
       error.silent = true
       return Promise.reject(error)
@@ -107,17 +107,6 @@ axios.interceptors.response.use(
     } else {
       // Something else happened
       error.userMessage = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
-    }
-    
-    // Log error for debugging
-    if (!error.silent) {
-      console.error('API Error:', {
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        message: error.message,
-        userMessage: error.userMessage
-      })
     }
     
     return Promise.reject(error)

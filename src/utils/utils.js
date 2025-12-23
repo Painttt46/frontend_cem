@@ -78,7 +78,7 @@ function fetchAndExport(url, fileName) {
             saveAs(blob, file_name);
         })
         .catch((error) => {
-            console.error('Export error:', error);
+            
         });
 }
 

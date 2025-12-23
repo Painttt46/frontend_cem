@@ -125,7 +125,7 @@ const loadSettings = async () => {
     level1Approvers.value = res.data.level1 || []
     level2Approvers.value = res.data.level2 || []
   } catch (error) {
-    console.error('Error loading settings:', error)
+    
   }
 }
 
@@ -134,7 +134,7 @@ const loadUsers = async () => {
     const res = await axios.get('/api/users')
     allUsers.value = res.data.filter(u => u.is_active)
   } catch (error) {
-    console.error('Error loading users:', error)
+    
   }
 }
 
