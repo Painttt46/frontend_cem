@@ -207,8 +207,14 @@ body {
 /* PrimeVue Dialog Responsive */
 .p-dialog {
   width: 95vw !important;
-  max-width: 1200px !important;
+  max-width: 1400px !important;
+  max-height: 90vh !important;
   margin: 0 auto !important;
+}
+
+.p-dialog .p-dialog-content {
+  max-height: calc(90vh - 100px) !important;
+  overflow-y: auto !important;
 }
 
 @media (max-width: 768px) {
@@ -220,6 +226,7 @@ body {
   
   .p-dialog .p-dialog-content {
     padding: 1rem !important;
+    max-height: calc(95vh - 100px) !important;
   }
   
   .p-dialog .p-dialog-header {

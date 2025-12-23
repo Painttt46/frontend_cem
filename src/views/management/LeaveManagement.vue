@@ -70,7 +70,7 @@
     </Card>
 
     <!-- Add Leave Type Dialog -->
-    <Dialog v-model:visible="showAddLeaveTypeDialog" header="เพิ่มประเภทการลาใหม่" :modal="true" :draggable="false" style="width: 400px">
+    <Dialog v-model:visible="showAddLeaveTypeDialog" header="เพิ่มประเภทการลาใหม่" :modal="true" :draggable="false" :style="{ width: '90vw', maxWidth: '500px' }">
       <div class="leave-type-form">
         <div class="field">
           <label>ชื่อประเภทการลา *</label>
@@ -88,7 +88,7 @@
     </Dialog>
     
     <!-- Edit Quota Dialog -->
-    <Dialog v-model:visible="showEditQuotaDialog" header="แก้ไขโควต้าการลา" :modal="true" :draggable="false" style="width: 450px">
+    <Dialog v-model:visible="showEditQuotaDialog" header="แก้ไขโควต้าการลา" :modal="true" :draggable="false" :style="{ width: '90vw', maxWidth: '550px' }">
       <div class="edit-quota-form" v-if="editingUser">
         <div class="user-info">
           <i class="pi pi-user"></i>
@@ -407,8 +407,13 @@ const deleteLeaveType = async (leaveType) => {
 <style scoped>
 .leave-management-container {
   padding: 1rem;
-  max-width: 1400px;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
+  margin-left: 0.5%;
+  background: #e5e7eb;
+  height: 100%;
+  overflow: auto;
 }
 
 .header-card {
