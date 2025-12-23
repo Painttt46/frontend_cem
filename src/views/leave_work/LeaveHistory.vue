@@ -108,13 +108,19 @@
           </template>
         </Column>
 
-        <Column header="ผู้ดำเนินการ" style="min-width: 150px;">
+        <Column header="ผู้อนุมัติ" style="min-width: 200px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.approved_by" class="approver-info">
-              <i class="pi pi-user-check"></i>
-              <span class="clickable-name" @click="showApproverInfo(slotProps.data.approved_by)">{{ slotProps.data.approved_by }}</span>
+            <div class="approver-info-box">
+              <div v-if="slotProps.data.approved_by_level1" class="approver-row">
+                <Badge value="HR" severity="info" class="level-badge" />
+                <span class="approver-name">{{ slotProps.data.approved_by_level1 }}</span>
+              </div>
+              <div v-if="slotProps.data.approved_by_level2" class="approver-row">
+                <Badge value="ผู้บริหาร" severity="success" class="level-badge" />
+                <span class="approver-name">{{ slotProps.data.approved_by_level2 }}</span>
+              </div>
+              <span v-if="!slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">-</span>
             </div>
-            <span v-else class="no-approver">-</span>
           </template>
         </Column>
 
@@ -818,5 +824,31 @@ export default {
 
 .status-actions .p-button .p-button-icon {
   font-size: 0.9rem;
+}
+
+.approver-info-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.approver-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.level-badge {
+  font-size: 0.7rem !important;
+  padding: 0.2rem 0.4rem !important;
+}
+
+.approver-name {
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.no-approver {
+  color: #adb5bd;
 }
 </style>

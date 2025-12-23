@@ -109,6 +109,29 @@
           </template>
         </Column>
 
+        <Column header="สถานะการอนุมัติ" style="min-width: 180px;">
+          <template #body="slotProps">
+            <div class="approval-status-box">
+              <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level1 }">
+                <i :class="slotProps.data.approved_by_level1 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <div class="step-info">
+                  <span class="step-label">ขั้นที่ 1 (HR)</span>
+                  <span v-if="slotProps.data.approved_by_level1" class="step-approver">{{ slotProps.data.approved_by_level1 }}</span>
+                  <span v-else class="step-pending">รอดำเนินการ</span>
+                </div>
+              </div>
+              <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level2, 'disabled': !slotProps.data.approved_by_level1 }">
+                <i :class="slotProps.data.approved_by_level2 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <div class="step-info">
+                  <span class="step-label">ขั้นที่ 2 (ผู้บริหาร)</span>
+                  <span v-if="slotProps.data.approved_by_level2" class="step-approver">{{ slotProps.data.approved_by_level2 }}</span>
+                  <span v-else class="step-pending">รอดำเนินการ</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </Column>
+
         <Column header="วันที่ส่งคำขอ" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.created_at) }}
@@ -650,5 +673,59 @@ export default {
 .status-badge {
   display: flex;
   justify-content: center;
+}
+
+.approval-status-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.approval-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.approval-step.completed {
+  background: #d1fae5;
+}
+
+.approval-step.completed i {
+  color: #10b981;
+}
+
+.approval-step.disabled {
+  opacity: 0.5;
+}
+
+.approval-step i {
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.step-approver {
+  font-size: 0.8rem;
+  color: #047857;
+}
+
+.step-pending {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
 }
 </style>
