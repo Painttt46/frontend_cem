@@ -264,7 +264,7 @@ export default {
           email: user.email
         }))
         this.attendeeOptions = this.users
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
@@ -348,7 +348,7 @@ export default {
           ...task,
           display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
@@ -372,7 +372,7 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         return response.data.files || []
-      } catch (error) {
+      } catch { // ignore
         return []
       }
     },
@@ -445,7 +445,7 @@ export default {
 
         this.$emit('submit-work')
         this.resetForm()
-      } catch (error) {
+      } catch { // ignore
         
         this.$toast.add({
           severity: 'error',
@@ -498,8 +498,7 @@ export default {
         .then(response => {
           this.statusOptions = response.data
         })
-        .catch(error => {
-          
+        .catch(() => {
           // Fallback to default
           this.statusOptions = [
             { label: '✅ เสร็จสมบูรณ์', value: 'completed', icon: 'emoji:✅' },

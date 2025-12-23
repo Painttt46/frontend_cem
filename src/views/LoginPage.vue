@@ -223,8 +223,7 @@ function auth(username, password) {
       // Navigate after showing success
       setTimeout(() => {
         isLoggingIn.value = false;
-        router.push("/daily_work").catch(err => {
-          
+        router.push("/daily_work").catch(() => {
           isLoggingIn.value = false;
         });
       }, 800);

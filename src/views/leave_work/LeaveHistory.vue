@@ -233,7 +233,7 @@ export default {
       try {
         const response = await this.$http.get('/api/leave/leave-types')
         this.leaveTypes = response.data
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
@@ -278,7 +278,7 @@ export default {
         // Emit event เพื่อ refresh ข้อมูล
         this.$emit('request-deleted')
 
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',

@@ -160,7 +160,7 @@ export default {
         } else {
           this.approverLevel = 0
         }
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
@@ -188,7 +188,7 @@ export default {
             submittedAt: new Date(record.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
           }
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -205,7 +205,7 @@ export default {
         await this.loadLeaveRecords()
         this.showLeaveDialog = false
         // Toast แสดงใน LeaveForm แล้ว ไม่ต้องแสดงซ้ำ
-      } catch (error) {
+      } catch { // ignore
         // Ignore error
       }
     },
@@ -253,7 +253,7 @@ export default {
               detail: approvalLevel === 1 ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอผู้บริหารอนุมัติ' : 'อนุมัติการลาเรียบร้อย',
               life: 3000
             })
-          } catch (error) {
+          } catch { // ignore
             this.$toast.add({
               severity: 'error',
               summary: 'เกิดข้อผิดพลาด',
@@ -294,7 +294,7 @@ export default {
               detail: 'ไม่อนุมัติการลาเรียบร้อย',
               life: 3000
             })
-          } catch (error) {
+          } catch { // ignore
             this.$toast.add({
               severity: 'error',
               summary: 'เกิดข้อผิดพลาด',

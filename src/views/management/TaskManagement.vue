@@ -292,7 +292,7 @@ const loadCategories = async () => {
     
     const response = await http.get('/api/settings/categories')
     categories.value = response.data
-  } catch (error) {
+  } catch { // ignore
     
   }
 }
@@ -304,7 +304,7 @@ const loadStatuses = async () => {
     
     const response = await http.get('/api/settings/statuses')
     workStatuses.value = response.data
-  } catch (error) {
+  } catch { // ignore
     
   }
 }
@@ -329,7 +329,7 @@ const addCategory = async () => {
         detail: 'เพิ่มหมวดหมู่เรียบร้อย',
         life: 3000
       })
-    } catch (error) {
+    } catch { // ignore
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
@@ -351,7 +351,7 @@ const removeCategory = async (categoryValue) => {
       detail: 'ลบหมวดหมู่เรียบร้อย',
       life: 3000
     })
-  } catch (error) {
+  } catch { // ignore
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -401,7 +401,7 @@ const addStatus = async () => {
         detail: 'เพิ่มสถานะเรียบร้อย',
         life: 3000
       })
-    } catch (error) {
+    } catch { // ignore
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
@@ -423,7 +423,7 @@ const removeStatus = async (statusValue) => {
       detail: 'ลบสถานะเรียบร้อย',
       life: 3000
     })
-  } catch (error) {
+  } catch { // ignore
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',

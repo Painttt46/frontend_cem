@@ -268,8 +268,8 @@ const logout = async () => {
   try {
     // เรียก API logout เพื่อ clear cookie
     await axios.post('/api/auth/logout');
-  } catch (error) {
-    
+  } catch {
+    // ignore
   } finally {
     // Clear localStorage และ sessionStorage
     localStorage.clear();

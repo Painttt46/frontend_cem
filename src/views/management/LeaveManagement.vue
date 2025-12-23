@@ -196,7 +196,7 @@ const loadLeaveTypes = async () => {
   try {
     const response = await axios.get('/api/leave/leave-types')
     leaveTypes.value = response.data
-  } catch (error) {
+  } catch { // ignore
     
   }
 }
@@ -220,7 +220,7 @@ const loadUsers = async () => {
         }
         
         return userData
-      } catch (error) {
+      } catch { // ignore
         
         return { ...user }
       }
@@ -228,7 +228,7 @@ const loadUsers = async () => {
     
     // Extract unique departments and positions
     extractFilters()
-  } catch (error) {
+  } catch { // ignore
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
@@ -305,7 +305,7 @@ const saveQuota = async () => {
 
     closeEditDialog()
     await loadUsers()
-  } catch (error) {
+  } catch { // ignore
     
     toast.add({
       severity: 'error',
@@ -352,7 +352,7 @@ const addLeaveType = async () => {
     closeAddDialog()
     await loadLeaveTypes()
     await loadUsers()
-  } catch (error) {
+  } catch { // ignore
     
     toast.add({
       severity: 'error',
@@ -392,7 +392,7 @@ const deleteLeaveType = async (leaveType) => {
 
     await loadLeaveTypes()
     await loadUsers()
-  } catch (error) {
+  } catch { // ignore
     
     toast.add({
       severity: 'error',

@@ -16,11 +16,8 @@ export function usePermissions() {
       permissions.value = response.data.permissions || []
       permissionsLoaded.value = true
       return true
-    } catch (error) {
-      
-      
+    } catch {
       // ถ้า token หมดอายุ - axios interceptor จะ handle
-      
       permissions.value = []
       permissionsLoaded.value = true
       return false

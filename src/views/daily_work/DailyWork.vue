@@ -78,7 +78,7 @@ export default {
             this.allCompleteNotificationSent = true
             localStorage.setItem('allCompleteNotificationSent', 'true')
           }
-        } catch (error) {
+        } catch { // ignore
           
         }
       }
@@ -114,7 +114,7 @@ export default {
       try {
         const response = await axios.get('/api/daily-work')
         this.workRecords = response.data
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',

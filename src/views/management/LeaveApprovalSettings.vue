@@ -124,7 +124,7 @@ const loadSettings = async () => {
     const res = await axios.get('/api/settings/leave-approval')
     level1Approvers.value = res.data.level1 || []
     level2Approvers.value = res.data.level2 || []
-  } catch (error) {
+  } catch { // ignore
     
   }
 }
@@ -133,7 +133,7 @@ const loadUsers = async () => {
   try {
     const res = await axios.get('/api/users')
     allUsers.value = res.data.filter(u => u.is_active)
-  } catch (error) {
+  } catch { // ignore
     
   }
 }
@@ -156,7 +156,7 @@ const addApprover = async (level) => {
     else newApproverLevel2.value = null
     
     await loadSettings()
-  } catch (error) {
+  } catch { // ignore
     toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: error.response?.data?.error || 'ไม่สามารถเพิ่มได้', life: 3000 })
   }
 }
@@ -168,7 +168,7 @@ const updateApprover = async (level, data) => {
       can_approve: data.can_approve
     })
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'อัพเดทแล้ว', life: 2000 })
-  } catch (error) {
+  } catch { // ignore
     toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถอัพเดทได้', life: 3000 })
   }
 }
@@ -178,7 +178,7 @@ const removeApprover = async (level, userId) => {
     await axios.delete(`/api/settings/leave-approval/${level}/${userId}`)
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'ลบผู้อนุมัติแล้ว', life: 3000 })
     await loadSettings()
-  } catch (error) {
+  } catch { // ignore
     toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถลบได้', life: 3000 })
   }
 }

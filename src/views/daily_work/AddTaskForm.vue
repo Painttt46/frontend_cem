@@ -119,8 +119,7 @@ export default {
             this.formData.category = this.categoryOptions[0].value
           }
         })
-        .catch(error => {
-          
+        .catch(() => {
           if (this.categoryOptions.length > 0 && !this.formData.category) {
             this.formData.category = this.categoryOptions[0].value
           }
@@ -167,7 +166,7 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         return response.data.files || []
-      } catch (error) {
+      } catch { // ignore
         return []
       }
     },
@@ -213,7 +212,7 @@ export default {
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         
         this.resetForm()
-      } catch (error) {
+      } catch { // ignore
         
         const errorMessage = error.response?.data?.error || error.message || 'ไม่สามารถเพิ่มงานได้'
         

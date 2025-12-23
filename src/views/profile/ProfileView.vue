@@ -175,8 +175,7 @@ function fetchData() {
       id.value = userData.id;
       loading.value = false;
     })
-    .catch(error => {
-      
+    .catch(() => {
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',

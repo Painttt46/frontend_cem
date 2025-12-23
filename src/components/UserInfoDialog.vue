@@ -104,8 +104,8 @@ export default {
             return userName === fullName
           })
         }
-      } catch (error) {
-        
+      } catch {
+        // ignore
       } finally {
         this.loading = false
       }

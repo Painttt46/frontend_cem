@@ -297,7 +297,7 @@ export default {
         this.currentTime = new Date(Date.now() + this.serverTimeOffset)
         
         
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
@@ -310,7 +310,7 @@ export default {
       try {
         const response = await axios.get('/api/car-booking')
         this.records = response.data
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -467,7 +467,7 @@ export default {
 
         // Clear file input
         event.target.value = ''
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -504,7 +504,7 @@ export default {
           detail: 'บันทึกการจองรถเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         
         // Handle conflict error (409)
         if (error.response?.status === 409) {
@@ -565,7 +565,7 @@ export default {
           detail: 'บันทึกการคืนรถเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -593,7 +593,7 @@ export default {
           detail: 'ยกเลิกการจองเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -652,7 +652,7 @@ export default {
           detail: `อัปโหลดรูปภาพ ${files.length} ไฟล์เรียบร้อย`,
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',

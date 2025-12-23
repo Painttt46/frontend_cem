@@ -339,8 +339,7 @@ export default {
             color: status.color
           }))
         })
-        .catch(error => {
-          
+        .catch(() => {
           // Fallback to default
           this.statusOptions = [
             { label: '⏳ รอดำเนินการ', value: 'pending', color: '#f59e0b' },
@@ -355,8 +354,7 @@ export default {
         .then(response => {
           this.categoryOptions = response.data
         })
-        .catch(error => {
-          
+        .catch(() => {
           this.categoryOptions = []
         })
     },
@@ -394,7 +392,7 @@ export default {
             life: 3000
           })
         }
-      } catch (error) {
+      } catch { // ignore
         this.localRecords = []
 
         this.$toast.add({
@@ -413,7 +411,7 @@ export default {
         const month = String(d.getMonth() + 1).padStart(2, '0')
         const year = d.getFullYear()
         return `${day}/${month}/${year}`
-      } catch (error) {
+      } catch { // ignore
         return date
       }
     },
@@ -501,7 +499,7 @@ export default {
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
-      } catch (error) {
+      } catch { // ignore
         
         this.$toast.add({
           severity: 'error',
@@ -573,7 +571,7 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         return response.data.files || []
-      } catch (error) {
+      } catch { // ignore
         return []
       }
     },
@@ -653,7 +651,7 @@ export default {
         window.dispatchEvent(new CustomEvent('workRecordUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))
 
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',

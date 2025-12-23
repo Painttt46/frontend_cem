@@ -355,7 +355,7 @@ export default {
               value: task.task_name
             }))
         }
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
@@ -376,7 +376,7 @@ export default {
             }))
           this.filteredUsers = this.users.slice(0, this.maxDisplayUsers)
         }
-      } catch (error) {
+      } catch { // ignore
         
       }
     },
