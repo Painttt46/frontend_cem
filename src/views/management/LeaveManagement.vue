@@ -305,12 +305,11 @@ const saveQuota = async () => {
 
     closeEditDialog()
     await loadUsers()
-  } catch { // ignore
-    
+  } catch (err) {
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
-      detail: error.response?.data?.error || 'ไม่สามารถแก้ไขโควต้าได้',
+      detail: err.response?.data?.error || 'ไม่สามารถแก้ไขโควต้าได้',
       life: 3000
     })
   } finally {
@@ -352,12 +351,11 @@ const addLeaveType = async () => {
     closeAddDialog()
     await loadLeaveTypes()
     await loadUsers()
-  } catch { // ignore
-    
+  } catch (err) {
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
-      detail: error.response?.data?.error || 'ไม่สามารถเพิ่มประเภทการลาได้',
+      detail: err.response?.data?.error || 'ไม่สามารถเพิ่มประเภทการลาได้',
       life: 3000
     })
   } finally {
@@ -392,12 +390,11 @@ const deleteLeaveType = async (leaveType) => {
 
     await loadLeaveTypes()
     await loadUsers()
-  } catch { // ignore
-    
+  } catch (err) {
     toast.add({
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
-      detail: error.response?.data?.error || 'ไม่สามารถลบประเภทการลาได้',
+      detail: err.response?.data?.error || 'ไม่สามารถลบประเภทการลาได้',
       life: 3000
     })
   }

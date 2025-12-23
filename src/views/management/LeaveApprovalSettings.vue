@@ -156,8 +156,8 @@ const addApprover = async (level) => {
     else newApproverLevel2.value = null
     
     await loadSettings()
-  } catch { // ignore
-    toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: error.response?.data?.error || 'ไม่สามารถเพิ่มได้', life: 3000 })
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: err.response?.data?.error || 'ไม่สามารถเพิ่มได้', life: 3000 })
   }
 }
 

@@ -278,11 +278,11 @@ export default {
         // Emit event เพื่อ refresh ข้อมูล
         this.$emit('request-deleted')
 
-      } catch { // ignore
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถลบคำขอได้',
+          detail: err.response?.data?.error || 'ไม่สามารถลบคำขอได้',
           life: 3000
         })
       }
@@ -399,13 +399,7 @@ export default {
     },
 
     getStatusLabel(status) {
-      const statusMap = {
-        'pending': 'รอ HR อนุมัติ',
-        'pending_level2': 'รอผู้บริหารอนุมัติ',
-        'approved': 'อนุมัติแล้ว',
-        'rejected': 'ปฏิเสธ'
-      }
-      return statusMap[status] || status
+      return status
     },
     viewAttachments(attachments) {
       this.$emit('view-attachments', attachments)

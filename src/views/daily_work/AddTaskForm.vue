@@ -212,9 +212,8 @@ export default {
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         
         this.resetForm()
-      } catch { // ignore
-        
-        const errorMessage = error.response?.data?.error || error.message || 'ไม่สามารถเพิ่มงานได้'
+      } catch (err) {
+        const errorMessage = err.response?.data?.error || err.message || 'ไม่สามารถเพิ่มงานได้'
         
         this.$toast.add({
           severity: 'error',

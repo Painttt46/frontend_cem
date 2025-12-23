@@ -504,14 +504,13 @@ export default {
           detail: 'บันทึกการจองรถเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch { // ignore
-        
+      } catch (err) {
         // Handle conflict error (409)
-        if (error.response?.status === 409) {
+        if (err.response?.status === 409) {
           this.$toast.add({
             severity: 'warn',
             summary: 'ไม่สามารถจองได้',
-            detail: error.response.data.details || error.response.data.error,
+            detail: err.response.data.details || err.response.data.error,
             life: 5000
           })
         } else {

@@ -441,14 +441,8 @@ export default {
       return time.toTimeString().split(' ')[0]
     },
     getStatusLabel(status) {
-      const statusMap = {
-        'completed': 'เสร็จสมบูรณ์',
-        'in_progress': 'อยู่ระหว่างดำเนินการ',
-        'pending': 'รอข้อมูล / อนุมัติ / อุปกรณ์'
-      }
-      const label = statusMap[status] || status
       // Remove all emoji and special characters
-      return label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      return status.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
     },
     getStatusLabelFromOptions(value) {
       const status = this.statusOptions.find(s => s.value === value)

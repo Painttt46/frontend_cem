@@ -445,12 +445,11 @@ export default {
 
         this.$emit('submit-work')
         this.resetForm()
-      } catch { // ignore
-        
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+          detail: err.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
           life: 5000
         })
       }

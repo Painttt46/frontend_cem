@@ -329,11 +329,11 @@ const addCategory = async () => {
         detail: 'เพิ่มหมวดหมู่เรียบร้อย',
         life: 3000
       })
-    } catch { // ignore
+    } catch (err) {
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
-        detail: error.response?.data?.error || 'ไม่สามารถเพิ่มหมวดหมู่ได้',
+        detail: err.response?.data?.error || 'ไม่สามารถเพิ่มหมวดหมู่ได้',
         life: 3000
       })
     }
@@ -351,7 +351,7 @@ const removeCategory = async (categoryValue) => {
       detail: 'ลบหมวดหมู่เรียบร้อย',
       life: 3000
     })
-  } catch { // ignore
+  } catch (err) { // ignore
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -401,11 +401,11 @@ const addStatus = async () => {
         detail: 'เพิ่มสถานะเรียบร้อย',
         life: 3000
       })
-    } catch { // ignore
+    } catch (err) {
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
-        detail: error.response?.data?.error || 'ไม่สามารถเพิ่มสถานะได้',
+        detail: err.response?.data?.error || 'ไม่สามารถเพิ่มสถานะได้',
         life: 3000
       })
     }
