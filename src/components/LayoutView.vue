@@ -306,35 +306,34 @@ const startCountdown = () => {
 
 .sidebar-toggle-btn {
   position: fixed;
-  top: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   right: var(--toggle-btn-right);
   left: var(--toggle-btn-left);
-  z-index: 1000;
+  z-index: 1001;
   background: linear-gradient(135deg, #4A90E2, #D73527) !important;
   color: white !important;
   border: none !important;
   border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3) !important;
-  transition: all 0.3s ease !important;
+  box-shadow: -2px 2px 8px rgba(74, 144, 226, 0.3) !important;
   width: 40px !important;
   height: 40px !important;
-
-}
-:root {
-  --toggle-btn-right: 1rem;
-  /* ตำแหน่งเมื่อ sidebar เปิด */
-  --toggle-btn-left: auto;
-}
-
-.sidebar-hidden {
-  --toggle-btn-right: auto;
-  /* ตำแหน่งเมื่อ sidebar ปิด */
-  --toggle-btn-left: 1rem;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0.3;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 .sidebar-toggle-btn:hover {
-  transform: translateY(-2px) !important;
+  opacity: 1;
   box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+}
+
+
+.sidebar-hidden .sidebar-toggle-btn {
+  right: auto;
 }
 
 .main-content-wrapper {
@@ -413,7 +412,8 @@ h4 {
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
   .sidebar-toggle-btn {
-    top: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   :root {

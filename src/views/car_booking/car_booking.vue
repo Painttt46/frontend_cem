@@ -721,16 +721,17 @@ export default {
 }
 
 .app-container {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 1rem;
+  max-width: 100%;
   margin: 0 auto;
-  background: #f8f9fa;
+  margin-left: 0.5%;
+  background: #e5e7eb;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .main-tabs {
-  margin-top: 1.5rem;
+  margin-top: 0;
   box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
   border-radius: 15px;
   overflow: hidden;

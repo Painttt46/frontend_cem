@@ -166,8 +166,9 @@ export default {
 .daily-work-container {
   padding: 1rem;
   max-width: 100%;
+  
   margin: 0 auto;
-  margin-left: 6rem;
+  margin-left: 0.5%;
   background: #e5e7eb;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
