@@ -121,6 +121,7 @@ const showForgotPassword = () => {
 const closeForgotDialog = () => {
   showForgotDialog.value = false;
   forgotEmail.value = "";
+  sendingEmail.value = false;
 };
 
 const sendPasswordReset = async () => {

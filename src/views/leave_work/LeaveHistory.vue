@@ -97,29 +97,44 @@
           </template>
         </Column>
 
-        <Column field="status" header="สถานะ">
+        <Column header="สถานะ" style="min-width: 180px;">
           <template #body="slotProps">
-            <div class="status-actions">
+            <div class="status-container">
               <Badge :value="getStatusLabel(slotProps.data.status)"
-                :severity="getStatusSeverity(slotProps.data.status)" />
-              <Button v-if="canDeleteRequest(slotProps.data)" icon="pi pi-trash" size="small" severity="danger" text
-                @click="confirmDelete(slotProps.data)" v-tooltip="'ลบคำขอ'" class="ml-2" />
+                :severity="getStatusSeverity(slotProps.data.status)" 
+                class="status-badge-large" />
+              <Button v-if="canDeleteRequest(slotProps.data)" 
+                icon="pi pi-trash" 
+                size="small" 
+                severity="danger" 
+                text
+                @click="confirmDelete(slotProps.data)" 
+                v-tooltip="'ลบคำขอ'" 
+                class="delete-btn" />
             </div>
           </template>
         </Column>
 
-        <Column header="ผู้อนุมัติ" style="min-width: 200px;">
+        <Column header="ผู้อนุมัติ" style="min-width: 250px;">
           <template #body="slotProps">
-            <div class="approver-info-box">
-              <div v-if="slotProps.data.approved_by_level1" class="approver-row">
-                <Badge value="HR" severity="info" class="level-badge" />
-                <span class="approver-name">{{ slotProps.data.approved_by_level1 }}</span>
+            <div class="approver-container">
+              <div v-if="slotProps.data.approved_by_level1" class="approver-item">
+                <div class="approver-badge-wrapper">
+                  <i class="pi pi-check-circle"></i>
+                  <Badge value="HR" severity="info" />
+                </div>
+                <span class="approver-text">{{ slotProps.data.approved_by_level1 }}</span>
               </div>
-              <div v-if="slotProps.data.approved_by_level2" class="approver-row">
-                <Badge value="ผู้บริหาร" severity="success" class="level-badge" />
-                <span class="approver-name">{{ slotProps.data.approved_by_level2 }}</span>
+              <div v-if="slotProps.data.approved_by_level2" class="approver-item">
+                <div class="approver-badge-wrapper">
+                  <i class="pi pi-check-circle"></i>
+                  <Badge value="ผู้บริหาร" severity="success" />
+                </div>
+                <span class="approver-text">{{ slotProps.data.approved_by_level2 }}</span>
               </div>
-              <span v-if="!slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">-</span>
+              <span v-if="!slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">
+                <i class="pi pi-clock"></i> รอการอนุมัติ
+              </span>
             </div>
           </template>
         </Column>
@@ -805,42 +820,81 @@ export default {
     font-size: 0.8rem;
   }
 }
-.status-actions {
+.status-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.75rem;
 }
 
-.status-actions .p-badge {
-  font-size: 0.85rem;
-  padding: 0.35rem 0.65rem;
+.status-badge-large {
+  font-size: 0.9rem !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
 }
 
-.status-actions .p-button {
+.delete-btn {
   width: 2rem !important;
   height: 2rem !important;
   padding: 0 !important;
 }
 
-.status-actions .p-button .p-button-icon {
+.delete-btn .p-button-icon {
   font-size: 0.9rem;
 }
 
-.approver-info-box {
+.approver-container {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-.approver-row {
+.approver-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border-left: 3px solid #10b981;
+}
+
+.approver-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.approver-badge-wrapper i {
+  color: #10b981;
+  font-size: 1rem;
+}
+
+.approver-badge-wrapper .p-badge {
+  font-size: 0.75rem !important;
+  padding: 0.3rem 0.6rem !important;
+  font-weight: 600 !important;
+}
+
+.approver-text {
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.no-approver {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.5rem;
 }
 
-.level-badge {
-  font-size: 0.7rem !important;
-  padding: 0.2rem 0.4rem !important;
+.no-approver i {
+  font-size: 1rem;
 }
 
 .approver-name {
