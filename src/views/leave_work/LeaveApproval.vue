@@ -117,13 +117,13 @@
 
         <Column header="การดำเนินการ" :frozen="true" alignFrozen="right">
           <template #body="slotProps">
-            <div class="action-buttons">
+            <div class="action-buttons" v-if="canApproveRecord(slotProps.data)">
               <Button 
                 icon="pi pi-check" 
                 severity="success" 
                 size="small"
                 @click="$emit('approve-leave', slotProps.data.id)"
-                v-tooltip="'อนุมัติ'"
+                v-tooltip="getApproveTooltip(slotProps.data)"
               />
               <Button 
                 icon="pi pi-times" 
@@ -132,6 +132,10 @@
                 @click="$emit('reject-leave', slotProps.data.id)"
                 v-tooltip="'ไม่อนุมัติ'"
               />
+            </div>
+            <div v-else class="status-badge">
+              <Badge v-if="slotProps.data.status === 'pending'" value="รอ HR อนุมัติ" severity="warning" />
+              <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอผู้บริหารอนุมัติ" severity="info" />
             </div>
           </template>
         </Column>
@@ -196,7 +200,11 @@ export default {
     UserInfoDialog
   },
   props: {
-    records: Array
+    records: Array,
+    approverLevel: {
+      type: Number,
+      default: 0
+    }
   },
   created() {
     this.$http = axios
@@ -323,6 +331,24 @@ export default {
       }
       return types[type] || type
     },
+    canApproveRecord(record) {
+      // approverLevel: 0 = ไม่มีสิทธิ์, 1 = level 1 only, 2 = level 2 only, 3 = ทั้งสอง
+      if (this.approverLevel === 0) return false
+      if (this.approverLevel === 3) return true // admin หรือมีสิทธิ์ทั้งสอง
+      
+      // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'
+      if (this.approverLevel === 1 && record.status === 'pending') return true
+      
+      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2'
+      if (this.approverLevel === 2 && record.status === 'pending_level2') return true
+      
+      return false
+    },
+    getApproveTooltip(record) {
+      if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (HR)'
+      if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (ผู้บริหาร)'
+      return 'อนุมัติ'
+    }
   }
 }
 </script>
@@ -620,5 +646,9 @@ export default {
 .clickable-name:hover {
   color: #764ba2;
   text-decoration: underline;
+}
+.status-badge {
+  display: flex;
+  justify-content: center;
 }
 </style>

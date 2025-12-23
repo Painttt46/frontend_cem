@@ -38,6 +38,7 @@
     <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
       <LeaveApproval 
         :records="pendingLeaveRecords" 
+        :approver-level="approverLevel"
         @approve-leave="approveLeave" 
         @reject-leave="rejectLeave" 
         @close-form="showApprovalDialog = false"
@@ -77,7 +78,9 @@ export default {
       leaveRecords: [],
       loading: false,
       showLeaveDialog: false,
-      showApprovalDialog: false
+      showApprovalDialog: false,
+      isLeaveApprover: false,
+      approverLevel: 0  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
     }
   },
   computed: {
@@ -92,12 +95,12 @@ export default {
       return role === 'hr' || role === 'admin'
     },
     canApproveLeave() {
-      // ตรวจสอบ permission สำหรับการอนุมัติลาเท่านั้น
-      return this.hasAccess('/leave_work/approve')
+      // ตรวจสอบ permission หรือ อยู่ใน leave approval settings
+      return this.hasAccess('/leave_work/approve') || this.isLeaveApprover
     },
     filteredLeaveRecords() {
       
-      if (this.isHROrAdmin) {
+      if (this.isHROrAdmin || this.isLeaveApprover) {
         return this.leaveRecords
       }
       
@@ -117,6 +120,33 @@ export default {
     }
   },
   methods: {
+    async checkLeaveApprover() {
+      try {
+        const userId = localStorage.getItem('soc_user_id')
+        if (!userId) return
+        
+        const response = await this.$http.get('/api/settings/leave-approval')
+        const level1 = response.data.level1 || []
+        const level2 = response.data.level2 || []
+        
+        const isLevel1 = level1.some(a => a.user_id == userId && a.can_approve)
+        const isLevel2 = level2.some(a => a.user_id == userId && a.can_approve)
+        
+        this.isLeaveApprover = isLevel1 || isLevel2
+        
+        if (isLevel1 && isLevel2) {
+          this.approverLevel = 3
+        } else if (isLevel1) {
+          this.approverLevel = 1
+        } else if (isLevel2) {
+          this.approverLevel = 2
+        } else {
+          this.approverLevel = 0
+        }
+      } catch (error) {
+        console.error('Error checking leave approver:', error)
+      }
+    },
     showLeaveForm() {
       this.showLeaveDialog = true
     },
@@ -293,8 +323,9 @@ export default {
     this.$http = axios
   },
 
-  mounted() {
+  async mounted() {
     this.loadPermissions()
+    await this.checkLeaveApprover()
     this.loadLeaveRecords()
   }
 }
