@@ -22,8 +22,8 @@
   </Dialog>
   <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100%">
-    <div class="row" style="height: 100%">
+  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100%; overflow: hidden;">
+    <div class="row" style="height: 100%; overflow: hidden;">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
         :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
@@ -127,7 +127,7 @@
         </div>
       </div>
 
-      <div :class="mainContentClass" style="height: 100%; padding: 0;">
+      <div :class="mainContentClass" style="height: 100%; padding: 0; overflow: hidden;">
         <div class="pt-1 pb-3 container-fluid h-100" style="padding-right: 0; padding-left: 0;">
           <div class="main-content-wrapper">
             <ScrollPanel style="

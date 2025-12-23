@@ -1,6 +1,6 @@
 <!-- App.vue -->
 <template>
-  <div id="app">
+  <div id="app" style="height: 100vh; overflow: hidden;">
     <!-- Show only router-view for login page -->
     <div v-if="$router.currentRoute.value.fullPath == '/login'">
       <router-view />
