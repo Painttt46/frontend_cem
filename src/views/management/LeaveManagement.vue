@@ -410,7 +410,7 @@ const deleteLeaveType = async (leaveType) => {
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
-  margin-left: 0.5%;
+  
   background: #e5e7eb;
   height: 100%;
   overflow: auto;

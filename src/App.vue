@@ -299,4 +299,129 @@ body {
     padding: 0.75rem !important;
   }
 }
+
+/* Global Responsive Utilities */
+.flex-wrap-mobile {
+  flex-wrap: wrap;
+}
+
+/* PrimeVue TabView Responsive */
+@media (max-width: 768px) {
+  .p-tabview .p-tabview-nav {
+    flex-wrap: wrap;
+  }
+  
+  .p-tabview .p-tabview-nav-link {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .p-tabview-panels {
+    padding: 0.5rem !important;
+  }
+}
+
+/* PrimeVue Dropdown Responsive */
+@media (max-width: 768px) {
+  .p-dropdown-panel {
+    max-width: 90vw !important;
+  }
+  
+  .p-dropdown-item {
+    padding: 0.75rem !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* PrimeVue Calendar Responsive */
+@media (max-width: 768px) {
+  .p-datepicker {
+    width: 100% !important;
+    max-width: 320px !important;
+  }
+  
+  .p-datepicker table {
+    font-size: 0.85rem !important;
+  }
+  
+  .p-datepicker table td {
+    padding: 0.25rem !important;
+  }
+}
+
+/* PrimeVue Toast Responsive */
+@media (max-width: 768px) {
+  .p-toast {
+    width: 90vw !important;
+    max-width: 350px !important;
+  }
+  
+  .p-toast-message-content {
+    padding: 0.75rem !important;
+  }
+}
+
+/* Form Layout Responsive */
+@media (max-width: 768px) {
+  .p-fluid .p-field,
+  .p-fluid .p-inputgroup {
+    margin-bottom: 1rem;
+  }
+  
+  .p-float-label {
+    margin-bottom: 1.5rem;
+  }
+  
+  .p-inputgroup .p-inputtext {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Button Group Responsive */
+@media (max-width: 768px) {
+  .p-button-group,
+  .button-group,
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .p-button-group .p-button,
+  .button-group .p-button,
+  .action-buttons .p-button {
+    width: 100% !important;
+    margin: 0.25rem 0 !important;
+  }
+}
+
+/* Grid Responsive */
+@media (max-width: 768px) {
+  .grid > .col-6,
+  .grid > .col-4,
+  .grid > .col-3 {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
 </style>

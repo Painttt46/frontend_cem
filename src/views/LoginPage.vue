@@ -49,7 +49,7 @@
   </div>
 
   <!-- Forgot Password Dialog -->
-  <Dialog v-model:visible="showForgotDialog" header="" :style="{ width: '400px', maxWidth: '90vw' }" modal
+  <Dialog v-model:visible="showForgotDialog" header="" :style="{ width: '90vw', maxWidth: '400px' }" modal
     :draggable="false" position="center" class="forgot-password-dialog">
     <template #header>
       <div class="dialog-header">

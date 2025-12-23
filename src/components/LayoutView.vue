@@ -128,7 +128,7 @@
       </div>
 
       <div :class="mainContentClass" style="height: 100%; padding: 0; overflow: hidden;">
-        <div class="pt-1 pb-3 container-fluid h-100" style="padding-right: 0; padding-left: 0;">
+        <div class="pt-1 pb-3 container-fluid h-100 content-padding">
           <div class="main-content-wrapper">
             <ScrollPanel style="
                 width: 100%;
@@ -409,8 +409,18 @@ h4 {
   transform: translateY(0) !important;
 }
 
+.content-padding {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
+  .content-padding {
+    padding-right: 1.3rem;
+    padding-left: 0.3rem;
+  }
+  
   .sidebar-toggle-btn {
     top: 50%;
     transform: translateY(-50%);

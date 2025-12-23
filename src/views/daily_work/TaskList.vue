@@ -153,7 +153,7 @@
   </div>
 
   <!-- Files Dialog -->
-  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }" :draggable="false">
+  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
@@ -281,7 +281,7 @@
   </Dialog>
 
   <!-- Edit Task Dialog -->
-  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '50rem' }" :draggable="false" position="center">
+  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false" position="center">
     <form @submit.prevent="updateTask" class="edit-form">
       <div class="form-grid">
         <div class="input-group">

@@ -49,7 +49,7 @@
       </div>
 
       <!-- Car Details Dialog -->
-      <Dialog v-model:visible="showCarDialog" modal header="🚗 รายละเอียดการใช้รถ" :style="{ width: '450px' }"
+      <Dialog v-model:visible="showCarDialog" modal header="🚗 รายละเอียดการใช้รถ" :style="{ width: '90vw', maxWidth: '500px' }"
         :draggable="false" :closable="false">
         <div v-if="selectedCarRecord" class="car-details">
           <div class="car-header">
@@ -124,7 +124,7 @@
       </Dialog>
 
       <!-- Booking Details Dialog -->
-      <Dialog v-model:visible="showBookingDialog" modal header="📅 รายละเอียดการจองรถ" :style="{ width: '450px' }"
+      <Dialog v-model:visible="showBookingDialog" modal header="📅 รายละเอียดการจองรถ" :style="{ width: '90vw', maxWidth: '500px' }"
         :draggable="false" :closable="false">
         <div v-if="selectedCarRecord" class="car-details">
           <div class="booking-header">

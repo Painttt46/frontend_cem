@@ -134,7 +134,7 @@
   </div>
 
   <!-- Files Dialog -->
-  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }" :draggable="false">
+  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div v-if="selectedRecordFiles && selectedRecordFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedRecordFiles" :key="index" class="file-item">
         <div class="file-info">
@@ -151,7 +151,7 @@
   </Dialog>
 
   <!-- Edit Record Dialog -->
-  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '50rem' }" position="center" :draggable="false">
+  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '800px' }" position="center" :draggable="false">
     <form @submit.prevent="updateRecord" class="edit-form">
       <div class="form-grid">
         <div class="input-group">

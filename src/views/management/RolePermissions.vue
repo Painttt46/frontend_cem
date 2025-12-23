@@ -72,7 +72,7 @@
     </div>
 
     <!-- Add Permission Dialog -->
-    <Dialog v-model:visible="showAddDialog" header="เพิ่ม Permission ใหม่" :modal="true" :draggable="false" style="width: 500px">
+    <Dialog v-model:visible="showAddDialog" header="เพิ่ม Permission ใหม่" :modal="true" :draggable="false" :style="{ width: '90vw', maxWidth: '500px' }">
       <div class="add-permission-form">
         <div class="field">
           <label>ชื่อหน้า</label>
@@ -347,7 +347,7 @@ const savePermissions = async () => {
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
-  margin-left: 0.5%;
+  
   background: #e5e7eb;
   height: 100%;
   overflow: auto;

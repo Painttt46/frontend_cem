@@ -128,7 +128,7 @@
   </Card>
 
   <!-- Work Details Dialog -->
-  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" style="width: 50rem;" :draggable="false">
+  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div class="work-details-content">
       <p>{{ selectedWorkDetails }}</p>
     </div>
@@ -138,7 +138,7 @@
   </Dialog>
 
   <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" style="width: 60rem;" :draggable="false">
+  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
     <div class="attachments-content">
       <div v-if="selectedAttachments.length === 0" class="no-attachments">
         <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>

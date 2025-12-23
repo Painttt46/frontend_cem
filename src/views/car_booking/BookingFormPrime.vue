@@ -1,5 +1,5 @@
 <template>
-  <Dialog :visible="showForm" modal :header="getFormTitle()" :style="{ width: '700px' }"
+  <Dialog :visible="showForm" modal :header="getFormTitle()" :style="{ width: '90vw', maxWidth: '700px' }"
     @update:visible="handleDialogClose" :closable="true" :draggable="false" class="corporate-dialog">
     <div class="p-fluid dialog-content">
       <!-- แจ้งใช้รถ -->
@@ -222,7 +222,7 @@
   </Dialog>
 
   <!-- Confirmation Dialog -->
-  <Dialog :visible="showConfirm" modal header="ยืนยันการดำเนินการ" :style="{ width: '450px' }" :closable="false"
+  <Dialog :visible="showConfirm" modal header="ยืนยันการดำเนินการ" :style="{ width: '90vw', maxWidth: '450px' }" :closable="false"
     :draggable="false" class="confirm-dialog">
     <div class="confirm-content">
       <div class="confirm-icon">

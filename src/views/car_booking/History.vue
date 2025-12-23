@@ -123,7 +123,7 @@
   </Card>
 
   <!-- Colleagues Dialog -->
-  <Dialog v-model:visible="showColleaguesModal" modal header="รายชื่อผู้ร่วมงาน" :style="{ width: '600px' }" :draggable="false">
+  <Dialog v-model:visible="showColleaguesModal" modal header="รายชื่อผู้ร่วมงาน" :style="{ width: '90vw', maxWidth: '600px' }" :draggable="false">
     <div class="colleagues-list">
       <div v-for="(colleague, index) in selectedColleagues" :key="index" class="colleague-card clickable-card" @click="showColleagueInfo(colleague)">
         <div class="colleague-details">
@@ -140,7 +140,7 @@
   </Dialog>
 
   <!-- Description Dialog -->
-  <Dialog v-model:visible="showDescriptionModal" modal header="ข้อมูลเพิ่มเติม" :style="{ width: '500px' }" :draggable="false">
+  <Dialog v-model:visible="showDescriptionModal" modal header="ข้อมูลเพิ่มเติม" :style="{ width: '90vw', maxWidth: '500px' }" :draggable="false">
     <div class="description-content">
       <p>{{ selectedDescription }}</p>
     </div>

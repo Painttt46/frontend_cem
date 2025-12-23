@@ -69,7 +69,7 @@
 
 <script setup>
 /* eslint-disable no-undef */
-import { ref, computed } from 'vue'
+import { ref, computed, useSlots } from 'vue'
 
 const props = defineProps({
   data: {
@@ -81,6 +81,8 @@ const props = defineProps({
     default: () => []
   }
 })
+
+const slots = useSlots()
 
 const localSearch = ref('')
 const advancedMode = ref(false)
@@ -104,9 +106,23 @@ const normalizeText = (text) => {
   return String(text).toLowerCase().trim()
 }
 
-// Get searchable columns
+// Get searchable columns from props or slots
 const searchableColumns = computed(() => {
-  return props.columns.filter(col => col.field)
+  if (props.columns && props.columns.length > 0) {
+    return props.columns.filter(col => col.field)
+  }
+  
+  // Extract from slot children
+  const defaultSlot = slots.default?.()
+  if (defaultSlot) {
+    return defaultSlot
+      .filter(vnode => vnode.props?.field)
+      .map(vnode => ({
+        field: vnode.props.field,
+        header: vnode.props.header || vnode.props.field
+      }))
+  }
+  return []
 })
 
 // Apply single filter
