@@ -529,5 +529,11 @@ export default {
   width: 98vw !important;
   max-width: 1600px !important;
   height: 95vh !important;
+  max-height: 95vh !important;
+}
+
+:deep(.approval-dialog .p-dialog-content) {
+  height: calc(95vh - 80px) !important;
+  max-height: calc(95vh - 80px) !important;
 }
 </style>
