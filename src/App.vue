@@ -172,16 +172,6 @@ function upperCase(inputString) {
   }
 }
 
-const renderComponent = ref(true);
-async function useForceUpdate() {
-  // Here, we'll remove MyComponent
-  renderComponent.value = false;
-
-  // Then, wait for the change to get flushed to the DOM
-  await nextTick();
-
-  // Add MyComponent back in
-  renderComponent.value = true;
 }
 function formatDateTime(dateString) {
   var date = new Date(dateString);
