@@ -341,15 +341,23 @@ export default {
     async loadTasks() {
       try {
         const response = await this.$http.get('/api/tasks')
-        // กรองเฉพาะ task ที่ไม่ complete
-        const availableTasks = response.data.filter(task => isActive(task.status))
-
-        this.tasks = availableTasks.map(task => ({
+        console.log('📋 Tasks response:', response.data)
+        
+        // แสดงทุก task (ไม่กรอง)
+        this.tasks = response.data.map(task => ({
           ...task,
           display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
-      } catch { // ignore
         
+        console.log('📝 All tasks:', this.tasks)
+      } catch (error) {
+        console.error('❌ Error loading tasks:', error)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถโหลดข้อมูลโครงการได้',
+          life: 3000
+        })
       }
     },
     handleFileUpload(event) {
