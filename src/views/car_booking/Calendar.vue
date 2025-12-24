@@ -55,7 +55,7 @@
           <div class="car-header">
             <div class="car-plate-display">
               <i class="pi pi-car"></i>
-              <span>FXAG-2032</span>
+              <span>ชฮ-3706</span>
             </div>
             <div class="status-badge">
               <i class="pi pi-circle-fill"></i>
@@ -130,7 +130,7 @@
           <div class="booking-header">
             <div class="car-plate-display">
               <i class="pi pi-calendar"></i>
-              <span>FXAG-2032</span>
+              <span>ชฮ-3706</span>
             </div>
             <div class="status-badge booking-status">
               <i class="pi pi-clock"></i>

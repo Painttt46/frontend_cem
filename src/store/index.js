@@ -9,6 +9,7 @@ export default createStore({
   },
   mutations: {
     SET_LOADING(state, value) {
+      console.log('🔄 Loading state changed:', value)
       state.loading = value
     }
   },

@@ -72,9 +72,13 @@
 import { ref, computed, useSlots } from 'vue'
 
 const props = defineProps({
+  value: {
+    type: Array,
+    default: () => []
+  },
   data: {
     type: Array,
-    required: true
+    default: () => []
   },
   columns: {
     type: Array,
@@ -152,7 +156,7 @@ const applyFilter = (item, filter) => {
 
 // Filter data based on search mode
 const filteredData = computed(() => {
-  let result = props.data
+  let result = props.value || props.data || []
 
   // Advanced mode: column-specific AND filters
   if (advancedMode.value) {

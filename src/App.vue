@@ -1,15 +1,12 @@
 <!-- App.vue -->
 <template>
   <div id="app" style="height: 100vh; overflow: hidden;">
-    <!-- Global Loading Overlay with Lottie -->
+    <!-- Global Loading Overlay with GIF -->
     <div v-if="$store.state.loading" class="loading-overlay">
-      <lottie-player
-        src="/assets/loading/loading.json"
-        background="transparent"
-        speed="1"
-        style="width: 200px; height: 200px;"
-        loop
-        autoplay
+      <img 
+        src="/assets/loading/loading.gif" 
+        alt="Loading..."
+        style="width: 80px; height: 80px;"
       />
     </div>
     
@@ -33,12 +30,6 @@ export default {
   components: {
     LayoutView,
   },
-  mounted() {
-    // Load Lottie Player
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js';
-    document.head.appendChild(script);
-  }
 };
 
 function addNumberToNumberArray(array, data) {
