@@ -170,7 +170,6 @@ function upperCase(inputString) {
   }
 }
 
-}
 function formatDateTime(dateString) {
   var date = new Date(dateString);
   return `${convertTo2digit(date.getDay())}/${convertTo2digit(date.getMonth() + 1)}/${date.getFullYear()} ${convertTo2digit(date.getHours())}:${convertTo2digit(date.getMinutes())}:${convertTo2digit(date.getSeconds())}`;
