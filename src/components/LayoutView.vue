@@ -147,7 +147,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import { upperCase } from "@/App.vue";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
@@ -230,7 +229,7 @@ onMounted(() => {
   soc_firstname.value = localStorage.getItem("soc_firstname") || "No data";
   soc_lastname.value = localStorage.getItem("soc_lastname") || "No data";
   if (soc_user.value != null) {
-    soc_user_firstLetter.value = upperCase(soc_user.value.charAt(0));
+    soc_user_firstLetter.value = soc_user.value.charAt(0).toUpperCase();
   }
 
   // Update time every second
