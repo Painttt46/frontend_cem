@@ -91,7 +91,10 @@
 
         <Column header="รูปภาพ">
           <template #body="slotProps">
-            <i class="pi pi-eye view-icon" @click="viewImages(slotProps.data)"></i>
+            <i v-if="(slotProps.data.borrowRecord.images?.length > 0) || (slotProps.data.returned && slotProps.data.returnRecord.images?.length > 0)" 
+               class="pi pi-eye view-icon" 
+               @click="viewImages(slotProps.data)"></i>
+            <span v-else>-</span>
           </template>
         </Column>
 

@@ -234,6 +234,7 @@ export default {
         draggable: false,
         accept: async () => {
           try {
+            const approverId = localStorage.getItem('soc_user_id')
             const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
             const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
             const approverInfo = `${approverName} (${approverPosition})`
@@ -242,6 +243,7 @@ export default {
             await this.$http.put(`/api/leave/${leaveId}/status`, {
               status: 'approved',
               approved_by: approverInfo,
+              approved_by_id: approverId,
               approval_level: approvalLevel
             })
             

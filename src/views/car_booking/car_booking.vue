@@ -79,9 +79,9 @@
 
       <div v-else class="image-viewer">
         <div v-for="imageType in groupedImages" :key="imageType.type"
-          :class="['image-section', imageType.type === 'ใช้' ? 'borrow-section' : 'return-section']">
+          :class="['image-section', imageType.type.includes('ใช้') ? 'borrow-section' : 'return-section']">
           <div class="section-header">
-            <i :class="imageType.type === 'ใช้' ? 'pi pi-download' : 'pi pi-upload'"></i>
+            <i :class="imageType.type.includes('ใช้') ? 'pi pi-download' : 'pi pi-upload'"></i>
             รูปภาพตอน{{ imageType.type }}
           </div>
           <div class="images-grid">
@@ -268,9 +268,13 @@ export default {
       this.currentTime = new Date(Date.now() + this.serverTimeOffset)
     }, 1000)
     
-    setInterval(() => {
-      this.loadRecords()
-    }, 30000)
+    // Add random delay to prevent all users from requesting at the same time
+    const randomDelay = Math.random() * 5000 // 0-5 seconds
+    setTimeout(() => {
+      setInterval(() => {
+        this.loadRecords()
+      }, 30000)
+    }, randomDelay)
     
     setInterval(() => {
       this.syncServerTime()
