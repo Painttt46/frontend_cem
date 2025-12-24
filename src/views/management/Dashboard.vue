@@ -183,7 +183,7 @@
           <Column field="taskCount" header="จำนวนงาน" sortable style="min-width: 100px" />
           <Column field="totalHours" header="รวมชั่วโมง" sortable style="min-width: 120px">
             <template #body="{ data }">
-              <span style="font-weight: 600; color: #4A90E2">{{ data.totalHours.toFixed(1) }} ชม.</span>
+              <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.totalHours) }}</span>
             </template>
           </Column>
           <!-- <Column field="avgHoursPerTask" header="เฉลี่ย/งาน" sortable style="min-width: 100px">
@@ -199,7 +199,7 @@
                 <Column field="taskName" header="ชื่องาน" style="min-width: 200px" />
                 <Column field="hours" header="ชั่วโมง" sortable>
                   <template #body="{ data: task }">
-                    <span style="font-weight: 600; color: #10b981">{{ task.hours.toFixed(1) }} ชม.</span>
+                    <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(task.hours) }}</span>
                   </template>
                 </Column>
                 <Column field="percentage" header="สัดส่วน" sortable>
@@ -464,6 +464,13 @@ const loadData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const formatHoursMinutes = (hours) => {
+  const h = parseFloat(hours) || 0
+  const hrs = Math.floor(h)
+  const mins = Math.round((h - hrs) * 60)
+  return `${hrs} ชม. ${mins} นาที`
 }
 
 const renderCharts = (leaves, tasks) => {

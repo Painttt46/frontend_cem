@@ -78,7 +78,7 @@
         </div>
         <div class="field">
           <label>โควต้าเริ่มต้น (ชม./ปี) *</label>
-          <InputNumber v-model="newLeaveTypeQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="8" />
+          <InputNumber v-model="newLeaveTypeQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
           <small class="field-hint">{{ (newLeaveTypeQuotaHours / 8).toFixed(1) }} วัน (1 วัน = 8 ชม.)</small>
         </div>
       </div>
@@ -108,13 +108,13 @@
         
         <div class="field">
           <label>โควต้าทั้งหมด (ชม./ปี) *</label>
-          <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="8" />
+          <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
           <small class="field-hint">ปัจจุบัน: {{ currentQuota * 8 }} ชม. ({{ currentQuota }} วัน)</small>
         </div>
         
         <div class="field">
           <label>โควต้าคงเหลือ (ชม.) *</label>
-          <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="8" />
+          <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="1" />
           <small class="field-hint">ปัจจุบัน: {{ currentRemaining * 8 }} ชม. ({{ currentRemaining }} วัน)</small>
         </div>
       </div>

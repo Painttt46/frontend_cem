@@ -196,7 +196,7 @@
         </div>
         <div class="summary-item">
           <i class="pi pi-clock"></i>
-          <span>รวม: <strong>{{ getTotalHours() }}</strong> ชั่วโมง</span>
+          <span>รวม: <strong>{{ getTotalHours() }}</strong></span>
         </div>
       </div>
       
@@ -235,9 +235,13 @@
                 <Badge :value="work.id" severity="info" />
               </td>
               <td>{{ formatDate(work.work_date) }}</td>
-              <td>{{ work.employee_name || 'ไม่ระบุ' }}</td>
+              <td>
+                <span class="clickable-name" @click="showUserInfo(work.employee_name, work.user_id)">
+                  {{ work.employee_name || 'ไม่ระบุ' }}
+                </span>
+              </td>
               <td>{{ work.start_time }} - {{ work.end_time }}</td>
-              <td class="text-center">{{ parseFloat(work.total_hours || 0).toFixed(1) }} ชม.</td>
+              <td class="text-center">{{ formatHoursMinutes(work.total_hours) }}</td>
               <td class="text-center">
                 <Badge :value="getStatusLabel(work.work_status)" 
                        :style="{ backgroundColor: getStatusColor(work.work_status), color: '#fff', fontWeight: 'bold' }" />
@@ -843,9 +847,11 @@ export default {
       }
     },
     getTotalHours() {
-      if (!this.taskWorks || this.taskWorks.length === 0) return '0.0'
+      if (!this.taskWorks || this.taskWorks.length === 0) return '0 ชม. 0 นาที'
       const total = this.taskWorks.reduce((sum, work) => sum + (parseFloat(work.total_hours) || 0), 0)
-      return total.toFixed(1)
+      const hours = Math.floor(total)
+      const minutes = Math.round((total - hours) * 60)
+      return `${hours} ชม. ${minutes} นาที`
     },
     showWorkFiles(work) {
       this.selectedWorkFiles = work.files || []
@@ -859,6 +865,40 @@ export default {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+    },
+    formatHoursMinutes(hours) {
+      const h = parseFloat(hours) || 0
+      const hrs = Math.floor(h)
+      const mins = Math.round((h - hrs) * 60)
+      return `${hrs} ชม. ${mins} นาที`
+    },
+    async showUserInfo(name, userId) {
+      if (!userId) {
+        this.$toast.add({
+          severity: 'info',
+          summary: 'ข้อมูลผู้ใช้',
+          detail: name || 'ไม่ระบุ',
+          life: 3000
+        })
+        return
+      }
+      try {
+        const response = await this.$http.get(`/api/users/${userId}`)
+        const user = response.data
+        this.$toast.add({
+          severity: 'info',
+          summary: user.firstname + ' ' + user.lastname,
+          detail: `ตำแหน่ง: ${user.position || '-'}\nแผนก: ${user.department || '-'}\nEmail: ${user.email || '-'}\nเบอร์โทร: ${user.phone || '-'}`,
+          life: 5000
+        })
+      } catch {
+        this.$toast.add({
+          severity: 'info',
+          summary: 'ข้อมูลผู้ใช้',
+          detail: name || 'ไม่ระบุ',
+          life: 3000
+        })
+      }
     }
   }
 }
@@ -1418,5 +1458,15 @@ export default {
 
 .p-dialog .p-dialog-header .p-dialog-title {
   cursor: default !important;
+}
+
+.clickable-name {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.clickable-name:hover {
+  color: #1d4ed8;
 }
 </style>

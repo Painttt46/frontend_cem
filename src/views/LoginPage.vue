@@ -85,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import axios from '@/utils/axiosConfig';
 import router from "@/router";
 
@@ -110,8 +110,26 @@ var loginIcon = ref("");
 var loginStatus = ref("");
 
 onMounted(() => {
-  // Don't automatically clear localStorage
-  // Let user manually logout if needed
+  // ถ้า back มาหน้า login (มี token อยู่) ให้ clear ข้อมูลทั้งหมด
+  if (localStorage.getItem('soc_token')) {
+    localStorage.clear();
+    sessionStorage.clear();
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+  }
+  // Replace history เพื่อไม่ให้กด back/forward ไปหน้าอื่นได้
+  window.history.replaceState(null, '', '/login');
+  window.history.pushState(null, '', '/login');
+  window.addEventListener('popstate', handlePopState);
+});
+
+const handlePopState = () => {
+  window.history.pushState(null, '', '/login');
+};
+
+onUnmounted(() => {
+  window.removeEventListener('popstate', handlePopState);
 });
 
 const showForgotPassword = () => {
