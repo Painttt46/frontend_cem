@@ -46,12 +46,16 @@
             <div class="date-field">
               <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
               <Calendar v-model="formData.startDateTime" showTime hourFormat="24" dateFormat="dd/mm/yy"
-                class="corporate-input" :manualInput="true" :stepHour="1" :stepMinute="1" required />
+                class="corporate-input" :manualInput="false" :stepMinute="30" required
+                :minDate="new Date()" @date-select="validateTime('start')" @blur="validateTime('start')" />
+              <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
             </div>
             <div class="date-field">
               <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
               <Calendar v-model="formData.endDateTime" showTime hourFormat="24" dateFormat="dd/mm/yy"
-                :minDate="formData.startDateTime" class="corporate-input" :manualInput="true" :stepHour="1" :stepMinute="1" required />
+                :minDate="formData.startDateTime" class="corporate-input" :manualInput="false" :stepMinute="30" required
+                @date-select="validateTime('end')" @blur="validateTime('end')" />
+              <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
             </div>
           </div>
 
@@ -224,19 +228,47 @@ export default {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        start.setHours(0, 0, 0, 0)
-        end.setHours(0, 0, 0, 0)
+        // คำนวณชั่วโมงทำงานจริง (9-12, 13-18 = 8 ชม./วัน)
+        const hoursPerDay = 8
+        let totalHours = 0
         
-        let count = 0
-        const current = new Date(start)
-        while (current <= end) {
-          const day = current.getDay()
-          if (day !== 0 && day !== 6) count++ // ไม่นับ อาทิตย์(0) และ เสาร์(6)
-          current.setDate(current.getDate() + 1)
+        const startDate = new Date(start)
+        startDate.setHours(0, 0, 0, 0)
+        const endDate = new Date(end)
+        endDate.setHours(0, 0, 0, 0)
+        
+        if (startDate.getTime() === endDate.getTime()) {
+          // วันเดียวกัน - คำนวณชั่วโมงตรงๆ
+          totalHours = this.calculateWorkHours(start, end)
+        } else {
+          // หลายวัน
+          const current = new Date(startDate)
+          while (current <= endDate) {
+            const day = current.getDay()
+            if (day !== 0 && day !== 6) { // ไม่นับ เสาร์-อาทิตย์
+              if (current.getTime() === startDate.getTime()) {
+                // วันแรก - นับจากเวลาเริ่มถึงสิ้นสุดวัน
+                const dayEnd = new Date(current)
+                dayEnd.setHours(18, 0, 0, 0)
+                totalHours += this.calculateWorkHours(start, dayEnd)
+              } else if (current.getTime() === endDate.getTime()) {
+                // วันสุดท้าย - นับจากเริ่มวันถึงเวลาสิ้นสุด
+                const dayStart = new Date(current)
+                dayStart.setHours(9, 0, 0, 0)
+                totalHours += this.calculateWorkHours(dayStart, end)
+              } else {
+                // วันกลาง - นับเต็มวัน
+                totalHours += hoursPerDay
+              }
+            }
+            current.setDate(current.getDate() + 1)
+          }
         }
-        return count + ' วัน'
+        
+        const days = (totalHours / hoursPerDay).toFixed(1)
+        return `${days} วัน (${totalHours.toFixed(1)} ชม.)`
       }
-      return '0 วัน'
+      return '0 วัน (0 ชม.)'
     },
     leaveTypesWithQuota() {
       return this.leaveTypes.map(type => {
@@ -250,6 +282,64 @@ export default {
     }
   },
   methods: {
+    // คำนวณชั่วโมงทำงานระหว่างสองเวลา (9-12, 13-18)
+    calculateWorkHours(start, end) {
+      const startHour = start.getHours() + start.getMinutes() / 60
+      const endHour = end.getHours() + end.getMinutes() / 60
+      
+      let hours = 0
+      // ช่วงเช้า 9-12
+      const morningStart = Math.max(startHour, 9)
+      const morningEnd = Math.min(endHour, 12)
+      if (morningEnd > morningStart) {
+        hours += morningEnd - morningStart
+      }
+      // ช่วงบ่าย 13-18
+      const afternoonStart = Math.max(startHour, 13)
+      const afternoonEnd = Math.min(endHour, 18)
+      if (afternoonEnd > afternoonStart) {
+        hours += afternoonEnd - afternoonStart
+      }
+      return Math.max(0, hours)
+    },
+    
+    // ตรวจสอบและปรับเวลาให้อยู่ในช่วงที่กำหนด
+    validateTime(field) {
+      const dateField = field === 'start' ? 'startDateTime' : 'endDateTime'
+      if (!this.formData[dateField]) return
+      
+      const date = new Date(this.formData[dateField])
+      const hour = date.getHours()
+      const minute = date.getMinutes()
+      
+      let adjusted = false
+      // ก่อน 9 โมง → ปรับเป็น 9:00
+      if (hour < 9) {
+        date.setHours(9, 0, 0, 0)
+        adjusted = true
+      }
+      // 12:01-12:59 → ปรับเป็น 13:00
+      else if (hour === 12 && minute > 0) {
+        date.setHours(13, 0, 0, 0)
+        adjusted = true
+      }
+      // หลัง 18 โมง → ปรับเป็น 18:00
+      else if (hour > 18 || (hour === 18 && minute > 0)) {
+        date.setHours(18, 0, 0, 0)
+        adjusted = true
+      }
+      
+      if (adjusted) {
+        this.formData[dateField] = date
+        this.$toast.add({
+          severity: 'info',
+          summary: 'ปรับเวลา',
+          detail: 'เวลาถูกปรับให้อยู่ในช่วงเวลาทำการ (09:00-12:00, 13:00-18:00)',
+          life: 3000
+        })
+      }
+    },
+    
     async loadLeaveTypes() {
       try {
         const response = await axios.get('/api/leave/leave-types');
@@ -930,5 +1020,12 @@ export default {
   color: #6c757d;
   font-style: italic;
   font-size: 0.9rem;
+}
+
+.time-hint {
+  color: #6c757d;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
 }
 </style>

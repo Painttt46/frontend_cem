@@ -69,7 +69,7 @@ export default {
       // ตรวจสอบว่าเป็นเวลา 9:30 น. หรือหลังจากนั้น
       if (currentHour > 9 || (currentHour === 9 && currentMinute >= 30)) {
         try {
-          const response = await axios.post('/api/daily-work/check-missing')
+          const response = await axios.post('/api/daily-work/check-missing', {}, { silent: true })
           
           // Update notification status based on backend response
           if (response.data.message.includes('Missing work')) {

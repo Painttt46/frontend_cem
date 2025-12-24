@@ -77,8 +77,9 @@
           <InputText v-model="newLeaveTypeName" placeholder="เช่น ลาบวช, ลาอุปสมบท" class="w-full" />
         </div>
         <div class="field">
-          <label>โควต้าเริ่มต้น (วัน/ปี) *</label>
-          <InputNumber v-model="newLeaveTypeQuota" :min="0" :max="365" showButtons class="w-full" />
+          <label>โควต้าเริ่มต้น (ชม./ปี) *</label>
+          <InputNumber v-model="newLeaveTypeQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="8" />
+          <small class="field-hint">{{ (newLeaveTypeQuotaHours / 8).toFixed(1) }} วัน (1 วัน = 8 ชม.)</small>
         </div>
       </div>
       <template #footer>
@@ -106,15 +107,15 @@
         </div>
         
         <div class="field">
-          <label>โควต้าทั้งหมด (วัน/ปี) *</label>
-          <InputNumber v-model="newQuota" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" />
-          <small class="field-hint">ปัจจุบัน: {{ currentQuota }} วัน</small>
+          <label>โควต้าทั้งหมด (ชม./ปี) *</label>
+          <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="8" />
+          <small class="field-hint">ปัจจุบัน: {{ currentQuota * 8 }} ชม. ({{ currentQuota }} วัน)</small>
         </div>
         
         <div class="field">
-          <label>โควต้าคงเหลือ (วัน) *</label>
-          <InputNumber v-model="newRemaining" :min="0" :max="newQuota" showButtons class="w-full" suffix=" วัน" />
-          <small class="field-hint">ปัจจุบัน: {{ currentRemaining }} วัน</small>
+          <label>โควต้าคงเหลือ (ชม.) *</label>
+          <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="8" />
+          <small class="field-hint">ปัจจุบัน: {{ currentRemaining * 8 }} ชม. ({{ currentRemaining }} วัน)</small>
         </div>
       </div>
       <template #footer>
@@ -142,7 +143,7 @@ const showEditQuotaDialog = ref(false)
 const adding = ref(false)
 const saving = ref(false)
 const newLeaveTypeName = ref('')
-const newLeaveTypeQuota = ref(0)
+const newLeaveTypeQuotaHours = ref(0)
 
 // Filter states
 const searchQuery = ref('')
@@ -156,8 +157,8 @@ const editingUser = ref(null)
 const editingLeaveType = ref(null)
 const currentQuota = ref(0)
 const currentRemaining = ref(0)
-const newQuota = ref(0)
-const newRemaining = ref(0)
+const newQuotaHours = ref(0)
+const newRemainingHours = ref(0)
 
 // Computed filtered users
 const filteredUsers = computed(() => {
@@ -253,8 +254,8 @@ const editQuota = (user, leaveType) => {
   editingLeaveType.value = leaveType
   currentQuota.value = user[`${leaveType.value}_quota`] || 0
   currentRemaining.value = user[`${leaveType.value}_remaining`] || 0
-  newQuota.value = currentQuota.value
-  newRemaining.value = currentRemaining.value
+  newQuotaHours.value = currentQuota.value * 8
+  newRemainingHours.value = currentRemaining.value * 8
   showEditQuotaDialog.value = true
 }
 
@@ -264,12 +265,15 @@ const closeEditDialog = () => {
   editingLeaveType.value = null
   currentQuota.value = 0
   currentRemaining.value = 0
-  newQuota.value = 0
-  newRemaining.value = 0
+  newQuotaHours.value = 0
+  newRemainingHours.value = 0
 }
 
 const saveQuota = async () => {
-  if (newQuota.value === currentQuota.value && newRemaining.value === currentRemaining.value) {
+  const newQuota = newQuotaHours.value / 8
+  const newRemaining = newRemainingHours.value / 8
+  
+  if (newQuota === currentQuota.value && newRemaining === currentRemaining.value) {
     toast.add({
       severity: 'info',
       summary: 'ไม่มีการเปลี่ยนแปลง',
@@ -279,7 +283,7 @@ const saveQuota = async () => {
     return
   }
 
-  if (newRemaining.value > newQuota.value) {
+  if (newRemainingHours.value > newQuotaHours.value) {
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -292,8 +296,8 @@ const saveQuota = async () => {
   saving.value = true
   try {
     await axios.put(`/api/leave/quota/${editingUser.value.id}/${editingLeaveType.value.value}`, {
-      quota: newQuota.value,
-      remaining: newRemaining.value
+      quota: newQuota,
+      remaining: newRemaining
     })
 
     toast.add({
@@ -320,7 +324,7 @@ const saveQuota = async () => {
 const closeAddDialog = () => {
   showAddLeaveTypeDialog.value = false
   newLeaveTypeName.value = ''
-  newLeaveTypeQuota.value = 0
+  newLeaveTypeQuotaHours.value = 0
 }
 
 const addLeaveType = async () => {
@@ -338,7 +342,7 @@ const addLeaveType = async () => {
   try {
     await axios.post('/api/leave/leave-types', {
       name: newLeaveTypeName.value.trim(),
-      default_quota: newLeaveTypeQuota.value
+      default_quota: newLeaveTypeQuotaHours.value / 8
     })
 
     toast.add({

@@ -44,9 +44,9 @@
           </template>
         </Column>
 
-        <Column header="จำนวนวัน">
+        <Column header="จำนวน">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน
+            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
           </template>
         </Column>
 

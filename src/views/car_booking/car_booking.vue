@@ -293,15 +293,12 @@ export default {
   methods: {
     async syncServerTime() {
       try {
-        const response = await axios.get('/api/server-time')
+        const response = await axios.get('/api/server-time', { silent: true })
         const serverTime = new Date(response.data.serverTime)
         const clientTime = new Date()
         this.serverTimeOffset = serverTime.getTime() - clientTime.getTime()
         this.currentTime = new Date(Date.now() + this.serverTimeOffset)
-        
-        
       } catch { // ignore
-        
       }
     },
     getCurrentUserName() {

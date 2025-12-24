@@ -10,7 +10,6 @@ export function usePermissions() {
       const role = localStorage.getItem('soc_role')
       if (!role) return false
 
-      // ไม่ต้องส่ง Authorization header (ใช้ cookie อัตโนมัติ)
       const response = await axios.get(`/api/role-permissions/${role}`)
 
       permissions.value = response.data.permissions || []
