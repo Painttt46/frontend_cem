@@ -22,6 +22,7 @@ import { ref, watch, computed, onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
 import LayoutView from './components/LayoutView.vue';
 import lottie from 'lottie-web';
+import loadingAnimation from '@/assets/loading/loading.json';
 
 export default {
   name: 'App',
@@ -42,7 +43,7 @@ export default {
           renderer: 'svg',
           loop: true,
           autoplay: true,
-          path: '/assets/loading/loading.json'
+          animationData: loadingAnimation
         });
       }
     };
