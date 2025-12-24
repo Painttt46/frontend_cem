@@ -195,7 +195,6 @@ function convertTo2digit(number) {
   }
 }
 
-export { addNumberToNumberArray, capitalize, getPrimeVueStringDate, getStringDate, getTimeFilter, logout, lowerCase, sortNumberArray, upperCase, useForceUpdate, formatDate, formatDateTime };
 
 </script>
 
