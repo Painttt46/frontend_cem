@@ -1,9 +1,9 @@
 <!-- App.vue -->
 <template>
   <div id="app" style="height: 100vh; overflow: hidden;">
-    <!-- Global Loading Overlay with Lottie -->
+    <!-- Global Loading Overlay -->
     <div v-if="$store.state.loading" class="loading-overlay">
-      <div ref="lottieContainer" style="width: 200px; height: 200px;"></div>
+      <div class="spinner"></div>
     </div>
     
     <!-- Show only router-view for login page -->
@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onBeforeUnmount } from 'vue';
 import { useStore } from 'vuex';
 import LayoutView from './components/LayoutView.vue';
 import lottie from 'lottie-web';
@@ -35,8 +35,8 @@ export default {
 
     const isLoading = computed(() => store.state.loading);
 
-    watch(isLoading, (loading) => {
-      if (loading && lottieContainer.value && !animation) {
+    const createAnimation = () => {
+      if (lottieContainer.value && !animation) {
         animation = lottie.loadAnimation({
           container: lottieContainer.value,
           renderer: 'svg',
@@ -44,10 +44,26 @@ export default {
           autoplay: true,
           path: '/assets/loading/loading.json'
         });
-      } else if (!loading && animation) {
+      }
+    };
+
+    const destroyAnimation = () => {
+      if (animation) {
         animation.destroy();
         animation = null;
       }
+    };
+
+    watch(isLoading, (loading) => {
+      if (loading) {
+        setTimeout(createAnimation, 50);
+      } else {
+        destroyAnimation();
+      }
+    }, { immediate: true });
+
+    onBeforeUnmount(() => {
+      destroyAnimation();
     });
 
     return {
