@@ -381,7 +381,12 @@ export default {
     canApproveRecord(record) {
       // approverLevel: 0 = ไม่มีสิทธิ์, 1 = level 1 only, 2 = level 2 only, 3 = ทั้งสอง
       if (this.approverLevel === 0) return false
-      if (this.approverLevel === 3) return true // admin หรือมีสิทธิ์ทั้งสอง
+      
+      // ต้องเป็น status ที่รออนุมัติเท่านั้น
+      if (record.status !== 'pending' && record.status !== 'pending_level2') return false
+      
+      // admin หรือมีสิทธิ์ทั้งสอง
+      if (this.approverLevel === 3) return true
       
       // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'
       if (this.approverLevel === 1 && record.status === 'pending') return true

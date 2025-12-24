@@ -393,16 +393,25 @@
       </div>
     </form>
   </Dialog>
+
+  <!-- User Info Dialog -->
+  <UserInfoDialog 
+    v-model:visible="showUserInfoDialog" 
+    :userId="selectedUserId"
+    :userName="selectedUserName"
+  />
 </template>
 
 <script>
 import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 export default {
   name: 'TaskList',
   components: {
-    EnhancedDataTable
+    EnhancedDataTable,
+    UserInfoDialog
   },
   created() {
     this.$http = axios
@@ -440,15 +449,11 @@ export default {
       loadingWorks: false,
       workFilesDialog: false,
       selectedWorkFiles: [],
+      showUserInfoDialog: false,
+      selectedUserId: null,
+      selectedUserName: '',
       workStatusFilter: null,
       workSortBy: 'date_desc',
-      workStatusFilterOptions: [
-        { label: 'ทั้งหมด', value: null },
-        { label: 'เสร็จสมบูรณ์', value: 'completed' },
-        { label: 'กำลังดำเนินการ', value: 'in_progress' },
-        { label: 'รอดำเนินการ', value: 'pending' },
-        { label: 'ระงับ', value: 'on_hold' }
-      ],
       workSortOptions: [
         { label: 'วันที่ล่าสุด', value: 'date_desc' },
         { label: 'วันที่เก่าสุด', value: 'date_asc' },
@@ -482,6 +487,16 @@ export default {
     }
   },
   computed: {
+    workStatusFilterOptions() {
+      const options = [{ label: 'ทั้งหมด', value: null }]
+      this.workStatuses.forEach(s => {
+        options.push({
+          label: s.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim(),
+          value: s.value
+        })
+      })
+      return options
+    },
     enrichedTasks() {
       // Add status and category labels to tasks for better search
       return this.tasks.map(task => ({
@@ -603,16 +618,27 @@ export default {
     },
     getStatusLabel(statusValue) {
       if (!statusValue) return '-'
-      const status = this.workStatuses.find(s => s.value === statusValue)
+      // ลอง match ด้วย value ก่อน
+      let status = this.workStatuses.find(s => s.value === statusValue)
+      // ถ้าไม่เจอ ลอง match ด้วย label
+      if (!status) {
+        status = this.workStatuses.find(s => s.label && s.label.includes(statusValue))
+      }
       if (status && status.label) {
         // Remove all emoji and special characters
         return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
       }
-      return '-'
+      // ถ้าไม่เจอใน workStatuses ให้แสดงค่าจริง
+      return statusValue
     },
     getStatusColor(statusValue) {
       if (!statusValue) return '#9e9e9e'
-      const status = this.workStatuses.find(s => s.value === statusValue)
+      // ลอง match ด้วย value ก่อน
+      let status = this.workStatuses.find(s => s.value === statusValue)
+      // ถ้าไม่เจอ ลอง match ด้วย label
+      if (!status) {
+        status = this.workStatuses.find(s => s.label && s.label.includes(statusValue))
+      }
       return status?.color || '#9e9e9e'
     },
     async loadTasks() {
@@ -872,33 +898,10 @@ export default {
       const mins = Math.round((h - hrs) * 60)
       return `${hrs} ชม. ${mins} นาที`
     },
-    async showUserInfo(name, userId) {
-      if (!userId) {
-        this.$toast.add({
-          severity: 'info',
-          summary: 'ข้อมูลผู้ใช้',
-          detail: name || 'ไม่ระบุ',
-          life: 3000
-        })
-        return
-      }
-      try {
-        const response = await this.$http.get(`/api/users/${userId}`)
-        const user = response.data
-        this.$toast.add({
-          severity: 'info',
-          summary: user.firstname + ' ' + user.lastname,
-          detail: `ตำแหน่ง: ${user.position || '-'}\nแผนก: ${user.department || '-'}\nEmail: ${user.email || '-'}\nเบอร์โทร: ${user.phone || '-'}`,
-          life: 5000
-        })
-      } catch {
-        this.$toast.add({
-          severity: 'info',
-          summary: 'ข้อมูลผู้ใช้',
-          detail: name || 'ไม่ระบุ',
-          life: 3000
-        })
-      }
+    showUserInfo(name, userId) {
+      this.selectedUserName = name
+      this.selectedUserId = userId
+      this.showUserInfoDialog = true
     }
   }
 }
