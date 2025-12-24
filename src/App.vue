@@ -1,12 +1,17 @@
 <!-- App.vue -->
 <template>
   <div id="app" style="height: 100vh; overflow: hidden;">
-    <!-- Global Loading Bar -->
-    <ProgressBar 
-      v-if="$store.state.loading" 
-      mode="indeterminate" 
-      style="height: 4px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;"
-    />
+    <!-- Global Loading Overlay with Lottie -->
+    <div v-if="$store.state.loading" class="loading-overlay">
+      <lottie-player
+        src="/assets/loading/loading.json"
+        background="transparent"
+        speed="1"
+        style="width: 200px; height: 200px;"
+        loop
+        autoplay
+      />
+    </div>
     
     <!-- Show only router-view for login page -->
     <div v-if="$router.currentRoute.value.fullPath == '/login'">
@@ -20,7 +25,7 @@
 </template>
 
 <script set>
-import { nextTick, ref } from 'vue';
+import { nextTick, ref, onMounted } from 'vue';
 import LayoutView from './components/LayoutView.vue';
 
 export default {
@@ -28,7 +33,12 @@ export default {
   components: {
     LayoutView,
   },
-
+  mounted() {
+    // Load Lottie Player
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js';
+    document.head.appendChild(script);
+  }
 };
 
 function addNumberToNumberArray(array, data) {
@@ -430,5 +440,19 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
 </style>
