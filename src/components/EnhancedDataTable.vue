@@ -52,7 +52,13 @@
         />
       </div>
       <div class="filter-actions">
-        <Button label="เพิ่มเงื่อนไข (AND)" icon="pi pi-plus" @click="addFilter" text size="small" />
+        <div class="logic-toggle">
+          <Button :label="'AND'" :severity="filterLogic === 'AND' ? 'primary' : 'secondary'" 
+            @click="filterLogic = 'AND'" size="small" />
+          <Button :label="'OR'" :severity="filterLogic === 'OR' ? 'primary' : 'secondary'" 
+            @click="filterLogic = 'OR'" size="small" />
+        </div>
+        <Button label="เพิ่มเงื่อนไข" icon="pi pi-plus" @click="addFilter" text size="small" />
         <Button label="ล้าง" icon="pi pi-refresh" @click="resetFilters" text size="small" severity="secondary" />
       </div>
     </div>
@@ -74,7 +80,11 @@ import { ref, computed, useSlots } from 'vue'
 const props = defineProps({
   data: {
     type: Array,
-    required: true
+    default: () => []
+  },
+  value: {
+    type: Array,
+    default: () => []
   },
   columns: {
     type: Array,
@@ -86,6 +96,7 @@ const slots = useSlots()
 
 const localSearch = ref('')
 const advancedMode = ref(false)
+const filterLogic = ref('AND') // AND or OR
 const filters = ref([
   { column: '', operator: 'contains', value: '' }
 ])
@@ -100,10 +111,37 @@ const operators = [
   { label: 'น้อยกว่า', value: 'lessThan' }
 ]
 
-// Normalize Thai text for search - simpler version
+// Get actual data (support both data and value props)
+const tableData = computed(() => {
+  return props.data?.length ? props.data : (props.value || [])
+})
+
+// Normalize text for search
 const normalizeText = (text) => {
   if (!text) return ''
   return String(text).toLowerCase().trim()
+}
+
+// Deep search in nested objects and arrays
+const deepSearch = (obj, query) => {
+  if (obj === null || obj === undefined) return false
+  
+  // String or number - direct match
+  if (typeof obj === 'string' || typeof obj === 'number') {
+    return normalizeText(obj).includes(query)
+  }
+  
+  // Array - search each element
+  if (Array.isArray(obj)) {
+    return obj.some(item => deepSearch(item, query))
+  }
+  
+  // Object - search all values
+  if (typeof obj === 'object') {
+    return Object.values(obj).some(value => deepSearch(value, query))
+  }
+  
+  return false
 }
 
 // Get searchable columns from props or slots
@@ -122,12 +160,26 @@ const searchableColumns = computed(() => {
         header: vnode.props.header || vnode.props.field
       }))
   }
+  
+  // Auto-detect from first data item
+  if (tableData.value.length > 0) {
+    return Object.keys(tableData.value[0]).map(key => ({
+      field: key,
+      header: key
+    }))
+  }
+  
   return []
 })
 
+// Get nested value by path (e.g., "borrowRecord.name")
+const getNestedValue = (obj, path) => {
+  return path.split('.').reduce((acc, part) => acc?.[part], obj)
+}
+
 // Apply single filter
 const applyFilter = (item, filter) => {
-  const fieldValue = normalizeText(item[filter.column])
+  const fieldValue = normalizeText(getNestedValue(item, filter.column))
   const searchValue = normalizeText(filter.value)
 
   switch (filter.operator) {
@@ -152,40 +204,27 @@ const applyFilter = (item, filter) => {
 
 // Filter data based on search mode
 const filteredData = computed(() => {
-  let result = props.data
+  let result = tableData.value
+  
+  if (!result || !Array.isArray(result)) return []
 
-  // Advanced mode: column-specific AND filters
+  // Advanced mode: column-specific filters with AND/OR
   if (advancedMode.value) {
     const validFilters = filters.value.filter(f => f.column && f.value)
     
     if (validFilters.length > 0) {
       result = result.filter(item => {
+        if (filterLogic.value === 'OR') {
+          return validFilters.some(filter => applyFilter(item, filter))
+        }
         return validFilters.every(filter => applyFilter(item, filter))
       })
     }
   } 
-  // Simple mode: global search - FIXED for Thai and mapped values
+  // Simple mode: global search with deep search
   else if (localSearch.value) {
     const query = normalizeText(localSearch.value)
-    result = result.filter(record => {
-      // Search in all fields
-      return Object.values(record).some((value) => {
-        if (value === null || value === undefined) return false
-        const strValue = normalizeText(value)
-        
-        // Check if it's an object with label/value
-        if (typeof value === 'object' && value.label) {
-          return normalizeText(value.label).includes(query)
-        }
-        
-        // Direct match
-        if (strValue.includes(query)) return true
-        
-        // For status/category fields, also check in slot content
-        // This allows searching by display label even if stored as code
-        return false
-      })
-    })
+    result = result.filter(record => deepSearch(record, query))
   }
 
   return result
@@ -272,6 +311,13 @@ const resetFilters = () => {
   gap: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid #dee2e6;
+  align-items: center;
+}
+
+.logic-toggle {
+  display: flex;
+  gap: 0.25rem;
+  margin-right: 1rem;
 }
 
 @media (max-width: 768px) {

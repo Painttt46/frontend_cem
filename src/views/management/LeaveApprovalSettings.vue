@@ -21,7 +21,7 @@
         <template #header>
           <div class="level-header level-1">
             <i class="pi pi-user-edit"></i>
-            <span>ขั้นที่ 1: HR อนุมัติ</span>
+            <span>ขั้นที่ 1: หัวหน้างาน อนุมัติ</span>
           </div>
         </template>
         <template #content>
@@ -61,11 +61,11 @@
         <template #header>
           <div class="level-header level-2">
             <i class="pi pi-verified"></i>
-            <span>ขั้นที่ 2: ผู้บริหารอนุมัติ</span>
+            <span>ขั้นที่ 2: HR อนุมัติ</span>
           </div>
         </template>
         <template #content>
-          <p class="level-desc">หลังจาก HR อนุมัติขั้นที่ 1 ระบบจะส่ง Email แจ้งผู้บริหารที่กำหนดไว้</p>
+          <p class="level-desc">หลังจาก หัวหน้างาน อนุมัติขั้นที่ 1 ระบบจะส่ง Email แจ้งผู้บริหารที่กำหนดไว้</p>
           
           <div class="add-approver">
             <Dropdown v-model="newApproverLevel2" :options="availableUsers" optionLabel="name" optionValue="id" 

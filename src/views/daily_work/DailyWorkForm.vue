@@ -39,13 +39,13 @@
               <Dropdown id="workStatus" v-model="formData.workStatus" :options="statusOptions" optionLabel="label"
                 optionValue="value" class="corporate-dropdown" required>
                 <template #value="slotProps">
-                  <Badge v-if="slotProps.value" :value="getStatusLabelOnly(slotProps.value)" 
-                         :style="{ backgroundColor: getStatusColor(slotProps.value), color: '#fff' }" />
+                  <Badge v-if="slotProps.value" :value="getStatusLabelOnly(slotProps.value)"
+                    :style="{ backgroundColor: getStatusColor(slotProps.value), color: '#fff' }" />
                   <span v-else>เลือกสถานะ</span>
                 </template>
                 <template #option="slotProps">
-                  <Badge :value="slotProps.option.label" 
-                         :style="{ backgroundColor: slotProps.option.color || '#6c757d', color: '#fff' }" />
+                  <Badge :value="slotProps.option.label"
+                    :style="{ backgroundColor: slotProps.option.color || '#6c757d', color: '#fff' }" />
                 </template>
               </Dropdown>
             </div>
@@ -82,24 +82,14 @@
           </div>
 
           <Divider />
-
-          <div class="calendar-section">
-            <div class="calendar-header">
-              <Checkbox v-model="formData.createCalendarEvent" inputId="createCalendar" :binary="true" />
+          <div class="calendar-options">
+            <div class="options-header">
               <label for="createCalendar" class="calendar-main-label">
                 <i class="pi pi-calendar-plus"></i>
                 สร้าง Calendar Event ใน Microsoft Teams
               </label>
             </div>
-          </div>
-
-          <div v-if="formData.createCalendarEvent" class="calendar-options">
-            <div class="options-header">
-              <i class="pi pi-cog"></i>
-              <span>ตัวเลือกเพิ่มเติม</span>
-            </div>
-
-            <div class="input-group">
+ <div class="input-group">
               <label for="attendees" class="input-label">
                 <i class="pi pi-users"></i>
                 เชิญผู้เข้าร่วม
@@ -247,7 +237,7 @@ export default {
   async mounted() {
     await this.loadTasks()
     this.loadStatusOptions()
-    
+
     // Listen for status updates
     window.addEventListener('statusesUpdated', this.handleStatusesUpdate)
   },
@@ -265,7 +255,7 @@ export default {
         }))
         this.attendeeOptions = this.users
       } catch { // ignore
-        
+
       }
     },
 
@@ -349,7 +339,7 @@ export default {
           display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
       } catch { // ignore
-        
+
       }
     },
     handleFileUpload(event) {
@@ -846,10 +836,6 @@ export default {
   align-items: center;
   gap: 0.5rem;
   transition: color 0.2s ease;
-}
-
-.calendar-main-label:hover {
-  color: #007bff;
 }
 
 .calendar-main-label i {

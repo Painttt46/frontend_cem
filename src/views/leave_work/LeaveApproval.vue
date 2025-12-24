@@ -229,6 +229,7 @@ export default {
       default: 0
     }
   },
+  inject: ['$toast'],
   created() {
     this.$http = axios
   },
@@ -275,13 +276,36 @@ export default {
       this.showAttachmentsDialog = true
     },
 
-    downloadFile(fileName) {
-      this.$toast.add({
-        severity: 'success',
-        summary: 'ดาวน์โหลด',
-        detail: `กำลังดาวน์โหลด: ${fileName}`,
-        life: 3000
-      })
+    async downloadFile(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, {
+          responseType: 'blob'
+        })
+        
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        const originalName = fileName.split('-').slice(2).join('-') || fileName
+        link.download = originalName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        this.$toast.add({
+          severity: 'success',
+          summary: 'ดาวน์โหลดสำเร็จ',
+          detail: originalName,
+          life: 3000
+        })
+      } catch {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
+          life: 3000
+        })
+      }
     },
 
     getFileIcon(fileName) {

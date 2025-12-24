@@ -46,7 +46,7 @@
             </Column>
             <Column field="department" header="แผนก" :sortable="true" frozen style="min-width: 120px" />
             <Column field="position" header="ตำแหน่ง" :sortable="true" frozen style="min-width: 120px" />
-            <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 150px">
+            <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 180px">
               <template #header>
                 <div class="leave-type-header">
                   <Badge :value="type.label" :style="{ backgroundColor: type.color, color: '#fff', fontWeight: 'bold' }" />
@@ -57,10 +57,10 @@
                 <div class="quota-cell">
                   <div class="quota-row">
                     <small>โควต้า:</small>
-                    <span class="quota-value">{{ data[`${type.value}_quota`] || 0 }} วัน</span>
+                    <span class="quota-value">{{ data[`${type.value}_quota`] || 0 }} วัน ({{ (data[`${type.value}_quota`] || 0) * 8 }} ชม.)</span>
                     <Button icon="pi pi-pencil" size="small" text @click="editQuota(data, type)" />
                   </div>
-                  <small class="remaining">คงเหลือ: {{ data[`${type.value}_remaining`] || 0 }} วัน</small>
+                  <small class="remaining">คงเหลือ: {{ data[`${type.value}_remaining`] || 0 }} วัน ({{ (data[`${type.value}_remaining`] || 0) * 8 }} ชม.)</small>
                 </div>
               </template>
             </Column>

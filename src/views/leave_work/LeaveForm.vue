@@ -33,9 +33,9 @@
             <div v-if="selectedQuota" class="quota-info">
               <span class="quota-label">โควต้าคงเหลือ:</span>
               <span class="quota-value" :class="getQuotaClass(selectedQuota.remainingDays)">
-                {{ selectedQuota.remainingDays }} วัน
+                {{ selectedQuota.remainingDays }} วัน ({{ selectedQuota.remainingHours }} ชม.)
               </span>
-              <span class="quota-total">(จาก {{ selectedQuota.quota }} วัน)</span>
+              <span class="quota-total">(จาก {{ selectedQuota.quota }} วัน / {{ selectedQuota.quotaHours }} ชม.)</span>
             </div>
             <div v-else class="quota-placeholder-text">
               เลือกประเภทการลาเพื่อดูโควต้า
