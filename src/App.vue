@@ -3,14 +3,7 @@
   <div id="app" style="height: 100vh; overflow: hidden;">
     <!-- Global Loading Overlay with Lottie -->
     <div v-if="$store.state.loading" class="loading-overlay">
-      <lottie-player
-        src="/assets/loading/loading.json"
-        background="transparent"
-        speed="1"
-        style="width: 200px; height: 200px;"
-        loop
-        autoplay
-      />
+      <div ref="lottieContainer" style="width: 200px; height: 200px;"></div>
     </div>
     
     <!-- Show only router-view for login page -->
@@ -24,20 +17,42 @@
   </div>
 </template>
 
-<script set>
-import { nextTick, ref, onMounted } from 'vue';
+<script>
+import { ref, watch, computed } from 'vue';
+import { useStore } from 'vuex';
 import LayoutView from './components/LayoutView.vue';
+import lottie from 'lottie-web';
 
 export default {
   name: 'App',
   components: {
     LayoutView,
   },
-  mounted() {
-    // Load Lottie Player
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js';
-    document.head.appendChild(script);
+  setup() {
+    const store = useStore();
+    const lottieContainer = ref(null);
+    let animation = null;
+
+    const isLoading = computed(() => store.state.loading);
+
+    watch(isLoading, (loading) => {
+      if (loading && lottieContainer.value && !animation) {
+        animation = lottie.loadAnimation({
+          container: lottieContainer.value,
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: '/assets/loading/loading.json'
+        });
+      } else if (!loading && animation) {
+        animation.destroy();
+        animation = null;
+      }
+    });
+
+    return {
+      lottieContainer
+    };
   }
 };
 
