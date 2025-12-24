@@ -165,7 +165,10 @@ export default {
       showFullImageModal: false,
       fullSizeImage: '',
       teamsWebhookUrl: 'YOUR_TEAMS_WEBHOOK_URL_HERE',
-      notifiedActiveBookings: new Set()
+      notifiedActiveBookings: new Set(),
+      refreshInterval: null,
+      timeInterval: null,
+      syncInterval: null
     }
   },
   computed: {
@@ -264,21 +267,24 @@ export default {
   mounted() {
     this.syncServerTime()
     
-    setInterval(() => {
+    this.timeInterval = setInterval(() => {
       this.currentTime = new Date(Date.now() + this.serverTimeOffset)
     }, 1000)
     
-    // Add random delay to prevent all users from requesting at the same time
-    const randomDelay = Math.random() * 5000 // 0-5 seconds
-    setTimeout(() => {
-      setInterval(() => {
-        this.loadRecords()
-      }, 30000)
-    }, randomDelay)
+    // Auto refresh ทุก 30 วินาที
+    this.refreshInterval = setInterval(() => {
+      this.loadRecords(true)
+    }, 30000)
     
-    setInterval(() => {
+    this.syncInterval = setInterval(() => {
       this.syncServerTime()
     }, 300000)
+  },
+  beforeUnmount() {
+    // Clear intervals เมื่อออกจากหน้านี้
+    if (this.refreshInterval) clearInterval(this.refreshInterval)
+    if (this.timeInterval) clearInterval(this.timeInterval)
+    if (this.syncInterval) clearInterval(this.syncInterval)
   },
   created() {
     this.$http = axios
@@ -303,17 +309,19 @@ export default {
       const lastName = localStorage.getItem('soc_lastname') || ''
       return `${firstName} ${lastName}`.trim()
     },
-    async loadRecords() {
+    async loadRecords(silent = false) {
       try {
-        const response = await axios.get('/api/car-booking')
+        const response = await axios.get('/api/car-booking', { silent })
         this.records = response.data
       } catch { // ignore
-        this.$toast.add({
-          severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลการจองรถได้',
-          life: 3000
-        })
+        if (!silent) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'เกิดข้อผิดพลาด',
+            detail: 'ไม่สามารถโหลดข้อมูลการจองรถได้',
+            life: 3000
+          })
+        }
       }
     },
     triggerFileUpload() {

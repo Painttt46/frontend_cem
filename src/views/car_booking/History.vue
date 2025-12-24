@@ -6,7 +6,7 @@
         <p>ยังไม่มีข้อมูลการใช้รถ</p>
       </div>
 
-      <EnhancedDataTable v-else :value="groupedRecordsWithDuration" :paginator="true" :rows="10"
+      <EnhancedDataTable v-else :data="groupedRecordsWithDuration" :paginator="true" :rows="10"
         :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
         <Column field="id" header="Ticket ID" :sortable="true">
           <template #body="slotProps">

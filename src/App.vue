@@ -24,6 +24,46 @@ export default {
   name: 'App',
   components: {
     LayoutView,
+  },
+  data() {
+    return {
+      tokenCheckInterval: null
+    }
+  },
+  mounted() {
+    // ตรวจสอบ token expiration ทุก 1 นาที
+    this.tokenCheckInterval = setInterval(() => {
+      this.checkTokenExpiration()
+    }, 60000)
+  },
+  beforeUnmount() {
+    if (this.tokenCheckInterval) {
+      clearInterval(this.tokenCheckInterval)
+    }
+  },
+  methods: {
+    checkTokenExpiration() {
+      const token = localStorage.getItem('soc_token')
+      if (!token) return
+      
+      try {
+        const parts = token.split('.')
+        if (parts.length !== 3) return
+        
+        const payload = JSON.parse(atob(parts[1]))
+        if (Date.now() >= payload.exp * 1000) {
+          // Token หมดอายุ - logout
+          localStorage.clear()
+          sessionStorage.clear()
+          document.cookie.split(";").forEach((c) => {
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
+          })
+          this.$router.push('/login')
+        }
+      } catch {
+        // ignore parse errors
+      }
+    }
   }
 };
 </script>

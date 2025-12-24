@@ -17,8 +17,10 @@ axios.interceptors.request.use(
       return Promise.reject(error)
     }
     
-    // Show loading
-    store.dispatch('setLoading', true)
+    // Show loading only if not silent
+    if (!config.silent) {
+      store.dispatch('setLoading', true)
+    }
     
     // Add token to Authorization header
     const token = localStorage.getItem('soc_token')
@@ -36,13 +38,17 @@ axios.interceptors.request.use(
 // Response interceptor
 axios.interceptors.response.use(
   (response) => {
-    // Hide loading
-    store.dispatch('setLoading', false)
+    // Hide loading only if not silent
+    if (!response.config.silent) {
+      store.dispatch('setLoading', false)
+    }
     return response
   },
   (error) => {
-    // Hide loading
-    store.dispatch('setLoading', false)
+    // Hide loading only if not silent request
+    if (!error.config?.silent) {
+      store.dispatch('setLoading', false)
+    }
     
     // Handle different error types
     if (error.response) {
