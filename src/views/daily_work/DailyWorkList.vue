@@ -582,14 +582,7 @@ export default {
           return
         }
 
-        // Validate เวลา (รองรับข้ามวัน)
-        if (this.editFormData.start_time && this.editFormData.end_time) {
-          const start = new Date(this.editFormData.start_time)
-          let end = new Date(this.editFormData.end_time)
-          
-          // ถ้าเวลาสิ้นสุดน้อยกว่าหรือเท่ากับเวลาเริ่ม อาจเป็นการข้ามวัน - ไม่ต้อง validate
-          // เพราะ backend จะจัดการเรื่องข้ามวันเอง
-        }
+        // รองรับการทำงานข้ามวัน - ไม่ต้อง validate เวลา
 
         // Upload ไฟล์ใหม่
         const newUploadedFiles = await this.uploadNewFiles()
