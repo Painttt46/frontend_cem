@@ -194,7 +194,6 @@ import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 
 import { isRequired, isValidTimeRange, getValidationMessage } from '@/utils/validation'
-import { isActive } from '@/utils/statusHelper'
 
 export default {
   name: 'DailyWorkForm',

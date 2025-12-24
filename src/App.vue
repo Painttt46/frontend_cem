@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import { ref, watch, onMounted, getCurrentInstance } from 'vue';
+import { ref, watch, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from 'vue';
 import LayoutView from './components/LayoutView.vue';
 import { useRoute } from "vue-router";
 import lottie from 'lottie-web';
