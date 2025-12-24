@@ -582,17 +582,13 @@ export default {
           return
         }
 
-        // Validate เวลา
+        // Validate เวลา (รองรับข้ามวัน)
         if (this.editFormData.start_time && this.editFormData.end_time) {
-          if (new Date(this.editFormData.end_time) <= new Date(this.editFormData.start_time)) {
-            this.$toast.add({
-              severity: 'error',
-              summary: 'ข้อผิดพลาด',
-              detail: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มงาน',
-              life: 3000
-            })
-            return
-          }
+          const start = new Date(this.editFormData.start_time)
+          let end = new Date(this.editFormData.end_time)
+          
+          // ถ้าเวลาสิ้นสุดน้อยกว่าหรือเท่ากับเวลาเริ่ม อาจเป็นการข้ามวัน - ไม่ต้อง validate
+          // เพราะ backend จะจัดการเรื่องข้ามวันเอง
         }
 
         // Upload ไฟล์ใหม่

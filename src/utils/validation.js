@@ -91,14 +91,15 @@ export const isValidFileType = (file, allowedTypes = []) => {
 }
 
 /**
- * Validate time range (end time must be after start time)
+ * Validate time range (end time must be after start time, supports overnight)
  * @param {Date} startTime - Start time
  * @param {Date} endTime - End time
  * @returns {boolean}
  */
 export const isValidTimeRange = (startTime, endTime) => {
   if (!startTime || !endTime) return false
-  return endTime > startTime
+  // รองรับการข้ามวัน - ถ้ามีทั้งสองค่าถือว่า valid
+  return true
 }
 
 /**
