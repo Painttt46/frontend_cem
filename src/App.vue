@@ -3,7 +3,14 @@
   <div id="app" style="height: 100vh; overflow: hidden;">
     <!-- Global Loading Overlay with Lottie -->
     <div v-if="$store.state.loading" class="loading-overlay">
-      <div ref="lottieContainer" style="width: 200px; height: 200px;"></div>
+      <lottie-player
+        src="/assets/loading/loading.json"
+        background="transparent"
+        speed="1"
+        style="width: 200px; height: 200px;"
+        loop
+        autoplay
+      />
     </div>
     
     <!-- Show only router-view for login page -->
@@ -17,44 +24,20 @@
   </div>
 </template>
 
-<script>
-import { ref, watch, onMounted, getCurrentInstance } from 'vue';
+<script set>
+import { nextTick, ref, onMounted } from 'vue';
 import LayoutView from './components/LayoutView.vue';
-import lottie from 'lottie-web';
 
 export default {
   name: 'App',
   components: {
     LayoutView,
   },
-  setup() {
-    const lottieContainer = ref(null);
-    const instance = getCurrentInstance();
-    let animation = null;
-
-    onMounted(() => {
-      // Watch loading state from store
-      watch(() => instance.proxy.$store.state.loading, (isLoading) => {
-        if (isLoading && lottieContainer.value) {
-          if (!animation) {
-            animation = lottie.loadAnimation({
-              container: lottieContainer.value,
-              renderer: 'svg',
-              loop: true,
-              autoplay: true,
-              path: '/assets/loading/loading.json'
-            });
-          }
-        } else if (!isLoading && animation) {
-          animation.destroy();
-          animation = null;
-        }
-      });
-    });
-
-    return {
-      lottieContainer
-    };
+  mounted() {
+    // Load Lottie Player
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js';
+    document.head.appendChild(script);
   }
 };
 
@@ -172,6 +155,16 @@ function upperCase(inputString) {
   }
 }
 
+const renderComponent = ref(true);
+async function useForceUpdate() {
+  // Here, we'll remove MyComponent
+  renderComponent.value = false;
+
+  // Then, wait for the change to get flushed to the DOM
+  await nextTick();
+
+  // Add MyComponent back in
+  renderComponent.value = true;
 }
 function formatDateTime(dateString) {
   var date = new Date(dateString);
@@ -195,6 +188,7 @@ function convertTo2digit(number) {
   }
 }
 
+export { addNumberToNumberArray, capitalize, getPrimeVueStringDate, getStringDate, getTimeFilter, logout, lowerCase, sortNumberArray, upperCase, useForceUpdate, formatDate, formatDateTime };
 
 </script>
 

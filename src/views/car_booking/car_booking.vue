@@ -137,7 +137,7 @@ export default {
       showForm: false,
       activeForm: 'borrow',
       borrowForm: {
-        license: 'ชฮ-3706',
+        license: 'FXAG-2032',
         time: '',
         location: '',
         project: '',
@@ -147,7 +147,7 @@ export default {
       },
       returnForm: {
         borrowId: '',
-        license: 'ชฮ-3706',
+        license: 'FXAG-2032',
         location: '',
         discription: '',
         images: []
@@ -483,7 +483,7 @@ export default {
           description: this.borrowForm.discription,
           selected_date: this.formatDateForDB(this.selectedDate),
           time: this.borrowForm.time,
-          license: 'ชฮ-3706',
+          license: 'FXAG-2032',
           colleagues: this.borrowForm.colleagues || [],
           images,
           user_id: localStorage.getItem('soc_user_id')
@@ -659,7 +659,7 @@ export default {
     },
     resetForms() {
       this.borrowForm = {
-        license: 'ชฮ-3706',
+        license: 'FXAG-2032',
         time: '',
         location: '',
         project: '',
@@ -669,7 +669,7 @@ export default {
       }
       this.returnForm = {
         borrowId: '',
-        license: 'ชฮ-3706',
+        license: 'FXAG-2032',
         location: '',
         discription: '',
         images: []

@@ -72,13 +72,9 @@
 import { ref, computed, useSlots } from 'vue'
 
 const props = defineProps({
-  value: {
-    type: Array,
-    default: () => []
-  },
   data: {
     type: Array,
-    default: () => []
+    required: true
   },
   columns: {
     type: Array,
@@ -112,24 +108,11 @@ const normalizeText = (text) => {
 
 // Get searchable columns from props or slots
 const searchableColumns = computed(() => {
-  // Priority 1: Use columns prop if provided
   if (props.columns && props.columns.length > 0) {
     return props.columns.filter(col => col.field)
   }
   
-  // Priority 2: Extract from data object keys
-  const dataSource = props.value || props.data
-  if (dataSource && dataSource.length > 0) {
-    const sampleData = dataSource[0]
-    return Object.keys(sampleData)
-      .filter(key => typeof sampleData[key] !== 'object' || sampleData[key] === null)
-      .map(key => ({
-        field: key,
-        header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')
-      }))
-  }
-  
-  // Priority 3: Extract from slot children
+  // Extract from slot children
   const defaultSlot = slots.default?.()
   if (defaultSlot) {
     return defaultSlot
@@ -139,7 +122,6 @@ const searchableColumns = computed(() => {
         header: vnode.props.header || vnode.props.field
       }))
   }
-  
   return []
 })
 
@@ -170,7 +152,7 @@ const applyFilter = (item, filter) => {
 
 // Filter data based on search mode
 const filteredData = computed(() => {
-  let result = props.value || props.data || []
+  let result = props.data
 
   // Advanced mode: column-specific AND filters
   if (advancedMode.value) {
@@ -186,36 +168,23 @@ const filteredData = computed(() => {
   else if (localSearch.value) {
     const query = normalizeText(localSearch.value)
     result = result.filter(record => {
-      // Search in all fields including nested objects
-      const searchInObject = (obj) => {
-        if (!obj) return false
+      // Search in all fields
+      return Object.values(record).some((value) => {
+        if (value === null || value === undefined) return false
+        const strValue = normalizeText(value)
         
-        // If it's an array, search in each item
-        if (Array.isArray(obj)) {
-          return obj.some(item => searchInObject(item))
+        // Check if it's an object with label/value
+        if (typeof value === 'object' && value.label) {
+          return normalizeText(value.label).includes(query)
         }
         
-        // If it's an object, search in all values
-        if (typeof obj === 'object') {
-          return Object.values(obj).some(value => {
-            if (value === null || value === undefined) return false
-            
-            // Recursive search for nested objects
-            if (typeof value === 'object') {
-              return searchInObject(value)
-            }
-            
-            const strValue = normalizeText(value)
-            return strValue.includes(query)
-          })
-        }
+        // Direct match
+        if (strValue.includes(query)) return true
         
-        // Direct string match
-        const strValue = normalizeText(obj)
-        return strValue.includes(query)
-      }
-      
-      return searchInObject(record)
+        // For status/category fields, also check in slot content
+        // This allows searching by display label even if stored as code
+        return false
+      })
     })
   }
 
