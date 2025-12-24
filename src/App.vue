@@ -1,6 +1,13 @@
 <!-- App.vue -->
 <template>
   <div id="app" style="height: 100vh; overflow: hidden;">
+    <!-- Global Loading Bar -->
+    <ProgressBar 
+      v-if="$store.state.loading" 
+      mode="indeterminate" 
+      style="height: 4px; position: fixed; top: 0; left: 0; right: 0; z-index: 9999;"
+    />
+    
     <!-- Show only router-view for login page -->
     <div v-if="$router.currentRoute.value.fullPath == '/login'">
       <router-view />

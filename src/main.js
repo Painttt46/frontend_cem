@@ -32,6 +32,7 @@ import TabView from 'primevue/tabview';
 import TabPanel from 'primevue/tabpanel';
 import Textarea from 'primevue/textarea';
 import Tooltip from 'primevue/tooltip';
+import ProgressBar from 'primevue/progressbar';
 
 import {nextTick} from 'vue';
 
@@ -76,6 +77,7 @@ app.component('Toast', Toast);
 app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
 app.component('Textarea', Textarea);
+app.component('ProgressBar', ProgressBar);
 app.directive('Tooltip', Tooltip);
 app.use(ConfirmationService);
 app.use(ToastService);

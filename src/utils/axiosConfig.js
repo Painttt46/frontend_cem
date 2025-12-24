@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from '@/router'
+import store from '@/store'
 
 // Configure axios defaults
 axios.defaults.baseURL = ''
@@ -16,6 +17,9 @@ axios.interceptors.request.use(
       return Promise.reject(error)
     }
     
+    // Show loading
+    store.dispatch('setLoading', true)
+    
     // Add token to Authorization header
     const token = localStorage.getItem('soc_token')
     if (token) {
@@ -24,6 +28,7 @@ axios.interceptors.request.use(
     return config
   },
   (error) => {
+    store.dispatch('setLoading', false)
     return Promise.reject(error)
   }
 )
@@ -31,9 +36,14 @@ axios.interceptors.request.use(
 // Response interceptor
 axios.interceptors.response.use(
   (response) => {
+    // Hide loading
+    store.dispatch('setLoading', false)
     return response
   },
   (error) => {
+    // Hide loading
+    store.dispatch('setLoading', false)
+    
     // Handle different error types
     if (error.response) {
       // Server responded with error status
