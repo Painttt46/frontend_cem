@@ -5,7 +5,7 @@
     <div v-if="$store.state.loading" class="loading-overlay">
       <div ref="lottieContainer" style="width: 200px; height: 200px;"></div>
     </div>
-
+    
     <!-- Show only router-view for login page -->
     <div v-if="$router.currentRoute.value.fullPath == '/login'">
       <router-view />
@@ -18,9 +18,8 @@
 </template>
 
 <script>
-import { ref, watch, onMounted, onBeforeUnmount, nextTick, getCurrentInstance } from 'vue';
+import { ref, watch, onMounted, getCurrentInstance } from 'vue';
 import LayoutView from './components/LayoutView.vue';
-import { useRoute } from "vue-router";
 import lottie from 'lottie-web';
 
 export default {
@@ -31,50 +30,26 @@ export default {
   setup() {
     const lottieContainer = ref(null);
     const instance = getCurrentInstance();
-    const route = useRoute();
     let animation = null;
-    let stopWatch = null;
-    const excludePaths = ["/car-booking"];
-
-    const destroyLottie = () => {
-      if (animation) {
-        animation.destroy();
-        animation = null;
-      }
-    };
-
-    const createLottie = () => {
-      if (!animation && lottieContainer.value) {
-        animation = lottie.loadAnimation({
-          container: lottieContainer.value,
-          renderer: "svg",
-          loop: true,
-          autoplay: true,
-          path: "/assets/loading/loading.json",
-        });
-      }
-    };
 
     onMounted(() => {
-      stopWatch = watch(
-        [() => instance.proxy.$store.state.loading, () => route.path],
-        ([isLoading, path]) => {
-
-          if (excludePaths.includes(path)) {
-            destroyLottie();
-            return;
+      // Watch loading state from store
+      watch(() => instance.proxy.$store.state.loading, (isLoading) => {
+        if (isLoading && lottieContainer.value) {
+          if (!animation) {
+            animation = lottie.loadAnimation({
+              container: lottieContainer.value,
+              renderer: 'svg',
+              loop: true,
+              autoplay: true,
+              path: '/assets/loading/loading.json'
+            });
           }
-
-          if (isLoading) createLottie();
-          else destroyLottie();
-        },
-        { immediate: true }
-      );
-    });
-
-    onBeforeUnmount(() => {
-      if (stopWatch) stopWatch();
-      destroyLottie();
+        } else if (!isLoading && animation) {
+          animation.destroy();
+          animation = null;
+        }
+      });
     });
 
     return {
@@ -214,7 +189,7 @@ function formatDateTime(dateString) {
 }
 
 function formatDate(dateString) {
-  if (dateString == null || dateString == '' || dateString == undefined) {
+  if (dateString == null || dateString == ''|| dateString == undefined) {
     return ''
   }
   var date = new Date(dateString);
@@ -282,12 +257,12 @@ body {
     height: 95vh;
     max-height: 95vh;
   }
-
+  
   .p-dialog .p-dialog-content {
     padding: 1rem;
     max-height: calc(95vh - 100px);
   }
-
+  
   .p-dialog .p-dialog-header {
     padding: 1rem;
   }
@@ -298,14 +273,14 @@ body {
   .p-datatable .p-datatable-wrapper {
     overflow-x: auto;
   }
-
-  .p-datatable .p-datatable-thead>tr>th {
+  
+  .p-datatable .p-datatable-thead > tr > th {
     min-width: 120px;
     font-size: 0.85rem;
     padding: 0.75rem 0.5rem;
   }
-
-  .p-datatable .p-datatable-tbody>tr>td {
+  
+  .p-datatable .p-datatable-tbody > tr > td {
     min-width: 120px;
     font-size: 0.85rem;
     padding: 0.75rem 0.5rem;
@@ -313,13 +288,13 @@ body {
 }
 
 @media (max-width: 480px) {
-  .p-datatable .p-datatable-thead>tr>th {
+  .p-datatable .p-datatable-thead > tr > th {
     min-width: 100px;
     font-size: 0.75rem;
     padding: 0.5rem 0.25rem;
   }
-
-  .p-datatable .p-datatable-tbody>tr>td {
+  
+  .p-datatable .p-datatable-tbody > tr > td {
     min-width: 100px;
     font-size: 0.75rem;
     padding: 0.5rem 0.25rem;
@@ -328,13 +303,10 @@ body {
 
 /* PrimeVue Form Controls Responsive */
 @media (max-width: 768px) {
-
-  .p-inputtext,
-  .p-dropdown,
-  .p-calendar {
+  .p-inputtext, .p-dropdown, .p-calendar {
     width: 100% !important;
   }
-
+  
   .p-button {
     width: 100% !important;
     margin-bottom: 0.5rem;
@@ -346,7 +318,7 @@ body {
   .p-card {
     margin: 0.5rem !important;
   }
-
+  
   .p-card .p-card-body {
     padding: 1rem !important;
   }
@@ -356,7 +328,7 @@ body {
   .p-card {
     margin: 0.25rem !important;
   }
-
+  
   .p-card .p-card-body {
     padding: 0.75rem !important;
   }
@@ -372,12 +344,12 @@ body {
   .p-tabview .p-tabview-nav {
     flex-wrap: wrap;
   }
-
+  
   .p-tabview .p-tabview-nav-link {
     padding: 0.75rem 1rem !important;
     font-size: 0.9rem !important;
   }
-
+  
   .p-tabview-panels {
     padding: 0.5rem !important;
   }
@@ -388,7 +360,7 @@ body {
   .p-dropdown-panel {
     max-width: 90vw !important;
   }
-
+  
   .p-dropdown-item {
     padding: 0.75rem !important;
     font-size: 0.9rem !important;
@@ -401,11 +373,11 @@ body {
     width: 100% !important;
     max-width: 320px !important;
   }
-
+  
   .p-datepicker table {
     font-size: 0.85rem !important;
   }
-
+  
   .p-datepicker table td {
     padding: 0.25rem !important;
   }
@@ -417,7 +389,7 @@ body {
     width: 90vw !important;
     max-width: 350px !important;
   }
-
+  
   .p-toast-message-content {
     padding: 0.75rem !important;
   }
@@ -425,16 +397,15 @@ body {
 
 /* Form Layout Responsive */
 @media (max-width: 768px) {
-
   .p-fluid .p-field,
   .p-fluid .p-inputgroup {
     margin-bottom: 1rem;
   }
-
+  
   .p-float-label {
     margin-bottom: 1.5rem;
   }
-
+  
   .p-inputgroup .p-inputtext {
     flex: 1;
     min-width: 0;
@@ -443,14 +414,13 @@ body {
 
 /* Button Group Responsive */
 @media (max-width: 768px) {
-
   .p-button-group,
   .button-group,
   .action-buttons {
     flex-direction: column;
     width: 100%;
   }
-
+  
   .p-button-group .p-button,
   .button-group .p-button,
   .action-buttons .p-button {
@@ -461,10 +431,9 @@ body {
 
 /* Grid Responsive */
 @media (max-width: 768px) {
-
-  .grid>.col-6,
-  .grid>.col-4,
-  .grid>.col-3 {
+  .grid > .col-6,
+  .grid > .col-4,
+  .grid > .col-3 {
     width: 100% !important;
     flex: 0 0 100% !important;
   }

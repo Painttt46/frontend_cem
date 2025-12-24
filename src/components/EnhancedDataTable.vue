@@ -112,11 +112,24 @@ const normalizeText = (text) => {
 
 // Get searchable columns from props or slots
 const searchableColumns = computed(() => {
+  // Priority 1: Use columns prop if provided
   if (props.columns && props.columns.length > 0) {
     return props.columns.filter(col => col.field)
   }
   
-  // Extract from slot children
+  // Priority 2: Extract from data object keys
+  const dataSource = props.value || props.data
+  if (dataSource && dataSource.length > 0) {
+    const sampleData = dataSource[0]
+    return Object.keys(sampleData)
+      .filter(key => typeof sampleData[key] !== 'object' || sampleData[key] === null)
+      .map(key => ({
+        field: key,
+        header: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')
+      }))
+  }
+  
+  // Priority 3: Extract from slot children
   const defaultSlot = slots.default?.()
   if (defaultSlot) {
     return defaultSlot
@@ -126,6 +139,7 @@ const searchableColumns = computed(() => {
         header: vnode.props.header || vnode.props.field
       }))
   }
+  
   return []
 })
 
