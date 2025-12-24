@@ -25,7 +25,7 @@
 </template>
 
 <script set>
-import { nextTick, ref, onMounted } from 'vue';
+import { nextTick, ref } from 'vue';
 import LayoutView from './components/LayoutView.vue';
 
 export default {
