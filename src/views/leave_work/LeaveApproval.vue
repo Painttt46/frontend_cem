@@ -115,7 +115,7 @@
               <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level1 }">
                 <i :class="slotProps.data.approved_by_level1 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
                 <div class="step-info">
-                  <span class="step-label">ขั้นที่ 1 (HR)</span>
+                  <span class="step-label">ขั้นที่ 1 (หัวหน้างาน)</span>
                   <span v-if="slotProps.data.approved_by_level1" class="step-approver">{{ slotProps.data.approved_by_level1 }}</span>
                   <span v-else class="step-pending">รอดำเนินการ</span>
                 </div>
@@ -123,7 +123,7 @@
               <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level2, 'disabled': !slotProps.data.approved_by_level1 }">
                 <i :class="slotProps.data.approved_by_level2 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
                 <div class="step-info">
-                  <span class="step-label">ขั้นที่ 2 (ผู้บริหาร)</span>
+                  <span class="step-label">ขั้นที่ 2 (HR)</span>
                   <span v-if="slotProps.data.approved_by_level2" class="step-approver">{{ slotProps.data.approved_by_level2 }}</span>
                   <span v-else class="step-pending">รอดำเนินการ</span>
                 </div>
@@ -157,8 +157,8 @@
               />
             </div>
             <div v-else class="status-badge">
-              <Badge v-if="slotProps.data.status === 'pending'" value="รอ HR อนุมัติ" severity="warning" />
-              <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอผู้บริหารอนุมัติ" severity="info" />
+              <Badge v-if="slotProps.data.status === 'pending'" value="รอหัวหน้างานอนุมัติ" severity="warning" />
+              <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอ HR อนุมัติ" severity="info" />
             </div>
           </template>
         </Column>
@@ -392,8 +392,8 @@ export default {
       return false
     },
     getApproveTooltip(record) {
-      if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (HR)'
-      if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (ผู้บริหาร)'
+      if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (หัวหน้างาน)'
+      if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (HR)'
       return 'อนุมัติ'
     }
   }

@@ -217,11 +217,11 @@ export default {
       
       // Determine approval level based on current status
       let approvalLevel = 1
-      let confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - HR)'
+      let confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - หัวหน้างาน)'
       
       if (currentStatus === 'pending_level2') {
         approvalLevel = 2
-        confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - ผู้บริหาร)'
+        confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - HR)'
       }
 
       this.$confirm.require({
@@ -252,7 +252,7 @@ export default {
             this.$toast.add({
               severity: 'success',
               summary: 'สำเร็จ',
-              detail: approvalLevel === 1 ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอผู้บริหารอนุมัติ' : 'อนุมัติการลาเรียบร้อย',
+              detail: approvalLevel === 1 ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอ HR อนุมัติ' : 'อนุมัติการลาเรียบร้อย',
               life: 3000
             })
           } catch { // ignore

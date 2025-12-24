@@ -227,7 +227,13 @@ export default {
     calculateHours() {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
-        const end = new Date(this.formData.endTime)
+        let end = new Date(this.formData.endTime)
+        
+        // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
+        if (end <= start) {
+          end.setDate(end.getDate() + 1)
+        }
+        
         const diff = (end - start) / (1000 * 60 * 60)
         return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
       }
@@ -462,7 +468,13 @@ export default {
     calculateTotalHours() {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
-        const end = new Date(this.formData.endTime)
+        let end = new Date(this.formData.endTime)
+        
+        // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
+        if (end <= start) {
+          end.setDate(end.getDate() + 1)
+        }
+        
         return Math.max(0, (end - start) / (1000 * 60 * 60))
       }
       return 0

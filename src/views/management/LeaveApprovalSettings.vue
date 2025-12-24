@@ -16,7 +16,7 @@
     </Card>
 
     <div class="approval-levels">
-      <!-- Level 1: HR -->
+      <!-- Level 1: หัวหน้างาน -->
       <Card class="level-card">
         <template #header>
           <div class="level-header level-1">
@@ -25,7 +25,7 @@
           </div>
         </template>
         <template #content>
-          <p class="level-desc">เมื่อมีคำขอลาใหม่ ระบบจะส่ง Email แจ้งผู้ที่กำหนดไว้</p>
+          <p class="level-desc">เมื่อมีคำขอลาใหม่ ระบบจะส่ง Email แจ้งหัวหน้างานที่กำหนดไว้</p>
           
           <div class="add-approver">
             <Dropdown v-model="newApproverLevel1" :options="availableUsers" optionLabel="name" optionValue="id" 
@@ -56,7 +56,7 @@
         </template>
       </Card>
 
-      <!-- Level 2: Manager -->
+      <!-- Level 2: HR -->
       <Card class="level-card">
         <template #header>
           <div class="level-header level-2">
@@ -65,7 +65,7 @@
           </div>
         </template>
         <template #content>
-          <p class="level-desc">หลังจาก หัวหน้างาน อนุมัติขั้นที่ 1 ระบบจะส่ง Email แจ้งผู้บริหารที่กำหนดไว้</p>
+          <p class="level-desc">หลังจากหัวหน้างานอนุมัติขั้นที่ 1 ระบบจะส่ง Email แจ้ง HR ที่กำหนดไว้</p>
           
           <div class="add-approver">
             <Dropdown v-model="newApproverLevel2" :options="availableUsers" optionLabel="name" optionValue="id" 
