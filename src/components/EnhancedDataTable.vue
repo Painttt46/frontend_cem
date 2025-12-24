@@ -172,23 +172,36 @@ const filteredData = computed(() => {
   else if (localSearch.value) {
     const query = normalizeText(localSearch.value)
     result = result.filter(record => {
-      // Search in all fields
-      return Object.values(record).some((value) => {
-        if (value === null || value === undefined) return false
-        const strValue = normalizeText(value)
+      // Search in all fields including nested objects
+      const searchInObject = (obj) => {
+        if (!obj) return false
         
-        // Check if it's an object with label/value
-        if (typeof value === 'object' && value.label) {
-          return normalizeText(value.label).includes(query)
+        // If it's an array, search in each item
+        if (Array.isArray(obj)) {
+          return obj.some(item => searchInObject(item))
         }
         
-        // Direct match
-        if (strValue.includes(query)) return true
+        // If it's an object, search in all values
+        if (typeof obj === 'object') {
+          return Object.values(obj).some(value => {
+            if (value === null || value === undefined) return false
+            
+            // Recursive search for nested objects
+            if (typeof value === 'object') {
+              return searchInObject(value)
+            }
+            
+            const strValue = normalizeText(value)
+            return strValue.includes(query)
+          })
+        }
         
-        // For status/category fields, also check in slot content
-        // This allows searching by display label even if stored as code
-        return false
-      })
+        // Direct string match
+        const strValue = normalizeText(obj)
+        return strValue.includes(query)
+      }
+      
+      return searchInObject(record)
     })
   }
 
