@@ -231,14 +231,10 @@ export default {
       
       const currentStatus = leaveRequest.status
       
-      // Determine approval level based on current status
-      let approvalLevel = 1
-      let confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - หัวหน้างาน)'
-      
-      if (currentStatus === 'pending_level2') {
-        approvalLevel = 2
-        confirmMessage = 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - HR)'
-      }
+      // Determine confirm message based on current status
+      const confirmMessage = currentStatus === 'pending_level2' 
+        ? 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - HR)'
+        : 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - หัวหน้างาน)'
 
       this.$confirm.require({
         message: confirmMessage,
