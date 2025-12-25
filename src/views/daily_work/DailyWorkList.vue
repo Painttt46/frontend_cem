@@ -138,7 +138,7 @@
     <div v-if="selectedRecordFiles && selectedRecordFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedRecordFiles" :key="index" class="file-item">
         <div class="file-info">
-          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" />
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
           <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
@@ -149,6 +149,11 @@
     <div v-else class="no-files-dialog">
       <p>ไม่มีไฟล์แนบ</p>
     </div>
+  </Dialog>
+
+  <!-- Full Image Dialog -->
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+    <img :src="fullImageUrl" class="full-image" />
   </Dialog>
 
   <!-- Edit Record Dialog -->
@@ -306,6 +311,8 @@ export default {
       selectedRecord: null,
       filesDialog: false,
       selectedRecordFiles: [],
+      fullImageDialog: false,
+      fullImageUrl: '',
       editDialog: false,
       editFormData: {
         id: null,
@@ -479,6 +486,10 @@ export default {
     getFileUrl(fileName) {
       const token = localStorage.getItem('soc_token')
       return `/api/files/download/${fileName}?token=${token}`
+    },
+    viewFullImage(fileName) {
+      this.fullImageUrl = this.getFileUrl(fileName)
+      this.fullImageDialog = true
     },
     hasFiles(record) {
       return record.files && Array.isArray(record.files) && record.files.length > 0
@@ -969,9 +980,14 @@ export default {
 .file-preview {
   width: 50px;
   height: 50px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 6px;
   border: 1px solid #e9ecef;
+  cursor: pointer;
+}
+
+.file-preview:hover {
+  opacity: 0.8;
 }
 
 .file-icon {
@@ -981,6 +997,12 @@ export default {
 
 .file-name {
   font-weight: 500;
+}
+
+.full-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 .no-files-dialog {

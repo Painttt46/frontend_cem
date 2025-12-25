@@ -1002,7 +1002,7 @@ export default {
 .grid-image {
   width: 100%;
   height: 100px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 6px;
   border: 1px solid #e9ecef;
   cursor: pointer;

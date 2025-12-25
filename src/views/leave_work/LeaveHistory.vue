@@ -628,7 +628,7 @@ export default {
 .file-preview {
   width: 60px;
   height: 60px;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 6px;
   border: 1px solid #e9ecef;
 }
