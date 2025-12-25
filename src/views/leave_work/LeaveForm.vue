@@ -760,41 +760,32 @@ export default {
 }
 
 .datetime-picker .date-only {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .datetime-picker .time-dropdown {
-  flex: 0 0 110px;
-  width: 110px;
+  flex: 0 0 100px;
 }
 
-:deep(.datetime-picker .p-calendar),
+:deep(.datetime-picker .p-calendar) {
+  width: 100% !important;
+  display: flex !important;
+}
+
+:deep(.datetime-picker .p-calendar .p-inputtext) {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
 :deep(.datetime-picker .p-dropdown) {
-  width: 100% !important;
-}
-
-:deep(.datetime-picker .p-inputtext) {
-  width: 100% !important;
+  width: 100px !important;
 }
 
 @media (max-width: 768px) {
   .date-range-group {
     flex-direction: column;
     gap: 0.5rem;
-  }
-  
-  .datetime-picker {
-    flex-direction: row;
-  }
-  
-  .datetime-picker .date-only {
-    flex: 1;
-  }
-  
-  .datetime-picker .time-dropdown {
-    flex: 0 0 100px;
-    width: 100px;
   }
 }
 
