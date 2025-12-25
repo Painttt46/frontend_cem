@@ -145,6 +145,8 @@
                 icon="pi pi-check" 
                 severity="success" 
                 size="small"
+                :disabled="disabled"
+                :loading="disabled"
                 @click="$emit('approve-leave', slotProps.data.id)"
                 v-tooltip="getApproveTooltip(slotProps.data)"
               />
@@ -152,6 +154,7 @@
                 icon="pi pi-times" 
                 severity="danger" 
                 size="small"
+                :disabled="disabled"
                 @click="$emit('reject-leave', slotProps.data.id)"
                 v-tooltip="'ไม่อนุมัติ'"
               />
@@ -233,6 +236,10 @@ export default {
     approverLevel: {
       type: Number,
       default: 0
+    },
+    disabled: {
+      type: Boolean,
+      default: false
     }
   },
   inject: ['$toast'],

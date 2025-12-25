@@ -39,6 +39,7 @@
       <LeaveApproval 
         :records="pendingLeaveRecords" 
         :approver-level="approverLevel"
+        :disabled="approving"
         @approve-leave="approveLeave" 
         @reject-leave="rejectLeave" 
         @close-form="showApprovalDialog = false"
@@ -253,6 +254,7 @@ export default {
             const freshRequest = this.pendingLeaveRecords.find(r => r.id === leaveId)
             if (!freshRequest) {
               this.$toast.add({ severity: 'warn', summary: 'ไม่พบข้อมูล', detail: 'คำขอลานี้ถูกดำเนินการแล้ว', life: 3000 })
+              this.approving = false
               return
             }
             const actualLevel = freshRequest.status === 'pending_level2' ? 2 : 1
