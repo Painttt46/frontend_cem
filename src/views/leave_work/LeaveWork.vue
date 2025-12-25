@@ -192,9 +192,9 @@ export default {
       } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลการลาได้',
-          life: 3000
+          summary: 'โหลดข้อมูลไม่สำเร็จ',
+          detail: 'กรุณารีเฟรชหน้าเว็บ หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต',
+          life: 4000
         })
       } finally {
         this.loading = false
@@ -280,9 +280,9 @@ export default {
           } catch { // ignore
             this.$toast.add({
               severity: 'error',
-              summary: 'เกิดข้อผิดพลาด',
-              detail: 'ไม่สามารถอนุมัติคำขอได้',
-              life: 3000
+              summary: 'อนุมัติไม่สำเร็จ',
+              detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+              life: 4000
             })
           } finally {
             this.approving = false
@@ -323,9 +323,9 @@ export default {
           } catch { // ignore
             this.$toast.add({
               severity: 'error',
-              summary: 'เกิดข้อผิดพลาด',
-              detail: 'ไม่สามารถปฏิเสธคำขอได้',
-              life: 3000
+              summary: 'ปฏิเสธไม่สำเร็จ',
+              detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+              life: 4000
             })
           }
         }

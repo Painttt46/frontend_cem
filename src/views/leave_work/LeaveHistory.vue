@@ -293,9 +293,9 @@ export default {
       } catch (err) {
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: err.response?.data?.error || 'ไม่สามารถลบคำขอได้',
-          life: 3000
+          summary: 'ลบไม่สำเร็จ',
+          detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
         })
       }
     },
@@ -337,9 +337,9 @@ export default {
       } catch {
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
-          life: 3000
+          summary: 'ดาวน์โหลดไม่สำเร็จ',
+          detail: 'ไฟล์อาจถูกลบหรือไม่พร้อมใช้งาน',
+          life: 4000
         })
       }
     },

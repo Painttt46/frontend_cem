@@ -393,9 +393,9 @@ export default {
       } catch (error) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลโควต้าได้',
-          life: 3000
+          summary: 'โหลดโควต้าไม่สำเร็จ',
+          detail: 'กรุณารีเฟรชหน้าเว็บ',
+          life: 4000
         });
       }
     },
@@ -418,9 +418,9 @@ export default {
       if (!this.formData.leaveType) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'กรุณาเลือกประเภทการลา',
-          life: 3000
+          summary: 'กรุณากรอกข้อมูล',
+          detail: 'เลือกประเภทการลาก่อนส่งคำขอ',
+          life: 4000
         })
         return
       }
@@ -429,9 +429,9 @@ export default {
       if (this.selectedQuota && this.selectedQuota.remainingDays <= 0) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'โควต้าการลาประเภทนี้หมดแล้ว',
-          life: 3000
+          summary: 'โควต้าหมด',
+          detail: 'โควต้าการลาประเภทนี้ใช้หมดแล้ว กรุณาเลือกประเภทอื่น',
+          life: 4000
         })
         return
       }
@@ -441,9 +441,9 @@ export default {
       if (this.selectedQuota && requestedDays > this.selectedQuota.remainingDays) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: `จำนวนวันที่ขอลา (${requestedDays} วัน) เกินโควต้าคงเหลือ (${this.selectedQuota.remainingDays} วัน)`,
-          life: 3000
+          summary: 'เกินโควต้า',
+          detail: `ขอลา ${requestedDays} วัน แต่เหลือโควต้า ${this.selectedQuota.remainingDays} วัน`,
+          life: 4000
         })
         return
       }
@@ -452,9 +452,9 @@ export default {
         if (new Date(this.formData.endDateTime) < new Date(this.formData.startDateTime)) {
           this.$toast.add({
             severity: 'error',
-            summary: 'ข้อผิดพลาด',
-            detail: 'วันสิ้นสุดการลาต้องไม่เป็นวันก่อนวันเริ่มลา',
-            life: 3000
+            summary: 'วันที่ไม่ถูกต้อง',
+            detail: 'วันสิ้นสุดต้องไม่ก่อนวันเริ่มลา',
+            life: 4000
           })
           return
         }
@@ -515,17 +515,15 @@ export default {
         
       } catch (error) {
         
-        let errorMessage = 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+        let errorMessage = 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ'
         
         if (error.response?.data?.error) {
           errorMessage = error.response.data.error
-        } else if (error.message) {
-          errorMessage = error.message
         }
         
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
+          summary: 'บันทึกไม่สำเร็จ',
           detail: errorMessage,
           life: 5000
         })

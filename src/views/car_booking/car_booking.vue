@@ -314,9 +314,9 @@ export default {
         if (!silent) {
           this.$toast.add({
             severity: 'error',
-            summary: 'เกิดข้อผิดพลาด',
-            detail: 'ไม่สามารถโหลดข้อมูลการจองรถได้',
-            life: 3000
+            summary: 'โหลดข้อมูลไม่สำเร็จ',
+            detail: 'กรุณารีเฟรชหน้าเว็บ',
+            life: 4000
           })
         }
       }
@@ -399,9 +399,9 @@ export default {
     handleImageError() {
       this.$toast.add({
         severity: 'error',
-        summary: 'เกิดข้อผิดพลาด',
-        detail: 'ไม่สามารถโหลดรูปภาพได้',
-        life: 3000
+        summary: 'โหลดรูปไม่สำเร็จ',
+        detail: 'รูปภาพอาจถูกลบหรือไม่พร้อมใช้งาน',
+        life: 4000
       })
     },
     handleImageLoad() {
@@ -472,9 +472,9 @@ export default {
       } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถอัปโหลดรูปภาพได้',
-          life: 3000
+          summary: 'อัปโหลดไม่สำเร็จ',
+          detail: 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
+          life: 4000
         })
       }
     },
@@ -518,9 +518,9 @@ export default {
         } else {
           this.$toast.add({
             severity: 'error',
-            summary: 'เกิดข้อผิดพลาด',
-            detail: 'ไม่สามารถบันทึกการจองได้',
-            life: 3000
+            summary: 'บันทึกไม่สำเร็จ',
+            detail: 'กรุณาลองใหม่อีกครั้ง',
+            life: 4000
           })
         }
       }
@@ -529,7 +529,7 @@ export default {
       const borrowId = this.returnForm.borrowId || this.$refs.bookingForm?.selectedReturnBorrow
 
       if (!borrowId) {
-        this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกการแจ้งใช้รถที่ต้องการคืน', life: 3000 })
+        this.$toast.add({ severity: 'error', summary: 'กรุณาเลือกข้อมูล', detail: 'เลือกการแจ้งใช้รถที่ต้องการคืน', life: 4000 })
         return
       }
 
@@ -569,16 +569,16 @@ export default {
       } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถบันทึกการคืนรถได้',
-          life: 3000
+          summary: 'บันทึกไม่สำเร็จ',
+          detail: 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
         })
       }
     },
     async submitCancel() {
 
       if (!this.cancelForm.borrowId) {
-        this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกการจองที่ต้องการยกเลิก', life: 3000 })
+        this.$toast.add({ severity: 'error', summary: 'กรุณาเลือกข้อมูล', detail: 'เลือกการจองที่ต้องการยกเลิก', life: 4000 })
         return
       }
 
@@ -597,9 +597,9 @@ export default {
       } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถยกเลิกการจองได้',
-          life: 3000
+          summary: 'ยกเลิกไม่สำเร็จ',
+          detail: 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
         })
       }
     },
@@ -656,9 +656,9 @@ export default {
       } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถอัปโหลดรูปภาพได้',
-          life: 3000
+          summary: 'อัปโหลดไม่สำเร็จ',
+          detail: 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
+          life: 4000
         })
       }
     },

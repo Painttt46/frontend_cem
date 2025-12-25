@@ -7,21 +7,6 @@ axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
 axios.defaults.timeout = 30000 // 30 seconds
 
-// Global toast reference (จะถูก set จาก App.vue)
-let globalToast = null
-export const setGlobalToast = (toast) => { globalToast = toast }
-
-const showErrorToast = (message, detail) => {
-  if (globalToast) {
-    globalToast.add({
-      severity: 'error',
-      summary: message,
-      detail: detail,
-      life: 5000
-    })
-  }
-}
-
 // Request interceptor
 axios.interceptors.request.use(
   (config) => {
@@ -133,11 +118,6 @@ axios.interceptors.response.use(
     } else {
       // Something else happened
       error.userMessage = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
-    }
-    
-    // แสดง toast อัตโนมัติ (ยกเว้น silent หรือ 401)
-    if (!error.silent && error.userMessage) {
-      showErrorToast('เกิดข้อผิดพลาด', error.userMessage)
     }
     
     return Promise.reject(error)

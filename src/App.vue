@@ -1,9 +1,6 @@
 <!-- App.vue -->
 <template>
   <div id="app" style="height: 100vh; overflow: hidden;">
-    <!-- Global Toast -->
-    <Toast position="top-right" />
-    
     <!-- Global Loading Overlay -->
     <div v-if="$store.state.loading" class="loading-overlay">
       <div class="spinner"></div>
@@ -22,7 +19,6 @@
 
 <script>
 import LayoutView from './components/LayoutView.vue';
-import { setGlobalToast } from './utils/axiosConfig';
 
 export default {
   name: 'App',
@@ -35,9 +31,6 @@ export default {
     }
   },
   mounted() {
-    // Set global toast สำหรับ axios interceptor
-    setGlobalToast(this.$toast)
-    
     // ตรวจสอบ token expiration ทุก 1 นาที
     this.tokenCheckInterval = setInterval(() => {
       this.checkTokenExpiration()
