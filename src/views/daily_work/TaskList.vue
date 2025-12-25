@@ -157,7 +157,8 @@
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
-          <i class="pi pi-file"></i>
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" />
+          <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
         <Button 
@@ -275,7 +276,8 @@
     <div v-if="selectedWorkFiles && selectedWorkFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedWorkFiles" :key="index" class="file-item">
         <div class="file-info">
-          <i class="pi pi-file"></i>
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" />
+          <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
         <Button icon="pi pi-download" size="small" severity="success" outlined
@@ -681,6 +683,13 @@ export default {
     showTaskDetails(task) {
       this.selectedTask = task
       this.detailDialog = true
+    },
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+    getFileUrl(fileName) {
+      return `/api/files/download/${fileName}`
     },
     hasFiles(task) {
       return task.files && Array.isArray(task.files) && task.files.length > 0
@@ -1109,6 +1118,19 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.file-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  color: #666;
 }
 
 .file-name {
