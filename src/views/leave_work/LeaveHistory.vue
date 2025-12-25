@@ -115,43 +115,51 @@
           </template>
         </Column>
 
-        <Column header="ผู้อนุมัติ" style="min-width: 250px;">
+        <Column header="ผู้อนุมัติ" style="min-width: 280px;">
           <template #body="slotProps">
             <div class="approver-container">
-              <!-- แสดงผู้ไม่อนุมัติ -->
-              <div v-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_by" class="approver-item rejected">
+              <!-- Step 1: หัวหน้างาน -->
+              <div class="approver-item" :class="{ 
+                'approved': slotProps.data.approved_by_level1,
+                'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1
+              }">
                 <div class="approver-badge-wrapper">
-                  <i class="pi pi-times-circle" style="color: #ef4444;"></i>
-                  <Badge :value="slotProps.data.rejected_level === 1 ? 'หัวหน้างาน' : 'HR'" severity="danger" />
+                  <i v-if="slotProps.data.approved_by_level1" class="pi pi-check-circle" style="color: #10b981;"></i>
+                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
+                  <Badge value="หัวหน้างาน" :severity="slotProps.data.approved_by_level1 ? 'info' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1 ? 'danger' : 'secondary')" />
                 </div>
-                <span class="approver-text">{{ slotProps.data.rejected_by }}</span>
-                <div v-if="slotProps.data.reject_reason" class="reject-reason">
-                  <i class="pi pi-info-circle"></i>
-                  <span>{{ slotProps.data.reject_reason }}</span>
-                </div>
-              </div>
-              <!-- แสดงผู้อนุมัติ -->
-              <div v-else-if="slotProps.data.approved_by_level1" class="approver-item">
-                <div class="approver-badge-wrapper">
-                  <i class="pi pi-check-circle"></i>
-                  <Badge value="หัวหน้างาน" severity="info" />
-                </div>
-                <span class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
+                <span v-if="slotProps.data.approved_by_level1" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
                   {{ slotProps.data.approved_by_level1 }}
                 </span>
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="approver-text rejected-text">
+                  {{ slotProps.data.rejected_by }}
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                </span>
+                <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
-              <div v-if="slotProps.data.approved_by_level2" class="approver-item">
+
+              <!-- Step 2: HR -->
+              <div class="approver-item" :class="{ 
+                'approved': slotProps.data.approved_by_level2,
+                'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2,
+                'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2)
+              }">
                 <div class="approver-badge-wrapper">
-                  <i class="pi pi-check-circle"></i>
-                  <Badge value="HR" severity="success" />
+                  <i v-if="slotProps.data.approved_by_level2" class="pi pi-check-circle" style="color: #10b981;"></i>
+                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
+                  <Badge value="HR" :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : 'secondary')" />
                 </div>
-                <span class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
+                <span v-if="slotProps.data.approved_by_level2" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
                   {{ slotProps.data.approved_by_level2 }}
                 </span>
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="approver-text rejected-text">
+                  {{ slotProps.data.rejected_by }}
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                </span>
+                <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
-              <span v-if="slotProps.data.status !== 'rejected' && !slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">
-                <i class="pi pi-clock"></i> รอการอนุมัติ
-              </span>
             </div>
           </template>
         </Column>
@@ -215,6 +223,14 @@
     :user-name="selectedUserName"
     :user-id="selectedUserId"
   />
+
+  <!-- Reject Reason Dialog -->
+  <Dialog v-model:visible="showRejectReasonDialog" modal header="เหตุผลที่ไม่อนุมัติ" :style="{ width: '400px' }" :draggable="false">
+    <div class="reject-reason-content">
+      <i class="pi pi-info-circle"></i>
+      <p>{{ selectedRejectReason }}</p>
+    </div>
+  </Dialog>
 </template>
 
 <script>
@@ -244,7 +260,9 @@ export default {
       leaveTypes: [],
       showUserInfoDialog: false,
       selectedUserName: '',
-      selectedUserId: null
+      selectedUserId: null,
+      showRejectReasonDialog: false,
+      selectedRejectReason: ''
     }
   },
   async mounted() {
@@ -486,6 +504,11 @@ export default {
       this.selectedUserName = approverName
       this.selectedUserId = null
       this.showUserInfoDialog = true
+    },
+
+    showRejectReason(reason) {
+      this.selectedRejectReason = reason
+      this.showRejectReasonDialog = true
     }
   }
 }
@@ -987,26 +1010,45 @@ export default {
   color: #adb5bd;
 }
 
-.reject-reason {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
-  margin-top: 0.4rem;
-  padding: 0.4rem 0.6rem;
-  background: #fef2f2;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  color: #991b1b;
-}
-
-.reject-reason i {
-  margin-top: 2px;
-  font-size: 0.75rem;
+.approver-item.disabled {
+  opacity: 0.5;
 }
 
 .approver-item.rejected {
   border-left-color: #ef4444;
-  flex-direction: column;
+}
+
+.rejected-text {
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pending-text {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.reject-reason-content {
+  display: flex;
   align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
+}
+
+.reject-reason-content i {
+  color: #ef4444;
+  font-size: 1.25rem;
+  margin-top: 2px;
+}
+
+.reject-reason-content p {
+  margin: 0;
+  color: #991b1b;
+  line-height: 1.5;
 }
 </style>
