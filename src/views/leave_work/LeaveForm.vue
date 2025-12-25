@@ -178,11 +178,13 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import AutoComplete from 'primevue/autocomplete'
+import Dropdown from 'primevue/dropdown'
 
 export default {
   name: 'LeaveForm',
   components: {
-    AutoComplete
+    AutoComplete,
+    Dropdown
   },
   async created() {
     await this.loadLeaveTypes();
@@ -359,29 +361,6 @@ export default {
         hours += afternoonEnd - afternoonStart
       }
       return Math.max(0, hours)
-    },
-        adjusted = true
-      }
-      // 12:01-12:59 → ปรับเป็น 13:00
-      else if (hour === 12 && minute > 0) {
-        date.setHours(13, 0, 0, 0)
-        adjusted = true
-      }
-      // หลัง 18 โมง → ปรับเป็น 18:00
-      else if (hour > 18 || (hour === 18 && minute > 0)) {
-        date.setHours(18, 0, 0, 0)
-        adjusted = true
-      }
-      
-      if (adjusted) {
-        this.formData[dateField] = date
-        this.$toast.add({
-          severity: 'info',
-          summary: 'ปรับเวลา',
-          detail: 'เวลาถูกปรับให้อยู่ในช่วงเวลาทำการ (09:00-12:00, 13:00-18:00)',
-          life: 3000
-        })
-      }
     },
     
     async loadLeaveTypes() {
