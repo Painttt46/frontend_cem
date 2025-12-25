@@ -109,7 +109,7 @@
           <template #body="slotProps">
             <div v-if="hasFiles(slotProps.data)" class="attachments-info">
               <Button icon="pi pi-paperclip" size="small" severity="info" outlined
-                @click="downloadFiles(slotProps.data)" v-tooltip="`${slotProps.data.files.length} ไฟล์`" />
+                @click="downloadFiles(slotProps.data)" v-tooltip="`${getFilesCount(slotProps.data)} ไฟล์`" />
             </div>
             <span v-else class="no-files">-</span>
           </template>
@@ -448,9 +448,12 @@ export default {
       if (!time) return null
       return time.toTimeString().split(' ')[0]
     },
-    getStatusLabel(status) {
-      // Remove all emoji and special characters
-      return status.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+    getStatusLabel(value) {
+      const status = this.statusOptions.find(s => s.value === value)
+      if (status && status.label) {
+        return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      }
+      return value
     },
     getStatusLabelFromOptions(value) {
       const status = this.statusOptions.find(s => s.value === value)
@@ -492,11 +495,26 @@ export default {
       this.fullImageDialog = true
     },
     hasFiles(record) {
-      return record.files && Array.isArray(record.files) && record.files.length > 0
+      let files = record.files
+      if (typeof files === 'string') {
+        try { files = JSON.parse(files) } catch { files = [] }
+      }
+      return files && Array.isArray(files) && files.length > 0
+    },
+    getFilesCount(record) {
+      let files = record.files
+      if (typeof files === 'string') {
+        try { files = JSON.parse(files) } catch { files = [] }
+      }
+      return Array.isArray(files) ? files.length : 0
     },
     downloadFiles(record) {
       if (this.hasFiles(record)) {
-        this.selectedRecordFiles = record.files
+        let files = record.files
+        if (typeof files === 'string') {
+          try { files = JSON.parse(files) } catch { files = [] }
+        }
+        this.selectedRecordFiles = files
         this.filesDialog = true
       }
     },
