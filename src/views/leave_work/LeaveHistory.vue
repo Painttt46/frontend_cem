@@ -118,7 +118,20 @@
         <Column header="ผู้อนุมัติ" style="min-width: 250px;">
           <template #body="slotProps">
             <div class="approver-container">
-              <div v-if="slotProps.data.approved_by_level1" class="approver-item">
+              <!-- แสดงผู้ไม่อนุมัติ -->
+              <div v-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_by" class="approver-item rejected">
+                <div class="approver-badge-wrapper">
+                  <i class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <Badge :value="slotProps.data.rejected_level === 1 ? 'หัวหน้างาน' : 'HR'" severity="danger" />
+                </div>
+                <span class="approver-text">{{ slotProps.data.rejected_by }}</span>
+                <div v-if="slotProps.data.reject_reason" class="reject-reason">
+                  <i class="pi pi-info-circle"></i>
+                  <span>{{ slotProps.data.reject_reason }}</span>
+                </div>
+              </div>
+              <!-- แสดงผู้อนุมัติ -->
+              <div v-else-if="slotProps.data.approved_by_level1" class="approver-item">
                 <div class="approver-badge-wrapper">
                   <i class="pi pi-check-circle"></i>
                   <Badge value="หัวหน้างาน" severity="info" />
@@ -136,7 +149,7 @@
                   {{ slotProps.data.approved_by_level2 }}
                 </span>
               </div>
-              <span v-if="!slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">
+              <span v-if="slotProps.data.status !== 'rejected' && !slotProps.data.approved_by_level1 && !slotProps.data.approved_by_level2" class="no-approver">
                 <i class="pi pi-clock"></i> รอการอนุมัติ
               </span>
             </div>
@@ -972,5 +985,28 @@ export default {
 
 .no-approver {
   color: #adb5bd;
+}
+
+.reject-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: #fef2f2;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #991b1b;
+}
+
+.reject-reason i {
+  margin-top: 2px;
+  font-size: 0.75rem;
+}
+
+.approver-item.rejected {
+  border-left-color: #ef4444;
+  flex-direction: column;
+  align-items: flex-start;
 }
 </style>

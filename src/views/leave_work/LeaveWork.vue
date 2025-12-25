@@ -41,9 +41,21 @@
         :approver-level="approverLevel"
         :disabled="approving"
         @approve-leave="approveLeave" 
-        @reject-leave="rejectLeave" 
+        @reject-leave="openRejectDialog" 
         @close-form="showApprovalDialog = false"
       />
+    </Dialog>
+
+    <!-- Reject Dialog -->
+    <Dialog v-model:visible="showRejectDialog" modal header="ไม่อนุมัติการลา" :style="{ width: '400px' }" :draggable="false">
+      <div class="reject-form">
+        <label class="input-label">เหตุผลที่ไม่อนุมัติ *</label>
+        <Textarea v-model="rejectReason" rows="3" class="w-full" placeholder="กรุณาระบุเหตุผล..." />
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" severity="secondary" @click="showRejectDialog = false" />
+        <Button label="ยืนยันไม่อนุมัติ" severity="danger" @click="confirmReject" :disabled="!rejectReason.trim()" />
+      </template>
     </Dialog>
   </div>
 </template>
@@ -82,7 +94,11 @@ export default {
       showLeaveDialog: false,
       showApprovalDialog: false,
       isLeaveApprover: false,
-      approverLevel: 0  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
+      approverLevel: 0,  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
+      // Reject dialog
+      showRejectDialog: false,
+      rejectLeaveId: null,
+      rejectReason: ''
     }
   },
   computed: {
@@ -285,44 +301,48 @@ export default {
     },
 
     async rejectLeave(leaveId) {
-      this.$confirm.require({
-        message: 'คุณต้องการปฏิเสธคำขอลางานนี้หรือไม่?',
-        header: 'ยืนยันการปฏิเสธ',
-        icon: 'pi pi-times-circle',
-        acceptClass: 'p-button-danger',
-        acceptLabel: 'ปฏิเสธ',
-        rejectLabel: 'ยกเลิก',
-        draggable: false,
-        accept: async () => {
-          try {
-            const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
-            const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
-            const approverInfo = `${approverName} (${approverPosition})`
-            
-            
-            await this.$http.put(`/api/leave/${leaveId}/status`, {
-              status: 'rejected',
-              approved_by: approverInfo
-            })
-            
-            await this.loadLeaveRecords()
+      this.rejectLeaveId = leaveId
+      this.rejectReason = ''
+      this.showRejectDialog = true
+    },
 
-            this.$toast.add({
-              severity: 'info',
-              summary: 'สำเร็จ',
-              detail: 'ไม่อนุมัติการลาเรียบร้อย',
-              life: 3000
-            })
-          } catch { // ignore
-            this.$toast.add({
-              severity: 'error',
-              summary: 'ปฏิเสธไม่สำเร็จ',
-              detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
-              life: 4000
-            })
-          }
-        }
-      })
+    openRejectDialog(leaveId) {
+      this.rejectLeaveId = leaveId
+      this.rejectReason = ''
+      this.showRejectDialog = true
+    },
+
+    async confirmReject() {
+      if (!this.rejectReason.trim()) return
+      
+      try {
+        const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
+        const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
+        const approverInfo = `${approverName} (${approverPosition})`
+        
+        await this.$http.put(`/api/leave/${this.rejectLeaveId}/status`, {
+          status: 'rejected',
+          approved_by: approverInfo,
+          reject_reason: this.rejectReason.trim()
+        })
+        
+        this.showRejectDialog = false
+        await this.loadLeaveRecords()
+
+        this.$toast.add({
+          severity: 'info',
+          summary: 'สำเร็จ',
+          detail: 'ไม่อนุมัติการลาเรียบร้อย',
+          life: 3000
+        })
+      } catch { // ignore
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ปฏิเสธไม่สำเร็จ',
+          detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+          life: 4000
+        })
+      }
     },
 
     viewAttachments(attachments) {
@@ -619,5 +639,20 @@ export default {
   height: auto !important;
   max-height: calc(95vh - 80px) !important;
   overflow-y: auto !important;
+}
+
+.reject-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reject-form .input-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.reject-form textarea {
+  width: 100%;
 }
 </style>
