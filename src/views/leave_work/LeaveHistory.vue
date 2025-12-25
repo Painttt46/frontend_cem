@@ -961,7 +961,16 @@ export default {
   padding: 0.5rem;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 8px;
-  border-left: 3px solid #10b981;
+  border-left: 3px solid #94a3b8;
+}
+
+.approver-item.approved {
+  border-left-color: #10b981;
+}
+
+.approver-item.rejected {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
 }
 
 .approver-badge-wrapper {
@@ -1012,10 +1021,6 @@ export default {
 
 .approver-item.disabled {
   opacity: 0.5;
-}
-
-.approver-item.rejected {
-  border-left-color: #ef4444;
 }
 
 .rejected-text {
