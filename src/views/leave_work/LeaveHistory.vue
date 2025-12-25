@@ -172,7 +172,7 @@
       <div v-else class="attachments-list">
         <div v-for="(file, index) in selectedAttachments" :key="index" class="attachment-item">
           <div class="file-info">
-            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @error="handleImageError" />
+            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
             <i v-else :class="getFileIcon(file)" class="file-icon"></i>
             <div class="file-details">
               <span class="file-name">{{ file }}</span>
@@ -189,6 +189,11 @@
     <template #footer>
       <Button label="ปิด" icon="pi pi-times" @click="showAttachmentsDialog = false" />
     </template>
+  </Dialog>
+
+  <!-- Full Image Dialog -->
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+    <img :src="fullImageUrl" class="full-image" />
   </Dialog>
 
   <!-- User Info Dialog -->
@@ -221,6 +226,8 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
+      fullImageDialog: false,
+      fullImageUrl: '',
       leaveTypes: [],
       showUserInfoDialog: false,
       selectedUserName: '',
@@ -343,7 +350,13 @@ export default {
     },
 
     getFileUrl(fileName) {
-      return `/api/files/download/${fileName}`
+      const token = localStorage.getItem('soc_token')
+      return `/api/files/download/${fileName}?token=${token}`
+    },
+
+    viewFullImage(fileName) {
+      this.fullImageUrl = this.getFileUrl(fileName)
+      this.fullImageDialog = true
     },
 
     handleImageError(e) {
@@ -631,6 +644,17 @@ export default {
   object-fit: contain;
   border-radius: 6px;
   border: 1px solid #e9ecef;
+  cursor: pointer;
+}
+
+.file-preview:hover {
+  opacity: 0.8;
+}
+
+.full-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 .file-icon {
