@@ -42,29 +42,28 @@
             </div>
           </div>
 
-          <div class="input-group date-range-group">
-            <div class="date-field">
-              <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
-              <div class="datetime-picker">
-                <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
-                  class="corporate-input date-only" :manualInput="false" required
-                  :minDate="new Date()" placeholder="เลือกวันที่" />
-                <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
-                  class="corporate-input time-dropdown" placeholder="เลือกเวลา" @change="updateStartDateTime" />
-              </div>
-              <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
+          <div class="input-group">
+            <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
+            <div class="datetime-picker">
+              <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
+                class="corporate-input date-only" :manualInput="false" required
+                :minDate="new Date()" placeholder="เลือกวันที่" />
+              <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
+                class="corporate-input time-dropdown" placeholder="เวลา" @change="updateStartDateTime" />
             </div>
-            <div class="date-field">
-              <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
-              <div class="datetime-picker">
-                <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                  :minDate="formData.startDate || new Date()" class="corporate-input date-only" :manualInput="false" required
-                  placeholder="เลือกวันที่" />
-                <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
-                  class="corporate-input time-dropdown" placeholder="เลือกเวลา" @change="updateEndDateTime" />
-              </div>
-              <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
+            <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
+          </div>
+
+          <div class="input-group">
+            <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
+            <div class="datetime-picker">
+              <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
+                :minDate="formData.startDate || new Date()" class="corporate-input date-only" :manualInput="false" required
+                placeholder="เลือกวันที่" />
+              <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
+                class="corporate-input time-dropdown" placeholder="เวลา" @change="updateEndDateTime" />
             </div>
+            <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
           </div>
 
           <div class="input-group">
@@ -745,14 +744,6 @@ export default {
   gap: 1rem;
 }
 
-.date-field {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
 .datetime-picker {
   display: flex;
   gap: 0.5rem;
@@ -760,32 +751,21 @@ export default {
 }
 
 .datetime-picker .date-only {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1;
 }
 
 .datetime-picker .time-dropdown {
   flex: 0 0 100px;
 }
 
-:deep(.datetime-picker .p-calendar) {
-  width: 100% !important;
-  display: flex !important;
-}
-
-:deep(.datetime-picker .p-calendar .p-inputtext) {
-  flex: 1 !important;
-  min-width: 0 !important;
-}
-
+:deep(.datetime-picker .p-calendar),
 :deep(.datetime-picker .p-dropdown) {
-  width: 100px !important;
+  width: 100% !important;
 }
 
 @media (max-width: 768px) {
-  .date-range-group {
-    flex-direction: column;
-    gap: 0.5rem;
+  .datetime-picker .time-dropdown {
+    flex: 0 0 90px;
   }
 }
 
