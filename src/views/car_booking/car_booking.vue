@@ -385,7 +385,11 @@ export default {
       const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
       const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
 
-      return `${diffHours}:${String(diffMinutes).padStart(2, '0')}`
+      if (diffHours > 0) {
+        return `${diffHours} ชั่วโมง ${diffMinutes} นาที`
+      } else {
+        return `${diffMinutes} นาที`
+      }
     },
     viewImages(images, bookingData = null) {
       this.selectedImages = images
