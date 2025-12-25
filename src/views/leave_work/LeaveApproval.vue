@@ -342,31 +342,33 @@ export default {
     formatDateTime(datetime) {
       if (!datetime) return '-'
       const date = new Date(datetime)
-      date.setHours(date.getHours() + 7)
       return date.toLocaleString('th-TH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
 
     formatDate(datetime) {
       if (!datetime) return '-'
       const date = new Date(datetime)
-      date.setHours(date.getHours() + 7)
       return date.toLocaleDateString('th-TH', {
         day: '2-digit',
-        month: '2-digit'
+        month: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
     calculateDays(startDateTime, endDateTime) {
       if (!startDateTime || !endDateTime) return 0
       const start = new Date(startDateTime)
       const end = new Date(endDateTime)
-      const diffTime = Math.abs(end - start)
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+      const diffMs = end - start
+      const diffHours = diffMs / (1000 * 60 * 60)
+      // คำนวณเป็นวัน (8 ชม. = 1 วัน)
+      return diffHours / 8
     },
     getLeaveTypeLabel(type) {
       const types = {

@@ -45,16 +45,24 @@
           <div class="input-group date-range-group">
             <div class="date-field">
               <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
-              <Calendar v-model="formData.startDateTime" showTime hourFormat="24" dateFormat="dd/mm/yy"
-                class="corporate-input" :manualInput="false" :stepMinute="30" required
-                :minDate="new Date()" @date-select="validateTime('start')" @blur="validateTime('start')" />
+              <div class="datetime-picker">
+                <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
+                  class="corporate-input date-only" :manualInput="false" required
+                  :minDate="new Date()" placeholder="เลือกวันที่" />
+                <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
+                  class="corporate-input time-dropdown" placeholder="เลือกเวลา" @change="updateStartDateTime" />
+              </div>
               <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
             </div>
             <div class="date-field">
               <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
-              <Calendar v-model="formData.endDateTime" showTime hourFormat="24" dateFormat="dd/mm/yy"
-                :minDate="formData.startDateTime" class="corporate-input" :manualInput="false" :stepMinute="30" required
-                @date-select="validateTime('end')" @blur="validateTime('end')" />
+              <div class="datetime-picker">
+                <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
+                  :minDate="formData.startDate || new Date()" class="corporate-input date-only" :manualInput="false" required
+                  placeholder="เลือกวันที่" />
+                <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
+                  class="corporate-input time-dropdown" placeholder="เลือกเวลา" @change="updateEndDateTime" />
+              </div>
               <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
             </div>
           </div>
@@ -187,6 +195,10 @@ export default {
     return {
       formData: {
         leaveType: '',
+        startDate: null,
+        startTime: null,
+        endDate: null,
+        endTime: null,
         startDateTime: null,
         endDateTime: null,
         reason: '',
@@ -198,6 +210,26 @@ export default {
         workDetails: '',
         attachments: []
       },
+      allowedTimes: [
+        { label: '09:00', value: '09:00' },
+        { label: '09:30', value: '09:30' },
+        { label: '10:00', value: '10:00' },
+        { label: '10:30', value: '10:30' },
+        { label: '11:00', value: '11:00' },
+        { label: '11:30', value: '11:30' },
+        { label: '12:00', value: '12:00' },
+        { label: '13:00', value: '13:00' },
+        { label: '13:30', value: '13:30' },
+        { label: '14:00', value: '14:00' },
+        { label: '14:30', value: '14:30' },
+        { label: '15:00', value: '15:00' },
+        { label: '15:30', value: '15:30' },
+        { label: '16:00', value: '16:00' },
+        { label: '16:30', value: '16:30' },
+        { label: '17:00', value: '17:00' },
+        { label: '17:30', value: '17:30' },
+        { label: '18:00', value: '18:00' }
+      ],
       leaveTypes: [],
       delegationOptions: [
         { label: 'ไม่มีการมอบหมายงาน', value: 'no' },
@@ -209,6 +241,14 @@ export default {
       maxDisplayUsers: 50,
       quotaData: {},
       selectedQuota: null
+    }
+  },
+  watch: {
+    'formData.startDate'() {
+      this.updateStartDateTime()
+    },
+    'formData.endDate'() {
+      this.updateEndDateTime()
     }
   },
   computed: {
@@ -282,6 +322,24 @@ export default {
     }
   },
   methods: {
+    // รวม date + time เป็น DateTime
+    updateStartDateTime() {
+      if (this.formData.startDate && this.formData.startTime) {
+        const [hours, minutes] = this.formData.startTime.split(':').map(Number)
+        const date = new Date(this.formData.startDate)
+        date.setHours(hours, minutes, 0, 0)
+        this.formData.startDateTime = date
+      }
+    },
+    updateEndDateTime() {
+      if (this.formData.endDate && this.formData.endTime) {
+        const [hours, minutes] = this.formData.endTime.split(':').map(Number)
+        const date = new Date(this.formData.endDate)
+        date.setHours(hours, minutes, 0, 0)
+        this.formData.endDateTime = date
+      }
+    },
+    
     // คำนวณชั่วโมงทำงานระหว่างสองเวลา (9-12, 13-18)
     calculateWorkHours(start, end) {
       const startHour = start.getHours() + start.getMinutes() / 60
@@ -302,20 +360,6 @@ export default {
       }
       return Math.max(0, hours)
     },
-    
-    // ตรวจสอบและปรับเวลาให้อยู่ในช่วงที่กำหนด
-    validateTime(field) {
-      const dateField = field === 'start' ? 'startDateTime' : 'endDateTime'
-      if (!this.formData[dateField]) return
-      
-      const date = new Date(this.formData[dateField])
-      const hour = date.getHours()
-      const minute = date.getMinutes()
-      
-      let adjusted = false
-      // ก่อน 9 โมง → ปรับเป็น 9:00
-      if (hour < 9) {
-        date.setHours(9, 0, 0, 0)
         adjusted = true
       }
       // 12:01-12:59 → ปรับเป็น 13:00
@@ -513,17 +557,41 @@ export default {
       if (this.formData.startDateTime && this.formData.endDateTime) {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
-        start.setHours(0, 0, 0, 0)
-        end.setHours(0, 0, 0, 0)
         
-        let count = 0
-        const current = new Date(start)
-        while (current <= end) {
-          const day = current.getDay()
-          if (day !== 0 && day !== 6) count++
-          current.setDate(current.getDate() + 1)
+        const hoursPerDay = 8
+        let totalHours = 0
+        
+        const startDate = new Date(start)
+        startDate.setHours(0, 0, 0, 0)
+        const endDate = new Date(end)
+        endDate.setHours(0, 0, 0, 0)
+        
+        if (startDate.getTime() === endDate.getTime()) {
+          // วันเดียวกัน
+          totalHours = this.calculateWorkHours(start, end)
+        } else {
+          // หลายวัน
+          const current = new Date(startDate)
+          while (current <= endDate) {
+            const day = current.getDay()
+            if (day !== 0 && day !== 6) {
+              if (current.getTime() === startDate.getTime()) {
+                const dayEnd = new Date(current)
+                dayEnd.setHours(18, 0, 0, 0)
+                totalHours += this.calculateWorkHours(start, dayEnd)
+              } else if (current.getTime() === endDate.getTime()) {
+                const dayStart = new Date(current)
+                dayStart.setHours(9, 0, 0, 0)
+                totalHours += this.calculateWorkHours(dayStart, end)
+              } else {
+                totalHours += hoursPerDay
+              }
+            }
+            current.setDate(current.getDate() + 1)
+          }
         }
-        return count
+        
+        return parseFloat((totalHours / hoursPerDay).toFixed(2))
       }
       return 0
     },
@@ -534,6 +602,10 @@ export default {
     resetForm() {
       this.formData = {
         leaveType: '',
+        startDate: null,
+        startTime: null,
+        endDate: null,
+        endTime: null,
         startDateTime: null,
         endDateTime: null,
         reason: '',
@@ -701,10 +773,34 @@ export default {
   gap: 0.5rem;
 }
 
+.datetime-picker {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.datetime-picker .date-only {
+  flex: 2;
+}
+
+.datetime-picker .time-dropdown {
+  flex: 1;
+  min-width: 100px;
+}
+
 @media (max-width: 768px) {
   .date-range-group {
     flex-direction: column;
     gap: 0.5rem;
+  }
+  
+  .datetime-picker {
+    flex-direction: column;
+  }
+  
+  .datetime-picker .date-only,
+  .datetime-picker .time-dropdown {
+    flex: 1;
+    width: 100%;
   }
 }
 

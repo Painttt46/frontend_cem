@@ -65,6 +65,13 @@
           </div>
 
           <ul class="nav-menu">
+            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/daily_work')">
+              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+                <h5 class="mt-2">
+                  <i class="pi pi-calendar px-2" style="font-size: 1.5rem"></i>ลงงานรายวัน
+                </h5>
+              </router-link>
+            </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/car_booking')">
               <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
                 <h5 class="mt-2">
@@ -76,13 +83,6 @@
               <router-link to="/leave_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
                 <h5 class="mt-2">
                   <i class="pi pi-sign-out px-2" style="font-size: 1.5rem"></i>ลางาน
-                </h5>
-              </router-link>
-            </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/daily_work')">
-              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-calendar px-2" style="font-size: 1.5rem"></i>ลงงานรายวัน
                 </h5>
               </router-link>
             </li>
