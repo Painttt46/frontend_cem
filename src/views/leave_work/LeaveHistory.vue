@@ -448,7 +448,13 @@ export default {
     },
 
     getStatusLabel(status) {
-      return status
+      const labels = {
+        'pending': 'รอหัวหน้างานอนุมัติ',
+        'pending_level2': 'รอ HR อนุมัติ',
+        'approved': 'อนุมัติแล้ว',
+        'rejected': 'ไม่อนุมัติ'
+      }
+      return labels[status] || status
     },
     viewAttachments(attachments) {
       this.$emit('view-attachments', attachments)

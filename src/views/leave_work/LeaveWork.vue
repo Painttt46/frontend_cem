@@ -77,6 +77,7 @@ export default {
     return {
       leaveRecords: [],
       loading: false,
+      approving: false,
       showLeaveDialog: false,
       showApprovalDialog: false,
       isLeaveApprover: false,
@@ -211,9 +212,24 @@ export default {
     },
 
     async approveLeave(leaveId) {
+      if (this.approving) return
+      
+      // Refresh ข้อมูลก่อนเพื่อให้ได้ status ล่าสุด
+      await this.loadLeaveRecords()
+      
       // Get current leave request to check its status
       const leaveRequest = this.pendingLeaveRecords.find(r => r.id === leaveId)
-      const currentStatus = leaveRequest?.status || 'pending'
+      if (!leaveRequest) {
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'ไม่พบข้อมูล',
+          detail: 'คำขอลานี้ถูกดำเนินการแล้ว',
+          life: 3000
+        })
+        return
+      }
+      
+      const currentStatus = leaveRequest.status
       
       // Determine approval level based on current status
       let approvalLevel = 1
@@ -233,6 +249,8 @@ export default {
         rejectLabel: 'ยกเลิก',
         draggable: false,
         accept: async () => {
+          if (this.approving) return
+          this.approving = true
           try {
             const approverId = localStorage.getItem('soc_user_id')
             const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
@@ -262,6 +280,8 @@ export default {
               detail: 'ไม่สามารถอนุมัติคำขอได้',
               life: 3000
             })
+          } finally {
+            this.approving = false
           }
         }
       })
