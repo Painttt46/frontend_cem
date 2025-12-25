@@ -747,6 +747,7 @@ export default {
 
 .date-field {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -755,15 +756,26 @@ export default {
 .datetime-picker {
   display: flex;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .datetime-picker .date-only {
-  flex: 2;
+  flex: 1;
+  min-width: 0;
 }
 
 .datetime-picker .time-dropdown {
-  flex: 1;
-  min-width: 100px;
+  flex: 0 0 110px;
+  width: 110px;
+}
+
+:deep(.datetime-picker .p-calendar),
+:deep(.datetime-picker .p-dropdown) {
+  width: 100% !important;
+}
+
+:deep(.datetime-picker .p-inputtext) {
+  width: 100% !important;
 }
 
 @media (max-width: 768px) {
@@ -773,13 +785,16 @@ export default {
   }
   
   .datetime-picker {
-    flex-direction: column;
+    flex-direction: row;
   }
   
-  .datetime-picker .date-only,
-  .datetime-picker .time-dropdown {
+  .datetime-picker .date-only {
     flex: 1;
-    width: 100%;
+  }
+  
+  .datetime-picker .time-dropdown {
+    flex: 0 0 100px;
+    width: 100px;
   }
 }
 
