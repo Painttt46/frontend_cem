@@ -315,7 +315,7 @@ export default {
     },
 
     getFileUrl(fileName) {
-      return `${process.env.VUE_APP_API_URL || ''}/uploads/${fileName}`
+      return `/api/files/download/${fileName}`
     },
 
     getFileIcon(fileName) {

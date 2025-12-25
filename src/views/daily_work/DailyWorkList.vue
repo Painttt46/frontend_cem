@@ -477,7 +477,7 @@ export default {
       return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
     },
     getFileUrl(fileName) {
-      return `${process.env.VUE_APP_API_URL || ''}/uploads/${fileName}`
+      return `/api/files/download/${fileName}`
     },
     hasFiles(record) {
       return record.files && Array.isArray(record.files) && record.files.length > 0
