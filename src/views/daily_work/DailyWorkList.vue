@@ -477,7 +477,8 @@ export default {
       return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
     },
     getFileUrl(fileName) {
-      return `/api/files/download/${fileName}`
+      const token = localStorage.getItem('soc_token')
+      return `/api/files/download/${fileName}?token=${token}`
     },
     hasFiles(record) {
       return record.files && Array.isArray(record.files) && record.files.length > 0
