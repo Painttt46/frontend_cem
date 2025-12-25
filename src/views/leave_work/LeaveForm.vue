@@ -33,9 +33,9 @@
             <div v-if="selectedQuota" class="quota-info">
               <span class="quota-label">โควต้าคงเหลือ:</span>
               <span class="quota-value" :class="getQuotaClass(selectedQuota.remainingDays)">
-                {{ selectedQuota.remainingDays }} วัน ({{ selectedQuota.remainingHours }} ชม.)
+                {{ selectedQuota.remainingDays }} วัน ({{ formatHours(selectedQuota.remainingHours) }})
               </span>
-              <span class="quota-total">(จาก {{ selectedQuota.quota }} วัน / {{ selectedQuota.quotaHours }} ชม.)</span>
+              <span class="quota-total">(จาก {{ selectedQuota.quota }} วัน / {{ formatHours(selectedQuota.quotaHours) }})</span>
             </div>
             <div v-else class="quota-placeholder-text">
               เลือกประเภทการลาเพื่อดูโควต้า
@@ -307,9 +307,11 @@ export default {
         }
         
         const days = (totalHours / hoursPerDay).toFixed(1)
-        return `${days} วัน (${totalHours.toFixed(1)} ชม.)`
+        const h = Math.floor(totalHours)
+        const m = Math.round((totalHours - h) * 60)
+        return `${days} วัน (${h}:${String(m).padStart(2, '0')})`
       }
-      return '0 วัน (0 ชม.)'
+      return '0 วัน (0:00)'
     },
     leaveTypesWithQuota() {
       return this.leaveTypes.map(type => {
@@ -412,6 +414,13 @@ export default {
       if (remainingDays <= 0) return 'quota-zero';
       if (remainingDays <= 2) return 'quota-low';
       return 'quota-normal';
+    },
+
+    formatHours(hours) {
+      if (!hours || hours <= 0) return '0:00'
+      const h = Math.floor(hours)
+      const m = Math.round((hours - h) * 60)
+      return `${h}:${String(m).padStart(2, '0')}`
     },
 
     async submitForm() {

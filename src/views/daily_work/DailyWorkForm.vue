@@ -235,9 +235,14 @@ export default {
         }
         
         const diff = (end - start) / (1000 * 60 * 60)
-        return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
+        if (diff > 0) {
+          const h = Math.floor(diff)
+          const m = Math.round((diff - h) * 60)
+          return `${h}:${String(m).padStart(2, '0')}`
+        }
+        return '0:00'
       }
-      return '0 ชั่วโมง'
+      return '0:00'
     }
   },
   async mounted() {

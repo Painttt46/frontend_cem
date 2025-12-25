@@ -470,7 +470,7 @@ const formatHoursMinutes = (hours) => {
   const h = parseFloat(hours) || 0
   const hrs = Math.floor(h)
   const mins = Math.round((h - hrs) * 60)
-  return `${hrs} ชม. ${mins} นาที`
+  return `${hrs}:${String(mins).padStart(2, '0')}`
 }
 
 const renderCharts = (leaves, tasks) => {

@@ -894,11 +894,11 @@ export default {
       }
     },
     getTotalHours() {
-      if (!this.taskWorks || this.taskWorks.length === 0) return '0 ชม. 0 นาที'
+      if (!this.taskWorks || this.taskWorks.length === 0) return '0:00'
       const total = this.taskWorks.reduce((sum, work) => sum + (parseFloat(work.total_hours) || 0), 0)
       const hours = Math.floor(total)
       const minutes = Math.round((total - hours) * 60)
-      return `${hours} ชม. ${minutes} นาที`
+      return `${hours}:${String(minutes).padStart(2, '0')}`
     },
     showWorkFiles(work) {
       this.selectedWorkFiles = work.files || []
@@ -917,7 +917,7 @@ export default {
       const h = parseFloat(hours) || 0
       const hrs = Math.floor(h)
       const mins = Math.round((h - hrs) * 60)
-      return `${hrs} ชม. ${mins} นาที`
+      return `${hrs}:${String(mins).padStart(2, '0')}`
     },
     showUserInfo(name, userId) {
       this.selectedUserName = name

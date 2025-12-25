@@ -221,11 +221,7 @@ export default {
           if (diffMs > 0) {
             const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
             const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-            if (diffHours > 0) {
-              duration = `${diffHours} ชั่วโมง ${diffMinutes} นาที`
-            } else {
-              duration = `${diffMinutes} นาที`
-            }
+            duration = `${diffHours}:${String(diffMinutes).padStart(2, '0')}`
           } else {
             duration = 'ข้อมูลเวลาไม่ถูกต้อง'
           }

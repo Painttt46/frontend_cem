@@ -45,7 +45,7 @@
 
         <Column header="จำนวน" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
+            {{ slotProps.data.total_days }} วัน ({{ formatHours(slotProps.data.total_days * 8) }})
           </template>
         </Column>
 
@@ -473,6 +473,13 @@ export default {
       this.selectedUserName = approverName
       this.selectedUserId = null
       this.showUserInfoDialog = true
+    },
+
+    formatHours(hours) {
+      if (!hours || hours <= 0) return '0:00'
+      const h = Math.floor(hours)
+      const m = Math.round((hours - h) * 60)
+      return `${h}:${String(m).padStart(2, '0')}`
     }
   }
 }

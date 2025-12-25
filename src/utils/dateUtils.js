@@ -140,3 +140,15 @@ export const parseLocalDate = (dateStr) => {
   const datePart = dateStr.split('T')[0]
   return new Date(datePart + 'T00:00:00')
 }
+
+/**
+ * Format hours to HH:MM format (e.g., 23.5 -> "23:30")
+ * @param {number} hours - Hours as decimal
+ * @returns {string} Formatted time string
+ */
+export const formatHoursToTime = (hours) => {
+  if (!hours || hours <= 0) return '0:00'
+  const h = Math.floor(hours)
+  const m = Math.round((hours - h) * 60)
+  return `${h}:${String(m).padStart(2, '0')}`
+}

@@ -46,7 +46,7 @@
 
         <Column header="จำนวน">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
+            {{ slotProps.data.total_days }} วัน ({{ formatHours(slotProps.data.total_days * 8) }})
           </template>
         </Column>
 
@@ -425,6 +425,12 @@ export default {
       if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (หัวหน้างาน)'
       if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (HR)'
       return 'อนุมัติ'
+    },
+    formatHours(hours) {
+      if (!hours || hours <= 0) return '0:00'
+      const h = Math.floor(hours)
+      const m = Math.round((hours - h) * 60)
+      return `${h}:${String(m).padStart(2, '0')}`
     }
   }
 }
