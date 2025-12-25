@@ -177,7 +177,7 @@ export default {
     async loadLeaveRecords() {
       this.loading = true
       try {
-        const response = await this.$http.get('/api/leave')
+        const response = await this.$http.get('/api/leave', { params: { _t: Date.now() } })
         this.leaveRecords = response.data.map(record => {
           return {
             ...record,
@@ -249,34 +249,25 @@ export default {
           if (this.approving) return
           this.approving = true
           try {
-            // Refresh และคำนวณ approval level ใหม่ก่อนส่ง API
-            await this.loadLeaveRecords()
-            const freshRequest = this.pendingLeaveRecords.find(r => r.id === leaveId)
-            if (!freshRequest) {
-              this.$toast.add({ severity: 'warn', summary: 'ไม่พบข้อมูล', detail: 'คำขอลานี้ถูกดำเนินการแล้ว', life: 3000 })
-              this.approving = false
-              return
-            }
-            const actualLevel = freshRequest.status === 'pending_level2' ? 2 : 1
-
             const approverId = localStorage.getItem('soc_user_id')
             const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
             const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
             const approverInfo = `${approverName} (${approverPosition})`
             
-            await this.$http.put(`/api/leave/${leaveId}/status`, {
+            // ส่งไป backend โดยไม่ระบุ approval_level - ให้ backend ตรวจสอบ status จริงจาก DB
+            const response = await this.$http.put(`/api/leave/${leaveId}/status`, {
               status: 'approved',
               approved_by: approverInfo,
-              approved_by_id: approverId,
-              approval_level: actualLevel
+              approved_by_id: approverId
             })
             
             await this.loadLeaveRecords()
 
+            const newStatus = response.data?.status
             this.$toast.add({
               severity: 'success',
               summary: 'สำเร็จ',
-              detail: actualLevel === 1 ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอ HR อนุมัติ' : 'อนุมัติการลาเรียบร้อย',
+              detail: newStatus === 'pending_level2' ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอ HR อนุมัติ' : 'อนุมัติการลาเรียบร้อย',
               life: 3000
             })
           } catch { // ignore
