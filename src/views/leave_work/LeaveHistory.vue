@@ -172,7 +172,8 @@
       <div v-else class="attachments-list">
         <div v-for="(file, index) in selectedAttachments" :key="index" class="attachment-item">
           <div class="file-info">
-            <i :class="getFileIcon(file)" class="file-icon"></i>
+            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @error="handleImageError" />
+            <i v-else :class="getFileIcon(file)" class="file-icon"></i>
             <div class="file-details">
               <span class="file-name">{{ file }}</span>
               <small class="file-type">{{ getFileType(file) }}</small>
@@ -334,6 +335,20 @@ export default {
           life: 3000
         })
       }
+    },
+
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+
+    getFileUrl(fileName) {
+      return `${process.env.VUE_APP_API_URL || ''}/uploads/${fileName}`
+    },
+
+    handleImageError(e) {
+      e.target.style.display = 'none'
+      e.target.nextElementSibling?.style?.removeProperty('display')
     },
 
     getFileIcon(fileName) {
@@ -608,6 +623,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.file-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
 }
 
 .file-icon {

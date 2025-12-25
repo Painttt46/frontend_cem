@@ -138,7 +138,8 @@
     <div v-if="selectedRecordFiles && selectedRecordFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedRecordFiles" :key="index" class="file-item">
         <div class="file-info">
-          <i class="pi pi-file"></i>
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" />
+          <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
         <Button icon="pi pi-download" size="small" severity="success" outlined @click="downloadFile(file)"
@@ -470,6 +471,13 @@ export default {
     },
     getCategorySeverity() {
       return 'contrast'
+    },
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+    getFileUrl(fileName) {
+      return `${process.env.VUE_APP_API_URL || ''}/uploads/${fileName}`
     },
     hasFiles(record) {
       return record.files && Array.isArray(record.files) && record.files.length > 0
@@ -954,7 +962,20 @@ export default {
 .file-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+}
+
+.file-preview {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  color: #6c757d;
 }
 
 .file-name {
