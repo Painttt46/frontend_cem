@@ -132,15 +132,15 @@
                 <span v-if="slotProps.data.approved_by_level1" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
                   {{ slotProps.data.approved_by_level1 }}
                 </span>
-                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="approver-text rejected-text">
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="approver-text rejected-text clickable-name" @click="showApproverInfo(slotProps.data.rejected_by)">
                   {{ slotProps.data.rejected_by }}
-                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
                 </span>
                 <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
 
-              <!-- Step 2: HR -->
-              <div class="approver-item" :class="{ 
+              <!-- Step 2: HR (ไม่แสดงถ้าถูกปฏิเสธตั้งแต่ step 1) -->
+              <div v-if="!(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1)" class="approver-item" :class="{ 
                 'approved': slotProps.data.approved_by_level2,
                 'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2,
                 'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2)
@@ -154,9 +154,9 @@
                 <span v-if="slotProps.data.approved_by_level2" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
                   {{ slotProps.data.approved_by_level2 }}
                 </span>
-                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="approver-text rejected-text">
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="approver-text rejected-text clickable-name" @click="showApproverInfo(slotProps.data.rejected_by)">
                   {{ slotProps.data.rejected_by }}
-                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
                 </span>
                 <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
