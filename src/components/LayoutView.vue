@@ -40,6 +40,14 @@
           </router-link>
         </div>
         <div class="flex align-items-center gap-3 mb-3">
+          <div class="nav-link" @click="toggleDarkMode" style="cursor: pointer;">
+            <h5>
+              <i :class="isDarkMode ? 'pi pi-sun' : 'pi pi-moon'" class="px-2" style="font-size: 1.5rem"></i>
+              {{ isDarkMode ? 'Light Mode' : 'Dark Mode' }}
+            </h5>
+          </div>
+        </div>
+        <div class="flex align-items-center gap-3 mb-3">
           <router-link to="/login" @click="logout" class="nav-link">
             <h5>
               <i class="pi pi-sign-out px-2" style="font-size: 1.2rem"></i>Logout
@@ -147,10 +155,12 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useStore } from "vuex";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
 
+const store = useStore();
 const { loadPermissions, hasAccess } = usePermissions();
 
 const position = ref("center");
@@ -158,6 +168,12 @@ const visible = ref(false);
 const sessionDialog = ref(false);
 const sidebarVisible = ref(true);
 const isMobile = ref(window.innerWidth <= 768);
+
+const isDarkMode = computed(() => store.state.darkMode);
+
+const toggleDarkMode = () => {
+  store.dispatch('toggleDarkMode');
+};
 
 const openPosition = (pos) => {
   position.value = pos;

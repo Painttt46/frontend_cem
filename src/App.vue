@@ -1,6 +1,6 @@
 <!-- App.vue -->
 <template>
-  <div id="app" style="height: 100vh; overflow: hidden;">
+  <div id="app" :class="{ 'dark-mode': $store.state.darkMode }" style="height: 100vh; overflow: hidden;">
     <!-- Global Loading Overlay -->
     <div v-if="$store.state.loading" class="loading-overlay">
       <div class="spinner"></div>
@@ -31,6 +31,9 @@ export default {
     }
   },
   mounted() {
+    // Initialize theme
+    this.$store.dispatch('initTheme')
+    
     // ตรวจสอบ token expiration ทุก 1 นาที
     this.tokenCheckInterval = setInterval(() => {
       this.checkTokenExpiration()
@@ -77,6 +80,24 @@ export default {
   --table-font-size: 1rem;
   --default-font-size: 0.8rem;
   font-size: var(--default-font-size);
+  
+  /* Light mode (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #e5e7eb;
+  --bg-card: #ffffff;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --border-color: #e5e7eb;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --bg-card: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --border-color: #4b5563;
+  --label-color: #9ca3af;
 }
 
 label {
@@ -140,5 +161,70 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1a1;
+}
+
+/* Dark Mode Styles */
+[data-theme="dark"] body,
+.dark-mode {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .bg-light {
+  background-color: var(--bg-primary) !important;
+}
+
+[data-theme="dark"] .p-card,
+[data-theme="dark"] .p-dialog {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .p-datatable .p-datatable-thead > tr > th {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .p-datatable .p-datatable-tbody > tr {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .p-inputtext,
+[data-theme="dark"] .p-dropdown,
+[data-theme="dark"] .p-calendar,
+[data-theme="dark"] .p-textarea {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .sidebar-container {
+  background-color: var(--bg-primary);
+}
+
+[data-theme="dark"] .main-content,
+[data-theme="dark"] .content-padding {
+  background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .daily-work-container,
+[data-theme="dark"] .leave-work-container,
+[data-theme="dark"] .projects-container,
+[data-theme="dark"] .car-booking-container {
+  background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
 }
 </style>
