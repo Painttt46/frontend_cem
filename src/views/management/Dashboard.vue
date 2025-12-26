@@ -16,7 +16,8 @@
           </div>
           <div class="header-right">
             <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
-                      placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" />
+                      placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" 
+                      filter filterPlaceholder="ค้นหาชื่อพนักงาน" />
           </div>
         </div>
       </template>
@@ -28,7 +29,7 @@
         <template #content>
           <div class="user-dashboard-header">
             <h2><i class="pi pi-user"></i> {{ selectedUserName }}</h2>
-            <Button label="ดูภาพรวมทั้งหมด" icon="pi pi-times" severity="secondary" size="small" @click="selectedUser = null" />
+            <Button label="ดูภาพรวมทั้งหมด" icon="pi pi-times" severity="secondary" size="small" @click="clearUserFilter" />
           </div>
         </template>
       </Card>
@@ -95,6 +96,25 @@
                   </div>
                   <span style="min-width: 50px; text-align: right">{{ data.percentage.toFixed(1) }}%</span>
                 </div>
+              </template>
+            </Column>
+          </DataTable>
+
+          <h4 class="mt-4">Timesheet รายวัน</h4>
+          <DataTable :value="userTimesheetDaily" paginator :rows="15" sortField="work_date" :sortOrder="-1">
+            <Column field="work_date" header="วันที่" sortable style="min-width: 120px">
+              <template #body="{ data }">
+                {{ formatDate(data.work_date) }}
+              </template>
+            </Column>
+            <Column field="task_name" header="งาน/โครงการ" sortable style="min-width: 200px" />
+            <Column field="work_description" header="รายละเอียด" style="min-width: 250px" />
+            <Column field="location" header="สถานที่" style="min-width: 120px" />
+            <Column field="start_time" header="เริ่ม" style="min-width: 80px" />
+            <Column field="end_time" header="สิ้นสุด" style="min-width: 80px" />
+            <Column field="hours" header="ชั่วโมง" sortable style="min-width: 100px">
+              <template #body="{ data }">
+                <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(data.hours) }}</span>
               </template>
             </Column>
           </DataTable>
@@ -408,11 +428,43 @@ const userTimesheetDetails = computed(() => {
   })).sort((a, b) => b.hours - a.hours)
 })
 
+const userTimesheetDaily = computed(() => {
+  if (!selectedUser.value) return []
+  
+  return allDailyWork.value
+    .filter(w => {
+      if (w.user_id !== selectedUser.value) return false
+      const workYear = new Date(w.work_date).getFullYear()
+      return workYear === currentYear
+    })
+    .map(w => {
+      let hours = 0
+      if (w.start_time && w.end_time) {
+        const [startH, startM] = w.start_time.split(':').map(Number)
+        const [endH, endM] = w.end_time.split(':').map(Number)
+        hours = (endH + endM/60) - (startH + startM/60)
+      }
+      return { ...w, hours }
+    })
+    .sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
+})
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 const onUserChange = async () => {
   await nextTick()
   if (selectedUser.value) {
     renderUserLeaveChart()
   }
+}
+
+const clearUserFilter = () => {
+  selectedUser.value = null
+  loadData()
 }
 
 const renderUserLeaveChart = () => {
