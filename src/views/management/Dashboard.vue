@@ -403,11 +403,12 @@ const getDateRange = () => {
     case 'today':
       startDate = today
       break
-    case 'week':
+    case 'week': {
       const dayOfWeek = today.getDay()
       startDate = new Date(today)
       startDate.setDate(today.getDate() - dayOfWeek)
       break
+    }
     case 'month':
       startDate = new Date(today.getFullYear(), today.getMonth(), 1)
       break
@@ -453,38 +454,6 @@ const userTimesheetSummary = computed(() => {
   })
   
   return { totalHours, totalTasks: taskCount, totalProjects: projects.size }
-})
-
-const userTimesheetDetails = computed(() => {
-  if (!selectedUser.value) return []
-  const taskHours = {}
-  const taskCounts = {}
-  let totalHours = 0
-  
-  allDailyWork.value.forEach(w => {
-    if (w.user_id !== selectedUser.value) return
-    const workYear = new Date(w.work_date).getFullYear()
-    if (workYear !== currentYear) return
-    
-    const taskName = w.task_name || 'ไม่ระบุ'
-    if (w.start_time && w.end_time) {
-      const [startH, startM] = w.start_time.split(':').map(Number)
-      const [endH, endM] = w.end_time.split(':').map(Number)
-      const hours = (endH + endM/60) - (startH + startM/60)
-      if (hours > 0) {
-        taskHours[taskName] = (taskHours[taskName] || 0) + hours
-        totalHours += hours
-      }
-    }
-    taskCounts[taskName] = (taskCounts[taskName] || 0) + 1
-  })
-  
-  return Object.entries(taskHours).map(([taskName, hours]) => ({
-    taskName,
-    hours,
-    workCount: taskCounts[taskName] || 0,
-    percentage: totalHours > 0 ? (hours / totalHours) * 100 : 0
-  })).sort((a, b) => b.hours - a.hours)
 })
 
 const userTimesheetDaily = computed(() => {
