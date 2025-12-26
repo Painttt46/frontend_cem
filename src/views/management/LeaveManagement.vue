@@ -116,6 +116,11 @@
           </div>
         </div>
         <div class="field">
+          <label>โควต้าเริ่มต้น (วัน/ปี)</label>
+          <InputNumber v-model="editingLeaveTypeData.default_quota" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" />
+          <small class="field-hint">โควต้าที่พนักงานใหม่จะได้รับ</small>
+        </div>
+        <div class="field">
           <label>ต้องลาล่วงหน้า (วัน)</label>
           <InputNumber v-model="editingLeaveTypeData.advance_days" :min="0" :max="30" showButtons class="w-full" suffix=" วัน" />
           <small class="field-hint">0 = ไม่ต้องลาล่วงหน้า, เช่น ลากิจ = 3 วัน</small>
@@ -467,7 +472,8 @@ const saveLeaveType = async () => {
     await axios.put(`/api/leave/leave-types/${encodeURIComponent(editingLeaveTypeData.value.value)}`, {
       display_name: editingLeaveTypeData.value.label,
       color: editingLeaveTypeData.value.color,
-      advance_days: editingLeaveTypeData.value.advance_days
+      advance_days: editingLeaveTypeData.value.advance_days,
+      default_quota: editingLeaveTypeData.value.default_quota
     })
 
     toast.add({
@@ -480,6 +486,7 @@ const saveLeaveType = async () => {
     showEditLeaveTypeDialog.value = false
     editingLeaveTypeData.value = null
     await loadLeaveTypes()
+    await loadUsers()
   } catch (err) {
     toast.add({
       severity: 'error',

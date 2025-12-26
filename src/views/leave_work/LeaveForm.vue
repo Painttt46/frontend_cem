@@ -55,7 +55,14 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only" :manualInput="false" required
-                :minDate="minStartDate" placeholder="เลือกวันที่" />
+                :minDate="minStartDate" placeholder="เลือกวันที่">
+                <template #date="slotProps">
+                  <span :class="getDateClass(slotProps.date)" 
+                        :title="getDateTooltip(slotProps.date)">
+                    {{ slotProps.date.day }}
+                  </span>
+                </template>
+              </Calendar>
               <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
                 class="corporate-input time-dropdown" placeholder="เวลา" @change="updateStartDateTime" />
             </div>
@@ -67,7 +74,14 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
                 :minDate="formData.startDate || minStartDate" class="corporate-input date-only" :manualInput="false" required
-                placeholder="เลือกวันที่" />
+                placeholder="เลือกวันที่">
+                <template #date="slotProps">
+                  <span :class="getDateClass(slotProps.date)" 
+                        :title="getDateTooltip(slotProps.date)">
+                    {{ slotProps.date.day }}
+                  </span>
+                </template>
+              </Calendar>
               <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
                 class="corporate-input time-dropdown" placeholder="เวลา" @change="updateEndDateTime" />
             </div>
@@ -348,6 +362,28 @@ export default {
     }
   },
   methods: {
+    // Check if date is in advance days period
+    isAdvanceDay(dateObj) {
+      if (!this.selectedLeaveTypeAdvanceDays) return false
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
+      checkDate.setHours(0, 0, 0, 0)
+      const diffDays = Math.floor((checkDate - today) / (1000 * 60 * 60 * 24))
+      return diffDays >= 0 && diffDays < this.selectedLeaveTypeAdvanceDays
+    },
+    getDateClass(dateObj) {
+      if (this.isAdvanceDay(dateObj)) {
+        return 'advance-day-blocked'
+      }
+      return ''
+    },
+    getDateTooltip(dateObj) {
+      if (this.isAdvanceDay(dateObj)) {
+        return `ต้องลาล่วงหน้า ${this.selectedLeaveTypeAdvanceDays} วัน`
+      }
+      return ''
+    },
     // รวม date + time เป็น DateTime
     updateStartDateTime() {
       if (this.formData.startDate && this.formData.startTime) {
@@ -1172,5 +1208,17 @@ export default {
 
 .advance-days-warning i {
   font-size: 0.9rem;
+}
+
+.advance-day-blocked {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+  border-radius: 50%;
+  cursor: not-allowed;
+}
+
+:deep(.p-datepicker-calendar td > span.advance-day-blocked) {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
 }
 </style>
