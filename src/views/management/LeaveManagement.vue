@@ -20,7 +20,10 @@
       <template #content>
         <div class="table-header">
           <h3>โควต้าการลาของพนักงาน</h3>
-          <Button label="เพิ่มประเภทการลา" icon="pi pi-plus" @click="showAddLeaveTypeDialog = true" />
+          <div class="header-actions">
+            <Button label="กำหนดวันหยุด" icon="pi pi-calendar" @click="showHolidayDialog = true" severity="warning" />
+            <Button label="เพิ่มประเภทการลา" icon="pi pi-plus" @click="showAddLeaveTypeDialog = true" />
+          </div>
         </div>
         
         <!-- Search and Filter -->
@@ -167,6 +170,34 @@
         <Button label="บันทึก" icon="pi pi-check" @click="saveQuota" :loading="saving" />
       </template>
     </Dialog>
+
+    <!-- Holiday Management Dialog -->
+    <Dialog v-model:visible="showHolidayDialog" header="กำหนดวันหยุด" :modal="true" :draggable="false" :style="{ width: '95vw', maxWidth: '700px' }">
+      <div class="holiday-form">
+        <div class="field">
+          <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
+          <Calendar v-model="selectedHolidayDates" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" />
+        </div>
+        <div class="field">
+          <label>คำอธิบาย (ไม่บังคับ)</label>
+          <InputText v-model="holidayDescription" placeholder="เช่น วันหยุดนักขัตฤกษ์" class="w-full" />
+        </div>
+        
+        <Divider />
+        
+        <div class="existing-holidays">
+          <h4>วันหยุดที่กำหนดไว้</h4>
+          <div v-if="holidays.length === 0" class="no-holidays">ยังไม่มีวันหยุดที่กำหนด</div>
+          <div v-else class="holiday-chips">
+            <Chip v-for="h in holidays" :key="h.id" :label="formatHolidayDate(h.holiday_date)" removable @remove="removeHoliday(h.id)" class="holiday-chip" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="ปิด" icon="pi pi-times" @click="showHolidayDialog = false" severity="secondary" />
+        <Button label="บันทึกวันหยุด" icon="pi pi-check" @click="saveHolidays" :loading="savingHolidays" :disabled="!selectedHolidayDates?.length" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -175,6 +206,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
+import Calendar from 'primevue/calendar'
+import Chip from 'primevue/chip'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
 
@@ -185,6 +218,11 @@ const leaveTypes = ref([])
 const showAddLeaveTypeDialog = ref(false)
 const showEditQuotaDialog = ref(false)
 const showEditLeaveTypeDialog = ref(false)
+const showHolidayDialog = ref(false)
+const holidays = ref([])
+const selectedHolidayDates = ref([])
+const holidayDescription = ref('')
+const savingHolidays = ref(false)
 const adding = ref(false)
 const saving = ref(false)
 const savingLeaveType = ref(false)
@@ -244,7 +282,47 @@ const filteredUsers = computed(() => {
 onMounted(() => {
   loadLeaveTypes()
   loadUsers()
+  loadHolidays()
 })
+
+const loadHolidays = async () => {
+  try {
+    const response = await axios.get('/api/leave/holidays')
+    holidays.value = response.data
+  } catch { /* ignore */ }
+}
+
+const formatHolidayDate = (date) => {
+  return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const saveHolidays = async () => {
+  if (!selectedHolidayDates.value?.length) return
+  savingHolidays.value = true
+  try {
+    const dates = selectedHolidayDates.value.map(d => {
+      const date = new Date(d)
+      return date.toISOString().split('T')[0]
+    })
+    await axios.post('/api/leave/holidays', { dates, description: holidayDescription.value })
+    toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'บันทึกวันหยุดเรียบร้อย', life: 3000 })
+    selectedHolidayDates.value = []
+    holidayDescription.value = ''
+    await loadHolidays()
+  } catch (err) {
+    toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: err.response?.data?.error || 'ไม่สามารถบันทึกได้', life: 3000 })
+  } finally {
+    savingHolidays.value = false
+  }
+}
+
+const removeHoliday = async (id) => {
+  try {
+    await axios.delete(`/api/leave/holidays/${id}`)
+    toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'ลบวันหยุดเรียบร้อย', life: 3000 })
+    await loadHolidays()
+  } catch { /* ignore */ }
+}
 
 const loadLeaveTypes = async () => {
   try {
@@ -732,6 +810,46 @@ const saveLeaveType = async () => {
   color: #6c757d;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.holiday-form .field {
+  margin-bottom: 1rem;
+}
+
+.holiday-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.holiday-calendar {
+  width: 100%;
+}
+
+.existing-holidays h4 {
+  margin: 0 0 0.75rem 0;
+  color: #2c3e50;
+}
+
+.no-holidays {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.holiday-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.holiday-chip {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
 @media (max-width: 768px) {
   .leave-management-container {
     padding: 0.5rem;
@@ -744,6 +862,15 @@ const saveLeaveType = async () => {
   }
 
   .table-header button {
+    width: 100%;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .header-actions button {
     width: 100%;
   }
   

@@ -209,6 +209,7 @@ export default {
     await this.loadLeaveTypes();
     await this.loadUsers();
     await this.loadQuotaData();
+    await this.loadHolidays();
     // Initialize with limited users
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
   },
@@ -261,7 +262,8 @@ export default {
       selectedDelegate: null,
       maxDisplayUsers: 50,
       quotaData: {},
-      selectedQuota: null
+      selectedQuota: null,
+      holidays: []
     }
   },
   watch: {
@@ -298,6 +300,13 @@ export default {
       }
       return today
     },
+    holidayDates() {
+      return this.holidays.map(h => {
+        const d = new Date(h.holiday_date)
+        d.setHours(0, 0, 0, 0)
+        return d.getTime()
+      })
+    },
     formatMinDate() {
       return this.minStartDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
     },
@@ -316,14 +325,18 @@ export default {
         endDate.setHours(0, 0, 0, 0)
         
         if (startDate.getTime() === endDate.getTime()) {
-          // วันเดียวกัน - คำนวณชั่วโมงตรงๆ
-          totalHours = this.calculateWorkHours(start, end)
+          // วันเดียวกัน - คำนวณชั่วโมงตรงๆ (ถ้าไม่ใช่วันหยุด)
+          const day = startDate.getDay()
+          if (day !== 0 && day !== 6 && !this.holidayDates.includes(startDate.getTime())) {
+            totalHours = this.calculateWorkHours(start, end)
+          }
         } else {
           // หลายวัน
           const current = new Date(startDate)
           while (current <= endDate) {
             const day = current.getDay()
-            if (day !== 0 && day !== 6) { // ไม่นับ เสาร์-อาทิตย์
+            const isHoliday = this.holidayDates.includes(current.getTime())
+            if (day !== 0 && day !== 6 && !isHoliday) { // ไม่นับ เสาร์-อาทิตย์ และวันหยุด
               if (current.getTime() === startDate.getTime()) {
                 // วันแรก - นับจากเวลาเริ่มถึงสิ้นสุดวัน
                 const dayEnd = new Date(current)
@@ -373,6 +386,11 @@ export default {
     getDateClass(dateObj) {
       if (this.isAdvanceDay(dateObj)) {
         return 'advance-day-blocked'
+      }
+      const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
+      checkDate.setHours(0, 0, 0, 0)
+      if (this.holidayDates.includes(checkDate.getTime())) {
+        return 'holiday-date'
       }
       return ''
     },
@@ -451,6 +469,13 @@ export default {
           life: 4000
         });
       }
+    },
+
+    async loadHolidays() {
+      try {
+        const response = await axios.get('/api/leave/holidays');
+        this.holidays = response.data;
+      } catch { /* ignore */ }
     },
 
     onLeaveTypeChange() {
@@ -1216,6 +1241,12 @@ export default {
   color: #fff !important;
   font-weight: 600;
   cursor: not-allowed;
+}
+
+.holiday-date {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+  font-weight: 600;
 }
 
 .advance-calendar :deep(.p-datepicker-calendar td) {
