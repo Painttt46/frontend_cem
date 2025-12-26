@@ -4,19 +4,17 @@
     <Toast />
     
     <!-- Header -->
-    <Card class="header-card mb-4">
-      <template #content>
-        <div class="header-content">
-          <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
-            <div class="header-title">
-              <i class="pi pi-chart-bar header-icon"></i>
-              <h1>Dashboard</h1>
-            </div>
+    <div class="header-card mb-4">
+      <div class="header-content">
+        <div class="header-left">
+          <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
+          <div class="header-title">
+            <i class="pi pi-chart-bar header-icon"></i>
+            <h1>Dashboard</h1>
           </div>
         </div>
-      </template>
-    </Card>
+      </div>
+    </div>
 
     <!-- Summary Cards -->
     <div class="summary-grid mb-4">

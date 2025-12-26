@@ -3,17 +3,15 @@
     <Toast />
     
     <!-- Header -->
-    <Card class="header-card mb-4">
-      <template #content>
-        <div class="header-content">
-          <Button icon="pi pi-arrow-left" text rounded @click="$router.push('/management/settings')" class="back-btn" />
-          <div class="header-title">
-            <i class="pi pi-users"></i>
-            <h1>ตั้งค่าผู้อนุมัติการลา</h1>
-          </div>
+    <div class="header-card mb-4">
+      <div class="header-content">
+        <Button icon="pi pi-arrow-left" text rounded @click="$router.push('/management/settings')" class="back-btn" />
+        <div class="header-title">
+          <i class="pi pi-users"></i>
+          <h1>ตั้งค่าผู้อนุมัติการลา</h1>
         </div>
-      </template>
-    </Card>
+      </div>
+    </div>
 
     <div class="approval-levels">
       <!-- Level 1: หัวหน้างาน -->

@@ -3,24 +3,22 @@
     <Toast />
     
     <!-- Header Card -->
-    <Card class="header-card mb-4">
-      <template #content>
-        <div class="header-content">
-          <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
-            <div class="header-title">
-              <i class="pi pi-briefcase header-icon"></i>
-              <h1>จัดการงาน</h1>
-            </div>
-          </div>
-          <div class="header-stats">
-            <div class="task-count">
-              หมวดหมู่: {{ categories.length }} | สถานะ: {{ workStatuses.length }}
-            </div>
+    <div class="header-card mb-4">
+      <div class="header-content">
+        <div class="header-left">
+          <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
+          <div class="header-title">
+            <i class="pi pi-briefcase header-icon"></i>
+            <h1>จัดการงาน</h1>
           </div>
         </div>
-      </template>
-    </Card>
+        <div class="header-stats">
+          <div class="task-count">
+            หมวดหมู่: {{ categories.length }} | สถานะ: {{ workStatuses.length }}
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Action Cards -->
     <div class="action-grid">

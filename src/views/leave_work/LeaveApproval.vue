@@ -1,13 +1,12 @@
 <template>
-  <Card class="approval-card">
-    <template #content>
-      <div v-if="records.length === 0" class="empty-state">
-        <i class="pi pi-check-circle" style="font-size: 4rem; color: #ccc;"></i>
-        <p>ไม่มีคำขอลางานที่รอการอนุมัติ</p>
-      </div>
+  <div class="approval-card">
+    <div v-if="records.length === 0" class="empty-state">
+      <i class="pi pi-check-circle" style="font-size: 4rem; color: #ccc;"></i>
+      <p>ไม่มีคำขอลางานที่รอการอนุมัติ</p>
+    </div>
 
-      <DataTable v-else :value="records" :paginator="true" :rows="10"
-        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="approval-table" stripedRows>
+    <DataTable v-else :value="records" :paginator="true" :rows="10"
+      :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="approval-table" stripedRows>
         
         <Column field="id" header="Ticket ID" :sortable="true" style="min-width: 120px;">
           <template #body="slotProps">
@@ -166,8 +165,7 @@
           </template>
         </Column>
       </DataTable>
-    </template>
-  </Card>
+  </div>
 
   <!-- Work Details Dialog -->
   <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
