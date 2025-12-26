@@ -2,13 +2,11 @@
   <div class="projects-container">
     <Toast />
     
-    <Card class="header-card">
-      <template #header>
-        <div class="main-header">
-          <h1><i class="pi pi-briefcase"></i> โครงการ</h1>
-        </div>
-      </template>
-    </Card>
+    <div class="header-card">
+      <div class="main-header">
+        <h1><i class="pi pi-briefcase"></i> โครงการ</h1>
+      </div>
+    </div>
 
     <div class="main-content">
       <div class="tab-action-buttons">
@@ -67,8 +65,8 @@ export default {
 .header-card {
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: none;
-  background: transparent;
+  border-radius: 15px;
+  overflow: hidden;
 }
 
 .header-card :deep(.p-card-body) {

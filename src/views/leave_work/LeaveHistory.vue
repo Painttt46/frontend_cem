@@ -1,13 +1,12 @@
 <template>
-  <Card class="history-card">
-    <template #content>
-      <div v-if="records.length === 0" class="empty-state">
-        <i class="pi pi-calendar-times" style="font-size: 4rem; color: #ccc;"></i>
-        <p>ยังไม่มีข้อมูลการลางาน</p>
-      </div>
+  <div class="history-card">
+    <div v-if="records.length === 0" class="empty-state">
+      <i class="pi pi-calendar-times" style="font-size: 4rem; color: #ccc;"></i>
+      <p>ยังไม่มีข้อมูลการลางาน</p>
+    </div>
 
-      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
-        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
+    <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
+      :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
 
         <Column field="id" header="รหัสคำขอ" :sortable="true">
           <template #body="slotProps">
@@ -170,8 +169,7 @@
           </template>
         </Column>
       </EnhancedDataTable>
-    </template>
-  </Card>
+  </div>
 
   <!-- Work Details Dialog -->
   <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
