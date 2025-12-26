@@ -1,12 +1,13 @@
 <template>
-  <div class="history-card">
-    <div v-if="records.length === 0" class="empty-state">
-      <i class="pi pi-calendar-clock" style="font-size: 4rem; color: #ccc;"></i>
-      <p>ยังไม่มีข้อมูลการลงงาน</p>
-    </div>
+  <Card class="history-card">
+    <template #content>
+      <div v-if="records.length === 0" class="empty-state">
+        <i class="pi pi-calendar-clock" style="font-size: 4rem; color: #ccc;"></i>
+        <p>ยังไม่มีข้อมูลการลงงาน</p>
+      </div>
 
-    <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
-      :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
+        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
 
         <Column field="id" header="ID" :sortable="true" style="width: 80px; text-align: center;">
           <template #body="slotProps">
@@ -114,7 +115,8 @@
           </template>
         </Column>
       </EnhancedDataTable>
-  </div>
+    </template>
+  </Card>
 
   <!-- Dialog สำหรับแสดงรายละเอียดงาน -->
   <div v-if="detailDialog" class="dialog-overlay" @click="detailDialog = false">

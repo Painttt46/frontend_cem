@@ -3,16 +3,18 @@
     <Toast />
     
     <!-- Header Card -->
-    <div class="header-card mb-4">
-      <div class="header-content">
-        <div class="header-left">
-          <div class="header-title">
-            <i class="pi pi-cog header-icon"></i>
-            <h1>ระบบจัดการ</h1>
+    <Card class="header-card mb-4">
+      <template #content>
+        <div class="header-content">
+          <div class="header-left">
+            <div class="header-title">
+              <i class="pi pi-cog header-icon"></i>
+              <h1>ระบบจัดการ</h1>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </Card>
 
     <!-- Management Grid -->
     <div class="management-grid">

@@ -1,11 +1,13 @@
 <template>
   <div class="leave-work-container">
     <Toast />
-    <div class="header-card">
-      <div class="main-header">
-        <h1><i class="pi pi-sign-out"></i> ระบบแจ้งลางาน</h1>
-      </div>
-    </div>
+    <Card class="header-card">
+      <template #header>
+        <div class="main-header">
+          <h1><i class="pi pi-sign-out"></i> ระบบแจ้งลางาน</h1>
+        </div>
+      </template>
+    </Card>
 
     <!-- Action Buttons -->
     <div class="action-buttons" v-if="permissionsLoaded">
@@ -519,8 +521,8 @@ export default {
 .header-card {
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border-radius: 15px;
-  overflow: hidden;
+  border: none;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-body) {

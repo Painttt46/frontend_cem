@@ -3,15 +3,17 @@
     <Toast />
     
     <!-- Header -->
-    <div class="header-card mb-4">
-      <div class="header-content">
-        <Button icon="pi pi-arrow-left" text rounded @click="$router.push('/management')" class="back-btn" />
-        <div class="header-title">
-          <i class="pi pi-calendar-times"></i>
-          <h1>จัดการการลางาน</h1>
+    <Card class="header-card mb-4">
+      <template #content>
+        <div class="header-content">
+          <Button icon="pi pi-arrow-left" text rounded @click="$router.push('/management')" class="back-btn" />
+          <div class="header-title">
+            <i class="pi pi-calendar-times"></i>
+            <h1>จัดการการลางาน</h1>
+          </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </Card>
 
     <!-- User Leave Quota Table -->
     <Card>

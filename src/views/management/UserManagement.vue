@@ -3,22 +3,24 @@
     <Toast />
     
     <!-- Header Card -->
-    <div class="header-card mb-4">
-      <div class="header-content">
-        <div class="header-left">
-          <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
-          <div class="header-title">
-            <i class="pi pi-users header-icon"></i>
-            <h1>จัดการผู้ใช้งาน</h1>
+    <Card class="header-card mb-4">
+      <template #content>
+        <div class="header-content">
+          <div class="header-left">
+            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
+            <div class="header-title">
+              <i class="pi pi-users header-icon"></i>
+              <h1>จัดการผู้ใช้งาน</h1>
+            </div>
+          </div>
+          <div class="header-stats">
+            <div class="user-count">
+              ผู้ใช้ทั้งหมด: {{ users.length }}
+            </div>
           </div>
         </div>
-        <div class="header-stats">
-          <div class="user-count">
-            ผู้ใช้ทั้งหมด: {{ users.length }}
-          </div>
-        </div>
-      </div>
-    </div>
+      </template>
+    </Card>
 
     <!-- Search and Filter Card -->
     <Card class="filter-card mb-4">
