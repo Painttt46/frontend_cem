@@ -172,10 +172,15 @@ onMounted(() => {
 })
 
 const navigateTo = (section) => {
-  // Check user role
-  const userRole = localStorage.getItem('soc_role')
+  const pathMap = {
+    'dashboard': '/management/dashboard',
+    'users': '/management/users',
+    'leave-management': '/management/leave',
+    'task-management': '/management/tasks'
+  }
+  const targetPath = pathMap[section]
   
-  if (userRole !== 'admin' && userRole !== 'superadmin') {
+  if (targetPath && !hasAccess(targetPath)) {
     toast.add({
       severity: 'error',
       summary: 'ไม่มีสิทธิ์เข้าถึง',

@@ -146,7 +146,7 @@ const router = createRouter({
 // ✅ Route Guard ตรวจสอบการ Login และสิทธิ์การเข้าถึง
 router.beforeEach(async (to, from, next) => {
   // 🧪 TEST MODE: Skip authentication
-  const TEST_MODE = true; // เปลี่ยนเป็น false เมื่อต้องการใช้งานจริง
+  const TEST_MODE = false; // เปลี่ยนเป็น true เมื่อต้องการ test
   
   if (TEST_MODE) {
     // Set mock data for testing

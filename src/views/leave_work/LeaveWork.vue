@@ -109,8 +109,7 @@ export default {
       return localStorage.getItem('soc_user_id') || ''
     },
     isHROrAdmin() {
-      const role = this.currentUserRole.toLowerCase()
-      return role === 'hr' || role === 'admin'
+      return this.hasAccess('/leave_work/approve')
     },
     canApproveLeave() {
       // ตรวจสอบ permission หรือ อยู่ใน leave approval settings
@@ -149,10 +148,9 @@ export default {
     async checkLeaveApprover() {
       try {
         const userId = localStorage.getItem('soc_user_id')
-        const role = localStorage.getItem('soc_role')?.toLowerCase()
         
-        // Admin มีสิทธิ์ทั้งสอง level
-        if (role === 'admin') {
+        // เช็คจาก permission แทน hardcode role
+        if (this.hasAccess('/leave_work/approve')) {
           this.isLeaveApprover = true
           this.approverLevel = 3
           return
