@@ -57,11 +57,11 @@
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" placeholder="เลือกวันที่">
                 <template #date="slotProps">
-                  <div :class="getDateClass(slotProps.date)" 
-                       :title="getDateTooltip(slotProps.date)"
+                  <span :class="getDateClass(slotProps.date)" 
+                       v-tooltip.top="getDateTooltip(slotProps.date)"
                        class="date-cell">
                     {{ slotProps.date.day }}
-                  </div>
+                  </span>
                 </template>
               </Calendar>
               <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
@@ -77,11 +77,11 @@
                 :minDate="formData.startDate || minStartDate" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่">
                 <template #date="slotProps">
-                  <div :class="getDateClass(slotProps.date)" 
-                       :title="getDateTooltip(slotProps.date)"
+                  <span :class="getDateClass(slotProps.date)" 
+                       v-tooltip.top="getDateTooltip(slotProps.date)"
                        class="date-cell">
                     {{ slotProps.date.day }}
-                  </div>
+                  </span>
                 </template>
               </Calendar>
               <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
