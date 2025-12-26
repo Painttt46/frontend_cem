@@ -69,7 +69,7 @@ export default {
       // ตรวจสอบว่าเป็นเวลา 9:30 น. หรือหลังจากนั้น
       if (currentHour > 9 || (currentHour === 9 && currentMinute >= 30)) {
         try {
-          const response = await axios.post('/api/daily-work/check-missing')
+          const response = await axios.post('/api/daily-work/check-missing', {}, { silent: true })
           
           // Update notification status based on backend response
           if (response.data.message.includes('Missing work')) {
@@ -78,8 +78,8 @@ export default {
             this.allCompleteNotificationSent = true
             localStorage.setItem('allCompleteNotificationSent', 'true')
           }
-        } catch (error) {
-          console.error(error)
+        } catch { // ignore
+          
         }
       }
     },
@@ -114,7 +114,7 @@ export default {
       try {
         const response = await axios.get('/api/daily-work')
         this.workRecords = response.data
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -164,12 +164,15 @@ export default {
 
 <style scoped>
 .daily-work-container {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 1rem;
+  max-width: 100%;
+  
   margin: 0 auto;
-  background: #f8f9fa;
-  min-height: 100vh;
+  
+  background: #e5e7eb;
+  height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
 }
 
 .tab-action-buttons {
@@ -297,11 +300,13 @@ export default {
 .header-card {
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  border: none;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-body) {
   padding: 0;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-content) {

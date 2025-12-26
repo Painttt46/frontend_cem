@@ -14,10 +14,111 @@
               <h1>Dashboard</h1>
             </div>
           </div>
+          <div class="header-right">
+            <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
+                      placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" 
+                      filter filterPlaceholder="ค้นหาชื่อพนักงาน" />
+          </div>
         </div>
       </template>
     </Card>
 
+    <!-- User Dashboard (when user selected) -->
+    <template v-if="selectedUser">
+      <Card class="mb-4">
+        <template #content>
+          <div class="user-dashboard-header">
+            <h2><i class="pi pi-user"></i> {{ selectedUserName }}</h2>
+            <Button label="ดูภาพรวมทั้งหมด" icon="pi pi-times" severity="secondary" size="small" @click="clearUserFilter" />
+          </div>
+        </template>
+      </Card>
+
+      <!-- User Leave Chart -->
+      <Card class="mb-4">
+        <template #content>
+          <h3>สรุปการลาประจำปี {{ currentYear }}</h3>
+          <div class="user-leave-summary">
+            <div v-for="(days, type) in userLeaveData" :key="type" class="leave-item">
+              <span class="leave-type" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }">{{ type }}</span>
+              <span class="leave-days">{{ days }} วัน</span>
+            </div>
+            <div v-if="Object.keys(userLeaveData).length === 0" class="no-data">ไม่มีข้อมูลการลา</div>
+          </div>
+          <div class="chart-container" style="height: 250px;">
+            <canvas ref="userLeaveChart"></canvas>
+          </div>
+        </template>
+      </Card>
+
+      <!-- User Timesheet -->
+      <Card class="mb-4">
+        <template #content>
+          <h3>Timesheet ประจำปี {{ currentYear }}</h3>
+          <div class="timesheet-summary">
+            <div class="summary-item">
+              <i class="pi pi-clock" style="color: #4A90E2"></i>
+              <div>
+                <h4>{{ formatHoursMinutes(userTimesheetSummary.totalHours) }}</h4>
+                <p>ชั่วโมงทำงานรวม</p>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-briefcase" style="color: #10b981"></i>
+              <div>
+                <h4>{{ userTimesheetSummary.totalTasks }}</h4>
+                <p>จำนวนงานทั้งหมด</p>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-folder" style="color: #8b5cf6"></i>
+              <div>
+                <h4>{{ userTimesheetSummary.totalProjects }}</h4>
+                <p>โครงการที่ทำ</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="timesheet-filter mt-4">
+            <label>ช่วงเวลา:</label>
+            <Dropdown v-model="timesheetPeriod" :options="periodOptions" optionLabel="label" optionValue="value" class="period-dropdown" />
+          </div>
+
+          <h4 class="mt-3">Timesheet รายวัน</h4>
+          <DataTable :value="userTimesheetDaily" paginator :rows="15" sortField="work_date" :sortOrder="-1">
+            <Column field="work_date" header="วันที่" sortable style="min-width: 120px">
+              <template #body="{ data }">
+                {{ formatDate(data.work_date) }}
+              </template>
+            </Column>
+            <Column field="task_name" header="งาน/โครงการ" sortable style="min-width: 200px" />
+            <Column field="category" header="หมวดหมู่" style="min-width: 120px">
+              <template #body="{ data }">
+                <div class="category-badges-small">
+                  <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge">{{ cat }}</span>
+                </div>
+              </template>
+            </Column>
+            <Column field="work_status" header="สถานะ" style="min-width: 100px">
+              <template #body="{ data }">
+                <Badge :value="data.work_status || '-'" :severity="getStatusSeverity(data.work_status)" />
+              </template>
+            </Column>
+            <Column field="location" header="สถานที่" style="min-width: 120px" />
+            <Column field="start_time" header="เริ่ม" style="min-width: 70px" />
+            <Column field="end_time" header="สิ้นสุด" style="min-width: 70px" />
+            <Column field="hours" header="ชั่วโมง" sortable style="min-width: 100px">
+              <template #body="{ data }">
+                <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(data.hours) }}</span>
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
+    </template>
+
+    <!-- Overall Dashboard (when no user selected) -->
+    <template v-else>
     <!-- Summary Cards -->
     <div class="summary-grid mb-4">
       <!-- Loading Skeleton -->
@@ -183,7 +284,7 @@
           <Column field="taskCount" header="จำนวนงาน" sortable style="min-width: 100px" />
           <Column field="totalHours" header="รวมชั่วโมง" sortable style="min-width: 120px">
             <template #body="{ data }">
-              <span style="font-weight: 600; color: #4A90E2">{{ data.totalHours.toFixed(1) }} ชม.</span>
+              <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.totalHours) }}</span>
             </template>
           </Column>
           <!-- <Column field="avgHoursPerTask" header="เฉลี่ย/งาน" sortable style="min-width: 100px">
@@ -199,7 +300,7 @@
                 <Column field="taskName" header="ชื่องาน" style="min-width: 200px" />
                 <Column field="hours" header="ชั่วโมง" sortable>
                   <template #body="{ data: task }">
-                    <span style="font-weight: 600; color: #10b981">{{ task.hours.toFixed(1) }} ชม.</span>
+                    <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(task.hours) }}</span>
                   </template>
                 </Column>
                 <Column field="percentage" header="สัดส่วน" sortable>
@@ -218,13 +319,34 @@
         </DataTable>
       </template>
     </Card>
+    </template>
   </div>
 
   <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false" :userId="selectedUserId" />
+  
+  <!-- Task Status Dialog -->
+  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus" :style="{ width: '90vw', maxWidth: '900px' }">
+    <DataTable :value="filteredTasksByStatus" paginator :rows="10" sortField="task_name" :sortOrder="1">
+      <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+      <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
+      <Column field="category" header="หมวดหมู่" style="min-width: 150px">
+        <template #body="{ data }">
+          <div class="category-badges-small">
+            <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge">{{ cat }}</span>
+          </div>
+        </template>
+      </Column>
+      <Column field="project_end_date" header="กำหนดส่ง" sortable style="min-width: 120px">
+        <template #body="{ data }">
+          {{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}
+        </template>
+      </Column>
+    </DataTable>
+  </Dialog>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
@@ -239,12 +361,179 @@ const leaveTypeColors = ref({})
 const showUserDialog = ref(false)
 const selectedUserId = ref(null)
 
+// Task status dialog
+const allTasks = ref([])
+const showTaskStatusDialog = ref(false)
+const selectedTaskStatus = ref(null)
+
+const filteredTasksByStatus = computed(() => {
+  if (!selectedTaskStatus.value) return []
+  return allTasks.value.filter(t => (t.status || 'pending') === selectedTaskStatus.value)
+})
+
+// User filter
+const selectedUser = ref(null)
+const userOptions = ref([])
+const allLeaves = ref([])
+const allDailyWork = ref([])
+const currentYear = new Date().getFullYear()
+const userLeaveChart = ref(null)
+let userLeaveChartInstance = null
+
+const selectedUserName = computed(() => {
+  const user = userOptions.value.find(u => u.value === selectedUser.value)
+  return user ? user.label : ''
+})
+
+// Period filter
+const timesheetPeriod = ref('month')
+const periodOptions = [
+  { label: 'วันนี้', value: 'today' },
+  { label: 'สัปดาห์นี้', value: 'week' },
+  { label: 'เดือนนี้', value: 'month' },
+  { label: 'ปีนี้', value: 'year' }
+]
+
+const getDateRange = () => {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  let startDate = today
+  
+  switch (timesheetPeriod.value) {
+    case 'today':
+      startDate = today
+      break
+    case 'week': {
+      const dayOfWeek = today.getDay()
+      startDate = new Date(today)
+      startDate.setDate(today.getDate() - dayOfWeek)
+      break
+    }
+    case 'month':
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+      break
+    case 'year':
+      startDate = new Date(today.getFullYear(), 0, 1)
+      break
+  }
+  return { startDate, endDate: now }
+}
+
+const userLeaveData = computed(() => {
+  if (!selectedUser.value) return {}
+  const data = {}
+  allLeaves.value.forEach(l => {
+    if (l.user_id !== selectedUser.value || l.status !== 'approved') return
+    const leaveYear = new Date(l.start_datetime).getFullYear()
+    if (leaveYear !== currentYear) return
+    const type = l.leave_type || 'อื่นๆ'
+    data[type] = (data[type] || 0) + (parseFloat(l.total_days) || 0)
+  })
+  return data
+})
+
+const userTimesheetSummary = computed(() => {
+  if (!selectedUser.value) return { totalHours: 0, totalTasks: 0, totalProjects: 0 }
+  const { startDate, endDate } = getDateRange()
+  let totalHours = 0
+  let taskCount = 0
+  const projects = new Set()
+  
+  allDailyWork.value.forEach(w => {
+    if (w.user_id !== selectedUser.value) return
+    const workDate = new Date(w.work_date)
+    if (workDate < startDate || workDate > endDate) return
+    
+    if (w.start_time && w.end_time) {
+      const [startH, startM] = w.start_time.split(':').map(Number)
+      const [endH, endM] = w.end_time.split(':').map(Number)
+      totalHours += (endH + endM/60) - (startH + startM/60)
+    }
+    taskCount++
+    if (w.task_name) projects.add(w.task_name)
+  })
+  
+  return { totalHours, totalTasks: taskCount, totalProjects: projects.size }
+})
+
+const userTimesheetDaily = computed(() => {
+  if (!selectedUser.value) return []
+  const { startDate, endDate } = getDateRange()
+  
+  return allDailyWork.value
+    .filter(w => {
+      if (w.user_id !== selectedUser.value) return false
+      const workDate = new Date(w.work_date)
+      return workDate >= startDate && workDate <= endDate
+    })
+    .map(w => {
+      let hours = 0
+      if (w.start_time && w.end_time) {
+        const [startH, startM] = w.start_time.split(':').map(Number)
+        const [endH, endM] = w.end_time.split(':').map(Number)
+        hours = (endH + endM/60) - (startH + startM/60)
+      }
+      return { ...w, hours }
+    })
+    .sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
+})
+
+const parseCategoryArray = (category) => {
+  if (!category) return []
+  if (Array.isArray(category)) return category
+  return category.split(',').map(c => c.trim()).filter(c => c)
+}
+
+const getStatusSeverity = (status) => {
+  const map = { 'completed': 'success', 'in_progress': 'info', 'pending': 'warning' }
+  return map[status] || 'secondary'
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const onUserChange = async () => {
+  await nextTick()
+  if (selectedUser.value) {
+    renderUserLeaveChart()
+  }
+}
+
+const clearUserFilter = () => {
+  selectedUser.value = null
+  loadData()
+}
+
+const renderUserLeaveChart = () => {
+  if (userLeaveChartInstance) userLeaveChartInstance.destroy()
+  if (!userLeaveChart.value || Object.keys(userLeaveData.value).length === 0) return
+  
+  const labels = Object.keys(userLeaveData.value)
+  const data = Object.values(userLeaveData.value)
+  const colors = labels.map(type => leaveTypeColors.value[type] || '#6c757d')
+  
+  userLeaveChartInstance = new Chart(userLeaveChart.value, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' } }
+    }
+  })
+}
+
 // Swipe functionality
 const currentChart = ref(0)
 const chartsWrapper = ref(null)
 let touchStartX = 0
 let touchEndX = 0
-
 
 const stats = ref({
   totalUsers: 0,
@@ -326,6 +615,14 @@ const loadData = async () => {
       axios.get('/api/tasks').then(r => r.data),
       dailyWorkService.getDailyWork()  // มี cache 2 นาที
     ])
+
+    // Store for user filter
+    allLeaves.value = leaves
+    allDailyWork.value = dailyWork
+    userOptions.value = activeUsers.map(u => ({
+      label: `${u.firstname} ${u.lastname}`,
+      value: u.id
+    })).sort((a, b) => a.label.localeCompare(b.label, 'th'))
 
     // Calculate stats
     stats.value.totalUsers = activeUsers.length
@@ -466,6 +763,13 @@ const loadData = async () => {
   }
 }
 
+const formatHoursMinutes = (hours) => {
+  const h = parseFloat(hours) || 0
+  const hrs = Math.floor(h)
+  const mins = Math.round((h - hrs) * 60)
+  return `${hrs} ชม. ${mins} นาที`
+}
+
 const renderCharts = (leaves, tasks) => {
   // Leave Chart - แสดงจำนวนวันลาของแต่ละคนแยกตามประเภท (รายปี)
   if (leaveChartInstance) leaveChartInstance.destroy()
@@ -485,72 +789,88 @@ const renderCharts = (leaves, tasks) => {
     const days = parseFloat(l.total_days) || 0
     
     if (!users[userName]) {
-      users[userName] = {}
+      users[userName] = { total: 0 }
     }
     if (!users[userName][leaveType]) {
       users[userName][leaveType] = 0
     }
     users[userName][leaveType] += days
+    users[userName].total += days
     leaveTypes.add(leaveType)
   })
+
+  // Sort by total leave days and limit to top 15
+  const sortedUsers = Object.entries(users)
+    .sort((a, b) => b[1].total - a[1].total)
+    .slice(0, 15)
+    .map(([name]) => name)
 
   // สร้าง datasets สำหรับแต่ละประเภทการลา
   const datasets = Array.from(leaveTypes).map(type => ({
     label: type,
-    data: Object.keys(users).map(userName => users[userName][type] || 0),
+    data: sortedUsers.map(userName => users[userName][type] || 0),
     backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random()*16777215).toString(16)
   }))
 
   leaveChartInstance = new Chart(leaveChart.value, {
     type: 'bar',
     data: {
-      labels: Object.keys(users),
+      labels: sortedUsers,
       datasets: datasets
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      indexAxis: 'y',
       scales: {
         x: {
-          stacked: false
-        },
-        y: {
           beginAtZero: true,
-          title: {
-            display: true,
-            text: 'จำนวนวัน'
-          }
+          title: { display: true, text: 'จำนวนวัน' }
         }
       },
       plugins: {
-        legend: {
-          display: true,
-          position: 'top'
-        }
+        legend: { display: true, position: 'top' }
       }
     }
   })
 
-  // Task Chart
+  // Task Chart - store tasks for click event
   if (taskChartInstance) taskChartInstance.destroy()
   
+  allTasks.value = tasks
   const taskStatus = {}
   tasks.forEach(t => {
-    taskStatus[t.status || 'pending'] = (taskStatus[t.status || 'pending'] || 0) + 1
+    const status = t.status || 'pending'
+    taskStatus[status] = (taskStatus[status] || 0) + 1
   })
+
+  const statusLabels = Object.keys(taskStatus)
+  const statusColors = {
+    'pending': '#f59e0b',
+    'in_progress': '#4A90E2', 
+    'completed': '#10b981',
+    'cancelled': '#ef4444'
+  }
 
   taskChartInstance = new Chart(taskChart.value, {
     type: 'doughnut',
     data: {
-      labels: Object.keys(taskStatus),
+      labels: statusLabels,
       datasets: [{
         data: Object.values(taskStatus),
-        backgroundColor: ['#f59e0b', '#4A90E2', '#10b981', '#ef4444']
+        backgroundColor: statusLabels.map(s => statusColors[s] || '#6c757d')
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      onClick: (event, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index
+          selectedTaskStatus.value = statusLabels[index]
+          showTaskStatusDialog.value = true
+        }
+      }
     }
   })
 }
@@ -571,8 +891,13 @@ const renderCharts = (leaves, tasks) => {
 
 .dashboard-container {
   padding: 1rem;
-  max-width: 1400px;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
+  
+  background: #e5e7eb;
+  height: 100%;
+  overflow: auto;
 }
 
 .header-card {
@@ -586,6 +911,124 @@ const renderCharts = (leaves, tasks) => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-filter {
+  min-width: 200px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 8px;
+}
+
+.user-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-dashboard-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4A90E2;
+}
+
+.user-leave-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.leave-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leave-type {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.85rem;
+}
+
+.leave-days {
+  font-weight: 600;
+}
+
+.no-data {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.timesheet-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.summary-item i {
+  font-size: 2rem;
+}
+
+.summary-item h4 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.summary-item p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+.chart-container {
+  position: relative;
+}
+
+.timesheet-filter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.timesheet-filter label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.period-dropdown {
+  min-width: 150px;
+}
+
+.category-badges-small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cat-badge {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
 }
 
 .header-left {
@@ -637,7 +1080,6 @@ const renderCharts = (leaves, tasks) => {
 .charts-wrapper {
   display: flex;
   transition: transform 0.3s ease-out;
-  touch-action: pan-y;
 }
 
 .chart-card {

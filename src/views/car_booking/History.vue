@@ -6,7 +6,7 @@
         <p>ยังไม่มีข้อมูลการใช้รถ</p>
       </div>
 
-      <EnhancedDataTable v-else :value="groupedRecordsWithDuration" :paginator="true" :rows="10"
+      <EnhancedDataTable v-else :data="groupedRecordsWithDuration" :paginator="true" :rows="10"
         :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
         <Column field="id" header="Ticket ID" :sortable="true">
           <template #body="slotProps">
@@ -53,7 +53,7 @@
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.name" 
                   class="clickable-name" 
-                  @click="showUserInfo(slotProps.data.returnRecord.user_id)">
+                  @click="showUserByName(slotProps.data.returnRecord.name)">
               {{ slotProps.data.returnRecord.name }}
             </span>
             <span v-else>-</span>
@@ -91,7 +91,10 @@
 
         <Column header="รูปภาพ">
           <template #body="slotProps">
-            <i class="pi pi-eye view-icon" @click="viewImages(slotProps.data)"></i>
+            <i v-if="(slotProps.data.borrowRecord.images?.length > 0) || (slotProps.data.returned && slotProps.data.returnRecord.images?.length > 0)" 
+               class="pi pi-eye view-icon" 
+               @click="viewImages(slotProps.data)"></i>
+            <span v-else>-</span>
           </template>
         </Column>
 
@@ -123,7 +126,7 @@
   </Card>
 
   <!-- Colleagues Dialog -->
-  <Dialog v-model:visible="showColleaguesModal" modal header="รายชื่อผู้ร่วมงาน" :style="{ width: '600px' }" :draggable="false">
+  <Dialog v-model:visible="showColleaguesModal" modal header="รายชื่อผู้ร่วมงาน" :style="{ width: '90vw', maxWidth: '600px' }" :draggable="false">
     <div class="colleagues-list">
       <div v-for="(colleague, index) in selectedColleagues" :key="index" class="colleague-card clickable-card" @click="showColleagueInfo(colleague)">
         <div class="colleague-details">
@@ -140,7 +143,7 @@
   </Dialog>
 
   <!-- Description Dialog -->
-  <Dialog v-model:visible="showDescriptionModal" modal header="ข้อมูลเพิ่มเติม" :style="{ width: '500px' }" :draggable="false">
+  <Dialog v-model:visible="showDescriptionModal" modal header="ข้อมูลเพิ่มเติม" :style="{ width: '90vw', maxWidth: '500px' }" :draggable="false">
     <div class="description-content">
       <p>{{ selectedDescription }}</p>
     </div>
@@ -180,17 +183,21 @@ export default {
       const borrowRecords = this.records.filter(r => r && r.status !== undefined)
       const groups = borrowRecords.map(borrow => {
         const returned = borrow.status === 'returned'
+        const imgs = borrow.images || {}
+        const borrowImages = Array.isArray(imgs) ? imgs : (imgs.borrow || [])
+        const returnImages = imgs.return || []
         return {
           id: borrow.id,
           license: borrow.license,
           borrowDate: borrow.selected_date,
-          borrowRecord: borrow,
+          borrowRecord: { ...borrow, images: borrowImages },
           returnRecord: returned ? {
             name: borrow.return_name,
             location: borrow.return_location,
             time: borrow.return_time,
             date: borrow.return_date,
-            created_at: borrow.updated_at
+            created_at: borrow.updated_at,
+            images: returnImages
           } : null,
           returned: returned
         }
@@ -231,6 +238,13 @@ export default {
     showUserInfo(userId) {
       if (userId) {
         this.selectedUserId = userId
+        this.showUserDialog = true
+      }
+    },
+    showUserByName(name) {
+      if (name) {
+        this.selectedUserId = null
+        this.selectedUserName = name
         this.showUserDialog = true
       }
     },
@@ -327,10 +341,10 @@ export default {
     viewImages(data) {
       const images = []
       if (data.borrowRecord.images?.length > 0) {
-        images.push(...data.borrowRecord.images.map(img => ({ src: img, type: 'ใช้' })))
+        images.push(...data.borrowRecord.images.map(img => ({ src: img, type: 'ใช้รถ' })))
       }
       if (data.returned && data.returnRecord.images?.length > 0) {
-        images.push(...data.returnRecord.images.map(img => ({ src: img, type: 'คืน' })))
+        images.push(...data.returnRecord.images.map(img => ({ src: img, type: 'คืนรถ' })))
       }
       this.$emit('view-images', images, data)
     },

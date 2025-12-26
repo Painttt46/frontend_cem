@@ -21,11 +21,19 @@
               :optionDisabled="optionDisabled" class="corporate-dropdown" required @change="onLeaveTypeChange">
               <template #option="slotProps">
                 <div class="leave-type-option" :class="{ 'disabled-option': slotProps.option.disabled }">
-                  <span>{{ slotProps.option.label }}</span>
-                  <span v-if="slotProps.option.disabled" class="quota-status">หมดโควต้า</span>
+                  <div class="leave-type-main">
+                    <span>{{ slotProps.option.label }}</span>
+                    <span v-if="slotProps.option.disabled" class="quota-status">หมดโควต้า</span>
+                  </div>
+                  <small v-if="slotProps.option.advance_days > 0" class="advance-hint">
+                    ต้องลาล่วงหน้า {{ slotProps.option.advance_days }} วัน
+                  </small>
                 </div>
               </template>
             </Dropdown>
+            <small v-if="selectedLeaveTypeAdvanceDays > 0" class="advance-days-warning">
+              <i class="pi pi-info-circle"></i> ต้องลาล่วงหน้าอย่างน้อย {{ selectedLeaveTypeAdvanceDays }} วัน (เริ่มลาได้ตั้งแต่ {{ formatMinDate }})
+            </small>
           </div>
 
           <!-- Quota Display -->
@@ -33,26 +41,49 @@
             <div v-if="selectedQuota" class="quota-info">
               <span class="quota-label">โควต้าคงเหลือ:</span>
               <span class="quota-value" :class="getQuotaClass(selectedQuota.remainingDays)">
-                {{ selectedQuota.remainingDays }} วัน
+                {{ selectedQuota.remainingDays }} วัน ({{ selectedQuota.remainingHours }} ชม.)
               </span>
-              <span class="quota-total">(จาก {{ selectedQuota.quota }} วัน)</span>
+              <span class="quota-total">(จาก {{ selectedQuota.quota }} วัน / {{ selectedQuota.quotaHours }} ชม.)</span>
             </div>
             <div v-else class="quota-placeholder-text">
               เลือกประเภทการลาเพื่อดูโควต้า
             </div>
           </div>
 
-          <div class="input-group date-range-group">
-            <div class="date-field">
-              <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
-              <Calendar v-model="formData.startDateTime" showTime hourFormat="24" dateFormat="dd/mm/yy"
-                class="corporate-input" :manualInput="true" :stepHour="1" :stepMinute="1" required />
+          <div class="input-group">
+            <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
+            <div class="datetime-picker">
+              <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
+                class="corporate-input date-only advance-calendar" :manualInput="false" required
+                :minDate="minStartDate" :disabledDates="disabledDates" placeholder="เลือกวันที่">
+                <template #date="slotProps">
+                  <span :class="getDateClass(slotProps.date)" class="date-cell">
+                    {{ slotProps.date.day }}
+                  </span>
+                </template>
+              </Calendar>
+              <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
+                class="corporate-input time-dropdown" placeholder="เวลา" @change="updateStartDateTime" />
             </div>
-            <div class="date-field">
-              <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
-              <Calendar v-model="formData.endDateTime" showTime hourFormat="24" dateFormat="dd/mm/yy"
-                :minDate="formData.startDateTime" class="corporate-input" :manualInput="true" :stepHour="1" :stepMinute="1" required />
+            <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
+          </div>
+
+          <div class="input-group">
+            <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
+            <div class="datetime-picker">
+              <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
+                :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" class="corporate-input date-only advance-calendar" :manualInput="false" required
+                placeholder="เลือกวันที่">
+                <template #date="slotProps">
+                  <span :class="getDateClass(slotProps.date)" class="date-cell">
+                    {{ slotProps.date.day }}
+                  </span>
+                </template>
+              </Calendar>
+              <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
+                class="corporate-input time-dropdown" placeholder="เวลา" @change="updateEndDateTime" />
             </div>
+            <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
           </div>
 
           <div class="input-group">
@@ -166,16 +197,19 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import AutoComplete from 'primevue/autocomplete'
+import Dropdown from 'primevue/dropdown'
 
 export default {
   name: 'LeaveForm',
   components: {
-    AutoComplete
+    AutoComplete,
+    Dropdown
   },
   async created() {
     await this.loadLeaveTypes();
     await this.loadUsers();
     await this.loadQuotaData();
+    await this.loadHolidays();
     // Initialize with limited users
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
   },
@@ -183,6 +217,10 @@ export default {
     return {
       formData: {
         leaveType: '',
+        startDate: null,
+        startTime: null,
+        endDate: null,
+        endTime: null,
         startDateTime: null,
         endDateTime: null,
         reason: '',
@@ -194,6 +232,26 @@ export default {
         workDetails: '',
         attachments: []
       },
+      allowedTimes: [
+        { label: '09:00', value: '09:00' },
+        { label: '09:30', value: '09:30' },
+        { label: '10:00', value: '10:00' },
+        { label: '10:30', value: '10:30' },
+        { label: '11:00', value: '11:00' },
+        { label: '11:30', value: '11:30' },
+        { label: '12:00', value: '12:00' },
+        { label: '13:00', value: '13:00' },
+        { label: '13:30', value: '13:30' },
+        { label: '14:00', value: '14:00' },
+        { label: '14:30', value: '14:30' },
+        { label: '15:00', value: '15:00' },
+        { label: '15:30', value: '15:30' },
+        { label: '16:00', value: '16:00' },
+        { label: '16:30', value: '16:30' },
+        { label: '17:00', value: '17:00' },
+        { label: '17:30', value: '17:30' },
+        { label: '18:00', value: '18:00' }
+      ],
       leaveTypes: [],
       delegationOptions: [
         { label: 'ไม่มีการมอบหมายงาน', value: 'no' },
@@ -204,7 +262,16 @@ export default {
       selectedDelegate: null,
       maxDisplayUsers: 50,
       quotaData: {},
-      selectedQuota: null
+      selectedQuota: null,
+      holidays: []
+    }
+  },
+  watch: {
+    'formData.startDate'() {
+      this.updateStartDateTime()
+    },
+    'formData.endDate'() {
+      this.updateEndDateTime()
     }
   },
   computed: {
@@ -219,20 +286,83 @@ export default {
     currentUserPosition() {
       return localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
     },
+    selectedLeaveTypeAdvanceDays() {
+      if (!this.formData.leaveType) return 0
+      const type = this.leaveTypes.find(t => t.value === this.formData.leaveType)
+      return type?.advance_days || 0
+    },
+    minStartDate() {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const advanceDays = this.selectedLeaveTypeAdvanceDays
+      if (advanceDays > 0) {
+        today.setDate(today.getDate() + advanceDays)
+      }
+      return today
+    },
+    holidayDates() {
+      return this.holidays.map(h => {
+        const d = new Date(h.holiday_date)
+        d.setHours(0, 0, 0, 0)
+        return d.getTime()
+      })
+    },
+    disabledDates() {
+      return this.holidays.map(h => new Date(h.holiday_date))
+    },
+    formatMinDate() {
+      return this.minStartDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+    },
     calculateDays() {
       if (this.formData.startDateTime && this.formData.endDateTime) {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        // Set time to start of day for accurate day calculation
-        start.setHours(0, 0, 0, 0)
-        end.setHours(0, 0, 0, 0)
+        // คำนวณชั่วโมงทำงานจริง (9-12, 13-18 = 8 ชม./วัน)
+        const hoursPerDay = 8
+        let totalHours = 0
         
-        const diffTime = end - start
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
-        return diffDays + ' วัน'
+        const startDate = new Date(start)
+        startDate.setHours(0, 0, 0, 0)
+        const endDate = new Date(end)
+        endDate.setHours(0, 0, 0, 0)
+        
+        if (startDate.getTime() === endDate.getTime()) {
+          // วันเดียวกัน - คำนวณชั่วโมงตรงๆ (ถ้าไม่ใช่วันหยุด)
+          const day = startDate.getDay()
+          if (day !== 0 && day !== 6 && !this.holidayDates.includes(startDate.getTime())) {
+            totalHours = this.calculateWorkHours(start, end)
+          }
+        } else {
+          // หลายวัน
+          const current = new Date(startDate)
+          while (current <= endDate) {
+            const day = current.getDay()
+            const isHoliday = this.holidayDates.includes(current.getTime())
+            if (day !== 0 && day !== 6 && !isHoliday) { // ไม่นับ เสาร์-อาทิตย์ และวันหยุด
+              if (current.getTime() === startDate.getTime()) {
+                // วันแรก - นับจากเวลาเริ่มถึงสิ้นสุดวัน
+                const dayEnd = new Date(current)
+                dayEnd.setHours(18, 0, 0, 0)
+                totalHours += this.calculateWorkHours(start, dayEnd)
+              } else if (current.getTime() === endDate.getTime()) {
+                // วันสุดท้าย - นับจากเริ่มวันถึงเวลาสิ้นสุด
+                const dayStart = new Date(current)
+                dayStart.setHours(9, 0, 0, 0)
+                totalHours += this.calculateWorkHours(dayStart, end)
+              } else {
+                // วันกลาง - นับเต็มวัน
+                totalHours += hoursPerDay
+              }
+            }
+            current.setDate(current.getDate() + 1)
+          }
+        }
+        
+        const days = (totalHours / hoursPerDay).toFixed(1)
+        return `${days} วัน (${totalHours.toFixed(1)} ชม.)`
       }
-      return '0 วัน'
+      return '0 วัน (0 ชม.)'
     },
     leaveTypesWithQuota() {
       return this.leaveTypes.map(type => {
@@ -246,12 +376,72 @@ export default {
     }
   },
   methods: {
+    // Check if date is in advance days period
+    isAdvanceDay(dateObj) {
+      if (!this.selectedLeaveTypeAdvanceDays) return false
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
+      checkDate.setHours(0, 0, 0, 0)
+      const diffDays = Math.floor((checkDate - today) / (1000 * 60 * 60 * 24))
+      return diffDays >= 0 && diffDays < this.selectedLeaveTypeAdvanceDays
+    },
+    getDateClass(dateObj) {
+      if (this.isAdvanceDay(dateObj)) {
+        return 'advance-day-blocked'
+      }
+      const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
+      checkDate.setHours(0, 0, 0, 0)
+      if (this.holidayDates.includes(checkDate.getTime())) {
+        return 'holiday-date'
+      }
+      return ''
+    },
+    // รวม date + time เป็น DateTime
+    updateStartDateTime() {
+      if (this.formData.startDate && this.formData.startTime) {
+        const [hours, minutes] = this.formData.startTime.split(':').map(Number)
+        const date = new Date(this.formData.startDate)
+        date.setHours(hours, minutes, 0, 0)
+        this.formData.startDateTime = date
+      }
+    },
+    updateEndDateTime() {
+      if (this.formData.endDate && this.formData.endTime) {
+        const [hours, minutes] = this.formData.endTime.split(':').map(Number)
+        const date = new Date(this.formData.endDate)
+        date.setHours(hours, minutes, 0, 0)
+        this.formData.endDateTime = date
+      }
+    },
+    
+    // คำนวณชั่วโมงทำงานระหว่างสองเวลา (9-12, 13-18)
+    calculateWorkHours(start, end) {
+      const startHour = start.getHours() + start.getMinutes() / 60
+      const endHour = end.getHours() + end.getMinutes() / 60
+      
+      let hours = 0
+      // ช่วงเช้า 9-12
+      const morningStart = Math.max(startHour, 9)
+      const morningEnd = Math.min(endHour, 12)
+      if (morningEnd > morningStart) {
+        hours += morningEnd - morningStart
+      }
+      // ช่วงบ่าย 13-18
+      const afternoonStart = Math.max(startHour, 13)
+      const afternoonEnd = Math.min(endHour, 18)
+      if (afternoonEnd > afternoonStart) {
+        hours += afternoonEnd - afternoonStart
+      }
+      return Math.max(0, hours)
+    },
+    
     async loadLeaveTypes() {
       try {
         const response = await axios.get('/api/leave/leave-types');
         this.leaveTypes = response.data;
       } catch (error) {
-        console.error('Error loading leave types:', error);
+        
         // Fallback to default types if API fails
         this.leaveTypes = [
           { label: 'ลาป่วย', value: 'sick' },
@@ -277,11 +467,18 @@ export default {
       } catch (error) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลโควต้าได้',
-          life: 3000
+          summary: 'โหลดโควต้าไม่สำเร็จ',
+          detail: 'กรุณารีเฟรชหน้าเว็บ',
+          life: 4000
         });
       }
+    },
+
+    async loadHolidays() {
+      try {
+        const response = await axios.get('/api/leave/holidays');
+        this.holidays = response.data;
+      } catch { /* ignore */ }
     },
 
     onLeaveTypeChange() {
@@ -289,6 +486,19 @@ export default {
         this.selectedQuota = this.quotaData[this.formData.leaveType];
       } else {
         this.selectedQuota = null;
+      }
+      
+      // Clear dates if they're before the new minStartDate
+      const minDate = this.minStartDate
+      if (this.formData.startDate && new Date(this.formData.startDate) < minDate) {
+        this.formData.startDate = null
+        this.formData.startTime = null
+        this.formData.startDateTime = null
+      }
+      if (this.formData.endDate && new Date(this.formData.endDate) < minDate) {
+        this.formData.endDate = null
+        this.formData.endTime = null
+        this.formData.endDateTime = null
       }
     },
 
@@ -302,9 +512,9 @@ export default {
       if (!this.formData.leaveType) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'กรุณาเลือกประเภทการลา',
-          life: 3000
+          summary: 'กรุณากรอกข้อมูล',
+          detail: 'เลือกประเภทการลาก่อนส่งคำขอ',
+          life: 4000
         })
         return
       }
@@ -313,9 +523,9 @@ export default {
       if (this.selectedQuota && this.selectedQuota.remainingDays <= 0) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'โควต้าการลาประเภทนี้หมดแล้ว',
-          life: 3000
+          summary: 'โควต้าหมด',
+          detail: 'โควต้าการลาประเภทนี้ใช้หมดแล้ว กรุณาเลือกประเภทอื่น',
+          life: 4000
         })
         return
       }
@@ -325,20 +535,42 @@ export default {
       if (this.selectedQuota && requestedDays > this.selectedQuota.remainingDays) {
         this.$toast.add({
           severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: `จำนวนวันที่ขอลา (${requestedDays} วัน) เกินโควต้าคงเหลือ (${this.selectedQuota.remainingDays} วัน)`,
-          life: 3000
+          summary: 'เกินโควต้า',
+          detail: `ขอลา ${requestedDays} วัน แต่เหลือโควต้า ${this.selectedQuota.remainingDays} วัน`,
+          life: 4000
         })
         return
+      }
+
+      // Check advance days requirement
+      const selectedLeaveType = this.leaveTypes.find(t => t.value === this.formData.leaveType)
+      if (selectedLeaveType && selectedLeaveType.advance_days > 0 && this.formData.startDateTime) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const startDate = new Date(this.formData.startDateTime)
+        startDate.setHours(0, 0, 0, 0)
+        
+        const diffTime = startDate - today
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays < selectedLeaveType.advance_days) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'ลาล่วงหน้าไม่เพียงพอ',
+            detail: `${selectedLeaveType.label} ต้องลาล่วงหน้าอย่างน้อย ${selectedLeaveType.advance_days} วัน (คุณลาล่วงหน้า ${diffDays} วัน)`,
+            life: 5000
+          })
+          return
+        }
       }
 
       if (this.formData.startDateTime && this.formData.endDateTime) {
         if (new Date(this.formData.endDateTime) < new Date(this.formData.startDateTime)) {
           this.$toast.add({
             severity: 'error',
-            summary: 'ข้อผิดพลาด',
-            detail: 'วันสิ้นสุดการลาต้องไม่เป็นวันก่อนวันเริ่มลา',
-            life: 3000
+            summary: 'วันที่ไม่ถูกต้อง',
+            detail: 'วันสิ้นสุดต้องไม่ก่อนวันเริ่มลา',
+            life: 4000
           })
           return
         }
@@ -399,17 +631,15 @@ export default {
         
       } catch (error) {
         
-        let errorMessage = 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง'
+        let errorMessage = 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ'
         
         if (error.response?.data?.error) {
           errorMessage = error.response.data.error
-        } else if (error.message) {
-          errorMessage = error.message
         }
         
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
+          summary: 'บันทึกไม่สำเร็จ',
           detail: errorMessage,
           life: 5000
         })
@@ -419,10 +649,41 @@ export default {
       if (this.formData.startDateTime && this.formData.endDateTime) {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
-        start.setHours(0, 0, 0, 0)
-        end.setHours(0, 0, 0, 0)
-        const diffTime = end - start
-        return Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1
+        
+        const hoursPerDay = 8
+        let totalHours = 0
+        
+        const startDate = new Date(start)
+        startDate.setHours(0, 0, 0, 0)
+        const endDate = new Date(end)
+        endDate.setHours(0, 0, 0, 0)
+        
+        if (startDate.getTime() === endDate.getTime()) {
+          // วันเดียวกัน
+          totalHours = this.calculateWorkHours(start, end)
+        } else {
+          // หลายวัน
+          const current = new Date(startDate)
+          while (current <= endDate) {
+            const day = current.getDay()
+            if (day !== 0 && day !== 6) {
+              if (current.getTime() === startDate.getTime()) {
+                const dayEnd = new Date(current)
+                dayEnd.setHours(18, 0, 0, 0)
+                totalHours += this.calculateWorkHours(start, dayEnd)
+              } else if (current.getTime() === endDate.getTime()) {
+                const dayStart = new Date(current)
+                dayStart.setHours(9, 0, 0, 0)
+                totalHours += this.calculateWorkHours(dayStart, end)
+              } else {
+                totalHours += hoursPerDay
+              }
+            }
+            current.setDate(current.getDate() + 1)
+          }
+        }
+        
+        return parseFloat((totalHours / hoursPerDay).toFixed(2))
       }
       return 0
     },
@@ -433,6 +694,10 @@ export default {
     resetForm() {
       this.formData = {
         leaveType: '',
+        startDate: null,
+        startTime: null,
+        endDate: null,
+        endTime: null,
         startDateTime: null,
         endDateTime: null,
         reason: '',
@@ -593,17 +858,28 @@ export default {
   gap: 1rem;
 }
 
-.date-field {
-  flex: 1;
+.datetime-picker {
   display: flex;
-  flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+}
+
+.datetime-picker .date-only {
+  flex: 1;
+}
+
+.datetime-picker .time-dropdown {
+  flex: 0 0 100px;
+}
+
+:deep(.datetime-picker .p-calendar),
+:deep(.datetime-picker .p-dropdown) {
+  width: 100% !important;
 }
 
 @media (max-width: 768px) {
-  .date-range-group {
-    flex-direction: column;
-    gap: 0.5rem;
+  .datetime-picker .time-dropdown {
+    flex: 0 0 90px;
   }
 }
 
@@ -889,10 +1165,9 @@ export default {
 
 .leave-type-option {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 0.5rem 0;
-  gap: 1rem;
+  gap: 0.25rem;
 }
 
 .disabled-option {
@@ -919,5 +1194,65 @@ export default {
   color: #6c757d;
   font-style: italic;
   font-size: 0.9rem;
+}
+
+.time-hint {
+  color: #6c757d;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.leave-type-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.advance-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #f59e0b;
+  margin-top: 0.25rem;
+}
+
+.advance-days-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #f59e0b;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.advance-days-warning i {
+  font-size: 0.9rem;
+}
+
+.date-cell {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.advance-day-blocked {
+  background-color: #f59e0b !important;
+  color: #fff !important;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+
+.holiday-date {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.advance-calendar :deep(.p-datepicker-calendar td) {
+  padding: 0.25rem;
 }
 </style>

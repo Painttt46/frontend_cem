@@ -51,9 +51,12 @@
 
         <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px; text-align: center;">
           <template #body="slotProps">
-            <Badge :value="getCategoryLabel(slotProps.data.category)" 
-                   :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff', fontWeight: 'bold' }" 
-                   class="category-badge" />
+            <div class="category-badges">
+              <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
+                     :value="getCategoryLabel(cat)" 
+                     :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', fontWeight: 'bold', margin: '2px' }" 
+                     class="category-badge" />
+            </div>
           </template>
         </Column>
 
@@ -153,11 +156,12 @@
   </div>
 
   <!-- Files Dialog -->
-  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }" :draggable="false">
+  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
-          <i class="pi pi-file"></i>
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+          <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
         <Button 
@@ -173,6 +177,11 @@
     <div v-else class="no-files">
       <p>ไม่มีไฟล์แนบ</p>
     </div>
+  </Dialog>
+
+  <!-- Full Image Dialog -->
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+    <img :src="fullImageUrl" class="full-image" />
   </Dialog>
 
   <!-- Task Works Dialog -->
@@ -196,7 +205,7 @@
         </div>
         <div class="summary-item">
           <i class="pi pi-clock"></i>
-          <span>รวม: <strong>{{ getTotalHours() }}</strong> ชั่วโมง</span>
+          <span>รวม: <strong>{{ getTotalHours() }}</strong></span>
         </div>
       </div>
       
@@ -235,9 +244,13 @@
                 <Badge :value="work.id" severity="info" />
               </td>
               <td>{{ formatDate(work.work_date) }}</td>
-              <td>{{ work.employee_name || 'ไม่ระบุ' }}</td>
+              <td>
+                <span class="clickable-name" @click="showUserInfo(work.employee_name, work.user_id)">
+                  {{ work.employee_name || 'ไม่ระบุ' }}
+                </span>
+              </td>
               <td>{{ work.start_time }} - {{ work.end_time }}</td>
-              <td class="text-center">{{ parseFloat(work.total_hours || 0).toFixed(1) }} ชม.</td>
+              <td class="text-center">{{ formatHoursMinutes(work.total_hours) }}</td>
               <td class="text-center">
                 <Badge :value="getStatusLabel(work.work_status)" 
                        :style="{ backgroundColor: getStatusColor(work.work_status), color: '#fff', fontWeight: 'bold' }" />
@@ -271,7 +284,8 @@
     <div v-if="selectedWorkFiles && selectedWorkFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedWorkFiles" :key="index" class="file-item">
         <div class="file-info">
-          <i class="pi pi-file"></i>
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+          <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
         <Button icon="pi pi-download" size="small" severity="success" outlined
@@ -281,7 +295,7 @@
   </Dialog>
 
   <!-- Edit Task Dialog -->
-  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '50rem' }" :draggable="false" position="center">
+  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false" position="center">
     <form @submit.prevent="updateTask" class="edit-form">
       <div class="form-grid">
         <div class="input-group">
@@ -317,16 +331,10 @@
 
         <div class="input-group">
           <label class="input-label">หมวดหมู่งาน *</label>
-          <Dropdown v-model="editFormData.category" :options="categories" 
+          <MultiSelect v-model="editFormData.category" :options="categories" 
                     optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
-                    class="corporate-input" required>
-            <template #value="slotProps">
-              <span v-if="slotProps.value">{{ getCategoryLabel(slotProps.value) }}</span>
-            </template>
-            <template #option="slotProps">
-              <span>{{ slotProps.option.label }}</span>
-            </template>
-          </Dropdown>
+                    class="corporate-input" display="chip" :maxSelectedLabels="3" :showToggleAll="false">
+          </MultiSelect>
         </div>
 
         <div class="input-group">
@@ -389,16 +397,25 @@
       </div>
     </form>
   </Dialog>
+
+  <!-- User Info Dialog -->
+  <UserInfoDialog 
+    v-model:visible="showUserInfoDialog" 
+    :userId="selectedUserId"
+    :userName="selectedUserName"
+  />
 </template>
 
 <script>
 import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 export default {
   name: 'TaskList',
   components: {
-    EnhancedDataTable
+    EnhancedDataTable,
+    UserInfoDialog
   },
   created() {
     this.$http = axios
@@ -430,21 +447,19 @@ export default {
       selectedTask: null,
       filesDialog: false,
       selectedTaskFiles: [],
+      fullImageDialog: false,
+      fullImageUrl: '',
       editDialog: false,
       taskWorksDialog: false,
       taskWorks: [],
       loadingWorks: false,
       workFilesDialog: false,
       selectedWorkFiles: [],
+      showUserInfoDialog: false,
+      selectedUserId: null,
+      selectedUserName: '',
       workStatusFilter: null,
       workSortBy: 'date_desc',
-      workStatusFilterOptions: [
-        { label: 'ทั้งหมด', value: null },
-        { label: 'เสร็จสมบูรณ์', value: 'completed' },
-        { label: 'กำลังดำเนินการ', value: 'in_progress' },
-        { label: 'รอดำเนินการ', value: 'pending' },
-        { label: 'ระงับ', value: 'on_hold' }
-      ],
       workSortOptions: [
         { label: 'วันที่ล่าสุด', value: 'date_desc' },
         { label: 'วันที่เก่าสุด', value: 'date_asc' },
@@ -457,7 +472,7 @@ export default {
         contract_number: '',
         sale_owner: '',
         description: '',
-        category: 'งานทั่วไป',
+        category: [],
         project_start_date: null,
         project_end_date: null,
         existingFiles: [],
@@ -478,6 +493,16 @@ export default {
     }
   },
   computed: {
+    workStatusFilterOptions() {
+      const options = [{ label: 'ทั้งหมด', value: null }]
+      this.workStatuses.forEach(s => {
+        options.push({
+          label: s.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim(),
+          value: s.value
+        })
+      })
+      return options
+    },
     enrichedTasks() {
       // Add status and category labels to tasks for better search
       return this.tasks.map(task => ({
@@ -535,7 +560,7 @@ export default {
         this.loadTasks()
         window.dispatchEvent(new CustomEvent('taskUpdated'))
       } catch (error) {
-        console.error('Error deleting task:', error)
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -549,7 +574,7 @@ export default {
         const response = await this.$http.get('/api/settings/categories')
         this.categories = response.data
       } catch (error) {
-        console.error('Error loading categories:', error)
+        
         // Fallback to default
         this.categories = [
           { label: '💼 งานทั่วไป', value: 'งานทั่วไป', icon: 'emoji:💼', color: '#6366f1' },
@@ -561,10 +586,10 @@ export default {
     async loadStatusesFromStorage() {
       try {
         const response = await this.$http.get('/api/settings/statuses')
-        console.log('Loaded statuses:', response.data)
+        
         this.workStatuses = response.data
       } catch (error) {
-        console.error('Error loading statuses:', error)
+        
         // Fallback to default
         this.workStatuses = [
           { label: '⏳ รอดำเนินการ', value: 'pending', icon: 'emoji:⏳', color: '#f59e0b' },
@@ -593,22 +618,38 @@ export default {
       const category = this.categories.find(cat => cat.value === categoryValue)
       return category && category.color ? category.color : '#6c757d'
     },
+    parseCategoryArray(category) {
+      if (!category) return []
+      if (Array.isArray(category)) return category
+      return category.split(',').map(c => c.trim()).filter(c => c)
+    },
     getStatusIcon(statusValue) {
       const status = this.workStatuses.find(s => s.value === statusValue)
       return status ? status.icon : 'pi pi-circle'
     },
     getStatusLabel(statusValue) {
       if (!statusValue) return '-'
-      const status = this.workStatuses.find(s => s.value === statusValue)
+      // ลอง match ด้วย value ก่อน
+      let status = this.workStatuses.find(s => s.value === statusValue)
+      // ถ้าไม่เจอ ลอง match ด้วย label
+      if (!status) {
+        status = this.workStatuses.find(s => s.label && s.label.includes(statusValue))
+      }
       if (status && status.label) {
         // Remove all emoji and special characters
         return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
       }
-      return '-'
+      // ถ้าไม่เจอใน workStatuses ให้แสดงค่าจริง
+      return statusValue
     },
     getStatusColor(statusValue) {
       if (!statusValue) return '#9e9e9e'
-      const status = this.workStatuses.find(s => s.value === statusValue)
+      // ลอง match ด้วย value ก่อน
+      let status = this.workStatuses.find(s => s.value === statusValue)
+      // ถ้าไม่เจอ ลอง match ด้วย label
+      if (!status) {
+        status = this.workStatuses.find(s => s.label && s.label.includes(statusValue))
+      }
       return status?.color || '#9e9e9e'
     },
     async loadTasks() {
@@ -652,6 +693,18 @@ export default {
       this.selectedTask = task
       this.detailDialog = true
     },
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+    getFileUrl(fileName) {
+      const token = localStorage.getItem('soc_token')
+      return `/api/files/download/${fileName}?token=${token}`
+    },
+    viewFullImage(fileName) {
+      this.fullImageUrl = this.getFileUrl(fileName)
+      this.fullImageDialog = true
+    },
     hasFiles(task) {
       return task.files && Array.isArray(task.files) && task.files.length > 0
     },
@@ -675,7 +728,7 @@ export default {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
       } catch (error) {
-        console.error('Download error:', error)
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -703,7 +756,7 @@ export default {
         contract_number: task.contract_number || '',
         sale_owner: task.sale_owner || '',
         description: task.description || '',
-        category: task.category || 'งานทั่วไป',
+        category: this.parseCategoryArray(task.category),
         status: task.status || 'pending',
         project_start_date: parseDate(task.project_start_date),
         project_end_date: parseDate(task.project_end_date),
@@ -759,6 +812,7 @@ export default {
         
         const updateData = {
           ...this.editFormData,
+          category: Array.isArray(this.editFormData.category) ? this.editFormData.category.join(',') : this.editFormData.category,
           project_start_date: formatDate(this.editFormData.project_start_date),
           project_end_date: formatDate(this.editFormData.project_end_date),
           files: allFiles
@@ -843,9 +897,11 @@ export default {
       }
     },
     getTotalHours() {
-      if (!this.taskWorks || this.taskWorks.length === 0) return '0.0'
+      if (!this.taskWorks || this.taskWorks.length === 0) return '0 ชม. 0 นาที'
       const total = this.taskWorks.reduce((sum, work) => sum + (parseFloat(work.total_hours) || 0), 0)
-      return total.toFixed(1)
+      const hours = Math.floor(total)
+      const minutes = Math.round((total - hours) * 60)
+      return `${hours} ชม. ${minutes} นาที`
     },
     showWorkFiles(work) {
       this.selectedWorkFiles = work.files || []
@@ -859,6 +915,17 @@ export default {
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+    },
+    formatHoursMinutes(hours) {
+      const h = parseFloat(hours) || 0
+      const hrs = Math.floor(h)
+      const mins = Math.round((h - hrs) * 60)
+      return `${hrs} ชม. ${mins} นาที`
+    },
+    showUserInfo(name, userId) {
+      this.selectedUserName = name
+      this.selectedUserId = userId
+      this.showUserInfoDialog = true
     }
   }
 }
@@ -1068,8 +1135,32 @@ export default {
   gap: 0.5rem;
 }
 
+.file-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.file-preview:hover {
+  opacity: 0.8;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  color: #666;
+}
+
 .file-name {
   font-weight: 500;
+}
+
+.full-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 .no-files {
@@ -1348,6 +1439,13 @@ export default {
   color: white !important;
 }
 
+.category-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+}
+
 @media (max-width: 480px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.25rem;
@@ -1418,5 +1516,15 @@ export default {
 
 .p-dialog .p-dialog-header .p-dialog-title {
   cursor: default !important;
+}
+
+.clickable-name {
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.clickable-name:hover {
+  color: #1d4ed8;
 }
 </style>

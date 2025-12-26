@@ -28,6 +28,10 @@
                   <InputText class="w-100" type="email" id="email" v-model="email" required />
               </div>
               <div class="col-5 mt-2 pt-2">
+                  <label for="phone">เบอร์โทร</label>
+                  <InputText class="w-100" type="text" id="phone" v-model="phone" placeholder="0xx-xxx-xxxx" />
+              </div>
+              <div class="col-5 mt-2 pt-2">
                   <label for="employeeId">รหัสพนักงาน</label>
                   <InputText class="w-100" type="text" id="employeeId" v-model="employeeId" disabled />
               </div>
@@ -122,6 +126,7 @@ const messages = ref([]);
 var id = ref();
 var username = ref();
 var email = ref();
+var phone = ref();
 var firstName = ref();
 var lastName = ref();
 var employeeId = ref();
@@ -166,6 +171,7 @@ function fetchData() {
       
       username.value = userData.username;
       email.value = userData.email;
+      phone.value = userData.phone;
       firstName.value = userData.firstname;
       lastName.value = userData.lastname;
       employeeId.value = userData.employee_id;
@@ -175,8 +181,7 @@ function fetchData() {
       id.value = userData.id;
       loading.value = false;
     })
-    .catch(error => {
-      console.error('Error fetching user data:', error);
+    .catch(() => {
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
@@ -193,6 +198,7 @@ function updateUser() {
     firstname: firstName.value,
     lastname: lastName.value,
     email: email.value,
+    phone: phone.value || null,
     employee_id: employeeId.value || null,
     position: position.value || null,
     department: department.value || null,

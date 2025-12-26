@@ -43,9 +43,9 @@
           </template>
         </Column>
 
-        <Column header="จำนวนวัน" :sortable="true">
+        <Column header="จำนวน" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน
+            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
           </template>
         </Column>
 
@@ -97,24 +97,70 @@
           </template>
         </Column>
 
-        <Column field="status" header="สถานะ">
+        <Column header="สถานะ" style="min-width: 180px;">
           <template #body="slotProps">
-            <div class="status-actions">
+            <div class="status-container">
               <Badge :value="getStatusLabel(slotProps.data.status)"
-                :severity="getStatusSeverity(slotProps.data.status)" />
-              <Button v-if="canDeleteRequest(slotProps.data)" icon="pi pi-trash" size="small" severity="danger" text
-                @click="confirmDelete(slotProps.data)" v-tooltip="'ลบคำขอ'" class="ml-2" />
+                :severity="getStatusSeverity(slotProps.data.status)" 
+                class="status-badge-large" />
+              <Button v-if="canDeleteRequest(slotProps.data)" 
+                icon="pi pi-trash" 
+                size="small" 
+                severity="danger" 
+                text
+                @click="confirmDelete(slotProps.data)" 
+                v-tooltip="'ลบคำขอ'" 
+                class="delete-btn" />
             </div>
           </template>
         </Column>
 
-        <Column header="ผู้ดำเนินการ" style="min-width: 150px;">
+        <Column header="ผู้อนุมัติ" style="min-width: 280px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.approved_by" class="approver-info">
-              <i class="pi pi-user-check"></i>
-              <span class="clickable-name" @click="showApproverInfo(slotProps.data.approved_by)">{{ slotProps.data.approved_by }}</span>
+            <div class="approver-container">
+              <!-- Step 1: หัวหน้างาน -->
+              <div class="approver-item" :class="{ 
+                'approved': slotProps.data.approved_by_level1,
+                'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1
+              }">
+                <div class="approver-badge-wrapper">
+                  <i v-if="slotProps.data.approved_by_level1" class="pi pi-check-circle" style="color: #10b981;"></i>
+                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
+                  <Badge value="หัวหน้างาน" :severity="slotProps.data.approved_by_level1 ? 'info' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1 ? 'danger' : 'secondary')" />
+                </div>
+                <span v-if="slotProps.data.approved_by_level1" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
+                  {{ slotProps.data.approved_by_level1 }}
+                </span>
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="approver-text rejected-text clickable-name" @click="showApproverInfo(slotProps.data.rejected_by)">
+                  {{ slotProps.data.rejected_by }}
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                </span>
+                <span v-else class="approver-text pending-text">รอดำเนินการ</span>
+              </div>
+
+              <!-- Step 2: HR (ไม่แสดงถ้าถูกปฏิเสธตั้งแต่ step 1) -->
+              <div v-if="!(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1)" class="approver-item" :class="{ 
+                'approved': slotProps.data.approved_by_level2,
+                'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2,
+                'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2)
+              }">
+                <div class="approver-badge-wrapper">
+                  <i v-if="slotProps.data.approved_by_level2" class="pi pi-check-circle" style="color: #10b981;"></i>
+                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
+                  <Badge value="HR" :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : 'secondary')" />
+                </div>
+                <span v-if="slotProps.data.approved_by_level2" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
+                  {{ slotProps.data.approved_by_level2 }}
+                </span>
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="approver-text rejected-text clickable-name" @click="showApproverInfo(slotProps.data.rejected_by)">
+                  {{ slotProps.data.rejected_by }}
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                </span>
+                <span v-else class="approver-text pending-text">รอดำเนินการ</span>
+              </div>
             </div>
-            <span v-else class="no-approver">-</span>
           </template>
         </Column>
 
@@ -128,7 +174,7 @@
   </Card>
 
   <!-- Work Details Dialog -->
-  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" style="width: 50rem;">
+  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div class="work-details-content">
       <p>{{ selectedWorkDetails }}</p>
     </div>
@@ -138,7 +184,7 @@
   </Dialog>
 
   <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" style="width: 60rem;">
+  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
     <div class="attachments-content">
       <div v-if="selectedAttachments.length === 0" class="no-attachments">
         <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
@@ -147,7 +193,8 @@
       <div v-else class="attachments-list">
         <div v-for="(file, index) in selectedAttachments" :key="index" class="attachment-item">
           <div class="file-info">
-            <i :class="getFileIcon(file)" class="file-icon"></i>
+            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+            <i v-else :class="getFileIcon(file)" class="file-icon"></i>
             <div class="file-details">
               <span class="file-name">{{ file }}</span>
               <small class="file-type">{{ getFileType(file) }}</small>
@@ -165,12 +212,25 @@
     </template>
   </Dialog>
 
+  <!-- Full Image Dialog -->
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+    <img :src="fullImageUrl" class="full-image" />
+  </Dialog>
+
   <!-- User Info Dialog -->
   <UserInfoDialog 
     v-model:visible="showUserInfoDialog" 
     :user-name="selectedUserName"
     :user-id="selectedUserId"
   />
+
+  <!-- Reject Reason Dialog -->
+  <Dialog v-model:visible="showRejectReasonDialog" modal header="เหตุผลที่ไม่อนุมัติ" :style="{ width: '400px' }" :draggable="false">
+    <div class="reject-reason-content">
+      <i class="pi pi-info-circle"></i>
+      <p>{{ selectedRejectReason }}</p>
+    </div>
+  </Dialog>
 </template>
 
 <script>
@@ -195,10 +255,14 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
+      fullImageDialog: false,
+      fullImageUrl: '',
       leaveTypes: [],
       showUserInfoDialog: false,
       selectedUserName: '',
-      selectedUserId: null
+      selectedUserId: null,
+      showRejectReasonDialog: false,
+      selectedRejectReason: ''
     }
   },
   async mounted() {
@@ -212,8 +276,8 @@ export default {
       try {
         const response = await this.$http.get('/api/leave/leave-types')
         this.leaveTypes = response.data
-      } catch (error) {
-        console.error('Error loading leave types:', error)
+      } catch { // ignore
+        
       }
     },
     getLeaveTypeColor(type) {
@@ -257,12 +321,12 @@ export default {
         // Emit event เพื่อ refresh ข้อมูล
         this.$emit('request-deleted')
 
-      } catch (error) {
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถลบคำขอได้',
-          life: 3000
+          summary: 'ลบไม่สำเร็จ',
+          detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
         })
       }
     },
@@ -277,22 +341,58 @@ export default {
       this.showAttachmentsDialog = true
     },
 
-    downloadFile(fileName) {
-      // Create download link
-      const link = document.createElement('a')
-      link.href = `/api/files/download/${fileName}`
-      link.download = fileName
-      link.target = '_blank'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+    async downloadFile(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, {
+          responseType: 'blob'
+        })
+        
+        // Create download link
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        // Extract original filename (remove timestamp prefix)
+        const originalName = fileName.split('-').slice(2).join('-') || fileName
+        link.download = originalName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
 
-      this.$toast.add({
-        severity: 'success',
-        summary: 'ดาวน์โหลด',
-        detail: `กำลังดาวน์โหลด: ${fileName}`,
-        life: 3000
-      })
+        this.$toast.add({
+          severity: 'success',
+          summary: 'ดาวน์โหลดสำเร็จ',
+          detail: originalName,
+          life: 3000
+        })
+      } catch {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ดาวน์โหลดไม่สำเร็จ',
+          detail: 'ไฟล์อาจถูกลบหรือไม่พร้อมใช้งาน',
+          life: 4000
+        })
+      }
+    },
+
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+
+    getFileUrl(fileName) {
+      const token = localStorage.getItem('soc_token')
+      return `/api/files/download/${fileName}?token=${token}`
+    },
+
+    viewFullImage(fileName) {
+      this.fullImageUrl = this.getFileUrl(fileName)
+      this.fullImageDialog = true
+    },
+
+    handleImageError(e) {
+      e.target.style.display = 'none'
+      e.target.nextElementSibling?.style?.removeProperty('display')
     },
 
     getFileIcon(fileName) {
@@ -331,25 +431,29 @@ export default {
       return new Date(date).toLocaleDateString('th-TH', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'Asia/Bangkok'
       })
     },
     formatDateTime(datetime) {
       if (!datetime) return '-'
-      return new Date(datetime).toLocaleString('th-TH', {
+      const date = new Date(datetime)
+      return date.toLocaleString('th-TH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
     calculateDays(startDateTime, endDateTime) {
       if (!startDateTime || !endDateTime) return 0
       const start = new Date(startDateTime)
       const end = new Date(endDateTime)
-      const diffTime = Math.abs(end - start)
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+      const diffMs = end - start
+      const diffHours = diffMs / (1000 * 60 * 60)
+      return diffHours / 8
     },
     getLeaveTypeLabel(type) {
       const types = {
@@ -364,6 +468,7 @@ export default {
     getStatusSeverity(status) {
       const severities = {
         'pending': 'warning',
+        'pending_level2': 'info',
         'approved': 'success',
         'rejected': 'danger',
         'รอการอนุมัติ': 'warning',
@@ -374,12 +479,13 @@ export default {
     },
 
     getStatusLabel(status) {
-      const statusMap = {
-        'pending': 'รอการอนุมัติ',
+      const labels = {
+        'pending': 'รอหัวหน้างานอนุมัติ',
+        'pending_level2': 'รอ HR อนุมัติ',
         'approved': 'อนุมัติแล้ว',
-        'rejected': 'ปฏิเสธ'
+        'rejected': 'ไม่อนุมัติ'
       }
-      return statusMap[status] || status
+      return labels[status] || status
     },
     viewAttachments(attachments) {
       this.$emit('view-attachments', attachments)
@@ -398,6 +504,11 @@ export default {
       this.selectedUserName = approverName
       this.selectedUserId = null
       this.showUserInfoDialog = true
+    },
+
+    showRejectReason(reason) {
+      this.selectedRejectReason = reason
+      this.showRejectReasonDialog = true
     }
   }
 }
@@ -567,6 +678,25 @@ export default {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.file-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  cursor: pointer;
+}
+
+.file-preview:hover {
+  opacity: 0.8;
+}
+
+.full-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 .file-icon {
@@ -793,5 +923,137 @@ export default {
     height: 2rem;
     font-size: 0.8rem;
   }
+}
+.status-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.status-badge-large {
+  font-size: 0.9rem !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+}
+
+.delete-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+}
+
+.delete-btn .p-button-icon {
+  font-size: 0.9rem;
+}
+
+.approver-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.approver-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 8px;
+  border-left: 3px solid #94a3b8;
+}
+
+.approver-item.approved {
+  border-left-color: #10b981;
+}
+
+.approver-item.rejected {
+  border-left-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.approver-badge-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.approver-badge-wrapper i {
+  color: #10b981;
+  font-size: 1rem;
+}
+
+.approver-badge-wrapper .p-badge {
+  font-size: 0.75rem !important;
+  padding: 0.3rem 0.6rem !important;
+  font-weight: 600 !important;
+}
+
+.approver-text {
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.no-approver {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.5rem;
+}
+
+.no-approver i {
+  font-size: 1rem;
+}
+
+.approver-name {
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.no-approver {
+  color: #adb5bd;
+}
+
+.approver-item.disabled {
+  opacity: 0.5;
+}
+
+.rejected-text {
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pending-text {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.reject-reason-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  border-left: 3px solid #ef4444;
+}
+
+.reject-reason-content i {
+  color: #ef4444;
+  font-size: 1.25rem;
+  margin-top: 2px;
+}
+
+.reject-reason-content p {
+  margin: 0;
+  color: #991b1b;
+  line-height: 1.5;
 }
 </style>

@@ -4,8 +4,23 @@
 
 .container {
     max-width: 100%;
-    margin-left: 2rem;
-    margin-right: 2rem;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    .container {
+        margin-left: 1rem;
+        margin-right: 1rem;
+    }
 }
 
 
@@ -67,11 +82,14 @@ a {
     text-decoration: none !important;
 }
 
-body {
+html, body {
     font-family: Arial, Helvetica, sans-serif;
     height: 100vh !important;
     margin: 0 !important;
     padding: 0 !important;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    overflow: hidden;
 }
 
 ol,
@@ -172,7 +190,6 @@ li {
 }
 
 body{
-    position: fixed;
     height: 100vh !important;
 }
 

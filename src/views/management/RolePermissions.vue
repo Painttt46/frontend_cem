@@ -72,7 +72,7 @@
     </div>
 
     <!-- Add Permission Dialog -->
-    <Dialog v-model:visible="showAddDialog" header="เพิ่ม Permission ใหม่" :modal="true" :draggable="false" style="width: 500px">
+    <Dialog v-model:visible="showAddDialog" header="เพิ่ม Permission ใหม่" :modal="true" :draggable="false" :style="{ width: '90vw', maxWidth: '500px' }">
       <div class="add-permission-form">
         <div class="field">
           <label>ชื่อหน้า</label>
@@ -148,7 +148,7 @@ const loadRoles = async () => {
       value: role
     }))
   } catch (error) {
-    console.error('Error loading roles:', error)
+    
     // Fallback to default roles
     roles.value = [
       { label: 'Superadmin', value: 'superadmin' },
@@ -344,8 +344,13 @@ const savePermissions = async () => {
 <style scoped>
 .permissions-container {
   padding: 1rem;
-  max-width: 1400px;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
+  
+  background: #e5e7eb;
+  height: 100%;
+  overflow: auto;
 }
 
 .header-card {

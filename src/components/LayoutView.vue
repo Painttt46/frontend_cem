@@ -22,8 +22,8 @@
   </Dialog>
   <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100vw">
-    <div class="row" style="height: 100%">
+  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100%; overflow: hidden;">
+    <div class="row" style="height: 100%; overflow: hidden;">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
         :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
@@ -65,6 +65,13 @@
           </div>
 
           <ul class="nav-menu">
+            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/daily_work')">
+              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+                <h5 class="mt-2">
+                  <i class="pi pi-calendar px-2" style="font-size: 1.5rem"></i>ลงงานรายวัน
+                </h5>
+              </router-link>
+            </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/car_booking')">
               <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
                 <h5 class="mt-2">
@@ -76,13 +83,6 @@
               <router-link to="/leave_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
                 <h5 class="mt-2">
                   <i class="pi pi-sign-out px-2" style="font-size: 1.5rem"></i>ลางาน
-                </h5>
-              </router-link>
-            </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/daily_work')">
-              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
-                <h5 class="mt-2">
-                  <i class="pi pi-calendar px-2" style="font-size: 1.5rem"></i>ลงงานรายวัน
                 </h5>
               </router-link>
             </li>
@@ -127,14 +127,14 @@
         </div>
       </div>
 
-      <div :class="mainContentClass" style="height: 100%">
-        <div class="pt-1 pb-3 container-fluid h-100">
+      <div :class="mainContentClass" style="height: 100%; padding: 0; overflow: hidden;">
+        <div class="pt-1 pb-3 container-fluid h-100 content-padding">
           <div class="main-content-wrapper">
             <ScrollPanel style="
                 width: 100%;
                 height: calc(100vh);
-                padding-right: 2rem;
-                padding-bottom: 2rem;
+                padding-right: 0;
+                padding-bottom: 0.5rem;
               ">
               <RouterView />
             </ScrollPanel>
@@ -147,7 +147,6 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from "vue";
-import { upperCase } from "@/App.vue";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
@@ -230,7 +229,7 @@ onMounted(() => {
   soc_firstname.value = localStorage.getItem("soc_firstname") || "No data";
   soc_lastname.value = localStorage.getItem("soc_lastname") || "No data";
   if (soc_user.value != null) {
-    soc_user_firstLetter.value = upperCase(soc_user.value.charAt(0));
+    soc_user_firstLetter.value = soc_user.value.charAt(0).toUpperCase();
   }
 
   // Update time every second
@@ -268,8 +267,8 @@ const logout = async () => {
   try {
     // เรียก API logout เพื่อ clear cookie
     await axios.post('/api/auth/logout');
-  } catch (error) {
-    console.error('Logout error:', error);
+  } catch {
+    // ignore
   } finally {
     // Clear localStorage และ sessionStorage
     localStorage.clear();
@@ -306,43 +305,41 @@ const startCountdown = () => {
 
 .sidebar-toggle-btn {
   position: fixed;
-  top: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
   right: var(--toggle-btn-right);
   left: var(--toggle-btn-left);
-  z-index: 1000;
+  z-index: 1001;
   background: linear-gradient(135deg, #4A90E2, #D73527) !important;
   color: white !important;
   border: none !important;
   border-radius: 8px !important;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3) !important;
-  transition: all 0.3s ease !important;
+  box-shadow: -2px 2px 8px rgba(74, 144, 226, 0.3) !important;
   width: 40px !important;
   height: 40px !important;
-
-}
-:root {
-  --toggle-btn-right: 1rem;
-  /* ตำแหน่งเมื่อ sidebar เปิด */
-  --toggle-btn-left: auto;
-}
-
-.sidebar-hidden {
-  --toggle-btn-right: auto;
-  /* ตำแหน่งเมื่อ sidebar ปิด */
-  --toggle-btn-left: 1rem;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 0.3;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 .sidebar-toggle-btn:hover {
-  transform: translateY(-2px) !important;
+  opacity: 1;
   box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+}
+
+
+.sidebar-hidden .sidebar-toggle-btn {
+  right: auto;
 }
 
 .main-content-wrapper {
   width: 100%;
   height: 100%;
-  padding: 0 1rem;
-  margin-left: 2rem;
-  margin-right: 1rem;
+  padding: 0;
+  margin: 0;
 }
 
 .sidebar-column {
@@ -411,10 +408,21 @@ h4 {
   transform: translateY(0) !important;
 }
 
+.content-padding {
+  padding-right: 0;
+  padding-left: 1rem;
+}
+
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
+  .content-padding {
+    padding-right: 1.3rem;
+    padding-left: 0.3rem;
+  }
+  
   .sidebar-toggle-btn {
-    top: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   :root {
@@ -432,7 +440,7 @@ h4 {
     top: 0;
     left: 0;
     height: 100vh;
-    width: 100vw;
+    width: 100%;
     z-index: 999;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     transform: translateX(0);
@@ -452,5 +460,23 @@ h4 {
   .sidebar-hidden .sidebar-column {
     transform: translateX(-100%);
   }
+}
+
+/* ซ่อน scrollbar ของ ScrollPanel */
+:deep(.p-scrollpanel-bar-y),
+:deep(.p-scrollpanel-bar) {
+  display: none !important;
+  width: 0 !important;
+  opacity: 0 !important;
+}
+
+:deep(.p-scrollpanel-content) {
+  overflow: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+:deep(.p-scrollpanel-content)::-webkit-scrollbar {
+  display: none !important;
 }
 </style>

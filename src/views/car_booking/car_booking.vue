@@ -79,9 +79,9 @@
 
       <div v-else class="image-viewer">
         <div v-for="imageType in groupedImages" :key="imageType.type"
-          :class="['image-section', imageType.type === 'ใช้' ? 'borrow-section' : 'return-section']">
+          :class="['image-section', imageType.type.includes('ใช้') ? 'borrow-section' : 'return-section']">
           <div class="section-header">
-            <i :class="imageType.type === 'ใช้' ? 'pi pi-download' : 'pi pi-upload'"></i>
+            <i :class="imageType.type.includes('ใช้') ? 'pi pi-download' : 'pi pi-upload'"></i>
             รูปภาพตอน{{ imageType.type }}
           </div>
           <div class="images-grid">
@@ -137,7 +137,7 @@ export default {
       showForm: false,
       activeForm: 'borrow',
       borrowForm: {
-        license: 'FXAG-2032',
+        license: 'ชฮ-3706',
         time: '',
         location: '',
         project: '',
@@ -147,7 +147,7 @@ export default {
       },
       returnForm: {
         borrowId: '',
-        license: 'FXAG-2032',
+        license: 'ชฮ-3706',
         location: '',
         discription: '',
         images: []
@@ -165,7 +165,10 @@ export default {
       showFullImageModal: false,
       fullSizeImage: '',
       teamsWebhookUrl: 'YOUR_TEAMS_WEBHOOK_URL_HERE',
-      notifiedActiveBookings: new Set()
+      notifiedActiveBookings: new Set(),
+      refreshInterval: null,
+      timeInterval: null,
+      syncInterval: null
     }
   },
   computed: {
@@ -189,15 +192,8 @@ export default {
         // Must be active status (past borrow time, not returned)
         if (r.status !== 'active') return false
 
-        // Check if current user is authorized to return this booking
-        const isBorrower = r.name === currentUserName
-        const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
-          r.colleagues.some(colleague => {
-            const colleagueName = typeof colleague === 'string' ? colleague : colleague?.name
-            return colleagueName === currentUserName
-          })
-
-        return isBorrower || isColleague
+        // Only borrower can return
+        return r.name === currentUserName
       })
     },
     pendingBorrows() {
@@ -271,17 +267,24 @@ export default {
   mounted() {
     this.syncServerTime()
     
-    setInterval(() => {
+    this.timeInterval = setInterval(() => {
       this.currentTime = new Date(Date.now() + this.serverTimeOffset)
     }, 1000)
     
-    setInterval(() => {
-      this.loadRecords()
+    // Auto refresh ทุก 30 วินาที
+    this.refreshInterval = setInterval(() => {
+      this.loadRecords(true)
     }, 30000)
     
-    setInterval(() => {
+    this.syncInterval = setInterval(() => {
       this.syncServerTime()
     }, 300000)
+  },
+  beforeUnmount() {
+    // Clear intervals เมื่อออกจากหน้านี้
+    if (this.refreshInterval) clearInterval(this.refreshInterval)
+    if (this.timeInterval) clearInterval(this.timeInterval)
+    if (this.syncInterval) clearInterval(this.syncInterval)
   },
   created() {
     this.$http = axios
@@ -290,15 +293,12 @@ export default {
   methods: {
     async syncServerTime() {
       try {
-        const response = await axios.get('/api/server-time')
+        const response = await axios.get('/api/server-time', { silent: true })
         const serverTime = new Date(response.data.serverTime)
         const clientTime = new Date()
         this.serverTimeOffset = serverTime.getTime() - clientTime.getTime()
         this.currentTime = new Date(Date.now() + this.serverTimeOffset)
-        console.log('[Time Sync] Server time:', serverTime.toLocaleString('th-TH'))
-        console.log('[Time Sync] Offset:', this.serverTimeOffset, 'ms')
-      } catch (error) {
-        console.error('Failed to sync server time:', error)
+      } catch { // ignore
       }
     },
     getCurrentUserName() {
@@ -306,17 +306,19 @@ export default {
       const lastName = localStorage.getItem('soc_lastname') || ''
       return `${firstName} ${lastName}`.trim()
     },
-    async loadRecords() {
+    async loadRecords(silent = false) {
       try {
-        const response = await axios.get('/api/car-booking')
+        const response = await axios.get('/api/car-booking', { silent })
         this.records = response.data
-      } catch (error) {
-        this.$toast.add({
-          severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลการจองรถได้',
-          life: 3000
-        })
+      } catch { // ignore
+        if (!silent) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'โหลดข้อมูลไม่สำเร็จ',
+            detail: 'กรุณารีเฟรชหน้าเว็บ',
+            life: 4000
+          })
+        }
       }
     },
     triggerFileUpload() {
@@ -357,6 +359,19 @@ export default {
         this.returnForm.images.splice(index, 1)
       }
     },
+    async convertImagesToBase64(images) {
+      const promises = images.map(img => {
+        if (img instanceof File) {
+          return new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result)
+            reader.readAsDataURL(img)
+          })
+        }
+        return Promise.resolve(img)
+      })
+      return Promise.all(promises)
+    },
     openImageModal(imageSrc) {
       this.selectedImages = [{ src: imageSrc, type: 'รูปภาพ' }]
       this.showImageModal = true
@@ -384,9 +399,9 @@ export default {
     handleImageError() {
       this.$toast.add({
         severity: 'error',
-        summary: 'เกิดข้อผิดพลาด',
-        detail: 'ไม่สามารถโหลดรูปภาพได้',
-        life: 3000
+        summary: 'โหลดรูปไม่สำเร็จ',
+        detail: 'รูปภาพอาจถูกลบหรือไม่พร้อมใช้งาน',
+        life: 4000
       })
     },
     handleImageLoad() {
@@ -454,17 +469,18 @@ export default {
 
         // Clear file input
         event.target.value = ''
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถอัปโหลดรูปภาพได้',
-          life: 3000
+          summary: 'อัปโหลดไม่สำเร็จ',
+          detail: 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
+          life: 4000
         })
       }
     },
     async submitBorrow() {
       try {
+        const images = await this.convertImagesToBase64(this.borrowForm.images || [])
         const borrowData = {
           type: 'borrow',
           location: this.borrowForm.location,
@@ -472,9 +488,9 @@ export default {
           description: this.borrowForm.discription,
           selected_date: this.formatDateForDB(this.selectedDate),
           time: this.borrowForm.time,
-          license: 'FXAG-2032',
+          license: 'ชฮ-3706',
           colleagues: this.borrowForm.colleagues || [],
-          images: this.borrowForm.images || [],
+          images,
           user_id: localStorage.getItem('soc_user_id')
         }
 
@@ -490,22 +506,21 @@ export default {
           detail: 'บันทึกการจองรถเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch (error) {
-        
+      } catch (err) {
         // Handle conflict error (409)
-        if (error.response?.status === 409) {
+        if (err.response?.status === 409) {
           this.$toast.add({
             severity: 'warn',
             summary: 'ไม่สามารถจองได้',
-            detail: error.response.data.details || error.response.data.error,
+            detail: err.response.data.details || err.response.data.error,
             life: 5000
           })
         } else {
           this.$toast.add({
             severity: 'error',
-            summary: 'เกิดข้อผิดพลาด',
-            detail: 'ไม่สามารถบันทึกการจองได้',
-            life: 3000
+            summary: 'บันทึกไม่สำเร็จ',
+            detail: 'กรุณาลองใหม่อีกครั้ง',
+            life: 4000
           })
         }
       }
@@ -514,7 +529,7 @@ export default {
       const borrowId = this.returnForm.borrowId || this.$refs.bookingForm?.selectedReturnBorrow
 
       if (!borrowId) {
-        this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกการแจ้งใช้รถที่ต้องการคืน', life: 3000 })
+        this.$toast.add({ severity: 'error', summary: 'กรุณาเลือกข้อมูล', detail: 'เลือกการแจ้งใช้รถที่ต้องการคืน', life: 4000 })
         return
       }
 
@@ -530,12 +545,14 @@ export default {
           hour12: false
         })
 
+        const images = await this.convertImagesToBase64(this.returnForm.images || [])
         const returnData = {
           return_name: currentUserName,
           return_location: this.returnForm.location,
           return_description: this.returnForm.discription,
           return_time: currentTime,
-          return_date: this.formatDateForDB(bangkokTime)
+          return_date: this.formatDateForDB(bangkokTime),
+          images
         }
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
@@ -549,19 +566,19 @@ export default {
           detail: 'บันทึกการคืนรถเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถบันทึกการคืนรถได้',
-          life: 3000
+          summary: 'บันทึกไม่สำเร็จ',
+          detail: 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
         })
       }
     },
     async submitCancel() {
 
       if (!this.cancelForm.borrowId) {
-        this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกการจองที่ต้องการยกเลิก', life: 3000 })
+        this.$toast.add({ severity: 'error', summary: 'กรุณาเลือกข้อมูล', detail: 'เลือกการจองที่ต้องการยกเลิก', life: 4000 })
         return
       }
 
@@ -577,12 +594,12 @@ export default {
           detail: 'ยกเลิกการจองเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถยกเลิกการจองได้',
-          life: 3000
+          summary: 'ยกเลิกไม่สำเร็จ',
+          detail: 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
         })
       }
     },
@@ -636,18 +653,18 @@ export default {
           detail: `อัปโหลดรูปภาพ ${files.length} ไฟล์เรียบร้อย`,
           life: 3000
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถอัปโหลดรูปภาพได้',
-          life: 3000
+          summary: 'อัปโหลดไม่สำเร็จ',
+          detail: 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
+          life: 4000
         })
       }
     },
     resetForms() {
       this.borrowForm = {
-        license: 'FXAG-2032',
+        license: 'ชฮ-3706',
         time: '',
         location: '',
         project: '',
@@ -657,7 +674,7 @@ export default {
       }
       this.returnForm = {
         borrowId: '',
-        license: 'FXAG-2032',
+        license: 'ชฮ-3706',
         location: '',
         discription: '',
         images: []
@@ -705,16 +722,19 @@ export default {
 }
 
 .app-container {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 1rem;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
-  background: #f8f9fa;
-  min-height: 100vh;
+  
+  background: #e5e7eb;
+  height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
 }
 
 .main-tabs {
-  margin-top: 1.5rem;
+  margin-top: 0;
   box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
   border-radius: 15px;
   overflow: hidden;
@@ -928,23 +948,31 @@ export default {
 }
 
 .borrow-section {
-  border: 2px solid #28a745;
+  border: 2px solid #dc3545;
 }
 
 .borrow-section .section-header {
+  background: #f8d7da;
+  color: #721c24;
+  border-bottom: 1px solid #f5c6cb;
+}
+
+.borrow-section .grid-image {
+  border: 3px solid #dc3545;
+}
+
+.return-section {
+  border: 2px solid #28a745;
+}
+
+.return-section .section-header {
   background: #d4edda;
   color: #155724;
   border-bottom: 1px solid #c3e6cb;
 }
 
-.return-section {
-  border: 2px solid #ffc107;
-}
-
-.return-section .section-header {
-  background: #fff3cd;
-  color: #856404;
-  border-bottom: 1px solid #ffeaa7;
+.return-section .grid-image {
+  border: 3px solid #28a745;
 }
 
 .section-header {
@@ -960,21 +988,21 @@ export default {
 
 .images-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 120px));
+  gap: 0.5rem;
+  padding: 0.5rem;
 }
 
 .image-container {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 100px;
 }
 
 .grid-image {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  height: 100px;
+  object-fit: contain;
   border-radius: 6px;
   border: 1px solid #e9ecef;
   cursor: pointer;

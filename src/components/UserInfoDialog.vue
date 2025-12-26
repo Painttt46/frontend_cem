@@ -1,5 +1,5 @@
 <template>
-  <Dialog :visible="visible" modal header="ข้อมูลผู้ใช้" :style="{ width: '400px', maxWidth: '95vw' }" position="center" :draggable="false" @update:visible="$emit('update:visible', $event)">
+  <Dialog :visible="visible" modal header="ข้อมูลผู้ใช้" :style="{ width: '90vw', maxWidth: '450px' }" position="center" :draggable="false" @update:visible="$emit('update:visible', $event)">
     <div v-if="loading" class="loading-state">
       <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
       <p>กำลังโหลดข้อมูล...</p>
@@ -104,8 +104,8 @@ export default {
             return userName === fullName
           })
         }
-      } catch (error) {
-        console.error('Error loading user info:', error)
+      } catch {
+        // ignore
       } finally {
         this.loading = false
       }

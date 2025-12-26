@@ -73,6 +73,16 @@
               </div>
             </template>
           </Column>
+
+          <Column field="phone" header="เบอร์โทร">
+            <template #body="slotProps">
+              <div v-if="slotProps.data.phone" class="phone-wrapper">
+                <i class="pi pi-phone"></i>
+                {{ slotProps.data.phone }}
+              </div>
+              <span v-else>-</span>
+            </template>
+          </Column>
           
           <Column field="position" header="ตำแหน่ง" class="position-col">
             <template #body="slotProps">
@@ -139,9 +149,15 @@
             <InputText v-model="userForm.lastname" required />
           </div>
         </div>
-        <div class="field">
-          <label>Email *</label>
-          <InputText v-model="userForm.email" type="email" required />
+        <div class="form-row">
+          <div class="field">
+            <label>Email *</label>
+            <InputText v-model="userForm.email" type="email" required />
+          </div>
+          <div class="field">
+            <label>เบอร์โทร</label>
+            <InputText v-model="userForm.phone" placeholder="0xx-xxx-xxxx" />
+          </div>
         </div>
         <div class="form-row">
           <div class="field">
@@ -203,6 +219,7 @@ const userForm = ref({
   username: '',
   password: '',
   email: '',
+  phone: '',
   position: '',
   department: '',
   role: 'user',
@@ -327,6 +344,7 @@ const resetForm = () => {
     username: '',
     password: '',
     email: '',
+    phone: '',
     position: '',
     department: '',
     role: 'user',
@@ -349,8 +367,13 @@ onMounted(() => {
 <style scoped>
 .user-management {
   padding: 1rem;
-  max-width: 1400px;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
+  
+  background: #e5e7eb;
+  height: 100%;
+  overflow: auto;
 }
 
 /* Header Styles */
@@ -501,6 +524,12 @@ onMounted(() => {
 .user-username {
   font-size: 0.75rem;
   color: #6c757d;
+}
+
+.phone-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .email-wrapper {

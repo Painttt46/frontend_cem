@@ -30,18 +30,32 @@
     </div>
 
     <!-- Leave Form Dialog -->
-    <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', height: '90vh' }" :draggable="false">
+    <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', maxWidth: '900px' }" class="leave-dialog" :draggable="false">
       <LeaveForm @submit-leave="submitLeave" @close-form="showLeaveDialog = false" />
     </Dialog>
 
     <!-- Approval Dialog -->
-    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '95vw', height: '90vh' }" :draggable="false">
+    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
       <LeaveApproval 
         :records="pendingLeaveRecords" 
+        :approver-level="approverLevel"
+        :disabled="approving"
         @approve-leave="approveLeave" 
-        @reject-leave="rejectLeave" 
+        @reject-leave="openRejectDialog" 
         @close-form="showApprovalDialog = false"
       />
+    </Dialog>
+
+    <!-- Reject Dialog -->
+    <Dialog v-model:visible="showRejectDialog" modal header="ไม่อนุมัติการลา" :style="{ width: '400px' }" :draggable="false">
+      <div class="reject-form">
+        <label class="input-label">เหตุผลที่ไม่อนุมัติ *</label>
+        <Textarea v-model="rejectReason" rows="3" class="w-full" placeholder="กรุณาระบุเหตุผล..." />
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" severity="secondary" @click="showRejectDialog = false" />
+        <Button label="ยืนยันไม่อนุมัติ" severity="danger" @click="confirmReject" :disabled="!rejectReason.trim()" />
+      </template>
     </Dialog>
   </div>
 </template>
@@ -76,8 +90,15 @@ export default {
     return {
       leaveRecords: [],
       loading: false,
+      approving: false,
       showLeaveDialog: false,
-      showApprovalDialog: false
+      showApprovalDialog: false,
+      isLeaveApprover: false,
+      approverLevel: 0,  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
+      // Reject dialog
+      showRejectDialog: false,
+      rejectLeaveId: null,
+      rejectReason: ''
     }
   },
   computed: {
@@ -92,12 +113,12 @@ export default {
       return role === 'hr' || role === 'admin'
     },
     canApproveLeave() {
-      // ตรวจสอบ permission สำหรับการอนุมัติลาเท่านั้น
-      return this.hasAccess('/leave_work/approve')
+      // ตรวจสอบ permission หรือ อยู่ใน leave approval settings
+      return this.hasAccess('/leave_work/approve') || this.isLeaveApprover
     },
     filteredLeaveRecords() {
       
-      if (this.isHROrAdmin) {
+      if (this.isHROrAdmin || this.isLeaveApprover) {
         return this.leaveRecords
       }
       
@@ -108,13 +129,59 @@ export default {
       return filtered
     },
     pendingLeaveRecords() {
-      return this.filteredLeaveRecords.filter(record => record.status === 'pending')
+      return this.filteredLeaveRecords.filter(record => 
+        record.status === 'pending' || record.status === 'pending_level2'
+      )
     },
     pendingLeaveCount() {
-      return this.pendingLeaveRecords.length
+      // นับเฉพาะ records ที่ user สามารถ approve ได้
+      if (this.approverLevel === 0) return 0
+      if (this.approverLevel === 3) return this.pendingLeaveRecords.length
+      
+      return this.pendingLeaveRecords.filter(record => {
+        if (this.approverLevel === 1 && record.status === 'pending') return true
+        if (this.approverLevel === 2 && record.status === 'pending_level2') return true
+        return false
+      }).length
     }
   },
   methods: {
+    async checkLeaveApprover() {
+      try {
+        const userId = localStorage.getItem('soc_user_id')
+        const role = localStorage.getItem('soc_role')?.toLowerCase()
+        
+        // Admin มีสิทธิ์ทั้งสอง level
+        if (role === 'admin') {
+          this.isLeaveApprover = true
+          this.approverLevel = 3
+          return
+        }
+        
+        if (!userId) return
+        
+        const response = await this.$http.get('/api/settings/leave-approval')
+        const level1 = response.data.level1 || []
+        const level2 = response.data.level2 || []
+        
+        const isLevel1 = level1.some(a => a.user_id == userId && a.can_approve)
+        const isLevel2 = level2.some(a => a.user_id == userId && a.can_approve)
+        
+        this.isLeaveApprover = isLevel1 || isLevel2
+        
+        if (isLevel1 && isLevel2) {
+          this.approverLevel = 3
+        } else if (isLevel1) {
+          this.approverLevel = 1
+        } else if (isLevel2) {
+          this.approverLevel = 2
+        } else {
+          this.approverLevel = 0
+        }
+      } catch { // ignore
+        
+      }
+    },
     showLeaveForm() {
       this.showLeaveDialog = true
     },
@@ -126,7 +193,7 @@ export default {
     async loadLeaveRecords() {
       this.loading = true
       try {
-        const response = await this.$http.get('/api/leave')
+        const response = await this.$http.get('/api/leave', { params: { _t: Date.now() } })
         this.leaveRecords = response.data.map(record => {
           return {
             ...record,
@@ -136,15 +203,15 @@ export default {
             leaveType: this.getLeaveTypeLabel(record.leave_type),
             startDate: this.formatDate(record.start_datetime),
             endDate: this.formatDate(record.end_datetime),
-            submittedAt: new Date(record.created_at).toLocaleString('th-TH')
+            submittedAt: new Date(record.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
           }
         })
-      } catch (error) {
+      } catch { // ignore
         this.$toast.add({
           severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลการลาได้',
-          life: 3000
+          summary: 'โหลดข้อมูลไม่สำเร็จ',
+          detail: 'กรุณารีเฟรชหน้าเว็บ หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต',
+          life: 4000
         })
       } finally {
         this.loading = false
@@ -156,14 +223,38 @@ export default {
         await this.loadLeaveRecords()
         this.showLeaveDialog = false
         // Toast แสดงใน LeaveForm แล้ว ไม่ต้องแสดงซ้ำ
-      } catch (error) {
+      } catch { // ignore
         // Ignore error
       }
     },
 
     async approveLeave(leaveId) {
+      if (this.approving) return
+      
+      // Refresh ข้อมูลก่อนเพื่อให้ได้ status ล่าสุด
+      await this.loadLeaveRecords()
+      
+      // Get current leave request to check its status
+      const leaveRequest = this.pendingLeaveRecords.find(r => r.id === leaveId)
+      if (!leaveRequest) {
+        this.$toast.add({
+          severity: 'warn',
+          summary: 'ไม่พบข้อมูล',
+          detail: 'คำขอลานี้ถูกดำเนินการแล้ว',
+          life: 3000
+        })
+        return
+      }
+      
+      const currentStatus = leaveRequest.status
+      
+      // Determine confirm message based on current status
+      const confirmMessage = currentStatus === 'pending_level2' 
+        ? 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - HR)'
+        : 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - หัวหน้างาน)'
+
       this.$confirm.require({
-        message: 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่?',
+        message: confirmMessage,
         header: 'ยืนยันการอนุมัติ',
         icon: 'pi pi-check-circle',
         acceptClass: 'p-button-success',
@@ -171,76 +262,87 @@ export default {
         rejectLabel: 'ยกเลิก',
         draggable: false,
         accept: async () => {
+          if (this.approving) return
+          this.approving = true
           try {
+            const approverId = localStorage.getItem('soc_user_id')
             const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
             const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
             const approverInfo = `${approverName} (${approverPosition})`
             
-            
-            await this.$http.put(`/api/leave/${leaveId}/status`, {
+            // ส่งไป backend โดยไม่ระบุ approval_level - ให้ backend ตรวจสอบ status จริงจาก DB
+            const response = await this.$http.put(`/api/leave/${leaveId}/status`, {
               status: 'approved',
-              approved_by: approverInfo
+              approved_by: approverInfo,
+              approved_by_id: approverId
             })
             
             await this.loadLeaveRecords()
 
+            const newStatus = response.data?.status
             this.$toast.add({
               severity: 'success',
               summary: 'สำเร็จ',
-              detail: 'อนุมัติการลาเรียบร้อย',
+              detail: newStatus === 'pending_level2' ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอ HR อนุมัติ' : 'อนุมัติการลาเรียบร้อย',
               life: 3000
             })
-          } catch (error) {
+          } catch { // ignore
             this.$toast.add({
               severity: 'error',
-              summary: 'เกิดข้อผิดพลาด',
-              detail: 'ไม่สามารถอนุมัติคำขอได้',
-              life: 3000
+              summary: 'อนุมัติไม่สำเร็จ',
+              detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+              life: 4000
             })
+          } finally {
+            this.approving = false
           }
         }
       })
     },
 
     async rejectLeave(leaveId) {
-      this.$confirm.require({
-        message: 'คุณต้องการปฏิเสธคำขอลางานนี้หรือไม่?',
-        header: 'ยืนยันการปฏิเสธ',
-        icon: 'pi pi-times-circle',
-        acceptClass: 'p-button-danger',
-        acceptLabel: 'ปฏิเสธ',
-        rejectLabel: 'ยกเลิก',
-        draggable: false,
-        accept: async () => {
-          try {
-            const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
-            const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
-            const approverInfo = `${approverName} (${approverPosition})`
-            
-            
-            await this.$http.put(`/api/leave/${leaveId}/status`, {
-              status: 'rejected',
-              approved_by: approverInfo
-            })
-            
-            await this.loadLeaveRecords()
+      this.rejectLeaveId = leaveId
+      this.rejectReason = ''
+      this.showRejectDialog = true
+    },
 
-            this.$toast.add({
-              severity: 'info',
-              summary: 'สำเร็จ',
-              detail: 'ไม่อนุมัติการลาเรียบร้อย',
-              life: 3000
-            })
-          } catch (error) {
-            this.$toast.add({
-              severity: 'error',
-              summary: 'เกิดข้อผิดพลาด',
-              detail: 'ไม่สามารถปฏิเสธคำขอได้',
-              life: 3000
-            })
-          }
-        }
-      })
+    openRejectDialog(leaveId) {
+      this.rejectLeaveId = leaveId
+      this.rejectReason = ''
+      this.showRejectDialog = true
+    },
+
+    async confirmReject() {
+      if (!this.rejectReason.trim()) return
+      
+      try {
+        const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
+        const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
+        const approverInfo = `${approverName} (${approverPosition})`
+        
+        await this.$http.put(`/api/leave/${this.rejectLeaveId}/status`, {
+          status: 'rejected',
+          approved_by: approverInfo,
+          reject_reason: this.rejectReason.trim()
+        })
+        
+        this.showRejectDialog = false
+        await this.loadLeaveRecords()
+
+        this.$toast.add({
+          severity: 'info',
+          summary: 'สำเร็จ',
+          detail: 'ไม่อนุมัติการลาเรียบร้อย',
+          life: 3000
+        })
+      } catch { // ignore
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ปฏิเสธไม่สำเร็จ',
+          detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+          life: 4000
+        })
+      }
     },
 
     viewAttachments(attachments) {
@@ -267,7 +369,15 @@ export default {
 
     formatDate(dateTime) {
       if (!dateTime) return ''
-      return new Date(dateTime).toLocaleDateString('th-TH')
+      const date = new Date(dateTime)
+      return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
+      })
     }
   },
 
@@ -275,8 +385,9 @@ export default {
     this.$http = axios
   },
 
-  mounted() {
+  async mounted() {
     this.loadPermissions()
+    await this.checkLeaveApprover()
     this.loadLeaveRecords()
   }
 }
@@ -284,12 +395,15 @@ export default {
 
 <style scoped>
 .leave-work-container {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 1rem;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
-  background: #f8f9fa;
-  min-height: 100vh;
+  
+  background: #e5e7eb;
+  height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
 }
 
 .action-buttons {
@@ -413,11 +527,13 @@ export default {
 .header-card {
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  border: none;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-body) {
   padding: 0;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-content) {
@@ -519,5 +635,32 @@ export default {
   .action-buttons {
     gap: 0.75rem;
   }
+}
+:deep(.leave-dialog.p-dialog),
+:deep(.approval-dialog.p-dialog) {
+  height: auto !important;
+  max-height: 95vh !important;
+}
+
+:deep(.leave-dialog .p-dialog-content),
+:deep(.approval-dialog .p-dialog-content) {
+  height: auto !important;
+  max-height: calc(95vh - 80px) !important;
+  overflow-y: auto !important;
+}
+
+.reject-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reject-form .input-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.reject-form textarea {
+  width: 100%;
 }
 </style>

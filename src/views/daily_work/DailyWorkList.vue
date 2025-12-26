@@ -71,9 +71,10 @@
 
         <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
           <template #body="slotProps">
-            <div class="badge-container">
-              <Badge :value="getCategoryLabel(slotProps.data.category)" 
-                     :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff' }" />
+            <div class="badge-container category-badges">
+              <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
+                     :value="getCategoryLabel(cat)" 
+                     :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '2px' }" />
             </div>
           </template>
         </Column>
@@ -109,7 +110,7 @@
           <template #body="slotProps">
             <div v-if="hasFiles(slotProps.data)" class="attachments-info">
               <Button icon="pi pi-paperclip" size="small" severity="info" outlined
-                @click="downloadFiles(slotProps.data)" v-tooltip="`${slotProps.data.files.length} ไฟล์`" />
+                @click="downloadFiles(slotProps.data)" v-tooltip="`${getFilesCount(slotProps.data)} ไฟล์`" />
             </div>
             <span v-else class="no-files">-</span>
           </template>
@@ -134,11 +135,12 @@
   </div>
 
   <!-- Files Dialog -->
-  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '50rem' }" :draggable="false">
+  <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div v-if="selectedRecordFiles && selectedRecordFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedRecordFiles" :key="index" class="file-item">
         <div class="file-info">
-          <i class="pi pi-file"></i>
+          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+          <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
         <Button icon="pi pi-download" size="small" severity="success" outlined @click="downloadFile(file)"
@@ -150,8 +152,13 @@
     </div>
   </Dialog>
 
+  <!-- Full Image Dialog -->
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+    <img :src="fullImageUrl" class="full-image" />
+  </Dialog>
+
   <!-- Edit Record Dialog -->
-  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '50rem' }" position="center" :draggable="false">
+  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '800px' }" position="center" :draggable="false">
     <form @submit.prevent="updateRecord" class="edit-form">
       <div class="form-grid">
         <div class="input-group">
@@ -305,6 +312,8 @@ export default {
       selectedRecord: null,
       filesDialog: false,
       selectedRecordFiles: [],
+      fullImageDialog: false,
+      fullImageUrl: '',
       editDialog: false,
       editFormData: {
         id: null,
@@ -339,8 +348,7 @@ export default {
             color: status.color
           }))
         })
-        .catch(error => {
-          console.error('Error loading statuses:', error)
+        .catch(() => {
           // Fallback to default
           this.statusOptions = [
             { label: '⏳ รอดำเนินการ', value: 'pending', color: '#f59e0b' },
@@ -355,8 +363,7 @@ export default {
         .then(response => {
           this.categoryOptions = response.data
         })
-        .catch(error => {
-          console.error('Error loading categories:', error)
+        .catch(() => {
           this.categoryOptions = []
         })
     },
@@ -394,7 +401,7 @@ export default {
             life: 3000
           })
         }
-      } catch (error) {
+      } catch { // ignore
         this.localRecords = []
 
         this.$toast.add({
@@ -413,7 +420,7 @@ export default {
         const month = String(d.getMonth() + 1).padStart(2, '0')
         const year = d.getFullYear()
         return `${day}/${month}/${year}`
-      } catch (error) {
+      } catch { // ignore
         return date
       }
     },
@@ -442,15 +449,12 @@ export default {
       if (!time) return null
       return time.toTimeString().split(' ')[0]
     },
-    getStatusLabel(status) {
-      const statusMap = {
-        'completed': 'เสร็จสมบูรณ์',
-        'in_progress': 'อยู่ระหว่างดำเนินการ',
-        'pending': 'รอข้อมูล / อนุมัติ / อุปกรณ์'
+    getStatusLabel(value) {
+      const status = this.statusOptions.find(s => s.value === value)
+      if (status && status.label) {
+        return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
       }
-      const label = statusMap[status] || status
-      // Remove all emoji and special characters
-      return label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      return value
     },
     getStatusLabelFromOptions(value) {
       const status = this.statusOptions.find(s => s.value === value)
@@ -476,15 +480,47 @@ export default {
       const category = this.categoryOptions.find(c => c.value === value)
       return category?.color || '#6c757d'
     },
+    parseCategoryArray(category) {
+      if (!category) return []
+      if (Array.isArray(category)) return category
+      return category.split(',').map(c => c.trim()).filter(c => c)
+    },
     getCategorySeverity() {
       return 'contrast'
     },
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+    getFileUrl(fileName) {
+      const token = localStorage.getItem('soc_token')
+      return `/api/files/download/${fileName}?token=${token}`
+    },
+    viewFullImage(fileName) {
+      this.fullImageUrl = this.getFileUrl(fileName)
+      this.fullImageDialog = true
+    },
     hasFiles(record) {
-      return record.files && Array.isArray(record.files) && record.files.length > 0
+      let files = record.files
+      if (typeof files === 'string') {
+        try { files = JSON.parse(files) } catch { files = [] }
+      }
+      return files && Array.isArray(files) && files.length > 0
+    },
+    getFilesCount(record) {
+      let files = record.files
+      if (typeof files === 'string') {
+        try { files = JSON.parse(files) } catch { files = [] }
+      }
+      return Array.isArray(files) ? files.length : 0
     },
     downloadFiles(record) {
       if (this.hasFiles(record)) {
-        this.selectedRecordFiles = record.files
+        let files = record.files
+        if (typeof files === 'string') {
+          try { files = JSON.parse(files) } catch { files = [] }
+        }
+        this.selectedRecordFiles = files
         this.filesDialog = true
       }
     },
@@ -501,8 +537,8 @@ export default {
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
-      } catch (error) {
-        console.error('Download error:', error)
+      } catch { // ignore
+        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -573,7 +609,7 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         return response.data.files || []
-      } catch (error) {
+      } catch { // ignore
         return []
       }
     },
@@ -590,18 +626,7 @@ export default {
           return
         }
 
-        // Validate เวลา
-        if (this.editFormData.start_time && this.editFormData.end_time) {
-          if (new Date(this.editFormData.end_time) <= new Date(this.editFormData.start_time)) {
-            this.$toast.add({
-              severity: 'error',
-              summary: 'ข้อผิดพลาด',
-              detail: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มงาน',
-              life: 3000
-            })
-            return
-          }
-        }
+        // รองรับการทำงานข้ามวัน - ไม่ต้อง validate เวลา
 
         // Upload ไฟล์ใหม่
         const newUploadedFiles = await this.uploadNewFiles()
@@ -653,11 +678,11 @@ export default {
         window.dispatchEvent(new CustomEvent('workRecordUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))
 
-      } catch (error) {
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถแก้ไขรายการงานได้',
+          detail: err.response?.data?.error || 'ไม่สามารถแก้ไขรายการงานได้',
           life: 5000
         })
       }
@@ -973,11 +998,35 @@ export default {
 .file-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+}
+
+.file-preview {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  cursor: pointer;
+}
+
+.file-preview:hover {
+  opacity: 0.8;
+}
+
+.file-icon {
+  font-size: 1.5rem;
+  color: #6c757d;
 }
 
 .file-name {
   font-weight: 500;
+}
+
+.full-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
 }
 
 .no-files-dialog {

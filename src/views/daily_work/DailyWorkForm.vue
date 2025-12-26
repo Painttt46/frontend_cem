@@ -39,13 +39,13 @@
               <Dropdown id="workStatus" v-model="formData.workStatus" :options="statusOptions" optionLabel="label"
                 optionValue="value" class="corporate-dropdown" required>
                 <template #value="slotProps">
-                  <Badge v-if="slotProps.value" :value="getStatusLabelOnly(slotProps.value)" 
-                         :style="{ backgroundColor: getStatusColor(slotProps.value), color: '#fff' }" />
+                  <Badge v-if="slotProps.value" :value="getStatusLabelOnly(slotProps.value)"
+                    :style="{ backgroundColor: getStatusColor(slotProps.value), color: '#fff' }" />
                   <span v-else>เลือกสถานะ</span>
                 </template>
                 <template #option="slotProps">
-                  <Badge :value="slotProps.option.label" 
-                         :style="{ backgroundColor: slotProps.option.color || '#6c757d', color: '#fff' }" />
+                  <Badge :value="slotProps.option.label"
+                    :style="{ backgroundColor: slotProps.option.color || '#6c757d', color: '#fff' }" />
                 </template>
               </Dropdown>
             </div>
@@ -82,24 +82,14 @@
           </div>
 
           <Divider />
-
-          <div class="calendar-section">
-            <div class="calendar-header">
-              <Checkbox v-model="formData.createCalendarEvent" inputId="createCalendar" :binary="true" />
+          <div class="calendar-options">
+            <div class="options-header">
               <label for="createCalendar" class="calendar-main-label">
                 <i class="pi pi-calendar-plus"></i>
                 สร้าง Calendar Event ใน Microsoft Teams
               </label>
             </div>
-          </div>
-
-          <div v-if="formData.createCalendarEvent" class="calendar-options">
-            <div class="options-header">
-              <i class="pi pi-cog"></i>
-              <span>ตัวเลือกเพิ่มเติม</span>
-            </div>
-
-            <div class="input-group">
+ <div class="input-group">
               <label for="attendees" class="input-label">
                 <i class="pi pi-users"></i>
                 เชิญผู้เข้าร่วม
@@ -220,7 +210,7 @@ export default {
         location: '',
         workDescription: '',
         files: [],
-        createCalendarEvent: false,
+        createCalendarEvent: true,
         attendees: [],
         createTeamsMeeting: false,
         eventDetails: ''
@@ -237,7 +227,13 @@ export default {
     calculateHours() {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
-        const end = new Date(this.formData.endTime)
+        let end = new Date(this.formData.endTime)
+        
+        // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
+        if (end <= start) {
+          end.setDate(end.getDate() + 1)
+        }
+        
         const diff = (end - start) / (1000 * 60 * 60)
         return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
       }
@@ -247,7 +243,7 @@ export default {
   async mounted() {
     await this.loadTasks()
     this.loadStatusOptions()
-    
+
     // Listen for status updates
     window.addEventListener('statusesUpdated', this.handleStatusesUpdate)
   },
@@ -264,8 +260,8 @@ export default {
           email: user.email
         }))
         this.attendeeOptions = this.users
-      } catch (error) {
-        console.error(error)
+      } catch { // ignore
+
       }
     },
 
@@ -348,8 +344,8 @@ export default {
           ...task,
           display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
-      } catch (error) {
-        console.error(error)
+      } catch { // ignore
+
       }
     },
     handleFileUpload(event) {
@@ -372,7 +368,7 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         return response.data.files || []
-      } catch (error) {
+      } catch { // ignore
         return []
       }
     },
@@ -445,12 +441,11 @@ export default {
 
         this.$emit('submit-work')
         this.resetForm()
-      } catch (error) {
-        console.error('Submit error:', error)
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+          detail: err.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
           life: 5000
         })
       }
@@ -473,7 +468,13 @@ export default {
     calculateTotalHours() {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
-        const end = new Date(this.formData.endTime)
+        let end = new Date(this.formData.endTime)
+        
+        // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
+        if (end <= start) {
+          end.setDate(end.getDate() + 1)
+        }
+        
         return Math.max(0, (end - start) / (1000 * 60 * 60))
       }
       return 0
@@ -498,8 +499,7 @@ export default {
         .then(response => {
           this.statusOptions = response.data
         })
-        .catch(error => {
-          console.error(error)
+        .catch(() => {
           // Fallback to default
           this.statusOptions = [
             { label: '✅ เสร็จสมบูรณ์', value: 'completed', icon: 'emoji:✅' },
@@ -848,10 +848,6 @@ export default {
   align-items: center;
   gap: 0.5rem;
   transition: color 0.2s ease;
-}
-
-.calendar-main-label:hover {
-  color: #007bff;
 }
 
 .calendar-main-label i {

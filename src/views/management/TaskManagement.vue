@@ -292,8 +292,8 @@ const loadCategories = async () => {
     
     const response = await http.get('/api/settings/categories')
     categories.value = response.data
-  } catch (error) {
-    console.error(error)
+  } catch { // ignore
+    
   }
 }
 
@@ -304,8 +304,8 @@ const loadStatuses = async () => {
     
     const response = await http.get('/api/settings/statuses')
     workStatuses.value = response.data
-  } catch (error) {
-    console.error(error)
+  } catch { // ignore
+    
   }
 }
 
@@ -329,11 +329,11 @@ const addCategory = async () => {
         detail: 'เพิ่มหมวดหมู่เรียบร้อย',
         life: 3000
       })
-    } catch (error) {
+    } catch (err) {
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
-        detail: error.response?.data?.error || 'ไม่สามารถเพิ่มหมวดหมู่ได้',
+        detail: err.response?.data?.error || 'ไม่สามารถเพิ่มหมวดหมู่ได้',
         life: 3000
       })
     }
@@ -351,7 +351,7 @@ const removeCategory = async (categoryValue) => {
       detail: 'ลบหมวดหมู่เรียบร้อย',
       life: 3000
     })
-  } catch (error) {
+  } catch (err) { // ignore
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -401,11 +401,11 @@ const addStatus = async () => {
         detail: 'เพิ่มสถานะเรียบร้อย',
         life: 3000
       })
-    } catch (error) {
+    } catch (err) {
       toast.add({
         severity: 'error',
         summary: 'ข้อผิดพลาด',
-        detail: error.response?.data?.error || 'ไม่สามารถเพิ่มสถานะได้',
+        detail: err.response?.data?.error || 'ไม่สามารถเพิ่มสถานะได้',
         life: 3000
       })
     }
@@ -423,7 +423,7 @@ const removeStatus = async (statusValue) => {
       detail: 'ลบสถานะเรียบร้อย',
       life: 3000
     })
-  } catch (error) {
+  } catch { // ignore
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -474,8 +474,13 @@ onMounted(() => {
 <style scoped>
 .task-management {
   padding: 1rem;
-  max-width: 1400px;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
+  
+  background: #e5e7eb;
+  height: 100%;
+  overflow: auto;
 }
 
 /* Header Styles */

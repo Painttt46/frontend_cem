@@ -13,13 +13,13 @@
     <div class="main-content">
       <div class="tab-action-buttons">
         <Button @click="showTaskDialog = true" class="task-btn" icon="pi pi-plus-circle" raised>
-          <span class="btn-text">เพิ่มงาน</span>
+          <span class="btn-text">เพิ่มโครงการ</span>
         </Button>
       </div>
       <TaskList ref="taskList" />
     </div>
 
-    <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มงาน" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
+    <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มโครงการ" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
       <AddTaskForm @task-added="handleTaskAdded" @close-form="showTaskDialog = false" />
     </Dialog>
   </div>
@@ -53,22 +53,27 @@ export default {
 
 <style scoped>
 .projects-container {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 1rem;
+  padding-bottom: 0;
+  max-width: 100%;
   margin: 0 auto;
-  background: #f8f9fa;
-  min-height: 100vh;
+  
+  background: #e5e7eb;
+  height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
 }
 
 .header-card {
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  border: none;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-body) {
   padding: 0;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-content) {

@@ -44,9 +44,9 @@
           </template>
         </Column>
 
-        <Column header="จำนวนวัน">
+        <Column header="จำนวน">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน
+            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
           </template>
         </Column>
 
@@ -109,6 +109,29 @@
           </template>
         </Column>
 
+        <Column header="สถานะการอนุมัติ" style="min-width: 180px;">
+          <template #body="slotProps">
+            <div class="approval-status-box">
+              <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level1 }">
+                <i :class="slotProps.data.approved_by_level1 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <div class="step-info">
+                  <span class="step-label">ขั้นที่ 1 (หัวหน้างาน)</span>
+                  <span v-if="slotProps.data.approved_by_level1" class="step-approver">{{ slotProps.data.approved_by_level1 }}</span>
+                  <span v-else class="step-pending">รอดำเนินการ</span>
+                </div>
+              </div>
+              <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level2, 'disabled': !slotProps.data.approved_by_level1 }">
+                <i :class="slotProps.data.approved_by_level2 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
+                <div class="step-info">
+                  <span class="step-label">ขั้นที่ 2 (HR)</span>
+                  <span v-if="slotProps.data.approved_by_level2" class="step-approver">{{ slotProps.data.approved_by_level2 }}</span>
+                  <span v-else class="step-pending">รอดำเนินการ</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </Column>
+
         <Column header="วันที่ส่งคำขอ" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.created_at) }}
@@ -117,21 +140,28 @@
 
         <Column header="การดำเนินการ" :frozen="true" alignFrozen="right">
           <template #body="slotProps">
-            <div class="action-buttons">
+            <div class="action-buttons" v-if="canApproveRecord(slotProps.data)">
               <Button 
                 icon="pi pi-check" 
                 severity="success" 
                 size="small"
+                :disabled="disabled"
+                :loading="disabled"
                 @click="$emit('approve-leave', slotProps.data.id)"
-                v-tooltip="'อนุมัติ'"
+                v-tooltip="getApproveTooltip(slotProps.data)"
               />
               <Button 
                 icon="pi pi-times" 
                 severity="danger" 
                 size="small"
+                :disabled="disabled"
                 @click="$emit('reject-leave', slotProps.data.id)"
                 v-tooltip="'ไม่อนุมัติ'"
               />
+            </div>
+            <div v-else class="status-badge">
+              <Badge v-if="slotProps.data.status === 'pending'" value="รอหัวหน้างานอนุมัติ" severity="warning" />
+              <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอ HR อนุมัติ" severity="info" />
             </div>
           </template>
         </Column>
@@ -140,7 +170,7 @@
   </Card>
 
   <!-- Work Details Dialog -->
-  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" style="width: 50rem;">
+  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div class="work-details-content">
       <p>{{ selectedWorkDetails }}</p>
     </div>
@@ -150,7 +180,7 @@
   </Dialog>
 
   <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" style="width: 60rem;">
+  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
     <div class="attachments-content">
       <div v-if="selectedAttachments.length === 0" class="no-attachments">
         <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
@@ -159,7 +189,8 @@
       <div v-else class="attachments-list">
         <div v-for="(file, index) in selectedAttachments" :key="index" class="attachment-item">
           <div class="file-info">
-            <i :class="getFileIcon(file)" class="file-icon"></i>
+            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+            <i v-else :class="getFileIcon(file)" class="file-icon"></i>
             <div class="file-details">
               <span class="file-name">{{ file }}</span>
               <small class="file-type">{{ getFileType(file) }}</small>
@@ -183,6 +214,11 @@
     </template>
   </Dialog>
 
+  <!-- Full Image Dialog -->
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+    <img :src="fullImageUrl" class="full-image" />
+  </Dialog>
+
   <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
 </template>
 
@@ -196,8 +232,17 @@ export default {
     UserInfoDialog
   },
   props: {
-    records: Array
+    records: Array,
+    approverLevel: {
+      type: Number,
+      default: 0
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
   },
+  inject: ['$toast'],
   created() {
     this.$http = axios
   },
@@ -207,6 +252,8 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
+      fullImageDialog: false,
+      fullImageUrl: '',
       leaveTypes: [],
       showUserDialog: false,
       selectedUserId: null
@@ -226,8 +273,8 @@ export default {
       try {
         const response = await this.$http.get('/api/leave/leave-types')
         this.leaveTypes = response.data
-      } catch (error) {
-        console.error('Error loading leave types:', error)
+      } catch { // ignore
+        
       }
     },
     getLeaveTypeColor(type) {
@@ -244,13 +291,51 @@ export default {
       this.showAttachmentsDialog = true
     },
 
-    downloadFile(fileName) {
-      this.$toast.add({
-        severity: 'success',
-        summary: 'ดาวน์โหลด',
-        detail: `กำลังดาวน์โหลด: ${fileName}`,
-        life: 3000
-      })
+    async downloadFile(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, {
+          responseType: 'blob'
+        })
+        
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        const originalName = fileName.split('-').slice(2).join('-') || fileName
+        link.download = originalName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        this.$toast.add({
+          severity: 'success',
+          summary: 'ดาวน์โหลดสำเร็จ',
+          detail: originalName,
+          life: 3000
+        })
+      } catch {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'เกิดข้อผิดพลาด',
+          detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
+          life: 3000
+        })
+      }
+    },
+
+    isImageFile(fileName) {
+      const extension = fileName.split('.').pop()?.toLowerCase()
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+    },
+
+    getFileUrl(fileName) {
+      const token = localStorage.getItem('soc_token')
+      return `/api/files/download/${fileName}?token=${token}`
+    },
+
+    viewFullImage(fileName) {
+      this.fullImageUrl = this.getFileUrl(fileName)
+      this.fullImageDialog = true
     },
 
     getFileIcon(fileName) {
@@ -286,28 +371,34 @@ export default {
     },
     formatDateTime(datetime) {
       if (!datetime) return '-'
-      return new Date(datetime).toLocaleString('th-TH', {
+      const date = new Date(datetime)
+      return date.toLocaleString('th-TH', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
 
     formatDate(datetime) {
       if (!datetime) return '-'
-      return new Date(datetime).toLocaleDateString('th-TH', {
+      const date = new Date(datetime)
+      return date.toLocaleDateString('th-TH', {
         day: '2-digit',
-        month: '2-digit'
+        month: '2-digit',
+        timeZone: 'Asia/Bangkok'
       })
     },
     calculateDays(startDateTime, endDateTime) {
       if (!startDateTime || !endDateTime) return 0
       const start = new Date(startDateTime)
       const end = new Date(endDateTime)
-      const diffTime = Math.abs(end - start)
-      return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+      const diffMs = end - start
+      const diffHours = diffMs / (1000 * 60 * 60)
+      // คำนวณเป็นวัน (8 ชม. = 1 วัน)
+      return diffHours / 8
     },
     getLeaveTypeLabel(type) {
       const types = {
@@ -319,6 +410,29 @@ export default {
       }
       return types[type] || type
     },
+    canApproveRecord(record) {
+      // approverLevel: 0 = ไม่มีสิทธิ์, 1 = level 1 only, 2 = level 2 only, 3 = ทั้งสอง
+      if (this.approverLevel === 0) return false
+      
+      // ต้องเป็น status ที่รออนุมัติเท่านั้น
+      if (record.status !== 'pending' && record.status !== 'pending_level2') return false
+      
+      // admin หรือมีสิทธิ์ทั้งสอง
+      if (this.approverLevel === 3) return true
+      
+      // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'
+      if (this.approverLevel === 1 && record.status === 'pending') return true
+      
+      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2'
+      if (this.approverLevel === 2 && record.status === 'pending_level2') return true
+      
+      return false
+    },
+    getApproveTooltip(record) {
+      if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (หัวหน้างาน)'
+      if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (HR)'
+      return 'อนุมัติ'
+    }
   }
 }
 </script>
@@ -541,6 +655,25 @@ export default {
   gap: 1rem;
 }
 
+.file-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  cursor: pointer;
+}
+
+.file-preview:hover {
+  opacity: 0.8;
+}
+
+.full-image {
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+}
+
 .file-icon {
   font-size: 2rem;
   color: #6c757d;
@@ -616,5 +749,63 @@ export default {
 .clickable-name:hover {
   color: #764ba2;
   text-decoration: underline;
+}
+.status-badge {
+  display: flex;
+  justify-content: center;
+}
+
+.approval-status-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.approval-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  border-radius: 6px;
+  background: #f8f9fa;
+}
+
+.approval-step.completed {
+  background: #d1fae5;
+}
+
+.approval-step.completed i {
+  color: #10b981;
+}
+
+.approval-step.disabled {
+  opacity: 0.5;
+}
+
+.approval-step i {
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.step-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.step-approver {
+  font-size: 0.8rem;
+  color: #047857;
+}
+
+.step-pending {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-style: italic;
 }
 </style>

@@ -49,7 +49,7 @@
       </div>
 
       <!-- Car Details Dialog -->
-      <Dialog v-model:visible="showCarDialog" modal header="🚗 รายละเอียดการใช้รถ" :style="{ width: '450px' }"
+      <Dialog v-model:visible="showCarDialog" modal header="🚗 รายละเอียดการใช้รถ" :style="{ width: '90vw', maxWidth: '500px' }"
         :draggable="false" :closable="false">
         <div v-if="selectedCarRecord" class="car-details">
           <div class="car-header">
@@ -103,6 +103,16 @@
                 {{ selectedCarRecord.project || 'ไม่ระบุ' }}
               </div>
             </div>
+
+            <div v-if="selectedCarRecord.colleagues?.length > 0" class="detail-row">
+              <div class="detail-label">
+                <i class="pi pi-users"></i>
+                ผู้ร่วมงาน
+              </div>
+              <div class="detail-value">
+                {{ formatColleagues(selectedCarRecord.colleagues) }}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -114,7 +124,7 @@
       </Dialog>
 
       <!-- Booking Details Dialog -->
-      <Dialog v-model:visible="showBookingDialog" modal header="📅 รายละเอียดการจองรถ" :style="{ width: '450px' }"
+      <Dialog v-model:visible="showBookingDialog" modal header="📅 รายละเอียดการจองรถ" :style="{ width: '90vw', maxWidth: '500px' }"
         :draggable="false" :closable="false">
         <div v-if="selectedCarRecord" class="car-details">
           <div class="booking-header">
@@ -231,6 +241,10 @@ export default {
     }
   },
   methods: {
+    formatColleagues(colleagues) {
+      if (!colleagues?.length) return '-'
+      return colleagues.map(c => typeof c === 'object' ? (c.name || c.value) : c).join(', ')
+    },
     previousMonth() {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1)
     },
