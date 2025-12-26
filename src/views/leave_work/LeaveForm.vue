@@ -58,7 +58,7 @@
                 :minDate="minStartDate" placeholder="เลือกวันที่">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" 
-                        v-tooltip.top="getDateTooltip(slotProps.date)">
+                        :data-tooltip="getDateTooltip(slotProps.date)">
                     {{ slotProps.date.day }}
                   </span>
                 </template>
@@ -77,7 +77,7 @@
                 placeholder="เลือกวันที่">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" 
-                        v-tooltip.top="getDateTooltip(slotProps.date)">
+                        :data-tooltip="getDateTooltip(slotProps.date)">
                     {{ slotProps.date.day }}
                   </span>
                 </template>
@@ -1225,6 +1225,35 @@ export default {
   justify-content: center;
   font-weight: 600;
   cursor: not-allowed;
+  position: relative;
+}
+
+.advance-day-blocked:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: #fff;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 5px;
+  font-weight: normal;
+}
+
+.advance-day-blocked:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1f2937;
+  z-index: 1000;
 }
 
 .advance-calendar :deep(.p-datepicker-calendar td > span) {
