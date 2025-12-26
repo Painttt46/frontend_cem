@@ -79,28 +79,12 @@
             </div>
           </div>
           
-          <h4 class="mt-4">รายละเอียดงาน/โครงการ</h4>
-          <DataTable :value="userTimesheetDetails" paginator :rows="10" sortField="hours" :sortOrder="-1">
-            <Column field="taskName" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
-            <Column field="workCount" header="จำนวนครั้ง" sortable style="min-width: 100px" />
-            <Column field="hours" header="ชั่วโมง" sortable style="min-width: 120px">
-              <template #body="{ data }">
-                <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.hours) }}</span>
-              </template>
-            </Column>
-            <Column field="percentage" header="สัดส่วน" sortable style="min-width: 150px">
-              <template #body="{ data }">
-                <div style="display: flex; align-items: center; gap: 0.5rem">
-                  <div style="flex: 1; background: #e9ecef; border-radius: 4px; height: 20px; overflow: hidden">
-                    <div :style="{ width: data.percentage + '%', background: '#4A90E2', height: '100%' }"></div>
-                  </div>
-                  <span style="min-width: 50px; text-align: right">{{ data.percentage.toFixed(1) }}%</span>
-                </div>
-              </template>
-            </Column>
-          </DataTable>
+          <div class="timesheet-filter mt-4">
+            <label>ช่วงเวลา:</label>
+            <Dropdown v-model="timesheetPeriod" :options="periodOptions" optionLabel="label" optionValue="value" class="period-dropdown" />
+          </div>
 
-          <h4 class="mt-4">Timesheet รายวัน</h4>
+          <h4 class="mt-3">Timesheet รายวัน</h4>
           <DataTable :value="userTimesheetDaily" paginator :rows="15" sortField="work_date" :sortOrder="-1">
             <Column field="work_date" header="วันที่" sortable style="min-width: 120px">
               <template #body="{ data }">
@@ -108,10 +92,21 @@
               </template>
             </Column>
             <Column field="task_name" header="งาน/โครงการ" sortable style="min-width: 200px" />
-            <Column field="work_description" header="รายละเอียด" style="min-width: 250px" />
+            <Column field="category" header="หมวดหมู่" style="min-width: 120px">
+              <template #body="{ data }">
+                <div class="category-badges-small">
+                  <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge">{{ cat }}</span>
+                </div>
+              </template>
+            </Column>
+            <Column field="work_status" header="สถานะ" style="min-width: 100px">
+              <template #body="{ data }">
+                <Badge :value="data.work_status || '-'" :severity="getStatusSeverity(data.work_status)" />
+              </template>
+            </Column>
             <Column field="location" header="สถานที่" style="min-width: 120px" />
-            <Column field="start_time" header="เริ่ม" style="min-width: 80px" />
-            <Column field="end_time" header="สิ้นสุด" style="min-width: 80px" />
+            <Column field="start_time" header="เริ่ม" style="min-width: 70px" />
+            <Column field="end_time" header="สิ้นสุด" style="min-width: 70px" />
             <Column field="hours" header="ชั่วโมง" sortable style="min-width: 100px">
               <template #body="{ data }">
                 <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(data.hours) }}</span>
@@ -328,6 +323,26 @@
   </div>
 
   <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false" :userId="selectedUserId" />
+  
+  <!-- Task Status Dialog -->
+  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus" :style="{ width: '90vw', maxWidth: '900px' }">
+    <DataTable :value="filteredTasksByStatus" paginator :rows="10" sortField="task_name" :sortOrder="1">
+      <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+      <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
+      <Column field="category" header="หมวดหมู่" style="min-width: 150px">
+        <template #body="{ data }">
+          <div class="category-badges-small">
+            <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge">{{ cat }}</span>
+          </div>
+        </template>
+      </Column>
+      <Column field="project_end_date" header="กำหนดส่ง" sortable style="min-width: 120px">
+        <template #body="{ data }">
+          {{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}
+        </template>
+      </Column>
+    </DataTable>
+  </Dialog>
 </template>
 
 <script setup>
@@ -346,6 +361,16 @@ const leaveTypeColors = ref({})
 const showUserDialog = ref(false)
 const selectedUserId = ref(null)
 
+// Task status dialog
+const allTasks = ref([])
+const showTaskStatusDialog = ref(false)
+const selectedTaskStatus = ref(null)
+
+const filteredTasksByStatus = computed(() => {
+  if (!selectedTaskStatus.value) return []
+  return allTasks.value.filter(t => (t.status || 'pending') === selectedTaskStatus.value)
+})
+
 // User filter
 const selectedUser = ref(null)
 const userOptions = ref([])
@@ -359,6 +384,39 @@ const selectedUserName = computed(() => {
   const user = userOptions.value.find(u => u.value === selectedUser.value)
   return user ? user.label : ''
 })
+
+// Period filter
+const timesheetPeriod = ref('month')
+const periodOptions = [
+  { label: 'วันนี้', value: 'today' },
+  { label: 'สัปดาห์นี้', value: 'week' },
+  { label: 'เดือนนี้', value: 'month' },
+  { label: 'ปีนี้', value: 'year' }
+]
+
+const getDateRange = () => {
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  let startDate = today
+  
+  switch (timesheetPeriod.value) {
+    case 'today':
+      startDate = today
+      break
+    case 'week':
+      const dayOfWeek = today.getDay()
+      startDate = new Date(today)
+      startDate.setDate(today.getDate() - dayOfWeek)
+      break
+    case 'month':
+      startDate = new Date(today.getFullYear(), today.getMonth(), 1)
+      break
+    case 'year':
+      startDate = new Date(today.getFullYear(), 0, 1)
+      break
+  }
+  return { startDate, endDate: now }
+}
 
 const userLeaveData = computed(() => {
   if (!selectedUser.value) return {}
@@ -375,14 +433,15 @@ const userLeaveData = computed(() => {
 
 const userTimesheetSummary = computed(() => {
   if (!selectedUser.value) return { totalHours: 0, totalTasks: 0, totalProjects: 0 }
+  const { startDate, endDate } = getDateRange()
   let totalHours = 0
   let taskCount = 0
   const projects = new Set()
   
   allDailyWork.value.forEach(w => {
     if (w.user_id !== selectedUser.value) return
-    const workYear = new Date(w.work_date).getFullYear()
-    if (workYear !== currentYear) return
+    const workDate = new Date(w.work_date)
+    if (workDate < startDate || workDate > endDate) return
     
     if (w.start_time && w.end_time) {
       const [startH, startM] = w.start_time.split(':').map(Number)
@@ -430,12 +489,13 @@ const userTimesheetDetails = computed(() => {
 
 const userTimesheetDaily = computed(() => {
   if (!selectedUser.value) return []
+  const { startDate, endDate } = getDateRange()
   
   return allDailyWork.value
     .filter(w => {
       if (w.user_id !== selectedUser.value) return false
-      const workYear = new Date(w.work_date).getFullYear()
-      return workYear === currentYear
+      const workDate = new Date(w.work_date)
+      return workDate >= startDate && workDate <= endDate
     })
     .map(w => {
       let hours = 0
@@ -448,6 +508,17 @@ const userTimesheetDaily = computed(() => {
     })
     .sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
 })
+
+const parseCategoryArray = (category) => {
+  if (!category) return []
+  if (Array.isArray(category)) return category
+  return category.split(',').map(c => c.trim()).filter(c => c)
+}
+
+const getStatusSeverity = (status) => {
+  const map = { 'completed': 'success', 'in_progress': 'info', 'pending': 'warning' }
+  return map[status] || 'secondary'
+}
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
@@ -749,72 +820,88 @@ const renderCharts = (leaves, tasks) => {
     const days = parseFloat(l.total_days) || 0
     
     if (!users[userName]) {
-      users[userName] = {}
+      users[userName] = { total: 0 }
     }
     if (!users[userName][leaveType]) {
       users[userName][leaveType] = 0
     }
     users[userName][leaveType] += days
+    users[userName].total += days
     leaveTypes.add(leaveType)
   })
+
+  // Sort by total leave days and limit to top 15
+  const sortedUsers = Object.entries(users)
+    .sort((a, b) => b[1].total - a[1].total)
+    .slice(0, 15)
+    .map(([name]) => name)
 
   // สร้าง datasets สำหรับแต่ละประเภทการลา
   const datasets = Array.from(leaveTypes).map(type => ({
     label: type,
-    data: Object.keys(users).map(userName => users[userName][type] || 0),
+    data: sortedUsers.map(userName => users[userName][type] || 0),
     backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random()*16777215).toString(16)
   }))
 
   leaveChartInstance = new Chart(leaveChart.value, {
     type: 'bar',
     data: {
-      labels: Object.keys(users),
+      labels: sortedUsers,
       datasets: datasets
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      indexAxis: 'y',
       scales: {
         x: {
-          stacked: false
-        },
-        y: {
           beginAtZero: true,
-          title: {
-            display: true,
-            text: 'จำนวนวัน'
-          }
+          title: { display: true, text: 'จำนวนวัน' }
         }
       },
       plugins: {
-        legend: {
-          display: true,
-          position: 'top'
-        }
+        legend: { display: true, position: 'top' }
       }
     }
   })
 
-  // Task Chart
+  // Task Chart - store tasks for click event
   if (taskChartInstance) taskChartInstance.destroy()
   
+  allTasks.value = tasks
   const taskStatus = {}
   tasks.forEach(t => {
-    taskStatus[t.status || 'pending'] = (taskStatus[t.status || 'pending'] || 0) + 1
+    const status = t.status || 'pending'
+    taskStatus[status] = (taskStatus[status] || 0) + 1
   })
+
+  const statusLabels = Object.keys(taskStatus)
+  const statusColors = {
+    'pending': '#f59e0b',
+    'in_progress': '#4A90E2', 
+    'completed': '#10b981',
+    'cancelled': '#ef4444'
+  }
 
   taskChartInstance = new Chart(taskChart.value, {
     type: 'doughnut',
     data: {
-      labels: Object.keys(taskStatus),
+      labels: statusLabels,
       datasets: [{
         data: Object.values(taskStatus),
-        backgroundColor: ['#f59e0b', '#4A90E2', '#10b981', '#ef4444']
+        backgroundColor: statusLabels.map(s => statusColors[s] || '#6c757d')
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false
+      maintainAspectRatio: false,
+      onClick: (event, elements) => {
+        if (elements.length > 0) {
+          const index = elements[0].index
+          selectedTaskStatus.value = statusLabels[index]
+          showTaskStatusDialog.value = true
+        }
+      }
     }
   })
 }
@@ -944,6 +1031,35 @@ const renderCharts = (leaves, tasks) => {
 
 .chart-container {
   position: relative;
+}
+
+.timesheet-filter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.timesheet-filter label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.period-dropdown {
+  min-width: 150px;
+}
+
+.category-badges-small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cat-badge {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
 }
 
 .header-left {
