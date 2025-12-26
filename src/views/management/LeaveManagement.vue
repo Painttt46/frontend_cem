@@ -184,10 +184,6 @@
             </template>
           </Calendar>
         </div>
-        <div class="field">
-          <label>คำอธิบาย (ไม่บังคับ)</label>
-          <InputText v-model="holidayDescription" placeholder="เช่น วันหยุดนักขัตฤกษ์" class="w-full" />
-        </div>
         
         <Divider />
         
@@ -227,7 +223,6 @@ const showEditLeaveTypeDialog = ref(false)
 const showHolidayDialog = ref(false)
 const holidays = ref([])
 const selectedHolidayDates = ref([])
-const holidayDescription = ref('')
 const savingHolidays = ref(false)
 const adding = ref(false)
 const saving = ref(false)
@@ -331,10 +326,9 @@ const saveHolidays = async () => {
       const date = new Date(d)
       return date.toISOString().split('T')[0]
     })
-    await axios.post('/api/leave/holidays', { dates, description: holidayDescription.value })
+    await axios.post('/api/leave/holidays', { dates })
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'บันทึกวันหยุดเรียบร้อย', life: 3000 })
     selectedHolidayDates.value = []
-    holidayDescription.value = ''
     await loadHolidays()
   } catch (err) {
     toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: err.response?.data?.error || 'ไม่สามารถบันทึกได้', life: 3000 })
@@ -856,10 +850,14 @@ const saveLeaveType = async () => {
   width: 100%;
 }
 
+.holiday-calendar :deep(.p-datepicker-calendar td) {
+  padding: 0.25rem;
+}
+
 .date-cell {
   display: flex;
-  width: 2rem;
-  height: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
   align-items: center;
   justify-content: center;
   border-radius: 50%;

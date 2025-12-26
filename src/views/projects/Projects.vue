@@ -67,11 +67,13 @@ export default {
 .header-card {
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  border: none;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-body) {
   padding: 0;
+  background: transparent;
 }
 
 .header-card :deep(.p-card-content) {
