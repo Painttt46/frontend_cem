@@ -14,10 +14,96 @@
               <h1>Dashboard</h1>
             </div>
           </div>
+          <div class="header-right">
+            <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
+                      placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" />
+          </div>
         </div>
       </template>
     </Card>
 
+    <!-- User Dashboard (when user selected) -->
+    <template v-if="selectedUser">
+      <Card class="mb-4">
+        <template #content>
+          <div class="user-dashboard-header">
+            <h2><i class="pi pi-user"></i> {{ selectedUserName }}</h2>
+            <Button label="ดูภาพรวมทั้งหมด" icon="pi pi-times" severity="secondary" size="small" @click="selectedUser = null" />
+          </div>
+        </template>
+      </Card>
+
+      <!-- User Leave Chart -->
+      <Card class="mb-4">
+        <template #content>
+          <h3>สรุปการลาประจำปี {{ currentYear }}</h3>
+          <div class="user-leave-summary">
+            <div v-for="(days, type) in userLeaveData" :key="type" class="leave-item">
+              <span class="leave-type" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }">{{ type }}</span>
+              <span class="leave-days">{{ days }} วัน</span>
+            </div>
+            <div v-if="Object.keys(userLeaveData).length === 0" class="no-data">ไม่มีข้อมูลการลา</div>
+          </div>
+          <div class="chart-container" style="height: 250px;">
+            <canvas ref="userLeaveChart"></canvas>
+          </div>
+        </template>
+      </Card>
+
+      <!-- User Timesheet -->
+      <Card class="mb-4">
+        <template #content>
+          <h3>Timesheet ประจำปี {{ currentYear }}</h3>
+          <div class="timesheet-summary">
+            <div class="summary-item">
+              <i class="pi pi-clock" style="color: #4A90E2"></i>
+              <div>
+                <h4>{{ formatHoursMinutes(userTimesheetSummary.totalHours) }}</h4>
+                <p>ชั่วโมงทำงานรวม</p>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-briefcase" style="color: #10b981"></i>
+              <div>
+                <h4>{{ userTimesheetSummary.totalTasks }}</h4>
+                <p>จำนวนงานทั้งหมด</p>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-folder" style="color: #8b5cf6"></i>
+              <div>
+                <h4>{{ userTimesheetSummary.totalProjects }}</h4>
+                <p>โครงการที่ทำ</p>
+              </div>
+            </div>
+          </div>
+          
+          <h4 class="mt-4">รายละเอียดงาน/โครงการ</h4>
+          <DataTable :value="userTimesheetDetails" paginator :rows="10" sortField="hours" :sortOrder="-1">
+            <Column field="taskName" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+            <Column field="workCount" header="จำนวนครั้ง" sortable style="min-width: 100px" />
+            <Column field="hours" header="ชั่วโมง" sortable style="min-width: 120px">
+              <template #body="{ data }">
+                <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.hours) }}</span>
+              </template>
+            </Column>
+            <Column field="percentage" header="สัดส่วน" sortable style="min-width: 150px">
+              <template #body="{ data }">
+                <div style="display: flex; align-items: center; gap: 0.5rem">
+                  <div style="flex: 1; background: #e9ecef; border-radius: 4px; height: 20px; overflow: hidden">
+                    <div :style="{ width: data.percentage + '%', background: '#4A90E2', height: '100%' }"></div>
+                  </div>
+                  <span style="min-width: 50px; text-align: right">{{ data.percentage.toFixed(1) }}%</span>
+                </div>
+              </template>
+            </Column>
+          </DataTable>
+        </template>
+      </Card>
+    </template>
+
+    <!-- Overall Dashboard (when no user selected) -->
+    <template v-else>
     <!-- Summary Cards -->
     <div class="summary-grid mb-4">
       <!-- Loading Skeleton -->
@@ -218,13 +304,14 @@
         </DataTable>
       </template>
     </Card>
+    </template>
   </div>
 
   <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false" :userId="selectedUserId" />
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
@@ -239,12 +326,122 @@ const leaveTypeColors = ref({})
 const showUserDialog = ref(false)
 const selectedUserId = ref(null)
 
+// User filter
+const selectedUser = ref(null)
+const userOptions = ref([])
+const allLeaves = ref([])
+const allDailyWork = ref([])
+const currentYear = new Date().getFullYear()
+const userLeaveChart = ref(null)
+let userLeaveChartInstance = null
+
+const selectedUserName = computed(() => {
+  const user = userOptions.value.find(u => u.value === selectedUser.value)
+  return user ? user.label : ''
+})
+
+const userLeaveData = computed(() => {
+  if (!selectedUser.value) return {}
+  const data = {}
+  allLeaves.value.forEach(l => {
+    if (l.user_id !== selectedUser.value || l.status !== 'approved') return
+    const leaveYear = new Date(l.start_datetime).getFullYear()
+    if (leaveYear !== currentYear) return
+    const type = l.leave_type || 'อื่นๆ'
+    data[type] = (data[type] || 0) + (parseFloat(l.total_days) || 0)
+  })
+  return data
+})
+
+const userTimesheetSummary = computed(() => {
+  if (!selectedUser.value) return { totalHours: 0, totalTasks: 0, totalProjects: 0 }
+  let totalHours = 0
+  let taskCount = 0
+  const projects = new Set()
+  
+  allDailyWork.value.forEach(w => {
+    if (w.user_id !== selectedUser.value) return
+    const workYear = new Date(w.work_date).getFullYear()
+    if (workYear !== currentYear) return
+    
+    if (w.start_time && w.end_time) {
+      const [startH, startM] = w.start_time.split(':').map(Number)
+      const [endH, endM] = w.end_time.split(':').map(Number)
+      totalHours += (endH + endM/60) - (startH + startM/60)
+    }
+    taskCount++
+    if (w.task_name) projects.add(w.task_name)
+  })
+  
+  return { totalHours, totalTasks: taskCount, totalProjects: projects.size }
+})
+
+const userTimesheetDetails = computed(() => {
+  if (!selectedUser.value) return []
+  const taskHours = {}
+  const taskCounts = {}
+  let totalHours = 0
+  
+  allDailyWork.value.forEach(w => {
+    if (w.user_id !== selectedUser.value) return
+    const workYear = new Date(w.work_date).getFullYear()
+    if (workYear !== currentYear) return
+    
+    const taskName = w.task_name || 'ไม่ระบุ'
+    if (w.start_time && w.end_time) {
+      const [startH, startM] = w.start_time.split(':').map(Number)
+      const [endH, endM] = w.end_time.split(':').map(Number)
+      const hours = (endH + endM/60) - (startH + startM/60)
+      if (hours > 0) {
+        taskHours[taskName] = (taskHours[taskName] || 0) + hours
+        totalHours += hours
+      }
+    }
+    taskCounts[taskName] = (taskCounts[taskName] || 0) + 1
+  })
+  
+  return Object.entries(taskHours).map(([taskName, hours]) => ({
+    taskName,
+    hours,
+    workCount: taskCounts[taskName] || 0,
+    percentage: totalHours > 0 ? (hours / totalHours) * 100 : 0
+  })).sort((a, b) => b.hours - a.hours)
+})
+
+const onUserChange = async () => {
+  await nextTick()
+  if (selectedUser.value) {
+    renderUserLeaveChart()
+  }
+}
+
+const renderUserLeaveChart = () => {
+  if (userLeaveChartInstance) userLeaveChartInstance.destroy()
+  if (!userLeaveChart.value || Object.keys(userLeaveData.value).length === 0) return
+  
+  const labels = Object.keys(userLeaveData.value)
+  const data = Object.values(userLeaveData.value)
+  const colors = labels.map(type => leaveTypeColors.value[type] || '#6c757d')
+  
+  userLeaveChartInstance = new Chart(userLeaveChart.value, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: colors }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' } }
+    }
+  })
+}
+
 // Swipe functionality
 const currentChart = ref(0)
 const chartsWrapper = ref(null)
 let touchStartX = 0
 let touchEndX = 0
-
 
 const stats = ref({
   totalUsers: 0,
@@ -326,6 +523,14 @@ const loadData = async () => {
       axios.get('/api/tasks').then(r => r.data),
       dailyWorkService.getDailyWork()  // มี cache 2 นาที
     ])
+
+    // Store for user filter
+    allLeaves.value = leaves
+    allDailyWork.value = dailyWork
+    userOptions.value = activeUsers.map(u => ({
+      label: `${u.firstname} ${u.lastname}`,
+      value: u.id
+    })).sort((a, b) => a.label.localeCompare(b.label, 'th'))
 
     // Calculate stats
     stats.value.totalUsers = activeUsers.length
@@ -598,6 +803,95 @@ const renderCharts = (leaves, tasks) => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-filter {
+  min-width: 200px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 8px;
+}
+
+.user-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-dashboard-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4A90E2;
+}
+
+.user-leave-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.leave-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.leave-type {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.85rem;
+}
+
+.leave-days {
+  font-weight: 600;
+}
+
+.no-data {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.timesheet-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.summary-item i {
+  font-size: 2rem;
+}
+
+.summary-item h4 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.summary-item p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+.chart-container {
+  position: relative;
 }
 
 .header-left {
