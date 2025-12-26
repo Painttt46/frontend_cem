@@ -50,8 +50,12 @@
               <template #header>
                 <div class="leave-type-header">
                   <Badge :value="type.label" :style="{ backgroundColor: type.color, color: '#fff', fontWeight: 'bold' }" />
-                  <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" />
+                  <div class="leave-type-actions">
+                    <Button icon="pi pi-pencil" size="small" text severity="info" @click="editLeaveType(type)" v-tooltip="'แก้ไข'" />
+                    <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" v-tooltip="'ลบ'" />
+                  </div>
                 </div>
+                <small v-if="type.advance_days > 0" class="advance-days-hint">ลาล่วงหน้า {{ type.advance_days }} วัน</small>
               </template>
               <template #body="{ data }">
                 <div class="quota-cell">
@@ -81,10 +85,45 @@
           <InputNumber v-model="newLeaveTypeQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
           <small class="field-hint">{{ (newLeaveTypeQuotaHours / 8).toFixed(1) }} วัน (1 วัน = 8 ชม.)</small>
         </div>
+        <div class="field">
+          <label>ต้องลาล่วงหน้า (วัน)</label>
+          <InputNumber v-model="newLeaveTypeAdvanceDays" :min="0" :max="30" showButtons class="w-full" suffix=" วัน" />
+          <small class="field-hint">0 = ไม่ต้องลาล่วงหน้า</small>
+        </div>
       </div>
       <template #footer>
         <Button label="ยกเลิก" icon="pi pi-times" @click="closeAddDialog" severity="secondary" />
         <Button label="เพิ่ม" icon="pi pi-check" @click="addLeaveType" :loading="adding" />
+      </template>
+    </Dialog>
+
+    <!-- Edit Leave Type Dialog -->
+    <Dialog v-model:visible="showEditLeaveTypeDialog" header="แก้ไขประเภทการลา" :modal="true" :draggable="false" :style="{ width: '90vw', maxWidth: '500px' }">
+      <div class="leave-type-form" v-if="editingLeaveTypeData">
+        <div class="field">
+          <label>ชื่อประเภทการลา</label>
+          <InputText v-model="editingLeaveTypeData.label" class="w-full" />
+        </div>
+        <div class="field">
+          <label>สี</label>
+          <div class="color-picker-row">
+            <div v-for="c in colorOptions" :key="c" 
+                 class="color-option" 
+                 :style="{ backgroundColor: c }"
+                 :class="{ selected: editingLeaveTypeData.color === c }"
+                 @click="editingLeaveTypeData.color = c">
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>ต้องลาล่วงหน้า (วัน)</label>
+          <InputNumber v-model="editingLeaveTypeData.advance_days" :min="0" :max="30" showButtons class="w-full" suffix=" วัน" />
+          <small class="field-hint">0 = ไม่ต้องลาล่วงหน้า, เช่น ลากิจ = 3 วัน</small>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" icon="pi pi-times" @click="showEditLeaveTypeDialog = false" severity="secondary" />
+        <Button label="บันทึก" icon="pi pi-check" @click="saveLeaveType" :loading="savingLeaveType" />
       </template>
     </Dialog>
     
@@ -140,10 +179,19 @@ const users = ref([])
 const leaveTypes = ref([])
 const showAddLeaveTypeDialog = ref(false)
 const showEditQuotaDialog = ref(false)
+const showEditLeaveTypeDialog = ref(false)
 const adding = ref(false)
 const saving = ref(false)
+const savingLeaveType = ref(false)
 const newLeaveTypeName = ref('')
 const newLeaveTypeQuotaHours = ref(0)
+const newLeaveTypeAdvanceDays = ref(0)
+
+// Color options for leave types
+const colorOptions = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+
+// Edit leave type states
+const editingLeaveTypeData = ref(null)
 
 // Filter states
 const searchQuery = ref('')
@@ -325,6 +373,7 @@ const closeAddDialog = () => {
   showAddLeaveTypeDialog.value = false
   newLeaveTypeName.value = ''
   newLeaveTypeQuotaHours.value = 0
+  newLeaveTypeAdvanceDays.value = 0
 }
 
 const addLeaveType = async () => {
@@ -342,7 +391,8 @@ const addLeaveType = async () => {
   try {
     await axios.post('/api/leave/leave-types', {
       name: newLeaveTypeName.value.trim(),
-      default_quota: newLeaveTypeQuotaHours.value / 8
+      default_quota: newLeaveTypeQuotaHours.value / 8,
+      advance_days: newLeaveTypeAdvanceDays.value
     })
 
     toast.add({
@@ -401,6 +451,44 @@ const deleteLeaveType = async (leaveType) => {
       detail: err.response?.data?.error || 'ไม่สามารถลบประเภทการลาได้',
       life: 3000
     })
+  }
+}
+
+const editLeaveType = (type) => {
+  editingLeaveTypeData.value = { ...type }
+  showEditLeaveTypeDialog.value = true
+}
+
+const saveLeaveType = async () => {
+  if (!editingLeaveTypeData.value) return
+
+  savingLeaveType.value = true
+  try {
+    await axios.put(`/api/leave/leave-types/${encodeURIComponent(editingLeaveTypeData.value.value)}`, {
+      display_name: editingLeaveTypeData.value.label,
+      color: editingLeaveTypeData.value.color,
+      advance_days: editingLeaveTypeData.value.advance_days
+    })
+
+    toast.add({
+      severity: 'success',
+      summary: 'สำเร็จ',
+      detail: 'แก้ไขประเภทการลาเรียบร้อยแล้ว',
+      life: 3000
+    })
+
+    showEditLeaveTypeDialog.value = false
+    editingLeaveTypeData.value = null
+    await loadLeaveTypes()
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: 'เกิดข้อผิดพลาด',
+      detail: err.response?.data?.error || 'ไม่สามารถแก้ไขประเภทการลาได้',
+      life: 3000
+    })
+  } finally {
+    savingLeaveType.value = false
   }
 }
 </script>
@@ -487,6 +575,42 @@ const deleteLeaveType = async (leaveType) => {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+.leave-type-actions {
+  display: flex;
+  gap: 0;
+}
+
+.advance-days-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.color-picker-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: #2c3e50;
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #2c3e50;
 }
 
 .quota-cell {

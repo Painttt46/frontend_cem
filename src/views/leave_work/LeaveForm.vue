@@ -21,11 +21,19 @@
               :optionDisabled="optionDisabled" class="corporate-dropdown" required @change="onLeaveTypeChange">
               <template #option="slotProps">
                 <div class="leave-type-option" :class="{ 'disabled-option': slotProps.option.disabled }">
-                  <span>{{ slotProps.option.label }}</span>
-                  <span v-if="slotProps.option.disabled" class="quota-status">หมดโควต้า</span>
+                  <div class="leave-type-main">
+                    <span>{{ slotProps.option.label }}</span>
+                    <span v-if="slotProps.option.disabled" class="quota-status">หมดโควต้า</span>
+                  </div>
+                  <small v-if="slotProps.option.advance_days > 0" class="advance-hint">
+                    ต้องลาล่วงหน้า {{ slotProps.option.advance_days }} วัน
+                  </small>
                 </div>
               </template>
             </Dropdown>
+            <small v-if="selectedLeaveTypeAdvanceDays > 0" class="advance-days-warning">
+              <i class="pi pi-info-circle"></i> ต้องลาล่วงหน้าอย่างน้อย {{ selectedLeaveTypeAdvanceDays }} วัน (เริ่มลาได้ตั้งแต่ {{ formatMinDate }})
+            </small>
           </div>
 
           <!-- Quota Display -->
@@ -47,7 +55,7 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only" :manualInput="false" required
-                :minDate="new Date()" placeholder="เลือกวันที่" />
+                :minDate="minStartDate" placeholder="เลือกวันที่" />
               <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
                 class="corporate-input time-dropdown" placeholder="เวลา" @change="updateStartDateTime" />
             </div>
@@ -58,7 +66,7 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                :minDate="formData.startDate || new Date()" class="corporate-input date-only" :manualInput="false" required
+                :minDate="formData.startDate || minStartDate" class="corporate-input date-only" :manualInput="false" required
                 placeholder="เลือกวันที่" />
               <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
                 class="corporate-input time-dropdown" placeholder="เวลา" @change="updateEndDateTime" />
@@ -264,6 +272,23 @@ export default {
     currentUserPosition() {
       return localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
     },
+    selectedLeaveTypeAdvanceDays() {
+      if (!this.formData.leaveType) return 0
+      const type = this.leaveTypes.find(t => t.value === this.formData.leaveType)
+      return type?.advance_days || 0
+    },
+    minStartDate() {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const advanceDays = this.selectedLeaveTypeAdvanceDays
+      if (advanceDays > 0) {
+        today.setDate(today.getDate() + advanceDays)
+      }
+      return today
+    },
+    formatMinDate() {
+      return this.minStartDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+    },
     calculateDays() {
       if (this.formData.startDateTime && this.formData.endDateTime) {
         const start = new Date(this.formData.startDateTime)
@@ -406,6 +431,19 @@ export default {
       } else {
         this.selectedQuota = null;
       }
+      
+      // Clear dates if they're before the new minStartDate
+      const minDate = this.minStartDate
+      if (this.formData.startDate && new Date(this.formData.startDate) < minDate) {
+        this.formData.startDate = null
+        this.formData.startTime = null
+        this.formData.startDateTime = null
+      }
+      if (this.formData.endDate && new Date(this.formData.endDate) < minDate) {
+        this.formData.endDate = null
+        this.formData.endTime = null
+        this.formData.endDateTime = null
+      }
     },
 
     getQuotaClass(remainingDays) {
@@ -446,6 +484,28 @@ export default {
           life: 4000
         })
         return
+      }
+
+      // Check advance days requirement
+      const selectedLeaveType = this.leaveTypes.find(t => t.value === this.formData.leaveType)
+      if (selectedLeaveType && selectedLeaveType.advance_days > 0 && this.formData.startDateTime) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const startDate = new Date(this.formData.startDateTime)
+        startDate.setHours(0, 0, 0, 0)
+        
+        const diffTime = startDate - today
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays < selectedLeaveType.advance_days) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'ลาล่วงหน้าไม่เพียงพอ',
+            detail: `${selectedLeaveType.label} ต้องลาล่วงหน้าอย่างน้อย ${selectedLeaveType.advance_days} วัน (คุณลาล่วงหน้า ${diffDays} วัน)`,
+            life: 5000
+          })
+          return
+        }
       }
 
       if (this.formData.startDateTime && this.formData.endDateTime) {
@@ -1049,10 +1109,9 @@ export default {
 
 .leave-type-option {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 0.5rem 0;
-  gap: 1rem;
+  gap: 0.25rem;
 }
 
 .disabled-option {
@@ -1086,5 +1145,32 @@ export default {
   font-size: 0.75rem;
   margin-top: 0.25rem;
   display: block;
+}
+
+.leave-type-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.advance-hint {
+  display: block;
+  font-size: 0.75rem;
+  color: #f59e0b;
+  margin-top: 0.25rem;
+}
+
+.advance-days-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #f59e0b;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.advance-days-warning i {
+  font-size: 0.9rem;
 }
 </style>
