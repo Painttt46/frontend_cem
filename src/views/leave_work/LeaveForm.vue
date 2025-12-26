@@ -54,11 +54,11 @@
             <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
-                class="corporate-input date-only" :manualInput="false" required
+                class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" placeholder="เลือกวันที่">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" 
-                        :title="getDateTooltip(slotProps.date)">
+                        v-tooltip.top="getDateTooltip(slotProps.date)">
                     {{ slotProps.date.day }}
                   </span>
                 </template>
@@ -73,11 +73,11 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                :minDate="formData.startDate || minStartDate" class="corporate-input date-only" :manualInput="false" required
+                :minDate="formData.startDate || minStartDate" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" 
-                        :title="getDateTooltip(slotProps.date)">
+                        v-tooltip.top="getDateTooltip(slotProps.date)">
                     {{ slotProps.date.day }}
                   </span>
                 </template>
@@ -200,12 +200,16 @@
 import axios from '@/utils/axiosConfig'
 import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
+import Tooltip from 'primevue/tooltip'
 
 export default {
   name: 'LeaveForm',
   components: {
     AutoComplete,
     Dropdown
+  },
+  directives: {
+    tooltip: Tooltip
   },
   async created() {
     await this.loadLeaveTypes();
@@ -382,7 +386,7 @@ export default {
       if (this.isAdvanceDay(dateObj)) {
         return `ต้องลาล่วงหน้า ${this.selectedLeaveTypeAdvanceDays} วัน`
       }
-      return ''
+      return null
     },
     // รวม date + time เป็น DateTime
     updateStartDateTime() {
@@ -1211,14 +1215,27 @@ export default {
 }
 
 .advance-day-blocked {
-  background-color: #fef3c7 !important;
-  color: #92400e !important;
+  background-color: #f59e0b !important;
+  color: #fff !important;
   border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
   cursor: not-allowed;
 }
 
-:deep(.p-datepicker-calendar td > span.advance-day-blocked) {
-  background-color: #fef3c7 !important;
-  color: #92400e !important;
+.advance-calendar :deep(.p-datepicker-calendar td > span) {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.advance-calendar :deep(.p-datepicker-calendar td) {
+  padding: 0.25rem;
 }
 </style>
