@@ -210,7 +210,7 @@ export default {
         location: '',
         workDescription: '',
         files: [],
-        createCalendarEvent: false,
+        createCalendarEvent: true,
         attendees: [],
         createTeamsMeeting: false,
         eventDetails: ''

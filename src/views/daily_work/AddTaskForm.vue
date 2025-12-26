@@ -36,17 +36,10 @@
 
           <div class="input-group">
             <label for="category" class="input-label">หมวดหมู่งาน *</label>
-            <Dropdown id="category" v-model="formData.category" :options="categoryOptions" 
+            <MultiSelect id="category" v-model="formData.category" :options="categoryOptions" 
                       optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
-                      class="corporate-input category-dropdown" required>
-              <template #value="slotProps">
-                <span v-if="slotProps.value">{{ getCategoryLabel(slotProps.value) }}</span>
-                <span v-else>เลือกหมวดหมู่งาน</span>
-              </template>
-              <template #option="slotProps">
-                <span>{{ slotProps.option.label }}</span>
-              </template>
-            </Dropdown>
+                      class="corporate-input category-dropdown" display="chip" :maxSelectedLabels="3">
+            </MultiSelect>
           </div>
 
           <div class="input-group full-width">
@@ -100,7 +93,7 @@ export default {
         projectStartDate: null,
         projectEndDate: null,
         description: '',
-        category: '',
+        category: [],
         files: []
       },
       categoryOptions: []
@@ -114,15 +107,8 @@ export default {
       this.$http.get('/api/settings/categories')
         .then(response => {
           this.categoryOptions = response.data
-          // Set default to first category
-          if (this.categoryOptions.length > 0 && !this.formData.category) {
-            this.formData.category = this.categoryOptions[0].value
-          }
         })
         .catch(() => {
-          if (this.categoryOptions.length > 0 && !this.formData.category) {
-            this.formData.category = this.categoryOptions[0].value
-          }
         })
     },
     getDefaultIcon(value) {
@@ -192,7 +178,7 @@ export default {
           project_start_date: formatDate(this.formData.projectStartDate),
           project_end_date: formatDate(this.formData.projectEndDate),
           description: this.formData.description,
-          category: this.formData.category,
+          category: this.formData.category.join(','),
           files: uploadedFiles
         }
 
@@ -232,7 +218,7 @@ export default {
         projectStartDate: null,
         projectEndDate: null,
         description: '',
-        category: this.categoryOptions.length > 0 ? this.categoryOptions[0].value : '',
+        category: [],
         files: []
       }
       const fileInput = document.getElementById('fileUpload')

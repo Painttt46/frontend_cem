@@ -370,8 +370,14 @@ export default {
     formatDate(dateTime) {
       if (!dateTime) return ''
       const date = new Date(dateTime)
-      date.setHours(date.getHours() + 7)
-      return date.toLocaleDateString('th-TH')
+      return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Bangkok'
+      })
     }
   },
 

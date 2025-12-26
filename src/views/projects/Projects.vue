@@ -13,13 +13,13 @@
     <div class="main-content">
       <div class="tab-action-buttons">
         <Button @click="showTaskDialog = true" class="task-btn" icon="pi pi-plus-circle" raised>
-          <span class="btn-text">เพิ่มงาน</span>
+          <span class="btn-text">เพิ่มโครงการ</span>
         </Button>
       </div>
       <TaskList ref="taskList" />
     </div>
 
-    <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มงาน" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
+    <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มโครงการ" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
       <AddTaskForm @task-added="handleTaskAdded" @close-form="showTaskDialog = false" />
     </Dialog>
   </div>
