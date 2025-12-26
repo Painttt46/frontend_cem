@@ -57,10 +57,11 @@
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" placeholder="เลือกวันที่">
                 <template #date="slotProps">
-                  <span :class="getDateClass(slotProps.date)" 
-                        :data-tooltip="getDateTooltip(slotProps.date)">
+                  <div :class="getDateClass(slotProps.date)" 
+                       :title="getDateTooltip(slotProps.date)"
+                       class="date-cell">
                     {{ slotProps.date.day }}
-                  </span>
+                  </div>
                 </template>
               </Calendar>
               <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
@@ -76,10 +77,11 @@
                 :minDate="formData.startDate || minStartDate" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่">
                 <template #date="slotProps">
-                  <span :class="getDateClass(slotProps.date)" 
-                        :data-tooltip="getDateTooltip(slotProps.date)">
+                  <div :class="getDateClass(slotProps.date)" 
+                       :title="getDateTooltip(slotProps.date)"
+                       class="date-cell">
                     {{ slotProps.date.day }}
-                  </span>
+                  </div>
                 </template>
               </Calendar>
               <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
@@ -384,9 +386,9 @@ export default {
     },
     getDateTooltip(dateObj) {
       if (this.isAdvanceDay(dateObj)) {
-        return `ต้องลาล่วงหน้า ${this.selectedLeaveTypeAdvanceDays} วัน`
+        return 'ต้องลาล่วงหน้า ' + this.selectedLeaveTypeAdvanceDays + ' วัน'
       }
-      return null
+      return undefined
     },
     // รวม date + time เป็น DateTime
     updateStartDateTime() {
@@ -1214,54 +1216,20 @@ export default {
   font-size: 0.9rem;
 }
 
-.advance-day-blocked {
-  background-color: #f59e0b !important;
-  color: #fff !important;
-  border-radius: 50%;
-  width: 2.5rem;
-  height: 2.5rem;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  cursor: not-allowed;
-  position: relative;
-}
-
-.advance-day-blocked:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1f2937;
-  color: #fff;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  z-index: 1000;
-  margin-bottom: 5px;
-  font-weight: normal;
-}
-
-.advance-day-blocked:hover::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: #1f2937;
-  z-index: 1000;
-}
-
-.advance-calendar :deep(.p-datepicker-calendar td > span) {
+.date-cell {
   width: 2.5rem;
   height: 2.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+}
+
+.advance-day-blocked {
+  background-color: #f59e0b !important;
+  color: #fff !important;
+  font-weight: 600;
+  cursor: not-allowed;
 }
 
 .advance-calendar :deep(.p-datepicker-calendar td) {
