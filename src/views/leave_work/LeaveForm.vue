@@ -57,9 +57,7 @@
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" placeholder="เลือกวันที่">
                 <template #date="slotProps">
-                  <span :class="getDateClass(slotProps.date)" 
-                       v-tooltip.top="getDateTooltip(slotProps.date)"
-                       class="date-cell">
+                  <span :class="getDateClass(slotProps.date)" class="date-cell">
                     {{ slotProps.date.day }}
                   </span>
                 </template>
@@ -77,9 +75,7 @@
                 :minDate="formData.startDate || minStartDate" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่">
                 <template #date="slotProps">
-                  <span :class="getDateClass(slotProps.date)" 
-                       v-tooltip.top="getDateTooltip(slotProps.date)"
-                       class="date-cell">
+                  <span :class="getDateClass(slotProps.date)" class="date-cell">
                     {{ slotProps.date.day }}
                   </span>
                 </template>
@@ -202,16 +198,12 @@
 import axios from '@/utils/axiosConfig'
 import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
-import Tooltip from 'primevue/tooltip'
 
 export default {
   name: 'LeaveForm',
   components: {
     AutoComplete,
     Dropdown
-  },
-  directives: {
-    tooltip: Tooltip
   },
   async created() {
     await this.loadLeaveTypes();
@@ -383,12 +375,6 @@ export default {
         return 'advance-day-blocked'
       }
       return ''
-    },
-    getDateTooltip(dateObj) {
-      if (this.isAdvanceDay(dateObj)) {
-        return 'ต้องลาล่วงหน้า ' + this.selectedLeaveTypeAdvanceDays + ' วัน'
-      }
-      return undefined
     },
     // รวม date + time เป็น DateTime
     updateStartDateTime() {
