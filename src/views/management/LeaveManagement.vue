@@ -176,7 +176,13 @@
       <div class="holiday-form">
         <div class="field">
           <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
-          <Calendar v-model="selectedHolidayDates" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" />
+          <Calendar v-model="selectedHolidayDates" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
+            <template #date="slotProps">
+              <span :class="getHolidayDateClass(slotProps.date)" class="date-cell">
+                {{ slotProps.date.day }}
+              </span>
+            </template>
+          </Calendar>
         </div>
         <div class="field">
           <label>คำอธิบาย (ไม่บังคับ)</label>
@@ -278,6 +284,27 @@ const filteredUsers = computed(() => {
 
   return filtered
 })
+
+const existingHolidayDates = computed(() => {
+  return holidays.value.map(h => new Date(h.holiday_date))
+})
+
+const existingHolidayTimestamps = computed(() => {
+  return holidays.value.map(h => {
+    const d = new Date(h.holiday_date)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  })
+})
+
+const getHolidayDateClass = (dateObj) => {
+  const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
+  checkDate.setHours(0, 0, 0, 0)
+  if (existingHolidayTimestamps.value.includes(checkDate.getTime())) {
+    return 'holiday-date'
+  }
+  return ''
+}
 
 onMounted(() => {
   loadLeaveTypes()
@@ -827,6 +854,21 @@ const saveLeaveType = async () => {
 
 .holiday-calendar {
   width: 100%;
+}
+
+.date-cell {
+  display: flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.holiday-date {
+  background-color: #ef4444 !important;
+  color: #fff !important;
+  font-weight: 600;
 }
 
 .existing-holidays h4 {

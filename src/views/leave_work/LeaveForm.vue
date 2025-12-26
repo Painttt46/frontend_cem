@@ -55,7 +55,7 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
-                :minDate="minStartDate" placeholder="เลือกวันที่">
+                :minDate="minStartDate" :disabledDates="disabledDates" placeholder="เลือกวันที่">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
                     {{ slotProps.date.day }}
@@ -72,7 +72,7 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                :minDate="formData.startDate || minStartDate" class="corporate-input date-only advance-calendar" :manualInput="false" required
+                :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
@@ -306,6 +306,9 @@ export default {
         d.setHours(0, 0, 0, 0)
         return d.getTime()
       })
+    },
+    disabledDates() {
+      return this.holidays.map(h => new Date(h.holiday_date))
     },
     formatMinDate() {
       return this.minStartDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
