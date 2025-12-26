@@ -26,7 +26,7 @@ export default createStore({
     toggleDarkMode({ commit, state }) {
       commit('SET_DARK_MODE', !state.darkMode)
     },
-    initTheme({ commit, state }) {
+    initTheme({ state }) {
       document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light')
     }
   },
