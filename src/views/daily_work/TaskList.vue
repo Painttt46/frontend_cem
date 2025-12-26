@@ -51,9 +51,12 @@
 
         <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px; text-align: center;">
           <template #body="slotProps">
-            <Badge :value="getCategoryLabel(slotProps.data.category)" 
-                   :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff', fontWeight: 'bold' }" 
-                   class="category-badge" />
+            <div class="category-badges">
+              <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
+                     :value="getCategoryLabel(cat)" 
+                     :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', fontWeight: 'bold', margin: '2px' }" 
+                     class="category-badge" />
+            </div>
           </template>
         </Column>
 
@@ -328,16 +331,10 @@
 
         <div class="input-group">
           <label class="input-label">หมวดหมู่งาน *</label>
-          <Dropdown v-model="editFormData.category" :options="categories" 
+          <MultiSelect v-model="editFormData.category" :options="categories" 
                     optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
-                    class="corporate-input" required>
-            <template #value="slotProps">
-              <span v-if="slotProps.value">{{ getCategoryLabel(slotProps.value) }}</span>
-            </template>
-            <template #option="slotProps">
-              <span>{{ slotProps.option.label }}</span>
-            </template>
-          </Dropdown>
+                    class="corporate-input" display="chip" :maxSelectedLabels="3" :showToggleAll="false">
+          </MultiSelect>
         </div>
 
         <div class="input-group">
@@ -475,7 +472,7 @@ export default {
         contract_number: '',
         sale_owner: '',
         description: '',
-        category: 'งานทั่วไป',
+        category: [],
         project_start_date: null,
         project_end_date: null,
         existingFiles: [],
@@ -621,6 +618,11 @@ export default {
       const category = this.categories.find(cat => cat.value === categoryValue)
       return category && category.color ? category.color : '#6c757d'
     },
+    parseCategoryArray(category) {
+      if (!category) return []
+      if (Array.isArray(category)) return category
+      return category.split(',').map(c => c.trim()).filter(c => c)
+    },
     getStatusIcon(statusValue) {
       const status = this.workStatuses.find(s => s.value === statusValue)
       return status ? status.icon : 'pi pi-circle'
@@ -754,7 +756,7 @@ export default {
         contract_number: task.contract_number || '',
         sale_owner: task.sale_owner || '',
         description: task.description || '',
-        category: task.category || 'งานทั่วไป',
+        category: this.parseCategoryArray(task.category),
         status: task.status || 'pending',
         project_start_date: parseDate(task.project_start_date),
         project_end_date: parseDate(task.project_end_date),
@@ -810,6 +812,7 @@ export default {
         
         const updateData = {
           ...this.editFormData,
+          category: Array.isArray(this.editFormData.category) ? this.editFormData.category.join(',') : this.editFormData.category,
           project_start_date: formatDate(this.editFormData.project_start_date),
           project_end_date: formatDate(this.editFormData.project_end_date),
           files: allFiles
@@ -1434,6 +1437,13 @@ export default {
   max-width: none;
   width: auto;
   color: white !important;
+}
+
+.category-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
 }
 
 @media (max-width: 480px) {

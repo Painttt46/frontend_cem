@@ -38,7 +38,7 @@
             <label for="category" class="input-label">หมวดหมู่งาน *</label>
             <MultiSelect id="category" v-model="formData.category" :options="categoryOptions" 
                       optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
-                      class="corporate-input category-dropdown" display="chip" :maxSelectedLabels="3">
+                      class="corporate-input category-dropdown" display="chip" :maxSelectedLabels="3" :showToggleAll="false">
             </MultiSelect>
           </div>
 

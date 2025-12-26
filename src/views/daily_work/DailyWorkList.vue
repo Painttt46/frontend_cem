@@ -71,9 +71,10 @@
 
         <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
           <template #body="slotProps">
-            <div class="badge-container">
-              <Badge :value="getCategoryLabel(slotProps.data.category)" 
-                     :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff' }" />
+            <div class="badge-container category-badges">
+              <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
+                     :value="getCategoryLabel(cat)" 
+                     :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '2px' }" />
             </div>
           </template>
         </Column>
@@ -478,6 +479,11 @@ export default {
     getCategoryColor(value) {
       const category = this.categoryOptions.find(c => c.value === value)
       return category?.color || '#6c757d'
+    },
+    parseCategoryArray(category) {
+      if (!category) return []
+      if (Array.isArray(category)) return category
+      return category.split(',').map(c => c.trim()).filter(c => c)
     },
     getCategorySeverity() {
       return 'contrast'
