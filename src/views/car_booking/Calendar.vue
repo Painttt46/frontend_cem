@@ -455,7 +455,7 @@ export default {
   cursor: pointer;
   position: relative;
   transition: background-color 0.2s ease;
-  border: 2px solid transparent;
+  border: 1px solid #dee2e6;
   font-size: 1.2rem;
   font-weight: 500;
   min-height: 60px;
