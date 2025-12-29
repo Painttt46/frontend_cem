@@ -590,7 +590,7 @@ export default {
               'Content-Type': 'multipart/form-data'
             }
           })
-          uploadedFiles = uploadResponse.data.files
+          uploadedFiles = (uploadResponse.data.files || []).map(f => typeof f === 'string' ? f : f.path)
         }
 
         // Calculate total days

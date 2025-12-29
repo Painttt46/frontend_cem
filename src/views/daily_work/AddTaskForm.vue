@@ -151,7 +151,7 @@ export default {
         const response = await this.$http.post('/api/files/upload/daily_work', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-        return response.data.files || []
+        const files = response.data.files || []; return files.map(f => typeof f === 'string' ? f : f.path)
       } catch { // ignore
         return []
       }

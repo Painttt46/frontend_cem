@@ -162,7 +162,7 @@
         <div class="file-info">
           <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
           <i v-else class="pi pi-file file-icon"></i>
-          <span class="file-name">{{ file }}</span>
+          <span class="file-name">{{ getDisplayFileName(file) }}</span>
         </div>
         <Button 
           icon="pi pi-download" 
@@ -286,7 +286,7 @@
         <div class="file-info">
           <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
           <i v-else class="pi pi-file file-icon"></i>
-          <span class="file-name">{{ file }}</span>
+          <span class="file-name">{{ getDisplayFileName(file) }}</span>
         </div>
         <Button icon="pi pi-download" size="small" severity="success" outlined
                 @click="downloadWorkFile(file)" v-tooltip="'ดาวน์โหลด'" />
@@ -374,7 +374,7 @@
             <h4>ไฟล์เดิม:</h4>
             <div v-for="(file, index) in editFormData.existingFiles" :key="index" class="file-item">
               <i class="pi pi-file"></i>
-              <span class="file-name">{{ file }}</span>
+              <span class="file-name">{{ getDisplayFileName(file) }}</span>
               <Button icon="pi pi-times" size="small" severity="danger" text @click="removeExistingFile(index)" />
             </div>
           </div>
@@ -697,6 +697,15 @@ export default {
       const extension = fileName.split('.').pop()?.toLowerCase()
       return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
     },
+    getDisplayFileName(filePath) {
+      const fileName = filePath.split("/").pop()
+      if (fileName.startsWith("user_")) {
+        const parts = fileName.split("_")
+        return parts.slice(3).join("_")
+      }
+      const parts = fileName.split("-")
+      return parts.length > 2 ? parts.slice(2).join("-") : fileName
+    },
     getFileUrl(fileName) {
       const token = localStorage.getItem('soc_token')
       return `/api/files/download/${fileName}?token=${token}`
@@ -787,7 +796,7 @@ export default {
         const response = await this.$http.post('/api/files/upload/daily_work', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-        return response.data.files || []
+        const files = response.data.files || []; return files.map(f => typeof f === 'string' ? f : f.path)
       } catch (error) {
         return []
       }
