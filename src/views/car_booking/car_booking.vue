@@ -714,321 +714,151 @@ export default {
 </script>
 
 <style scoped>
-.calendar-card {
-  width: 100%;
-  margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
-}
-
-.app-container {
-  padding: 1rem;
-  padding-bottom: 0;
-  max-width: 100%;
-  margin: 0 auto;
-  
-  background: #e5e7eb;
-  height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: auto;
-}
-
 .main-tabs {
-  margin-top: 0;
-  box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
-  border-radius: 15px;
-  overflow: hidden;
-  border: 1px solid rgba(74, 144, 226, 0.2);
   background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .tabs-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
-  position: relative;
-  flex-wrap: wrap;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .header-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   color: white;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2;
 }
 
 .header-title h1 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   font-weight: 600;
 }
 
 .header-title i {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
 }
 
 .tab-navigation {
   background: transparent;
-  max-width: 100%;
-  overflow: hidden;
-  margin-right: auto;
+  margin-left: auto;
 }
 
 .tab-navigation :deep(.p-tabview-nav) {
   background: transparent;
   border: none;
-  margin: 0;
-  padding: 0;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 0.5rem;
 }
 
 .tab-navigation :deep(.p-tabview-nav-link) {
-  color: white;
+  color: rgba(255, 255, 255, 0.8);
   border: none;
-  font-weight: 500;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 1rem;
   font-size: 0.9rem;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin: 0.25rem;
-  white-space: nowrap;
+  border-radius: var(--radius-sm);
 }
 
 .tab-navigation :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
-  border-bottom: none !important;
 }
 
-.tab-navigation :deep(.p-tabview-nav-link:hover) {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
-}
-
-.tab-navigation :deep(.p-tabview-ink-bar) {
-  display: none !important;
-}
-
+.tab-navigation :deep(.p-tabview-ink-bar),
 .tab-navigation :deep(.p-tabview-panels) {
   display: none;
 }
 
 .action-buttons-header {
   display: flex;
-  gap: 1rem;
-  flex-shrink: 0;
-  z-index: 1;
-  margin-left: auto;
-}
-
-.action-buttons-header .p-button {
-  font-weight: 700;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  border-radius: 8px;
-  min-width: 140px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  border: 3px solid white;
-}
-
-.action-buttons-header .p-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border: 3px solid white;
-}
-
-.tab-content-area {
-  background: white;
-}
-
-.tab-content {
-  padding: 0;
-}
-
-.main-tabs :deep(.p-tabview-nav) {
-  background: transparent;
-  border: none;
-  margin: 0;
-  padding: 0.5rem;
-  gap: 0.5rem;
-}
-
-.main-tabs :deep(.p-tabview-nav-link) {
-  color: black !important;
-  border: none;
-  font-weight: 800 !important;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  border-radius: 8px;
-  margin: 0 0.25rem;
-  background: rgba(255, 255, 255, 0.4
-  )
-}
-
-.tab-header {
-  font-weight: 800 !important;
-  color: black !important;
-}
-
-.tab-header span {
-  font-weight: 800 !important;
-  color: black !important;
-}
-
-.tab-header i {
-  font-size: 1.2rem;
-  font-weight: 900;
-}
-
-.main-tabs :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
-  background: white;
-  color: #4A90E2;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-  transform: translateY(-2px);
-  border-bottom: none !important;
-  font-weight: 700;
-  border-radius: 8px;
-}
-
-.main-tabs :deep(.p-tabview-nav-link:hover) {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-  border-radius: 8px;
-}
-
-.main-tabs :deep(.p-tabview-ink-bar) {
-  display: none !important;
-}
-
-.main-tabs :deep(.p-tabview-panels) {
-  background: white;
-  padding: 0;
-  border-radius: 0 0 15px 15px;
-}
-
-.main-tabs :deep(.p-tabview-panel) {
-  padding: 0;
+  gap: 0.75rem;
 }
 
 .tab-header {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-weight: 500;
+  gap: 0.5rem;
 }
 
-.tab-header i {
-  font-size: 1.1rem;
+.tab-content-area {
+  background: #f8f9fa;
+  min-height: 400px;
 }
 
-.tab-content {
-  padding: 0;
-}
-
+/* Image Modal */
 .image-viewer {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .image-section {
   border-radius: 8px;
   overflow: hidden;
+  border: 1px solid #e9ecef;
 }
 
 .borrow-section {
-  border: 2px solid #dc3545;
+  border-color: #f5c6cb;
 }
 
 .borrow-section .section-header {
   background: #f8d7da;
   color: #721c24;
-  border-bottom: 1px solid #f5c6cb;
-}
-
-.borrow-section .grid-image {
-  border: 3px solid #dc3545;
 }
 
 .return-section {
-  border: 2px solid #28a745;
+  border-color: #c3e6cb;
 }
 
 .return-section .section-header {
   background: #d4edda;
   color: #155724;
-  border-bottom: 1px solid #c3e6cb;
-}
-
-.return-section .grid-image {
-  border: 3px solid #28a745;
 }
 
 .section-header {
-  background: #f8f9fa;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   font-weight: 600;
-  color: #495057;
-  border-bottom: 1px solid #e9ecef;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .images-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 120px));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.75rem;
 }
 
 .image-container {
   position: relative;
-  width: 100%;
-  height: 100px;
 }
 
 .grid-image {
   width: 100%;
-  height: 100px;
-  object-fit: contain;
+  height: 80px;
+  object-fit: cover;
   border-radius: 6px;
-  border: 1px solid #e9ecef;
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
-.image-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 200px;
-  background: #f8f9fa;
-  border: 1px dashed #dee2e6;
-  border-radius: 6px;
-  color: #6c757d;
-}
-
 .grid-image:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .full-size-image {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: 75vh;
   object-fit: contain;
   border-radius: 8px;
   display: block;
@@ -1037,13 +867,8 @@ export default {
 
 .no-images-state {
   text-align: center;
-  padding: 3rem;
+  padding: 2rem;
   color: #6c757d;
-}
-
-.no-images-state p {
-  margin-top: 1rem;
-  font-size: 1.1rem;
 }
 
 .upload-section {
@@ -1052,155 +877,47 @@ export default {
 
 .upload-controls {
   text-align: center;
-  padding: 1rem;
+  padding: 0.75rem;
 }
 
 @media (max-width: 768px) {
-  .app-container {
-    padding: 1rem;
-  }
-
-  .main-header {
-    flex-direction: column;
-    text-align: center;
-    padding: 1.5rem;
-  }
-
-  .main-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .car-status {
-    margin-bottom: 1rem !important;
-  }
-
-  .status-card {
-    min-width: 100%;
-    max-width: 100%;
-  }
-
-  .status-content {
-    padding: 1rem;
-    gap: 1rem;
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .status-icon {
-    font-size: 2rem;
-  }
-
-  .status-text {
-    align-items: center;
-  }
-
   .tabs-header {
     flex-direction: column;
-    gap: 1rem;
     padding: 1rem;
-    text-align: center;
+    gap: 0.75rem;
   }
 
   .header-title {
-    order: 1;
-    position: static;
-    transform: none;
-    justify-content: center;
     width: 100%;
+    justify-content: center;
+  }
+
+  .header-title h1 {
+    font-size: 1.1rem;
   }
 
   .tab-navigation {
-    order: 2;
     width: 100%;
-    margin-right: 0;
+    margin-left: 0;
   }
 
   .tab-navigation :deep(.p-tabview-nav) {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.5rem;
-  }
-
-  .tab-navigation :deep(.p-tabview-nav-link) {
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
-    margin: 0;
-    width: 100%;
-    text-align: center;
-  }
-
-  .action-buttons-header {
-    order: 3;
-    width: 100%;
     justify-content: center;
-    flex-wrap: wrap;
   }
 
   .action-buttons-header {
     width: 100%;
     justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .action-buttons-header .p-button {
-    flex: 1;
-    font-size: 0.9rem;
-    padding: 0.75rem 1rem;
-    min-width: auto;
   }
 }
 
 @media (max-width: 480px) {
-  .app-container {
-    padding: 0.5rem;
-  }
-
-  .main-header h1 {
-    font-size: 1.25rem;
-  }
-
   .header-title h1 {
-    font-size: 1.2rem;
-  }
-
-  .status-card {
-    min-width: 100%;
-  }
-
-  .status-content {
-    padding: 0.8rem;
-  }
-
-  .status-icon {
-    font-size: 1.8rem;
-  }
-
-  .status-text strong {
     font-size: 1rem;
   }
 
   .action-buttons-header {
     flex-direction: column;
-    gap: 0.8rem;
-  }
-
-  .action-buttons-header .p-button {
-    width: 100%;
-    font-size: 0.85rem;
-    padding: 0.75rem;
-  }
-
-  .tab-navigation :deep(.p-tabview-nav-link) {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.8rem;
-  }
-
-  .tab-header {
-    gap: 0.5rem;
-  }
-
-  .tab-header span {
-    font-size: 0.8rem;
   }
 }
 </style>

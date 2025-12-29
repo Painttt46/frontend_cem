@@ -474,21 +474,16 @@ onMounted(() => {
 <style scoped>
 .task-management {
   padding: 1rem;
-  padding-bottom: 0;
-  max-width: 100%;
-  margin: 0 auto;
-  
-  background: #e5e7eb;
-  height: 100%;
+  background: var(--bg-color);
+  min-height: 100%;
   overflow: auto;
 }
 
-/* Header Styles */
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .header-content {
@@ -505,16 +500,14 @@ onMounted(() => {
 }
 
 .back-btn {
-  color: white !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 8px !important;
-  padding: 0.5rem !important;
-  transition: all 0.3s ease !important;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  padding: 0.5rem;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .header-title {
@@ -545,10 +538,8 @@ onMounted(() => {
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 20px;
-  white-space: nowrap;
 }
 
-/* Action Grid */
 .action-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -558,16 +549,15 @@ onMounted(() => {
 
 .action-card {
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
 .action-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border-color: #4A90E2;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
 }
 
 .action-content {
@@ -583,12 +573,7 @@ onMounted(() => {
 
 .action-icon {
   font-size: 2rem;
-  color: #4A90E2;
-  transition: color 0.3s ease;
-}
-
-.action-card:hover .action-icon {
-  color: #D73527;
+  color: var(--primary-color);
 }
 
 .action-content h3 {
@@ -600,9 +585,8 @@ onMounted(() => {
 
 .action-content p {
   margin: 0 0 1rem 0;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.9rem;
-  line-height: 1.5;
 }
 
 .action-stats {
@@ -614,22 +598,21 @@ onMounted(() => {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #4A90E2;
+  color: var(--primary-color);
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
-/* Dialog Styles */
 .dialog-content {
   padding: 1rem 0;
 }
 
 .add-section {
   padding-bottom: 1rem;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .icon-dropdown {
@@ -644,15 +627,6 @@ onMounted(() => {
 
 .emoji {
   font-size: 1.4rem;
-}
-
-.icon-option {
-  justify-content: center;
-  padding: 0.5rem;
-}
-
-.icon-display {
-  justify-content: center;
 }
 
 .list-section h4 {
@@ -677,8 +651,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
   background: #f8f9fa;
 }
 
@@ -692,7 +666,6 @@ onMounted(() => {
 .item-actions {
   display: flex;
   gap: 0.25rem;
-  align-items: center;
 }
 
 .status-info .emoji {
@@ -702,7 +675,7 @@ onMounted(() => {
 
 .category-info i,
 .status-info i {
-  color: #4A90E2;
+  color: var(--primary-color);
 }
 
 .color-preview {
@@ -711,20 +684,10 @@ onMounted(() => {
   gap: 0.75rem;
   padding: 0.5rem;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
-.color-preview span {
-  font-size: 0.9rem;
-  color: #495057;
-}
-
-/* Mobile Responsive */
 @media (max-width: 768px) {
-  .task-management {
-    padding: 0.5rem;
-  }
-
   .header-content {
     flex-direction: column;
     gap: 1rem;
@@ -739,18 +702,6 @@ onMounted(() => {
   .action-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
-  }
-  
-  .action-content {
-    padding: 1.25rem;
-  }
-  
-  .action-icon {
-    font-size: 1.75rem;
-  }
-
-  .action-content h3 {
-    font-size: 1.1rem;
   }
 }
 </style>

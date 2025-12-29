@@ -392,259 +392,69 @@ export default {
 </script>
 
 <style scoped>
-.leave-work-container {
-  padding: 1rem;
-  padding-bottom: 0;
-  max-width: 100%;
-  margin: 0 auto;
-  
-  background: #e5e7eb;
-  height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: auto;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-}
-
-.leave-btn {
-  background: #3b82f6 !important;
-  border: none !important;
-  color: white !important;
-  padding: 1rem 2rem !important;
-  font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
-  transition: all 0.3s ease !important;
-  position: relative !important;
-  overflow: hidden !important;
-  min-width: 200px !important;
-  font-size: 1rem !important;
-}
-
-.leave-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6) !important;
-}
-
-.leave-btn:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.leave-btn:hover:before {
-  left: 100%;
-}
-
-.approval-btn {
-  background: #22c55e !important;
-  border: none !important;
-  color: white !important;
-  padding: 1rem 2rem !important;
-  font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4) !important;
-  transition: all 0.3s ease !important;
-  position: relative !important;
-  overflow: hidden !important;
-  min-width: 200px !important;
-  font-size: 1rem !important;
-}
-
-.approval-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.6) !important;
-}
-
-.approval-btn:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.approval-btn:hover:before {
-  left: 100%;
-}
-
-.btn-text {
-  margin-left: 0.5rem;
-  font-size: 1rem;
-  letter-spacing: 0.5px;
-}
-
-.pending-badge {
-  margin-left: 2rem !important;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-  color: white !important;
-  font-weight: 700 !important;
-  padding: 0.3rem !important;
-  border-radius: 50% !important;
-  font-size: 0.7rem !important;
-  border: 2px solid rgba(239, 68, 68, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important;
-  animation: pulse 2s infinite;
-  width: 22px !important;
-  height: 22px !important;
-  text-align: center !important;
-  letter-spacing: 0.5px !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-.main-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  padding: 2rem;
-  min-height: 500px;
-}
-
 .header-card {
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1rem;
+  background: transparent;
+  box-shadow: none;
   border: none;
-  background: transparent;
 }
 
-.header-card :deep(.p-card-body) {
-  padding: 0;
-  background: transparent;
-}
-
+.header-card :deep(.p-card-body),
 .header-card :deep(.p-card-content) {
   padding: 0;
+  background: transparent;
 }
 
 .main-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  border-radius: 15px 15px 0 0;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-  overflow: hidden;
-  min-height: 80px;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  border-radius: var(--radius-md);
 }
 
 .main-header h1 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.main-header i {
-  font-size: 1.5rem;
-}
-
-.datetime-display {
-  display: flex;
-  align-items: center;
   gap: 0.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
 }
 
-@media (max-width: 768px) {
-  .leave-work-container {
-    padding: 1rem;
-  }
-
-  .main-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-    padding: 1.5rem;
-  }
-
-  .main-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .main-content {
-    padding: 1rem;
-  }
-
-  .action-buttons {
-    justify-content: center;
-    flex-direction: column;
-  }
-
-  .leave-btn, .approval-btn {
-    width: 100% !important;
-    min-width: auto !important;
-  }
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
 }
 
-@media (max-width: 480px) {
-  .leave-work-container {
-    padding: 0.5rem;
-  }
-
-  .main-header {
-    padding: 1rem;
-  }
-
-  .main-header h1 {
-    font-size: 1.3rem;
-  }
-
-  .datetime-display {
-    font-size: 0.9rem;
-  }
-
-  .main-content {
-    padding: 0.75rem;
-  }
-
-  .action-buttons {
-    gap: 0.75rem;
-  }
-}
-:deep(.leave-dialog.p-dialog),
-:deep(.approval-dialog.p-dialog) {
-  height: auto !important;
-  max-height: 95vh !important;
+.leave-btn {
+  background: #3b82f6;
+  border: none;
 }
 
-:deep(.leave-dialog .p-dialog-content),
-:deep(.approval-dialog .p-dialog-content) {
-  height: auto !important;
-  max-height: calc(95vh - 80px) !important;
-  overflow-y: auto !important;
+.approval-btn {
+  background: #22c55e;
+  border: none;
+}
+
+.btn-text {
+  margin-left: 0.25rem;
+}
+
+.pending-badge {
+  margin-left: 0.5rem;
+}
+
+.main-content {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem;
+  border: 1px solid var(--border-color);
 }
 
 .reject-form {
@@ -656,9 +466,36 @@ export default {
 .reject-form .input-label {
   font-weight: 500;
   color: #374151;
+  font-size: 0.9rem;
 }
 
-.reject-form textarea {
-  width: 100%;
+@media (max-width: 768px) {
+  .main-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .main-header h1 {
+    font-size: 1.1rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .leave-btn,
+  .approval-btn {
+    width: 100%;
+  }
+}
+
+:deep(.leave-dialog.p-dialog),
+:deep(.approval-dialog.p-dialog) {
+  max-height: 95vh;
+}
+
+:deep(.leave-dialog .p-dialog-content),
+:deep(.approval-dialog .p-dialog-content) {
+  max-height: calc(95vh - 80px);
+  overflow-y: auto;
 }
 </style>

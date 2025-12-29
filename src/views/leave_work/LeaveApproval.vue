@@ -438,67 +438,67 @@ export default {
 </script>
 
 <style scoped>
-.ticket-id-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.ticket-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 0.9rem !important;
-  padding: 0.5rem 0.75rem !important;
-  border-radius: 8px !important;
-  border: 2px solid rgba(102, 126, 234, 0.2) !important;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
-  letter-spacing: 0.5px !important;
-  min-width: 80px !important;
-  text-align: center !important;
-}
-
 .approval-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .empty-state {
   text-align: center;
-  padding: 4rem 2rem;
-  color: #6c757d;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin: 1rem;
 }
 
 .empty-state p {
   margin-top: 1rem;
-  font-size: 1.1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.approval-table :deep(.p-datatable) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1rem;
 }
 
 .approval-table :deep(.p-datatable-thead > tr > th) {
   background: #f8f9fa;
   color: #495057;
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
-  padding: 1rem 0.75rem;
-  font-size: 0.9rem;
+  border-bottom: 2px solid var(--border-color);
+  padding: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.approval-table :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f1f3f4;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.approval-table :deep(.p-datatable-tbody > tr:hover) {
+  background: #f8f9fa;
+}
+
+.ticket-id-container {
+  display: flex;
+  justify-content: center;
+}
+
+.ticket-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
 }
 
 .delegate-info {
   text-align: left;
   padding: 0.5rem;
   background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
+  border-radius: var(--radius-md);
+  border-left: 4px solid var(--success-color);
 }
 
 .delegate-info > div {
@@ -513,74 +513,31 @@ export default {
 }
 
 .delegate-info i {
-  color: #6c757d;
+  color: var(--text-secondary);
   width: 16px;
-  text-align: center;
 }
 
 .delegate-name strong {
   color: #495057;
-  font-size: 0.95rem;
-}
-
-.delegate-role small {
-  color: #6c757d;
-  font-weight: 500;
 }
 
 .delegate-contact .contact-info {
-  color: #28a745 !important;
+  color: var(--success-color);
   font-weight: 500;
 }
 
 .work-details {
-  flex-direction: column !important;
-  align-items: flex-start !important;
+  flex-direction: column;
+  align-items: flex-start;
   background: white;
   padding: 0.5rem;
   border-radius: 4px;
   margin-top: 0.5rem;
 }
 
-.work-details i {
-  margin-bottom: 0.25rem;
-}
-
-.work-details small {
-  color: #495057 !important;
-  line-height: 1.4;
-  margin-left: 0;
-}
-
 .no-delegation {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-style: italic;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.approval-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 1rem 0.75rem;
-  border-bottom: 1px solid #f1f3f4;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.approval-table :deep(.p-datatable-tbody > tr:hover) {
-  background: #f8f9fa;
-}
-
-.approval-table :deep(.p-badge) {
-  font-weight: 500;
-  padding: 0.5rem 0.75rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.5rem;
-  white-space: normal;
-  text-align: center;
-  line-height: 1.2;
 }
 
 .reason-text {
@@ -591,25 +548,10 @@ export default {
   text-overflow: ellipsis;
 }
 
-.reason-text-wrap {
-  width: 100%;
-  display: block;
-  word-wrap: break-word;
-  white-space: normal;
-  line-height: 1.4;
-  text-align: left;
-}
-
 .view-icon {
   font-size: 1.2rem;
-  color: #28a745;
+  color: var(--success-color);
   cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.view-icon:hover {
-  color: #20c997;
-  transform: scale(1.1);
 }
 
 .action-buttons {
@@ -630,7 +572,7 @@ export default {
 .no-attachments {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .attachments-list {
@@ -645,8 +587,8 @@ export default {
   align-items: center;
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .file-info {
@@ -659,13 +601,9 @@ export default {
   width: 60px;
   height: 60px;
   object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
   cursor: pointer;
-}
-
-.file-preview:hover {
-  opacity: 0.8;
 }
 
 .full-image {
@@ -676,7 +614,7 @@ export default {
 
 .file-icon {
   font-size: 2rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .file-details {
@@ -690,7 +628,7 @@ export default {
 }
 
 .file-type {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.85rem;
 }
 
@@ -710,46 +648,16 @@ export default {
   margin-bottom: 0.25rem;
 }
 
-.delegate-compact .work-details-btn {
-  margin-top: 0.25rem;
-}
-
-@media (max-width: 768px) {
-  .approval-table :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.9rem;
-  }
-  
-  .reason-text {
-    max-width: 150px;
-  }
-
-  .delegate-info {
-    font-size: 0.85rem;
-  }
-
-  .approval-table :deep(.p-datatable-thead > tr > th) {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
-  }
-
-  .action-buttons .p-button {
-    width: 2rem;
-    height: 2rem;
-  }
-}
-
 .clickable-name {
   cursor: pointer;
-  color: #667eea;
+  color: var(--primary-color);
   font-weight: 600;
-  transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #764ba2;
   text-decoration: underline;
 }
+
 .status-badge {
   display: flex;
   justify-content: center;
@@ -766,7 +674,7 @@ export default {
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #f8f9fa;
 }
 
@@ -783,7 +691,7 @@ export default {
 }
 
 .approval-step i {
-  color: #f59e0b;
+  color: var(--warning-color);
   margin-top: 2px;
 }
 
@@ -807,5 +715,18 @@ export default {
   font-size: 0.75rem;
   color: #9ca3af;
   font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .approval-table :deep(.p-datatable-tbody > tr > td),
+  .approval-table :deep(.p-datatable-thead > tr > th) {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .action-buttons .p-button {
+    width: 2rem;
+    height: 2rem;
+  }
 }
 </style>

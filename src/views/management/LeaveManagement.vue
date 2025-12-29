@@ -602,20 +602,16 @@ const saveLeaveType = async () => {
 <style scoped>
 .leave-management-container {
   padding: 1rem;
-  padding-bottom: 0;
-  max-width: 100%;
-  margin: 0 auto;
-  
-  background: #e5e7eb;
-  height: 100%;
+  background: var(--bg-color);
+  min-height: 100%;
   overflow: auto;
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .header-content {
@@ -626,7 +622,7 @@ const saveLeaveType = async () => {
 }
 
 .back-btn {
-  color: white !important;
+  color: white;
 }
 
 .header-title {
@@ -661,19 +657,12 @@ const saveLeaveType = async () => {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.search-field {
-  width: 100%;
-}
-
+.search-field,
 .filter-dropdown {
   width: 100%;
-}
-
-.table-wrapper {
-  overflow-x: auto;
 }
 
 .leave-type-header {
@@ -683,15 +672,9 @@ const saveLeaveType = async () => {
   gap: 0.5rem;
 }
 
-.leave-type-actions {
-  display: flex;
-  gap: 0;
-}
-
 .advance-days-hint {
-  display: block;
   font-size: 0.75rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   margin-top: 0.25rem;
 }
 
@@ -704,14 +687,9 @@ const saveLeaveType = async () => {
 .color-option {
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.color-option:hover {
-  transform: scale(1.1);
 }
 
 .color-option.selected {
@@ -722,7 +700,7 @@ const saveLeaveType = async () => {
 .quota-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .quota-row {
@@ -733,44 +711,39 @@ const saveLeaveType = async () => {
 
 .quota-row small {
   font-size: 0.85rem;
-  color: #6c757d;
+  color: var(--text-secondary);
   min-width: 60px;
 }
 
 .quota-value {
   font-weight: 600;
   color: #2c3e50;
-  font-size: 0.9rem;
 }
 
-.remaining {
-  font-size: 0.85rem;
-  color: #6c757d;
-  padding-left: 60px;
-}
-
-.edit-quota-form {
+.edit-quota-form,
+.leave-type-form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   padding: 1rem 0;
 }
 
-.edit-quota-form .field {
+.edit-quota-form .field,
+.leave-type-form .field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-.edit-quota-form label {
+.edit-quota-form label,
+.leave-type-form label {
   font-weight: 600;
   color: #2c3e50;
 }
 
 .field-hint {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.85rem;
-  margin-top: 0.25rem;
 }
 
 .user-info {
@@ -779,56 +752,21 @@ const saveLeaveType = async () => {
   gap: 1rem;
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
 }
 
 .user-info i {
   font-size: 2rem;
-  color: #4A90E2;
+  color: var(--primary-color);
 }
 
 .user-info h4 {
   margin: 0;
   color: #2c3e50;
-  font-size: 1.1rem;
 }
 
 .user-info small {
-  color: #6c757d;
-}
-
-.leave-type-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 1rem 0;
-}
-
-.leave-type-form .field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.leave-type-form label {
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.leave-type-form small {
-  color: #6c757d;
-  font-size: 0.8rem;
-}
-
-.quota-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.quota-cell small {
-  font-size: 0.85rem;
-  color: #6c757d;
+  color: var(--text-secondary);
 }
 
 .header-actions {
@@ -850,10 +788,6 @@ const saveLeaveType = async () => {
   width: 100%;
 }
 
-.holiday-calendar :deep(.p-datepicker-calendar td) {
-  padding: 0.25rem;
-}
-
 .date-cell {
   display: flex;
   width: 2.5rem;
@@ -864,8 +798,8 @@ const saveLeaveType = async () => {
 }
 
 .holiday-date {
-  background-color: #ef4444 !important;
-  color: #fff !important;
+  background-color: #ef4444;
+  color: #fff;
   font-weight: 600;
 }
 
@@ -875,7 +809,7 @@ const saveLeaveType = async () => {
 }
 
 .no-holidays {
-  color: #6c757d;
+  color: var(--text-secondary);
   font-style: italic;
 }
 
@@ -886,34 +820,22 @@ const saveLeaveType = async () => {
 }
 
 .holiday-chip {
-  background: #ef4444 !important;
-  color: white !important;
+  background: #ef4444;
+  color: white;
 }
 
 @media (max-width: 768px) {
-  .leave-management-container {
-    padding: 0.5rem;
-  }
-
   .table-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
   }
 
-  .table-header button {
-    width: 100%;
-  }
-  
   .header-actions {
     flex-direction: column;
     width: 100%;
   }
-  
-  .header-actions button {
-    width: 100%;
-  }
-  
+
   .filters-section {
     grid-template-columns: 1fr;
   }

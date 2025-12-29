@@ -539,8 +539,8 @@ export default {
 
 <style scoped>
 .form-card {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }
 
 .daily-work-form {
@@ -550,8 +550,8 @@ export default {
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .input-group {
@@ -560,57 +560,38 @@ export default {
   gap: 0.5rem;
 }
 
+.input-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.input-label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
 .checkbox-group {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-/* Attendees Section Styling */
-.colleague-search {
-  margin-bottom: 1rem;
-}
-
-.email-input-section {
-  margin-bottom: 1.5rem;
-}
-
+/* Attendees */
 .input-with-button {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
 }
 
 .input-with-button input {
   flex: 1;
 }
 
-.add-email-btn {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: #007bff;
-  border: none;
-  color: white;
-  transition: all 0.2s ease;
-}
-
-.add-email-btn:hover:not(:disabled) {
-  background: #0056b3;
-  transform: translateY(-1px);
-}
-
-.add-email-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
 .selected-attendees {
   margin-top: 1rem;
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
 }
 
 .attendees-title {
@@ -618,14 +599,6 @@ export default {
   font-size: 0.9rem;
   font-weight: 600;
   color: #495057;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.attendees-title::before {
-  content: '👥';
-  font-size: 1rem;
 }
 
 .attendees-list {
@@ -640,18 +613,8 @@ export default {
   align-items: center;
   padding: 0.75rem;
   background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.attendee-card:hover {
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
-}
-
-.attendee-details {
-  flex: 1;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
 }
 
 .attendee-name {
@@ -664,15 +627,9 @@ export default {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #dc3545;
+  background: var(--danger-color);
   border: none;
   color: white;
-  transition: all 0.2s ease;
-}
-
-.remove-btn:hover {
-  background: #c82333;
-  transform: scale(1.1);
 }
 
 .no-attendees {
@@ -681,113 +638,72 @@ export default {
   justify-content: center;
   gap: 0.5rem;
   padding: 2rem;
-  color: #6c757d;
-  font-style: italic;
+  color: var(--text-secondary);
   background: #f8f9fa;
-  border: 2px dashed #dee2e6;
-  border-radius: 8px;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
   margin-top: 1rem;
 }
 
-.no-attendees i {
-  font-size: 1.2rem;
-  opacity: 0.7;
+/* Calendar Section */
+.calendar-section {
+  background: #f8f9fa;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin: 1rem 0;
 }
 
-/* User Option Styling */
-.user-option {
-  padding: 0.5rem 0;
+.calendar-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-.user-name {
-  font-weight: 500;
-  color: #212529;
-  font-size: 0.9rem;
-}
-
-/* Input Styling */
-.corporate-input {
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.corporate-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  outline: none;
-}
-
-.field-hint {
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-/* Event Details Section */
-.event-details-section {
-  margin-top: 0.5rem;
-}
-
-.corporate-textarea {
-  width: 100%;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 100px;
-  transition: all 0.2s ease;
-  background: #fff;
-}
-
-.corporate-textarea:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  outline: none;
-}
-
-.corporate-textarea::placeholder {
-  color: #6c757d;
-  font-style: italic;
-}
-
-.field-hint {
+.calendar-main-label {
+  font-weight: 600;
+  color: #495057;
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 3px solid #ffc107;
 }
 
-.field-hint i {
-  color: #ffc107;
-  font-size: 0.9rem;
+.calendar-main-label i {
+  color: var(--primary-color);
 }
 
-/* Teams Meeting Section */
-.event-details-group {
-  margin-top: 1.5rem;
+.calendar-description {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-left: 2rem;
 }
 
+.calendar-options {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: white;
+  border: 1px solid var(--primary-color);
+  border-radius: var(--radius-md);
+}
+
+.options-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+/* Teams Meeting */
 .teams-meeting-section {
   padding: 1rem;
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  background: #e3f2fd;
   border: 1px solid #bbdefb;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   margin-top: 1rem;
-}
-
-.teams-meeting-section .checkbox-group {
-  margin-bottom: 0.5rem;
 }
 
 .teams-meeting-section .checkbox-label {
@@ -798,153 +714,48 @@ export default {
   gap: 0.5rem;
 }
 
-.teams-meeting-section .checkbox-label i {
-  color: #1976d2;
-  font-size: 1.1rem;
-}
-
 .teams-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.8rem;
-  font-style: italic;
   margin-top: 0.5rem;
 }
 
-.teams-hint i {
-  color: #1976d2;
-  font-size: 0.9rem;
-}
-
-.calendar-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px solid #dee2e6;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  transition: all 0.3s ease;
-}
-
-.calendar-section:hover {
-  border-color: #007bff;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-}
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.calendar-main-label {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #495057;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: color 0.2s ease;
-}
-
-.calendar-main-label i {
-  font-size: 1.2rem;
-  color: #007bff;
-}
-
-.calendar-description {
-  font-size: 0.9rem;
-  color: #6c757d;
-  line-height: 1.4;
-  margin-left: 2.5rem;
-}
-
-.calendar-options {
-  margin: 1.5rem 0;
-  padding: 1.5rem;
-  background: #ffffff;
-  border: 2px solid #007bff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.1);
-  animation: slideDown 0.3s ease-out;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.options-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #007bff;
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
-}
-
-.options-header i {
-  font-size: 1.1rem;
-}
-
-.input-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  color: #495057;
-  margin-bottom: 0.5rem;
-}
-
-.input-label i {
-  color: #007bff;
-  font-size: 1rem;
-}
-
-.field-hint {
-  color: #6c757d;
-  font-style: italic;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.full-width {
-  grid-column: 1 / -1;
-}
-
-.input-label {
-  font-weight: 500;
-  color: #495057;
-  font-size: 0.9rem;
-}
-
+/* Form Elements */
 .corporate-input,
-.corporate-dropdown {
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
+.corporate-dropdown,
+.corporate-textarea {
+  width: 100%;
+  border: 1px solid #ced4da;
+  border-radius: var(--radius-sm);
   padding: 0.75rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .corporate-input:focus,
-.corporate-dropdown:focus {
-  border-color: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+.corporate-dropdown:focus,
+.corporate-textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.15);
   outline: none;
 }
 
+.corporate-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.readonly-field {
+  background: #f8f9fa;
+  color: var(--text-secondary);
+}
+
+.field-hint {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* Status */
 .status-display,
 .status-option {
   display: flex;
@@ -953,28 +764,19 @@ export default {
 }
 
 .emoji {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
-.readonly-field {
-  background: #f8f9fa;
-  color: #6c757d;
-}
-
+/* Form Actions */
 .form-actions {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
   padding-top: 1rem;
-  border-top: 2px solid #e9ecef;
+  border-top: 1px solid var(--border-color);
 }
 
-.form-actions .p-button {
-  min-width: 120px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-}
-
+/* File Upload */
 .file-upload-wrapper {
   display: flex;
   flex-direction: column;
@@ -992,8 +794,8 @@ export default {
   margin-top: 0.75rem;
   padding: 0.75rem;
   background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
 }
 
 .file-item {
@@ -1003,12 +805,11 @@ export default {
   padding: 0.5rem;
   background: white;
   border-radius: 4px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-color);
 }
 
 .file-item i {
-  color: #6c757d;
-  font-size: 1rem;
+  color: var(--text-secondary);
 }
 
 .file-name {
@@ -1018,53 +819,16 @@ export default {
   word-break: break-all;
 }
 
-:deep(.p-dropdown) {
-  width: 100%;
-}
-
-:deep(.p-calendar) {
-  width: 100%;
-}
-
-:deep(.p-inputtext) {
-  width: 100%;
-}
-
+:deep(.p-dropdown),
+:deep(.p-calendar),
+:deep(.p-inputtext),
 :deep(.p-textarea) {
   width: 100%;
-  resize: vertical;
-}
-
-:deep(.p-divider) {
-  margin: 1.5rem 0;
-}
-
-.status-display,
-.status-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-display .emoji,
-.status-option .emoji {
-  font-size: 16px;
-}
-
-.status-display i,
-.status-option i {
-  color: #4A90E2;
-  font-size: 14px;
 }
 
 @media (max-width: 768px) {
-  .daily-work-form {
-    padding: 0.75rem;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
 
   .form-actions {
@@ -1073,25 +837,6 @@ export default {
 
   .form-actions .p-button {
     width: 100%;
-  }
-
-  .corporate-input,
-  .corporate-dropdown {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .daily-work-form {
-    padding: 0.5rem;
-  }
-
-  .input-label {
-    font-size: 0.8rem;
-  }
-
-  .form-grid {
-    gap: 0.75rem;
   }
 }
 </style>

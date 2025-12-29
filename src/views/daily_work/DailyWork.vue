@@ -163,252 +163,77 @@ export default {
 </script>
 
 <style scoped>
-.daily-work-container {
-  padding: 1rem;
-  max-width: 100%;
-  
-  margin: 0 auto;
-  
-  background: #e5e7eb;
-  height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  overflow: auto;
-}
-
-.tab-action-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  margin-top: 0rem;
-  justify-content: flex-start;
-}
-
-.work-btn {
-  background: #1e3a8a !important;
-  border: none !important;
-  color: white !important;
-  padding: 1rem 2rem !important;
-  font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4) !important;
-  transition: all 0.3s ease !important;
-  position: relative !important;
-  overflow: hidden !important;
-  min-width: 180px !important;
-  font-size: 1rem !important;
-}
-
-.work-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(30, 58, 138, 0.6) !important;
-}
-
-.task-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-  border: none !important;
-  color: white !important;
-  padding: 1rem 2rem !important;
-  font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
-  transition: all 0.3s ease !important;
-  position: relative !important;
-  overflow: hidden !important;
-  min-width: 180px !important;
-  font-size: 1rem !important;
-}
-
-.task-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6) !important;
-}
-
-.btn-text {
-  margin-left: 0.5rem;
-  font-size: 1rem;
-  letter-spacing: 0.5px;
-}
-
-.main-content {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  padding: 2rem;
-}
-
-.tab-navigation {
-  border: none;
-}
-
-.tab-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  color: #495057;
-}
-
-.tab-content {
-  padding: 1rem 2rem 1rem 2rem;
-  min-height: 500px;
-}
-
-.tab-navigation :deep(.p-tabview-nav) {
-  background: #f8f9fa;
-  border-bottom: 2px solid #e9ecef;
-  padding: 0 1rem;
-}
-
-.tab-navigation :deep(.p-tabview-nav-link) {
-  background: transparent;
-  border: none;
-  color: #6c757d;
-  font-weight: 500;
-  padding: 1rem 1.5rem;
-  margin: 0 0.25rem;
-  border-radius: 8px 8px 0 0;
-  transition: all 0.3s ease;
-}
-
-.tab-navigation :deep(.p-tabview-nav-link:hover) {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
-}
-
-.tab-navigation :deep(.p-tabview-nav-link.p-highlight) {
-  background: white;
-  color: #667eea;
-  border-bottom: 2px solid #667eea;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.tab-navigation :deep(.p-tabview-panels) {
-  background: white;
-  border: none;
-  padding: 0;
-}
-
-.tab-navigation :deep(.p-tabview-panel) {
-  background: white;
-}
-
-.tab-navigation :deep(.p-tabview-ink-bar) {
-  display: none !important;
-}
-
 .header-card {
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1rem;
+  background: transparent;
+  box-shadow: none;
   border: none;
-  background: transparent;
 }
 
-.header-card :deep(.p-card-body) {
-  padding: 0;
-  background: transparent;
-}
-
+.header-card :deep(.p-card-body),
 .header-card :deep(.p-card-content) {
   padding: 0;
+  background: transparent;
 }
 
 .main-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  border-radius: 15px 15px 0 0;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-  overflow: hidden;
-  min-height: 80px;
-  flex-wrap: wrap;
-  gap: 1.5rem;
+  border-radius: var(--radius-md);
 }
 
 .main-header h1 {
   margin: 0;
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
-.main-header i {
-  font-size: 1.5rem;
+.tab-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.work-btn {
+  background: #1e3a8a;
+  border: none;
+}
+
+.btn-text {
+  margin-left: 0.25rem;
+}
+
+.main-content {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 1rem;
+  border: 1px solid var(--border-color);
 }
 
 @media (max-width: 768px) {
-  .daily-work-container {
-    padding: 1rem;
-  }
-
   .main-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-    padding: 1.5rem;
-  }
-
-  .main-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .tab-content {
-    padding: 1rem;
-  }
-
-  .tab-action-buttons {
-    justify-content: center;
-    flex-direction: column;
-  }
-
-  .work-btn, .task-btn {
-    width: 100% !important;
-    min-width: auto !important;
-  }
-
-  .tab-navigation :deep(.p-tabview-nav) {
-    flex-wrap: wrap;
-    padding: 0 0.5rem;
-  }
-
-  .tab-navigation :deep(.p-tabview-nav-link) {
     padding: 0.75rem 1rem;
-    font-size: 0.9rem;
-    margin: 0.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .daily-work-container {
-    padding: 0.5rem;
-  }
-
-  .main-header {
-    padding: 1rem;
   }
 
   .main-header h1 {
-    font-size: 1.3rem;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .tab-content {
-    padding: 0.75rem;
+    font-size: 1.1rem;
   }
 
   .tab-action-buttons {
-    gap: 0.75rem;
+    flex-direction: column;
   }
 
-  .tab-navigation :deep(.p-tabview-nav-link) {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
+  .work-btn {
+    width: 100%;
   }
 }
 </style>

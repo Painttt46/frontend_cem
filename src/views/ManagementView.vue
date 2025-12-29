@@ -232,22 +232,16 @@ const navigateTo = (section) => {
 <style scoped>
 .management-container {
   padding: 1rem;
-  padding-bottom: 0;
-  max-width: 100%;
-  margin: 0 auto;
-  
-  background: #e5e7eb;
-  height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-color);
+  min-height: 100%;
   overflow: auto;
 }
 
-/* Header Styles */
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
 }
 
 .header-content {
@@ -304,20 +298,18 @@ const navigateTo = (section) => {
   gap: 1.5rem;
 }
 
-/* Card Styles */
 .management-card {
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   height: 100%;
 }
 
 .management-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border-color: #4A90E2;
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-color);
 }
 
 .card-content {
@@ -325,7 +317,6 @@ const navigateTo = (section) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  position: relative;
 }
 
 .card-header {
@@ -337,12 +328,7 @@ const navigateTo = (section) => {
 
 .card-icon {
   font-size: 2.5rem;
-  color: #4A90E2;
-  transition: color 0.3s ease;
-}
-
-.management-card:hover .card-icon {
-  color: #D73527;
+  color: var(--primary-color);
 }
 
 .status-badge {
@@ -359,9 +345,8 @@ const navigateTo = (section) => {
 
 .card-content p {
   margin: 0;
-  color: #6c757d;
+  color: var(--text-secondary);
   font-size: 0.9rem;
-  line-height: 1.5;
   flex: 1;
 }
 
@@ -374,22 +359,14 @@ const navigateTo = (section) => {
 }
 
 .card-footer i {
-  color: #4A90E2;
-  font-size: 1rem;
-  transition: transform 0.3s ease;
+  color: var(--primary-color);
 }
 
 .management-card:hover .card-footer i {
   transform: translateX(4px);
-  color: #D73527;
 }
 
-/* Mobile Responsive */
 @media (max-width: 768px) {
-  .management-container {
-    padding: 0.5rem;
-  }
-
   .header-content {
     flex-direction: column;
     gap: 1rem;
@@ -401,68 +378,9 @@ const navigateTo = (section) => {
     gap: 0.5rem;
   }
 
-  .header-stats {
-    margin-top: 0.5rem;
-  }
-
   .management-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
-  .card-content {
-    padding: 1.25rem;
-  }
-  
-  .card-icon {
-    font-size: 2rem;
-  }
-
-  .card-content h3 {
-    font-size: 1.1rem;
-  }
 }
-
-@media (max-width: 480px) {
-  .management-container {
-    padding: 0.25rem;
-  }
-
-  .card-content {
-    padding: 1rem;
-  }
-
-  .card-icon {
-    font-size: 1.75rem;
-  }
-
-  .header-title h1 {
-    font-size: 1.25rem;
-  }
-}
-
-/* Animation */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.management-card {
-  animation: fadeInUp 0.6s ease forwards;
-}
-
-.management-card:nth-child(1) { animation-delay: 0.1s; }
-.management-card:nth-child(2) { animation-delay: 0.2s; }
-.management-card:nth-child(3) { animation-delay: 0.3s; }
-.management-card:nth-child(4) { animation-delay: 0.4s; }
-.management-card:nth-child(5) { animation-delay: 0.5s; }
-.management-card:nth-child(6) { animation-delay: 0.6s; }
-.management-card:nth-child(7) { animation-delay: 0.7s; }
-.management-card:nth-child(8) { animation-delay: 0.8s; }
 </style>

@@ -335,57 +335,21 @@ export default {
 </script>
 
 <style scoped>
-.status-card {
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-@keyframes carMove {
-
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-
-  50% {
-    transform: translateX(10px);
-  }
-}
-
-.status-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.car-plate {
-  background: #007bff;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
-  font-weight: bold;
-  display: inline-block;
-  width: fit-content;
-}
-
 .calendar-container {
   background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  margin: 2rem 0 0 0;
-  width: 100%;
+  margin: 1rem;
 }
 
 .calendar-header {
-  background: linear-gradient(135deg, #4A90E2 0%, #D73527 100%);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 12px 12px 0 0;
 }
 
 .month-title-container {
@@ -395,204 +359,212 @@ export default {
 
 .month-title {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .calendar-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   opacity: 0.9;
   margin-top: 0.25rem;
-  font-weight: 400;
 }
 
 .nav-btn {
-  background: rgba(255, 255, 255, 0.15);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
   color: white;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  font-size: 1.2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: #f0f0f0;
-  padding: 1px;
-  height: calc(80vh - 120px);
+  border-top: 1px solid var(--border-color);
 }
 
 .day-header {
-  background: #6c757d;
-  color: white;
-  padding: 1rem 0.5rem;
+  background: #f8f9fa;
+  color: #495057;
+  padding: 0.75rem;
   text-align: center;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+}
+
+.day-header:last-child {
+  border-right: none;
 }
 
 .calendar-day {
-  background: #f8f9fa;
+  background: white;
   padding: 0.5rem;
   text-align: center;
   cursor: pointer;
   position: relative;
-  transition: background-color 0.2s ease;
-  border: 1px solid #dee2e6;
-  font-size: 1.2rem;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-left: none;
+  font-size: 0.95rem;
   font-weight: 500;
-  min-height: 60px;
+  min-height: 80px;
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 0.75rem;
-  color: #212529;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 0.5rem;
+  color: var(--text-primary);
+}
+
+.calendar-day:nth-child(7n) {
+  border-right: none;
 }
 
 .calendar-day:hover {
-  background: #e9ecef;
-  border-color: #007bff;
+  background: #f0f7ff;
 }
 
 .calendar-day.other-month {
-  background: #f1f3f4;
-  color: #9aa0a6;
-  cursor: not-allowed;
+  background: #fafafa;
+  color: #bbb;
+  cursor: default;
 }
 
 .calendar-day.today {
-  background: #007bff;
+  background: var(--primary-color);
   color: white;
-  font-weight: bold;
-}
-
-.calendar-day.has-booking {
-  background: #d4edda;
-  border-color: #28a745;
-}
-
-.calendar-day.active-usage {
-  background: #fff3cd;
-  border-color: #ffc107;
-  color: #856404;
   font-weight: 600;
 }
 
+.calendar-day.has-booking {
+  background: #e8f5e9;
+  border-color: #c8e6c9;
+}
+
+.calendar-day.active-usage {
+  background: #fff8e1;
+  border-color: #ffecb3;
+}
+
 .calendar-day.past-date {
-  background: #f1f3f4;
-  color: #9aa0a6;
-  cursor: not-allowed;
+  background: #fafafa;
+  color: #bbb;
+  cursor: default;
 }
 
 .booking-indicator {
   position: absolute;
-  top: 0.5rem;
-  right: 1rem;
+  top: 0.25rem;
+  right: 0.25rem;
 }
 
 .booking-text-center {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  margin-top: auto;
+  padding-bottom: 0.25rem;
 }
 
 .booking-text {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #5f5f5f;
-  margin-top: 0.1rem;
-  text-align: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #2e7d32;
+  background: #c8e6c9;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
 }
 
-.booking-emoji {
-  font-size: 1.3rem;
-  animation: bookingPulse 2s ease-in-out infinite;
+.car-indicator {
+  margin-top: auto;
+  padding-bottom: 0.25rem;
 }
 
-@keyframes bookingPulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.1);
-  }
+.car-indicator p {
+  font-size: 0.65rem;
+  margin: 0;
+  color: #f57c00;
+  font-weight: 600;
 }
 
+/* Dialog Styles */
+.car-header,
 .booking-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: linear-gradient(135deg, #28a745, #20c997);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
   color: white;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
 }
 
-.booking-status {
+.booking-header {
+  background: linear-gradient(135deg, #43a047, #2e7d32);
+}
+
+.car-plate-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   background: rgba(255, 255, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
 }
 
-.booked-dot {
-  width: 8px;
-  height: 8px;
-  background: #ff5722;
-  border-radius: 50%;
-  display: block;
+.details-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.car-indicator {
-  position: absolute;
-  bottom: 2rem;
-  left: 0;
-  right: 0;
-  overflow: visible;
-  height: 20px;
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--primary-color);
 }
 
-.car-emoji {
-  font-size: 1em;
-  animation: carSlide 1.5s linear infinite;
-  display: inline-block;
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
-@keyframes carSlide {
-  0% {
-    transform: translateX(120%);
-  }
+.detail-value {
+  font-weight: 500;
+  color: var(--text-primary);
+}
 
-  100% {
-    transform: translateX(-120%);
-  }
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
 }
 
 @media (max-width: 768px) {
   .calendar-container {
-    margin: 1rem 0 0 0;
+    margin: 0.5rem;
   }
 
   .calendar-header {
@@ -604,162 +576,19 @@ export default {
   }
 
   .nav-btn {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1rem;
-  }
-
-  .calendar {
-    height: calc(60vh - 80px);
-  }
-
-  .day-header {
-    padding: 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .calendar-day {
-    padding: 0.8rem 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .booking-indicator {
-    top: 0.3rem;
-    right: 0.3rem;
-  }
-
-  .booked-dot {
-    width: 6px;
-    height: 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .calendar-header {
-    padding: 0.8rem;
-  }
-
-  .month-title {
-    font-size: 1rem;
-  }
-
-  .nav-btn {
     width: 2rem;
     height: 2rem;
-    font-size: 0.9rem;
-  }
-
-  .calendar {
-    height: calc(50vh - 60px);
   }
 
   .day-header {
-    padding: 0.4rem;
-    font-size: 0.7rem;
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
   }
 
   .calendar-day {
-    padding: 0.6rem 0.3rem;
-    font-size: 0.8rem;
+    min-height: 60px;
+    font-size: 0.85rem;
+    padding: 0.25rem;
   }
-}
-
-.car-details {
-  padding: 0;
-}
-
-.car-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
-  color: white;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-}
-
-.car-plate-display {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.status-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-}
-
-.status-badge .pi-circle-fill {
-  color: #28a745;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.details-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #4A90E2;
-}
-
-.detail-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #495057;
-  min-width: 120px;
-}
-
-.detail-value {
-  font-weight: 500;
-  color: #212529;
-  text-align: right;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: center;
-  padding-top: 1rem;
-}
-
-.detail-item {
-  margin-bottom: 0.75rem;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 4px;
-}
-
-.status-active {
-  color: #ffc107;
-  font-weight: bold;
 }
 </style>
