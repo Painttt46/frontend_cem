@@ -4,14 +4,15 @@
       <form @submit.prevent="submitForm" class="add-task-form">
         <div class="form-grid">
           <div class="input-group">
+            <label for="soNumber" class="input-label">เลข SO (Project)</label>
+            <InputText id="soNumber" v-model="formData.soNumber" class="corporate-input" />
+          </div>
+          <div class="input-group">
             <label for="taskName" class="input-label">ชื่องาน / โครงการ *</label>
             <InputText id="taskName" v-model="formData.taskName" required class="corporate-input" />
           </div>
 
-          <div class="input-group">
-            <label for="soNumber" class="input-label">เลข SO (Project)</label>
-            <InputText id="soNumber" v-model="formData.soNumber" class="corporate-input" />
-          </div>
+
 
           <div class="input-group">
             <label for="contractNumber" class="input-label">เลขที่สัญญา</label>
@@ -25,20 +26,21 @@
 
           <div class="input-group">
             <label for="projectStartDate" class="input-label">เวลาเริ่มโครงการ</label>
-            <Calendar id="projectStartDate" v-model="formData.projectStartDate" dateFormat="dd/mm/yy" class="corporate-input" />
+            <Calendar id="projectStartDate" v-model="formData.projectStartDate" dateFormat="dd/mm/yy"
+              class="corporate-input" />
           </div>
 
           <div class="input-group">
             <label for="projectEndDate" class="input-label">สิ้นสุดโครงการ</label>
-            <Calendar id="projectEndDate" v-model="formData.projectEndDate" dateFormat="dd/mm/yy" 
-                      :minDate="formData.projectStartDate" class="corporate-input" />
+            <Calendar id="projectEndDate" v-model="formData.projectEndDate" dateFormat="dd/mm/yy"
+              :minDate="formData.projectStartDate" class="corporate-input" />
           </div>
 
           <div class="input-group">
             <label for="category" class="input-label">หมวดหมู่งาน *</label>
-            <MultiSelect id="category" v-model="formData.category" :options="categoryOptions" 
-                      optionLabel="label" optionValue="value" placeholder="เลือกหมวดหมู่งาน" 
-                      class="corporate-input category-dropdown" display="chip" :maxSelectedLabels="3" :showToggleAll="false">
+            <MultiSelect id="category" v-model="formData.category" :options="categoryOptions" optionLabel="label"
+              optionValue="value" placeholder="เลือกหมวดหมู่งาน" class="corporate-input category-dropdown"
+              display="chip" :maxSelectedLabels="3" :showToggleAll="false">
             </MultiSelect>
           </div>
 
@@ -50,8 +52,8 @@
           <div class="input-group full-width">
             <label class="input-label">แนบไฟล์ (รูปภาพ, เอกสาร)</label>
             <div class="file-upload-wrapper">
-              <input ref="fileInput" @change="handleFileUpload" type="file"
-                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple class="file-input" id="fileUpload">
+              <input ref="fileInput" @change="handleFileUpload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                multiple class="file-input" id="fileUpload">
               <Button type="button"
                 :label="formData.files?.length > 0 ? `เลือกแล้ว ${formData.files.length} ไฟล์` : 'เลือกไฟล์'"
                 icon="pi pi-upload" severity="secondary" outlined @click="$refs.fileInput.click()" />
@@ -67,7 +69,8 @@
         </div>
 
         <div class="form-actions">
-          <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined @click="resetForm" />
+          <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined
+            @click="resetForm" />
           <Button type="submit" label="เพิ่มงาน" icon="pi pi-plus" severity="success" />
         </div>
       </form>
@@ -141,12 +144,12 @@ export default {
     },
     async uploadFiles() {
       if (this.formData.files.length === 0) return []
-      
+
       const formData = new FormData()
       this.formData.files.forEach(file => {
         formData.append('files', file)
       })
-      
+
       try {
         const response = await this.$http.post('/api/files/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
@@ -159,7 +162,7 @@ export default {
     async submitForm() {
       try {
         const uploadedFiles = await this.uploadFiles()
-        
+
         // Format dates to YYYY-MM-DD (local date only, no time)
         const formatDate = (date) => {
           if (!date) return null
@@ -169,7 +172,7 @@ export default {
           const day = String(d.getDate()).padStart(2, '0')
           return `${year}-${month}-${day}`
         }
-        
+
         const taskData = {
           task_name: this.formData.taskName,
           so_number: this.formData.soNumber,
@@ -183,7 +186,7 @@ export default {
         }
 
         await this.$http.post('/api/tasks', taskData)
-        
+
         this.$toast.add({
           severity: 'success',
           summary: 'สำเร็จ',
@@ -193,14 +196,14 @@ export default {
 
         // Emit to parent component
         this.$emit('task-added')
-        
+
         // Dispatch global event for real-time update
         window.dispatchEvent(new CustomEvent('taskUpdated'))
-        
+
         this.resetForm()
       } catch (err) {
         const errorMessage = err.response?.data?.error || err.message || 'ไม่สามารถเพิ่มงานได้'
-        
+
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
@@ -346,16 +349,16 @@ export default {
   .add-task-form {
     padding: 0.75rem;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .form-actions .p-button {
     width: 100%;
   }

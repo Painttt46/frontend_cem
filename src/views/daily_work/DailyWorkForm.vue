@@ -8,7 +8,8 @@
             <div class="input-group">
               <label for="taskId" class="input-label">เลือกโครงการ *</label>
               <Dropdown id="taskId" v-model="formData.taskId" :options="tasks" optionLabel="display" optionValue="id"
-                class="corporate-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange" />
+                class="corporate-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange"
+                filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO" :filterFields="['task_name', 'so_number', 'display']" />
             </div>
 
             <div class="input-group">

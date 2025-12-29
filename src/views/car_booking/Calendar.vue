@@ -509,20 +509,19 @@ export default {
 
 .booking-text-center {
   position: absolute;
-  bottom: 1rem;
+  bottom: 0.3rem;
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
 }
 
 .booking-text {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #5f5f5f;
-  margin-top: 0.1rem;
-  text-align: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #2e7d32;
+  background: #c8e6c9;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
 }
 
 .booking-emoji {
@@ -567,100 +566,104 @@ export default {
 
 .car-indicator {
   position: absolute;
-  bottom: 2rem;
+  bottom: 0.5rem;
   left: 0;
   right: 0;
-  overflow: visible;
-  height: 20px;
+  text-align: center;
 }
 
 .car-emoji {
-  font-size: 1em;
-  animation: carSlide 1.5s linear infinite;
+  font-size: 0.9rem;
   display: inline-block;
 }
 
-@keyframes carSlide {
-  0% {
-    transform: translateX(120%);
-  }
-
-  100% {
-    transform: translateX(-120%);
-  }
+.car-indicator p {
+  font-size: 0.6rem;
+  margin: 0;
+  color: #856404;
 }
+
 
 @media (max-width: 768px) {
   .calendar-container {
-    margin: 1rem 0 0 0;
+    margin: 0.5rem;
   }
 
   .calendar-header {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .month-title {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
   .nav-btn {
-    width: 2.5rem;
-    height: 2.5rem;
-    font-size: 1rem;
-  }
-
-  .calendar {
-    height: calc(60vh - 80px);
-  }
-
-  .day-header {
-    padding: 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .calendar-day {
-    padding: 0.8rem 0.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
     font-size: 0.9rem;
   }
 
-  .booking-indicator {
-    top: 0.3rem;
-    right: 0.3rem;
+  .day-header {
+    padding: 0.4rem 0.2rem;
+    font-size: 0.7rem;
   }
 
-  .booked-dot {
-    width: 6px;
-    height: 6px;
+  .calendar-day {
+    padding: 0.3rem;
+    font-size: 0.8rem;
+    min-height: 50px;
+  }
+
+  .booking-text {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.2rem;
+  }
+
+  .car-indicator p {
+    font-size: 0.5rem;
+  }
+
+  .car-emoji {
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
+  .calendar-container {
+    margin: 0.25rem;
+  }
+
   .calendar-header {
-    padding: 0.8rem;
+    padding: 0.5rem;
   }
 
   .month-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .nav-btn {
     width: 2rem;
     height: 2rem;
-    font-size: 0.9rem;
-  }
-
-  .calendar {
-    height: calc(50vh - 60px);
+    font-size: 0.8rem;
   }
 
   .day-header {
-    padding: 0.4rem;
-    font-size: 0.7rem;
+    padding: 0.3rem 0.1rem;
+    font-size: 0.6rem;
   }
 
   .calendar-day {
-    padding: 0.6rem 0.3rem;
-    font-size: 0.8rem;
+    padding: 0.2rem;
+    font-size: 0.7rem;
+    min-height: 42px;
+  }
+
+  .booking-text {
+    font-size: 0.5rem;
+  }
+
+  .car-indicator p {
+    font-size: 0.45rem;
   }
 }
 

@@ -41,7 +41,8 @@
         </div>
         
         <div class="table-wrapper">
-          <DataTable :value="filteredUsers" :paginator="true" :rows="10" stripedRows class="p-datatable-sm" scrollable scrollHeight="600px">
+          <DataTable :value="filteredUsers" :paginator="true" :rows="10" stripedRows class="p-datatable-sm" 
+            scrollable scrollHeight="600px" scrollDirection="both">
             <Column field="firstname" header="ชื่อ" :sortable="true" frozen style="min-width: 150px">
               <template #body="{ data }">
                 {{ data.firstname }} {{ data.lastname }}
@@ -673,7 +674,16 @@ const saveLeaveType = async () => {
 }
 
 .table-wrapper {
-  overflow-x: auto;
+  overflow: auto;
+  max-width: 100%;
+}
+
+.table-wrapper :deep(.p-datatable-wrapper) {
+  overflow: auto;
+}
+
+.table-wrapper :deep(.p-datatable-scrollable .p-datatable-wrapper) {
+  overflow: auto;
 }
 
 .leave-type-header {
