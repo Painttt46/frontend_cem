@@ -767,7 +767,9 @@ export default {
     },
     handleEditFileUpload(event) {
       const files = Array.from(event.target.files)
+      console.log('Files selected:', files.length, files.map(f => f.name))
       this.editFormData.newFiles = [...this.editFormData.newFiles, ...files]
+      console.log('Total new files:', this.editFormData.newFiles.length)
     },
     removeExistingFile(index) {
       this.editFormData.existingFiles.splice(index, 1)
@@ -776,7 +778,8 @@ export default {
       this.editFormData.newFiles.splice(index, 1)
     },
     async uploadNewFiles() {
-      if (this.editFormData.newFiles.length === 0) return []
+      console.log('uploadNewFiles called, files:', this.editFormData.newFiles?.length)
+      if (!this.editFormData.newFiles || this.editFormData.newFiles.length === 0) return []
       
       const formData = new FormData()
       this.editFormData.newFiles.forEach(file => {
@@ -787,8 +790,10 @@ export default {
         const response = await this.$http.post('/api/files/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
+        console.log('Upload response:', response.data)
         return response.data.files || []
       } catch (error) {
+        console.error('Upload error:', error)
         return []
       }
     },
@@ -811,14 +816,17 @@ export default {
         }
         
         const updateData = {
-          ...this.editFormData,
+          task_name: this.editFormData.task_name,
+          so_number: this.editFormData.so_number,
+          contract_number: this.editFormData.contract_number,
+          sale_owner: this.editFormData.sale_owner,
+          description: this.editFormData.description,
           category: Array.isArray(this.editFormData.category) ? this.editFormData.category.join(',') : this.editFormData.category,
+          status: this.editFormData.status,
           project_start_date: formatDate(this.editFormData.project_start_date),
           project_end_date: formatDate(this.editFormData.project_end_date),
           files: allFiles
         }
-        delete updateData.existingFiles
-        delete updateData.newFiles
         
         await this.$http.put(`/api/tasks/${this.editFormData.id}`, updateData)
         
