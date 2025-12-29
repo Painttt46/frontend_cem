@@ -22,7 +22,7 @@
             'active-usage': isActiveUsage(date.date),
             'today': isToday(date.date),
             'past-date': isPastDate(date.date)
-          }]" @click="selectDate(date.date)">
+          }]" @click="date.isCurrentMonth && selectDate(date.date)">
             {{ date.day }}
             <div v-if="hasBookingOnDate(date.date) && !isActiveUsage(date.date)" class="booking-indicator">
               <span class="booking-emoji">📅</span>
