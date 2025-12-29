@@ -374,8 +374,10 @@ export default {
   background: white;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin: 2rem 0 0 0;
-  width: 100%;
+  margin: 1rem;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 180px);
 }
 
 .calendar-header {
@@ -435,16 +437,17 @@ export default {
   grid-template-columns: repeat(7, 1fr);
   background: #dee2e6;
   border: 1px solid #dee2e6;
-  min-height: 500px;
+  flex: 1;
+  min-height: 0;
 }
 
 .day-header {
   background: #6c757d;
   color: white;
-  padding: 1rem 0.5rem;
+  padding: 0.75rem 0.5rem;
   text-align: center;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   border: 1px solid #dee2e6;
 }
 
@@ -455,13 +458,12 @@ export default {
   cursor: pointer;
   position: relative;
   border: 1px solid #dee2e6;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
-  min-height: 60px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 0.75rem;
+  padding-top: 0.5rem;
   color: #212529;
 }
 
@@ -591,7 +593,8 @@ export default {
 
 @media (max-width: 768px) {
   .calendar-container {
-    margin: 1rem 0 0 0;
+    margin: 0.5rem;
+    height: calc(100vh - 200px);
   }
 
   .calendar-header {
@@ -608,34 +611,25 @@ export default {
     font-size: 1rem;
   }
 
-  .calendar {
-    height: calc(60vh - 80px);
-  }
-
   .day-header {
     padding: 0.5rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .calendar-day {
-    padding: 0.8rem 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .booking-indicator {
-    top: 0.3rem;
-    right: 0.3rem;
-  }
-
-  .booked-dot {
-    width: 6px;
-    height: 6px;
+    padding: 0.3rem;
+    font-size: 0.85rem;
   }
 }
 
 @media (max-width: 480px) {
+  .calendar-container {
+    margin: 0.25rem;
+    height: calc(100vh - 220px);
+  }
+
   .calendar-header {
-    padding: 0.8rem;
+    padding: 0.75rem;
   }
 
   .month-title {
@@ -648,18 +642,14 @@ export default {
     font-size: 0.9rem;
   }
 
-  .calendar {
-    height: calc(50vh - 60px);
-  }
-
   .day-header {
     padding: 0.4rem;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
   }
 
   .calendar-day {
-    padding: 0.6rem 0.3rem;
-    font-size: 0.8rem;
+    padding: 0.2rem;
+    font-size: 0.75rem;
   }
 }
 
