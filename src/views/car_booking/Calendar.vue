@@ -374,8 +374,8 @@ export default {
   background: white;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin: 1rem;
-  border-radius: 12px;
+  margin: 2rem 0 0 0;
+  width: 100%;
 }
 
 .calendar-header {
@@ -433,33 +433,36 @@ export default {
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  background: #dee2e6;
-  padding: 2px;
+  gap: 1px;
+  background: #f0f0f0;
+  padding: 1px;
+  height: calc(80vh - 120px);
 }
 
 .day-header {
   background: #6c757d;
   color: white;
-  padding: 0.75rem 0.5rem;
+  padding: 1rem 0.5rem;
   text-align: center;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .calendar-day {
-  background: white;
-  padding: 0.75rem 0.5rem;
+  background: #f8f9fa;
+  padding: 0.5rem;
   text-align: center;
   cursor: pointer;
   position: relative;
-  font-size: 1rem;
+  transition: background-color 0.2s ease;
+  border: 1px solid #dee2e6;
+  font-size: 1.2rem;
   font-weight: 500;
-  min-height: 70px;
+  min-height: 60px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 0.5rem;
+  padding-top: 0.75rem;
   color: #212529;
 }
 
@@ -589,7 +592,7 @@ export default {
 
 @media (max-width: 768px) {
   .calendar-container {
-    margin: 0.5rem;
+    margin: 1rem 0 0 0;
   }
 
   .calendar-header {
@@ -606,25 +609,34 @@ export default {
     font-size: 1rem;
   }
 
+  .calendar {
+    height: calc(60vh - 80px);
+  }
+
   .day-header {
     padding: 0.5rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .calendar-day {
-    padding: 0.5rem 0.3rem;
-    font-size: 0.85rem;
-    min-height: 55px;
+    padding: 0.8rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .booking-indicator {
+    top: 0.3rem;
+    right: 0.3rem;
+  }
+
+  .booked-dot {
+    width: 6px;
+    height: 6px;
   }
 }
 
 @media (max-width: 480px) {
-  .calendar-container {
-    margin: 0.25rem;
-  }
-
   .calendar-header {
-    padding: 0.75rem;
+    padding: 0.8rem;
   }
 
   .month-title {
@@ -637,15 +649,18 @@ export default {
     font-size: 0.9rem;
   }
 
+  .calendar {
+    height: calc(50vh - 60px);
+  }
+
   .day-header {
     padding: 0.4rem;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 
   .calendar-day {
-    padding: 0.4rem 0.2rem;
-    font-size: 0.75rem;
-    min-height: 45px;
+    padding: 0.6rem 0.3rem;
+    font-size: 0.8rem;
   }
 }
 
