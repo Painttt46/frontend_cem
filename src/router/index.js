@@ -200,7 +200,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Skip permission check for basic pages (fix race condition after login)
-    const skipPermissionCheck = ['/profile', '/login', '/two-authentication', '/daily_work'];
+    const skipPermissionCheck = ['/profile', '/login', '/two-authentication'];
     if (role && !skipPermissionCheck.includes(to.path)) {
       const { loadPermissions, canAccessRoute, permissionsLoaded } = usePermissions();
 
@@ -214,7 +214,15 @@ router.beforeEach(async (to, from, next) => {
       }
 
       if (!canAccessRoute(to.path)) {
-        next("/daily_work");
+        // Redirect to first accessible route
+        const accessibleRoutes = ['/leave_work', '/daily_work', '/car_booking', '/projects'];
+        for (const route of accessibleRoutes) {
+          if (canAccessRoute(route)) {
+            next(route);
+            return;
+          }
+        }
+        next("/login");
         return;
       }
     }

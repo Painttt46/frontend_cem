@@ -154,8 +154,16 @@ export default {
         const response = await this.$http.post('/api/files/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
+        console.log('Upload response:', response.data)
         return response.data.files || []
-      } catch { // ignore
+      } catch (error) {
+        console.error('Upload error:', error)
+        this.$toast.add({
+          severity: 'error',
+          summary: 'อัปโหลดไฟล์ไม่สำเร็จ',
+          detail: error.response?.data?.error || error.message,
+          life: 5000
+        })
         return []
       }
     },
