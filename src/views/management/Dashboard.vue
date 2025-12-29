@@ -879,23 +879,29 @@ const renderCharts = (leaves, tasks) => {
 <style scoped>
 .clickable-name {
   cursor: pointer;
-  color: var(--primary-color);
+  color: #667eea;
   font-weight: 600;
+  transition: all 0.2s;
 }
 
 .clickable-name:hover {
+  color: #764ba2;
   text-decoration: underline;
 }
 
 .dashboard-container {
   padding: 1rem;
-  background: var(--bg-color);
-  min-height: 100%;
+  padding-bottom: 0;
+  max-width: 100%;
+  margin: 0 auto;
+  
+  background: #e5e7eb;
+  height: 100%;
   overflow: auto;
 }
 
 .header-card {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
 }
@@ -1048,15 +1054,15 @@ const renderCharts = (leaves, tasks) => {
 }
 
 .back-btn {
-  color: white;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: var(--radius-md);
-  padding: 0.5rem;
+  color: white !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 0.5rem !important;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .summary-grid {
@@ -1065,6 +1071,7 @@ const renderCharts = (leaves, tasks) => {
   gap: 1rem;
 }
 
+/* Charts Container with Swipe */
 .charts-container {
   position: relative;
   overflow: hidden;
@@ -1078,7 +1085,7 @@ const renderCharts = (leaves, tasks) => {
 .chart-card {
   flex: 0 0 100%;
   min-width: 100%;
-  border: 1px solid var(--border-color);
+  border: 1px solid #e9ecef;
   min-height: 350px;
   opacity: 0.5;
   transition: opacity 0.3s;
@@ -1111,14 +1118,16 @@ canvas {
   border-radius: 50%;
   background: #d1d5db;
   cursor: pointer;
+  transition: all 0.3s;
 }
 
 .chart-dots span.active {
-  background: var(--primary-color);
+  background: #4A90E2;
   width: 24px;
   border-radius: 4px;
 }
 
+/* Desktop: Show grid */
 @media (min-width: 769px) {
   .charts-wrapper {
     display: grid;
@@ -1133,7 +1142,12 @@ canvas {
   }
 }
 
+/* Mobile: Show swipe */
 @media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
@@ -1168,18 +1182,39 @@ canvas {
   .header-title h1 {
     font-size: 1.2rem;
   }
+  
+  .header-icon {
+    font-size: 1.2rem;
+  }
+  
+  /* Hide table columns on mobile */
+  :deep(.p-datatable-wrapper) {
+    overflow-x: auto;
+  }
+  
+  :deep(.p-datatable) {
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 480px) {
   .summary-grid {
     grid-template-columns: 1fr;
   }
+  
+  .header-content {
+    padding: 0.5rem;
+  }
+  
+  .back-btn {
+    padding: 0.4rem !important;
+  }
 }
 
 .task-breakdown {
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
 }
 
 .task-breakdown h4 {
@@ -1195,8 +1230,160 @@ canvas {
   border-radius: 4px;
 }
 
+.skeleton-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-text {
+  border-radius: 4px;
+}
+
 @keyframes loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.75rem;
+  }
+  
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+  
+  .summary-card:hover {
+    transform: none;
+  }
+  
+  .summary-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .summary-icon {
+    font-size: 2rem;
+  }
+  
+  .summary-info h3 {
+    font-size: 1.5rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.8rem;
+  }
+  
+  .chart-dots {
+    display: flex;
+  }
+  
+  .header-title h1 {
+    font-size: 1.25rem;
+  }
+  
+  .header-icon {
+    font-size: 1.25rem;
+  }
+  
+  :deep(.p-datatable-wrapper) {
+    overflow-x: auto;
+  }
+  
+  :deep(.p-datatable) {
+    font-size: 0.9rem;
+  }
+  
+  :deep(.p-datatable .p-column-title) {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-container {
+    padding: 0.5rem;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .header-content {
+    padding: 0.5rem;
+  }
+  
+  .header-left {
+    gap: 0.5rem;
+  }
+  
+  .header-title {
+    gap: 0.5rem;
+  }
+  
+  .header-title h1 {
+    font-size: 1.1rem;
+  }
+  
+  .header-icon {
+    font-size: 1.1rem;
+  }
+  
+  .back-btn {
+    padding: 0.4rem !important;
+  }
+  
+  .summary-icon {
+    font-size: 1.8rem;
+  }
+  
+  .summary-info h3 {
+    font-size: 1.3rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.75rem;
+  }
+  
+  .chart-card {
+    min-height: 300px;
+  }
+  
+  canvas {
+    max-height: 250px;
+  }
+  
+  :deep(.p-datatable) {
+    font-size: 0.8rem;
+  }
+  
+  :deep(.p-datatable .p-column-title) {
+    font-size: 0.75rem;
+  }
+  
+  :deep(.p-paginator) {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .summary-info h3 {
+    font-size: 1.2rem;
+  }
+  
+  .summary-info p {
+    font-size: 0.7rem;
+  }
+  
+  .header-title h1 {
+    font-size: 1rem;
+  }
 }
 </style>

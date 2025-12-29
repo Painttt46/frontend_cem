@@ -367,16 +367,21 @@ onMounted(() => {
 <style scoped>
 .user-management {
   padding: 1rem;
-  background: var(--bg-color);
-  min-height: 100%;
+  padding-bottom: 0;
+  max-width: 100%;
+  margin: 0 auto;
+  
+  background: #e5e7eb;
+  height: 100%;
   overflow: auto;
 }
 
+/* Header Styles */
 .header-card {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
@@ -409,15 +414,15 @@ onMounted(() => {
 }
 
 .back-btn {
-  color: white;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: var(--radius-md);
-  padding: 0.5rem;
+  color: white !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px !important;
+  padding: 0.5rem !important;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .header-stats {
@@ -445,19 +450,20 @@ onMounted(() => {
 }
 
 .add-btn {
-  background: var(--primary-color);
-  border: 1px solid var(--primary-color);
+  background: #4A90E2;
+  border: 1px solid #4A90E2;
   color: white;
 }
 
 .add-btn:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background: #357ABD;
+  border-color: #357ABD;
 }
 
+/* Filter Card */
 .filter-card {
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .filter-content {
@@ -717,6 +723,6 @@ onMounted(() => {
 }
 
 .add-role-btn {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem !important;
 }
 </style>

@@ -413,8 +413,9 @@ export default {
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   background: #f8f9fa;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
 .clickable-card {
@@ -423,13 +424,15 @@ export default {
 
 .clickable-card:hover {
   background: #e3f2fd;
-  border-color: var(--primary-color);
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
 }
+
 
 .colleague-avatar {
   width: 50px;
   height: 50px;
-  background: var(--primary-color);
+  background: #667eea;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -456,8 +459,9 @@ export default {
 }
 
 .position {
-  color: var(--text-secondary);
+  color: #6c757d;
   font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .department {
@@ -469,49 +473,65 @@ export default {
 .history-card {
   width: 100%;
   margin: 0;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
 }
 
 .card-header {
   background: #87CEEB;
   color: white;
-  padding: 1rem;
+  padding: 1.5rem;
   text-align: center;
-  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  border-radius: 8px 8px 0 0;
 }
 
 .card-header h3 {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.card-header i {
+  margin-right: 0.5rem;
 }
 
 .empty-state {
   text-align: center;
-  padding: 3rem 2rem;
-  color: var(--text-secondary);
+  padding: 4rem 2rem;
+  color: #6c757d;
   background: #f8f9fa;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   margin: 1rem;
 }
 
 .empty-state p {
   margin-top: 1rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.history-table :deep(.p-datatable) {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.history-table :deep(.p-datatable-header) {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+  padding: 1rem;
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
   background: #f8f9fa;
   color: #495057;
   font-weight: 600;
-  border-bottom: 2px solid var(--border-color);
-  padding: 0.75rem;
-  font-size: 0.85rem;
+  border-bottom: 2px solid #e9ecef;
+  padding: 1rem 0.75rem;
+  font-size: 0.9rem;
 }
 
 .history-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.75rem;
+  padding: 1rem 0.75rem;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
   text-align: center;
@@ -523,14 +543,32 @@ export default {
 
 .history-table :deep(.p-paginator) {
   background: #f8f9fa;
-  border-top: 2px solid var(--border-color);
-  padding: 0.75rem;
+  border-top: 2px solid #e9ecef;
+  padding: 1rem;
+}
+
+.history-table :deep(.p-badge) {
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.5rem;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .view-icon {
   font-size: 1.2rem;
-  color: var(--primary-color);
+  color: #667eea;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-icon:hover {
+  color: #5a67d8;
+  transform: scale(1.1);
 }
 
 .ticket-id {
@@ -542,11 +580,18 @@ export default {
   border: 1px solid #bbdefb;
 }
 
+@media (max-width: 768px) {
+  .history-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
 .description-content {
   padding: 1rem;
   background: #f8f9fa;
-  border-radius: var(--radius-md);
-  border-left: 4px solid var(--primary-color);
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
 }
 
 .description-content p {
@@ -556,17 +601,19 @@ export default {
 }
 
 .no-description {
-  color: var(--text-secondary);
+  color: #6c757d;
   font-style: italic;
 }
 
 .clickable-name {
   cursor: pointer;
-  color: var(--primary-color);
+  color: #667eea;
   font-weight: 600;
+  transition: all 0.2s;
 }
 
 .clickable-name:hover {
+  color: #764ba2;
   text-decoration: underline;
 }
 </style>

@@ -784,9 +784,51 @@ export default {
 </script>
 
 <style scoped>
+.quota-display {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+}
+
+.quota-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.quota-label {
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.quota-value {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.quota-value.quota-normal {
+  color: #28a745;
+}
+
+.quota-value.quota-low {
+  color: #ffc107;
+}
+
+.quota-value.quota-zero {
+  color: #dc3545;
+}
+
+.quota-total {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
 .form-card {
-  box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e9ecef;
 }
 
 .leave-form {
@@ -796,8 +838,8 @@ export default {
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .full-width {
@@ -810,14 +852,9 @@ export default {
   gap: 0.5rem;
 }
 
-.input-label {
-  font-weight: 500;
-  color: #495057;
-  font-size: 0.9rem;
-}
-
 .date-range-group {
   display: flex;
+  flex-direction: row;
   gap: 1rem;
 }
 
@@ -835,36 +872,54 @@ export default {
   flex: 0 0 100px;
 }
 
+:deep(.datetime-picker .p-calendar),
+:deep(.datetime-picker .p-dropdown) {
+  width: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .datetime-picker .time-dropdown {
+    flex: 0 0 90px;
+  }
+}
+
+.input-label {
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
 .corporate-input,
 .corporate-dropdown {
-  border: 1px solid #ced4da;
-  border-radius: var(--radius-sm);
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
   padding: 0.75rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
 }
 
 .corporate-input:focus,
 .corporate-dropdown:focus {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.15);
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 }
 
 .readonly-field {
   background: #f8f9fa;
-  color: var(--text-secondary);
+  color: #6c757d;
 }
 
 .section-divider {
   grid-column: 1 / -1;
   margin: 1rem 0;
   padding: 1rem 0;
-  border-top: 1px solid var(--border-color);
+  border-top: 2px solid #e9ecef;
 }
 
 .section-title {
   margin: 0;
   color: #495057;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
@@ -872,12 +927,13 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 0;
+  padding: 1rem 0;
 }
 
 .checkbox-label {
-  font-weight: 500;
+  font-weight: 600;
   color: #495057;
+  font-size: 1rem;
   cursor: pointer;
 }
 
@@ -895,11 +951,11 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
   padding: 0.75rem;
   background: #f8f9fa;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
 }
 
 .file-item {
@@ -909,11 +965,12 @@ export default {
   padding: 0.5rem;
   background: white;
   border-radius: 4px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #e9ecef;
 }
 
 .file-item i {
-  color: var(--text-secondary);
+  color: #6c757d;
+  font-size: 1rem;
 }
 
 .file-name {
@@ -927,15 +984,145 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+}
+
+.form-actions .p-button {
+  min-width: 140px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .leave-form {
+    padding: 0.5rem;
+  }
+
+  .corporate-input,
+  .corporate-dropdown {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .input-label {
+    font-size: 0.85rem;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+  }
+
+  .file-list {
+    padding: 0.5rem;
+  }
+
+  .file-item {
+    padding: 0.4rem;
+  }
+
+  .file-name {
+    font-size: 0.85rem;
+  }
+}
+
+/* DateTime input styling */
+.datetime-inputs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.date-input {
+  flex: 2;
+}
+
+.time-input {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .datetime-inputs {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .date-input, .time-input {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .leave-form {
+    padding: 0.25rem;
+  }
+
+  .form-grid {
+    gap: 1rem;
+  }
+
+  .corporate-input,
+  .corporate-dropdown {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .input-label {
+    font-size: 0.8rem;
+  }
+
+  .form-actions .p-button {
+    min-width: 100%;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .checkbox-group {
+    padding: 0.75rem 0;
+  }
+
+  .checkbox-label {
+    font-size: 0.85rem;
+  }
+}
+
+.user-option {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #495057;
+}
+
+.user-role {
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+.corporate-input :deep(.p-autocomplete-panel) {
+  max-height: 250px;
+  overflow-y: auto;
 }
 
 .quota-display {
   margin-top: 0.5rem;
   padding: 0.75rem;
   background: #f8f9fa;
-  border-radius: var(--radius-sm);
-  border-left: 4px solid var(--primary-color);
+  border-radius: 6px;
+  border-left: 4px solid #007bff;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
 }
 
 .quota-info {
@@ -972,35 +1159,8 @@ export default {
 }
 
 .quota-total {
-  color: var(--text-secondary);
+  color: #6c757d;
   font-size: 0.85rem;
-}
-
-.quota-placeholder {
-  background: #f8f9fa;
-  border-left: 4px solid #dee2e6;
-}
-
-.quota-placeholder-text {
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.user-option {
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 0;
-}
-
-.user-name {
-  font-weight: 500;
-  color: #495057;
-}
-
-.user-role {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-top: 0.25rem;
 }
 
 .leave-type-option {
@@ -1010,6 +1170,39 @@ export default {
   gap: 0.25rem;
 }
 
+.disabled-option {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+}
+
+.quota-status {
+  font-size: 0.75rem;
+  color: #dc3545;
+  font-weight: 500;
+  background: #f8d7da;
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+}
+
+.quota-placeholder {
+  background: #f8f9fa;
+  border-left: 4px solid #dee2e6;
+}
+
+.quota-placeholder-text {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+.time-hint {
+  color: #6c757d;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 .leave-type-main {
   display: flex;
   justify-content: space-between;
@@ -1017,24 +1210,10 @@ export default {
   width: 100%;
 }
 
-.quota-status {
-  font-size: 0.75rem;
-  color: var(--danger-color);
-  font-weight: 500;
-  background: #f8d7da;
-  padding: 0.2rem 0.4rem;
-  border-radius: 3px;
-}
-
-.time-hint {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-}
-
 .advance-hint {
+  display: block;
   font-size: 0.75rem;
-  color: var(--warning-color);
+  color: #f59e0b;
   margin-top: 0.25rem;
 }
 
@@ -1042,9 +1221,13 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--warning-color);
+  color: #f59e0b;
   font-size: 0.8rem;
   margin-top: 0.5rem;
+}
+
+.advance-days-warning i {
+  font-size: 0.9rem;
 }
 
 .date-cell {
@@ -1057,32 +1240,19 @@ export default {
 }
 
 .advance-day-blocked {
-  background-color: var(--warning-color);
-  color: #fff;
+  background-color: #f59e0b !important;
+  color: #fff !important;
   font-weight: 600;
+  cursor: not-allowed;
 }
 
 .holiday-date {
-  background-color: #ef4444;
-  color: #fff;
+  background-color: #ef4444 !important;
+  color: #fff !important;
   font-weight: 600;
 }
 
-@media (max-width: 768px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .p-button {
-    width: 100%;
-  }
-
-  .datetime-picker .time-dropdown {
-    flex: 0 0 90px;
-  }
+.advance-calendar :deep(.p-datepicker-calendar td) {
+  padding: 0.25rem;
 }
 </style>
