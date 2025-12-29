@@ -364,7 +364,7 @@ export default {
       })
 
       try {
-        const response = await this.$http.post('/api/files/upload', formData, {
+        const response = await this.$http.post('/api/files/upload/daily_work', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         return response.data.files || []
