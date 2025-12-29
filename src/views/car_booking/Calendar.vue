@@ -435,6 +435,7 @@ export default {
   grid-template-columns: repeat(7, 1fr);
   background: #dee2e6;
   border: 1px solid #dee2e6;
+  min-height: 500px;
 }
 
 .day-header {
