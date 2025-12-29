@@ -375,9 +375,7 @@ export default {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   margin: 1rem;
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 180px);
+  border-radius: 12px;
 }
 
 .calendar-header {
@@ -435,10 +433,9 @@ export default {
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
   background: #dee2e6;
-  border: 1px solid #dee2e6;
-  flex: 1;
-  min-height: 0;
+  padding: 2px;
 }
 
 .day-header {
@@ -448,18 +445,17 @@ export default {
   text-align: center;
   font-weight: 600;
   font-size: 0.9rem;
-  border: 1px solid #dee2e6;
 }
 
 .calendar-day {
   background: white;
-  padding: 0.5rem;
+  padding: 0.75rem 0.5rem;
   text-align: center;
   cursor: pointer;
   position: relative;
-  border: 1px solid #dee2e6;
   font-size: 1rem;
   font-weight: 500;
+  min-height: 70px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -594,7 +590,6 @@ export default {
 @media (max-width: 768px) {
   .calendar-container {
     margin: 0.5rem;
-    height: calc(100vh - 200px);
   }
 
   .calendar-header {
@@ -617,15 +612,15 @@ export default {
   }
 
   .calendar-day {
-    padding: 0.3rem;
+    padding: 0.5rem 0.3rem;
     font-size: 0.85rem;
+    min-height: 55px;
   }
 }
 
 @media (max-width: 480px) {
   .calendar-container {
     margin: 0.25rem;
-    height: calc(100vh - 220px);
   }
 
   .calendar-header {
@@ -648,8 +643,9 @@ export default {
   }
 
   .calendar-day {
-    padding: 0.2rem;
+    padding: 0.4rem 0.2rem;
     font-size: 0.75rem;
+    min-height: 45px;
   }
 }
 
