@@ -340,10 +340,11 @@
         <div class="input-group">
           <label class="input-label">สถานะงาน</label>
           <Dropdown v-model="editFormData.status" :options="workStatuses" 
-                    optionLabel="label" optionValue="value" placeholder="เลือกสถานะงาน" 
-                    class="corporate-input">
+                    optionLabel="label" optionValue="value" placeholder="ไม่ระบุสถานะ" 
+                    class="corporate-input" showClear>
             <template #value="slotProps">
               <span v-if="slotProps.value">{{ getStatusLabel(slotProps.value) }}</span>
+              <span v-else class="text-muted">ไม่ระบุสถานะ</span>
             </template>
             <template #option="slotProps">
               <span>{{ slotProps.option.label }}</span>
@@ -757,7 +758,7 @@ export default {
         sale_owner: task.sale_owner || '',
         description: task.description || '',
         category: this.parseCategoryArray(task.category),
-        status: task.status || 'pending',
+        status: task.status || null,
         project_start_date: parseDate(task.project_start_date),
         project_end_date: parseDate(task.project_end_date),
         existingFiles: [...(task.files || [])],
