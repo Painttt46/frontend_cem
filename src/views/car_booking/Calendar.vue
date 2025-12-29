@@ -433,10 +433,8 @@ export default {
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 1px;
-  background: #f0f0f0;
-  padding: 1px;
-  height: calc(80vh - 120px);
+  background: #dee2e6;
+  border: 1px solid #dee2e6;
 }
 
 .day-header {
@@ -446,15 +444,15 @@ export default {
   text-align: center;
   font-weight: 600;
   font-size: 1.1rem;
+  border: 1px solid #dee2e6;
 }
 
 .calendar-day {
-  background: #f8f9fa;
+  background: white;
   padding: 0.5rem;
   text-align: center;
   cursor: pointer;
   position: relative;
-  transition: background-color 0.2s ease;
   border: 1px solid #dee2e6;
   font-size: 1.2rem;
   font-weight: 500;
