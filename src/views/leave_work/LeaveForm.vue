@@ -585,12 +585,12 @@ export default {
             formData.append('files', file)
           })
           
-          const uploadResponse = await axios.post('/api/files/upload/leave', formData, {
+          const uploadResponse = await axios.post('/api/files/upload', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }
           })
-          uploadedFiles = (uploadResponse.data.files || []).map(f => typeof f === 'string' ? f : f.path)
+          uploadedFiles = uploadResponse.data.files
         }
 
         // Calculate total days
