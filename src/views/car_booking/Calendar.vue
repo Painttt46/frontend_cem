@@ -342,14 +342,13 @@ export default {
 }
 
 @keyframes carMove {
-
   0%,
   100% {
     transform: translateX(0);
   }
 
   50% {
-    transform: translateX(10px);
+    transform: translateX(-10px);
   }
 }
 
@@ -575,6 +574,7 @@ export default {
 .car-emoji {
   font-size: 0.9rem;
   display: inline-block;
+  animation: carMove 1.5s ease-in-out infinite;
 }
 
 .car-indicator p {

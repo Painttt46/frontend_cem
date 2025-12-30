@@ -8,15 +8,18 @@ export function usePermissions() {
   const loadPermissions = async () => {
     try {
       const role = localStorage.getItem('soc_role')
-      if (!role) return false
+      const token = localStorage.getItem('soc_token')
+      if (!role || !token) return false
 
-      const response = await axios.get(`/api/role-permissions/${role}`)
+      const response = await axios.get(`/api/role-permissions/${role}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        silent: true
+      })
 
       permissions.value = response.data.permissions || []
       permissionsLoaded.value = true
       return true
     } catch {
-      // ถ้า token หมดอายุ - axios interceptor จะ handle
       permissions.value = []
       permissionsLoaded.value = true
       return false
@@ -42,9 +45,6 @@ export function usePermissions() {
   }
 
   const getFirstAccessibleRoute = () => {
-    const role = localStorage.getItem('soc_role')
-    if (role === 'superadmin') return '/daily_work'
-    
     const menuOrder = ['/daily_work', '/car_booking', '/leave_work', '/projects', '/management']
     for (const path of menuOrder) {
       const permission = permissions.value.find(p => p.page_path === path)
