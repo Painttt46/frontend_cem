@@ -513,10 +513,9 @@ export default {
 }
 
 .booking-text {
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #2e7d32;
-  background: #c8e6c9;
   padding: 0.1rem 0.3rem;
   border-radius: 3px;
 }
@@ -614,10 +613,6 @@ export default {
     min-height: 50px;
   }
 
-  .booking-text {
-    font-size: 0.55rem;
-    padding: 0.1rem 0.2rem;
-  }
 
 }
 
@@ -651,9 +646,6 @@ export default {
     min-height: 42px;
   }
 
-  .booking-text {
-    font-size: 0.5rem;
-  }
 
 }
 
