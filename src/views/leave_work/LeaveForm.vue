@@ -86,6 +86,25 @@
             <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
           </div>
 
+          <!-- ปุ่มลาครึ่งวัน/เต็มวัน -->
+          <div class="input-group full-width">
+            <label class="input-label">ลาแบบด่วน</label>
+            <div class="quick-leave-buttons">
+              <Button type="button" :label="'ลาครึ่งวันเช้า (09:00-12:00)'" 
+                :severity="formData.quickLeave === 'half_morning' ? 'success' : 'secondary'" 
+                :outlined="formData.quickLeave !== 'half_morning'"
+                @click="setQuickLeave('half_morning')" size="small" />
+              <Button type="button" :label="'ลาครึ่งวันบ่าย (13:00-18:00)'" 
+                :severity="formData.quickLeave === 'half_afternoon' ? 'success' : 'secondary'" 
+                :outlined="formData.quickLeave !== 'half_afternoon'"
+                @click="setQuickLeave('half_afternoon')" size="small" />
+              <Button type="button" :label="'ลาเต็มวัน (09:00-18:00)'" 
+                :severity="formData.quickLeave === 'full' ? 'success' : 'secondary'" 
+                :outlined="formData.quickLeave !== 'full'"
+                @click="setQuickLeave('full')" size="small" />
+            </div>
+          </div>
+
           <div class="input-group">
             <label for="totalDays" class="input-label">จำนวนวันลา</label>
             <InputText id="totalDays" :value="calculateDays" readonly class="corporate-input readonly-field" />
@@ -230,9 +249,12 @@ export default {
         delegateDepartment: '',
         delegateContact: '',
         workDetails: '',
-        attachments: []
+        attachments: [],
+        quickLeave: null
       },
       allowedTimes: [
+        { label: '08:00', value: '08:00' },
+        { label: '08:30', value: '08:30' },
         { label: '09:00', value: '09:00' },
         { label: '09:30', value: '09:30' },
         { label: '10:00', value: '10:00' },
@@ -707,7 +729,8 @@ export default {
         delegateDepartment: '',
         delegateContact: '',
         workDetails: '',
-        attachments: []
+        attachments: [],
+        quickLeave: null
       }
       this.selectedDelegate = null
     },
@@ -778,6 +801,31 @@ export default {
         this.formData.delegatePosition = user.position || ''
         this.formData.delegateDepartment = user.department || ''
       }
+    },
+    setQuickLeave(type) {
+      this.formData.quickLeave = type
+      
+      // ถ้ายังไม่เลือกวันเริ่ม ให้ใช้วันนี้หรือ minStartDate
+      if (!this.formData.startDate) {
+        this.formData.startDate = new Date(this.minStartDate)
+      }
+      
+      // ตั้งค่าวันสิ้นสุดเป็นวันเดียวกับวันเริ่ม
+      this.formData.endDate = new Date(this.formData.startDate)
+      
+      if (type === 'half_morning') {
+        this.formData.startTime = '09:00'
+        this.formData.endTime = '12:00'
+      } else if (type === 'half_afternoon') {
+        this.formData.startTime = '13:00'
+        this.formData.endTime = '18:00'
+      } else if (type === 'full') {
+        this.formData.startTime = '09:00'
+        this.formData.endTime = '18:00'
+      }
+      
+      this.updateStartDateTime()
+      this.updateEndDateTime()
     }
   }
 }
@@ -1254,5 +1302,26 @@ export default {
 
 .advance-calendar :deep(.p-datepicker-calendar td) {
   padding: 0.25rem;
+}
+
+.quick-leave-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.quick-leave-buttons .p-button {
+  flex: 1;
+  min-width: 150px;
+}
+
+@media (max-width: 768px) {
+  .quick-leave-buttons {
+    flex-direction: column;
+  }
+  
+  .quick-leave-buttons .p-button {
+    width: 100%;
+  }
 }
 </style>
