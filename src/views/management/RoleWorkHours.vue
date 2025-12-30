@@ -60,7 +60,7 @@
         <DataTable :value="workHoursList" :loading="loading" class="p-datatable-sm" stripedRows>
           <Column field="role" header="Role" style="min-width: 120px">
             <template #body="{ data }">
-              <Tag :value="data.role || '-'" severity="info" />
+              <span class="role-badge">{{ data.role }}</span>
             </template>
           </Column>
           <Column field="start_time" header="เริ่มงาน" style="min-width: 100px">
@@ -80,7 +80,7 @@
           </Column>
           <Column header="ชั่วโมงทำงาน/วัน" style="min-width: 120px">
             <template #body="{ data }">
-              <Tag :value="`${calculateWorkHours(data)} ชม.`" severity="success" />
+              <span class="hours-badge">{{ calculateWorkHours(data) }} ชม.</span>
             </template>
           </Column>
           <Column header="จัดการ" style="width: 120px">
@@ -348,6 +348,22 @@ const deleteWorkHours = async (role) => {
 .time-badge.secondary {
   background: #f5f5f5;
   color: #666;
+}
+
+.role-badge {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.hours-badge {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .action-buttons {
