@@ -60,7 +60,7 @@
         <DataTable :value="workHoursList" :loading="loading" class="p-datatable-sm" stripedRows>
           <Column field="role" header="Role" style="min-width: 120px">
             <template #body="{ data }">
-              <Tag :value="data.role" severity="info" />
+              <Tag :value="data.role || '-'" severity="info" />
             </template>
           </Column>
           <Column field="start_time" header="เริ่มงาน" style="min-width: 100px">
@@ -168,6 +168,7 @@ const loadWorkHours = async () => {
   loading.value = true
   try {
     const response = await axios.get('/api/settings/role-work-hours')
+    console.log('API Response:', response.data)
     workHoursList.value = response.data
   } catch {
     workHoursList.value = []
