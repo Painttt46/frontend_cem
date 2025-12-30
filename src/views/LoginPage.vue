@@ -9,7 +9,7 @@
             <img src="../assets/images/GENT.png" alt="GENT Logo" style="max-width: 200px; height: auto;" />
           </div>
           <div class="">
-            <h3 class="text-center text-white">GenT Customer Excellency Management</h3>
+            <h3 class="text-center text-white">GenT Excellency Management</h3>
           </div>
           <div class="card-body-2">
             <form @submit.prevent="handleLogin">

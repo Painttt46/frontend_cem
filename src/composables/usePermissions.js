@@ -42,8 +42,15 @@ export function usePermissions() {
   }
 
   const getFirstAccessibleRoute = () => {
-    const accessible = permissions.value.find(p => p.has_access)
-    return accessible ? accessible.page_path : '/profile'
+    const role = localStorage.getItem('soc_role')
+    if (role === 'superadmin') return '/daily_work'
+    
+    const menuOrder = ['/daily_work', '/car_booking', '/leave_work', '/projects', '/management']
+    for (const path of menuOrder) {
+      const permission = permissions.value.find(p => p.page_path === path)
+      if (permission?.has_access) return path
+    }
+    return '/profile'
   }
 
   return {
