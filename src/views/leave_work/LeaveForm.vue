@@ -423,21 +423,26 @@ export default {
       }
     },
     
-    // คำนวณชั่วโมงทำงานระหว่างสองเวลา (9-12, 13-18)
+    // คำนวณชั่วโมงทำงานระหว่างสองเวลา (ใช้ workHours ของ role)
     calculateWorkHours(start, end) {
       const startHour = start.getHours() + start.getMinutes() / 60
       const endHour = end.getHours() + end.getMinutes() / 60
       
+      const [ws] = this.workHours.start_time.split(':').map(Number)
+      const [we] = this.workHours.end_time.split(':').map(Number)
+      const [ls] = this.workHours.lunch_start.split(':').map(Number)
+      const [le] = this.workHours.lunch_end.split(':').map(Number)
+      
       let hours = 0
-      // ช่วงเช้า 9-12
-      const morningStart = Math.max(startHour, 9)
-      const morningEnd = Math.min(endHour, 12)
+      // ช่วงเช้า
+      const morningStart = Math.max(startHour, ws)
+      const morningEnd = Math.min(endHour, ls)
       if (morningEnd > morningStart) {
         hours += morningEnd - morningStart
       }
-      // ช่วงบ่าย 13-18
-      const afternoonStart = Math.max(startHour, 13)
-      const afternoonEnd = Math.min(endHour, 18)
+      // ช่วงบ่าย
+      const afternoonStart = Math.max(startHour, le)
+      const afternoonEnd = Math.min(endHour, we)
       if (afternoonEnd > afternoonStart) {
         hours += afternoonEnd - afternoonStart
       }
