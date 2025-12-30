@@ -88,6 +88,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import axios from '@/utils/axiosConfig';
 import router from "@/router";
+import { usePermissions } from '@/composables/usePermissions';
 
 import InputText from "primevue/inputtext";
 import Password from "primevue/password";
@@ -239,9 +240,12 @@ function auth(username, password) {
       localStorage.setItem("soc_user_id", response.data.user);
 
       // Navigate after showing success
-      setTimeout(() => {
+      setTimeout(async () => {
         isLoggingIn.value = false;
-        router.push("/daily_work").catch(() => {
+        const { loadPermissions, getFirstAccessibleRoute } = usePermissions();
+        await loadPermissions();
+        const targetRoute = getFirstAccessibleRoute();
+        router.push(targetRoute).catch(() => {
           isLoggingIn.value = false;
         });
       }, 800);
