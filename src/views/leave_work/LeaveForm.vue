@@ -493,7 +493,13 @@ export default {
       try {
         const role = localStorage.getItem('soc_role') || 'user';
         const response = await axios.get(`/api/settings/role-work-hours/${role}`);
-        this.workHours = response.data;
+        // แปลง format เวลาจาก HH:mm:ss เป็น HH:mm
+        this.workHours = {
+          start_time: response.data.start_time?.substring(0, 5) || '09:00',
+          end_time: response.data.end_time?.substring(0, 5) || '18:00',
+          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
+          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
+        };
         this.generateAllowedTimes();
       } catch {
         // Use default work hours
