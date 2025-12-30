@@ -715,7 +715,11 @@ export default {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        const hoursPerDay = 8
+        const [ws] = this.workHours.start_time.split(':').map(Number)
+        const [we] = this.workHours.end_time.split(':').map(Number)
+        const [ls] = this.workHours.lunch_start.split(':').map(Number)
+        const [le] = this.workHours.lunch_end.split(':').map(Number)
+        const hoursPerDay = (ls - ws) + (we - le)
         let totalHours = 0
         
         const startDate = new Date(start)
@@ -724,21 +728,23 @@ export default {
         endDate.setHours(0, 0, 0, 0)
         
         if (startDate.getTime() === endDate.getTime()) {
-          // วันเดียวกัน
-          totalHours = this.calculateWorkHours(start, end)
+          const day = startDate.getDay()
+          if (day !== 0 && day !== 6 && !this.holidayDates.includes(startDate.getTime())) {
+            totalHours = this.calculateWorkHours(start, end)
+          }
         } else {
-          // หลายวัน
           const current = new Date(startDate)
           while (current <= endDate) {
             const day = current.getDay()
-            if (day !== 0 && day !== 6) {
+            const isHoliday = this.holidayDates.includes(current.getTime())
+            if (day !== 0 && day !== 6 && !isHoliday) {
               if (current.getTime() === startDate.getTime()) {
                 const dayEnd = new Date(current)
-                dayEnd.setHours(18, 0, 0, 0)
+                dayEnd.setHours(we, 0, 0, 0)
                 totalHours += this.calculateWorkHours(start, dayEnd)
               } else if (current.getTime() === endDate.getTime()) {
                 const dayStart = new Date(current)
-                dayStart.setHours(9, 0, 0, 0)
+                dayStart.setHours(ws, 0, 0, 0)
                 totalHours += this.calculateWorkHours(dayStart, end)
               } else {
                 totalHours += hoursPerDay
