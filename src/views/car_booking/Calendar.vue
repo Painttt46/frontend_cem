@@ -506,20 +506,10 @@ export default {
 
 .booking-text-center {
   position: absolute;
-  bottom: 0.3rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  animation: floatUp 1.5s ease-in-out infinite;
-}
-
-@keyframes floatUp {
-  0%, 100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-5px);
-  }
 }
 
 .booking-text {
@@ -580,9 +570,10 @@ export default {
 }
 
 .car-emoji {
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   display: inline-block;
   animation: carMove 1s linear infinite;
+  margin-bottom: 0.3rem;
 }
 
 .car-indicator p {
