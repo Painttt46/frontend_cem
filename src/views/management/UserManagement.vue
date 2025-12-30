@@ -227,9 +227,9 @@ const userForm = ref({
 })
 
 const roleOptions = ref([
-  { label: 'User', value: 'user' },
-  { label: 'Admin', value: 'admin' },
-  { label: 'HR', value: 'hr' }
+  { label: 'user', value: 'user' },
+  { label: 'admin', value: 'admin' },
+  { label: 'hr', value: 'hr' }
 ])
 
 const statusOptions = [
@@ -245,7 +245,7 @@ const addNewRole = () => {
   const newRole = newRoleInput.value.trim().toLowerCase()
   if (newRole && !roleOptions.value.find(opt => opt.value === newRole)) {
     roleOptions.value.push({
-      label: newRole.charAt(0).toUpperCase() + newRole.slice(1),
+      label: newRole,
       value: newRole
     })
     userForm.value.role = newRole

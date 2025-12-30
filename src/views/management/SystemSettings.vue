@@ -18,7 +18,7 @@
     <!-- Settings Grid -->
     <div class="settings-grid">
       <!-- Role Permissions -->
-      <Card class="setting-card" @click="navigateTo('role-permissions')">
+      <Card v-if="canAccess('/management/settings/role-permissions')" class="setting-card" @click="navigateTo('role-permissions')">
         <template #content>
           <div class="card-content">
             <div class="card-header">
@@ -34,8 +34,8 @@
         </template>
       </Card>
 
-      <!-- Notifications -->
-      <Card class="setting-card" @click="navigateTo('leave-approval')">
+      <!-- Leave Approval -->
+      <Card v-if="canAccess('/management/settings/leave-approval')" class="setting-card" @click="navigateTo('leave-approval')">
         <template #content>
           <div class="card-content">
             <div class="card-header">
@@ -52,7 +52,7 @@
       </Card>
 
       <!-- Role Work Hours -->
-      <Card class="setting-card" @click="navigateTo('role-work-hours')">
+      <Card v-if="canAccess('/management/settings/role-work-hours')" class="setting-card" @click="navigateTo('role-work-hours')">
         <template #content>
           <div class="card-content">
             <div class="card-header">
@@ -125,9 +125,15 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { usePermissions } from '@/composables/usePermissions'
 
 const router = useRouter()
 const toast = useToast()
+const { canAccessRoute } = usePermissions()
+
+const canAccess = (path) => {
+  return canAccessRoute(path)
+}
 
 const navigateTo = (section) => {
   if (section === 'role-permissions') {

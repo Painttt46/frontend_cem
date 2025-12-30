@@ -151,15 +151,15 @@ const loadRoles = async () => {
   try {
     const response = await axios.get('/api/users/roles')
     roles.value = response.data.roles.map(role => ({
-      label: role.charAt(0).toUpperCase() + role.slice(1),
+      label: role,
       value: role
     }))
   } catch {
     roles.value = [
-      { label: 'Superadmin', value: 'superadmin' },
-      { label: 'Admin', value: 'admin' },
-      { label: 'Manager', value: 'manager' },
-      { label: 'User', value: 'user' }
+      { label: 'superadmin', value: 'superadmin' },
+      { label: 'admin', value: 'admin' },
+      { label: 'manager', value: 'manager' },
+      { label: 'user', value: 'user' }
     ]
   }
 }
