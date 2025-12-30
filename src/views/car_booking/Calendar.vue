@@ -570,14 +570,14 @@ export default {
 }
 
 .car-emoji {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   display: inline-block;
   animation: carMove 1s linear infinite;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
 }
 
 .car-indicator p {
-  font-size: 0.7rem;
+  font-size: 1rem;
   margin: 0;
   color: #856404;
   font-weight: 600;
@@ -619,13 +619,6 @@ export default {
     padding: 0.1rem 0.2rem;
   }
 
-  .car-indicator p {
-    font-size: 0.5rem;
-  }
-
-  .car-emoji {
-    font-size: 0.8rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -662,9 +655,6 @@ export default {
     font-size: 0.5rem;
   }
 
-  .car-indicator p {
-    font-size: 0.45rem;
-  }
 }
 
 .car-details {
