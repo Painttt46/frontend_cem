@@ -326,8 +326,11 @@ export default {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        // คำนวณชั่วโมงทำงานจริง (9-12, 13-18 = 8 ชม./วัน)
-        const hoursPerDay = 8
+        const [ws] = this.workHours.start_time.split(':').map(Number)
+        const [we] = this.workHours.end_time.split(':').map(Number)
+        const [ls] = this.workHours.lunch_start.split(':').map(Number)
+        const [le] = this.workHours.lunch_end.split(':').map(Number)
+        const hoursPerDay = (ls - ws) + (we - le)
         let totalHours = 0
         
         const startDate = new Date(start)
@@ -347,19 +350,16 @@ export default {
           while (current <= endDate) {
             const day = current.getDay()
             const isHoliday = this.holidayDates.includes(current.getTime())
-            if (day !== 0 && day !== 6 && !isHoliday) { // ไม่นับ เสาร์-อาทิตย์ และวันหยุด
+            if (day !== 0 && day !== 6 && !isHoliday) {
               if (current.getTime() === startDate.getTime()) {
-                // วันแรก - นับจากเวลาเริ่มถึงสิ้นสุดวัน
                 const dayEnd = new Date(current)
-                dayEnd.setHours(18, 0, 0, 0)
+                dayEnd.setHours(we, 0, 0, 0)
                 totalHours += this.calculateWorkHours(start, dayEnd)
               } else if (current.getTime() === endDate.getTime()) {
-                // วันสุดท้าย - นับจากเริ่มวันถึงเวลาสิ้นสุด
                 const dayStart = new Date(current)
-                dayStart.setHours(9, 0, 0, 0)
+                dayStart.setHours(ws, 0, 0, 0)
                 totalHours += this.calculateWorkHours(dayStart, end)
               } else {
-                // วันกลาง - นับเต็มวัน
                 totalHours += hoursPerDay
               }
             }

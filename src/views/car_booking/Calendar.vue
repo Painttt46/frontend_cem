@@ -342,13 +342,11 @@ export default {
 }
 
 @keyframes carMove {
-  0%,
-  100% {
-    transform: translateX(0);
+  0% {
+    transform: translateX(15px);
   }
-
-  50% {
-    transform: translateX(-10px);
+  100% {
+    transform: translateX(-15px);
   }
 }
 
@@ -512,10 +510,20 @@ export default {
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
+  animation: floatUp 1.5s ease-in-out infinite;
+}
+
+@keyframes floatUp {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-5px);
+  }
 }
 
 .booking-text {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #2e7d32;
   background: #c8e6c9;
@@ -574,13 +582,14 @@ export default {
 .car-emoji {
   font-size: 0.9rem;
   display: inline-block;
-  animation: carMove 1.5s ease-in-out infinite;
+  animation: carMove 1s linear infinite;
 }
 
 .car-indicator p {
-  font-size: 0.6rem;
+  font-size: 0.7rem;
   margin: 0;
   color: #856404;
+  font-weight: 600;
 }
 
 
