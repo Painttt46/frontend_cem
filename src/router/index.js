@@ -19,6 +19,7 @@ const RolePermissions = () => import('../views/management/RolePermissions.vue')
 const LeaveApprovalSettings = () => import('../views/management/LeaveApprovalSettings.vue')
 const LeaveManagement = () => import('../views/management/LeaveManagement.vue')
 const Dashboard = () => import('../views/management/Dashboard.vue')
+const RoleWorkHours = () => import('../views/management/RoleWorkHours.vue')
 
 const routes = [
   {
@@ -115,6 +116,12 @@ const routes = [
     name: 'leave-approval-settings',
     component: LeaveApprovalSettings,
     meta: { requiresAuth: true, requiresPermission: '/management/settings/leave-approval', title: 'ตั้งค่าผู้อนุมัติการลา - Gent-CEM' },
+  },
+  {
+    path: '/management/settings/role-work-hours',
+    name: 'role-work-hours',
+    component: RoleWorkHours,
+    meta: { requiresAuth: true, requiresPermission: '/management/settings/role-work-hours', title: 'ตั้งค่าเวลาทำงานตาม Role - Gent-CEM' },
   },
   {
     path: '/management/leave',

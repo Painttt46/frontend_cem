@@ -133,7 +133,8 @@ const pages = ref([
   { id: 11, name: 'จัดการสิทธิ์', path: '/management/settings/role-permissions', icon: 'pi pi-shield', hasAccess: false },
   { id: 12, name: 'Dashboard', path: '/management/dashboard', icon: 'pi pi-chart-bar', hasAccess: false },
   { id: 13, name: 'จัดการการลา', path: '/management/leave', icon: 'pi pi-calendar', hasAccess: false },
-  { id: 14, name: 'ตั้งค่าผู้อนุมัติลา', path: '/management/settings/leave-approval', icon: 'pi pi-user-edit', hasAccess: false }
+  { id: 14, name: 'ตั้งค่าผู้อนุมัติลา', path: '/management/settings/leave-approval', icon: 'pi pi-user-edit', hasAccess: false },
+  { id: 15, name: 'ตั้งค่าเวลาทำงานตาม Role', path: '/management/settings/role-work-hours', icon: 'pi pi-clock', hasAccess: false }
 ])
 
 onMounted(async () => {

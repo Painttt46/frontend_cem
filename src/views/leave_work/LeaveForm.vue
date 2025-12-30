@@ -65,7 +65,7 @@
               <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
                 class="corporate-input time-dropdown" placeholder="เวลา" @change="updateStartDateTime" />
             </div>
-            <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
+            <small class="time-hint">เวลาทำการ: {{ workHours.start_time }}-{{ workHours.lunch_start }}, {{ workHours.lunch_end }}-{{ workHours.end_time }}</small>
           </div>
 
           <div class="input-group">
@@ -83,22 +83,22 @@
               <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
                 class="corporate-input time-dropdown" placeholder="เวลา" @change="updateEndDateTime" />
             </div>
-            <small class="time-hint">เวลาทำการ: 09:00-12:00, 13:00-18:00</small>
+            <small class="time-hint">เวลาทำการ: {{ workHours.start_time }}-{{ workHours.lunch_start }}, {{ workHours.lunch_end }}-{{ workHours.end_time }}</small>
           </div>
 
           <!-- ปุ่มลาครึ่งวัน/เต็มวัน -->
           <div class="input-group full-width">
             <label class="input-label">ลาแบบด่วน</label>
             <div class="quick-leave-buttons">
-              <Button type="button" :label="'ลาครึ่งวันเช้า (09:00-12:00)'" 
+              <Button type="button" :label="`ลาครึ่งวันเช้า (${workHours.start_time}-${workHours.lunch_start})`" 
                 :severity="formData.quickLeave === 'half_morning' ? 'success' : 'secondary'" 
                 :outlined="formData.quickLeave !== 'half_morning'"
                 @click="setQuickLeave('half_morning')" size="small" />
-              <Button type="button" :label="'ลาครึ่งวันบ่าย (13:00-18:00)'" 
+              <Button type="button" :label="`ลาครึ่งวันบ่าย (${workHours.lunch_end}-${workHours.end_time})`" 
                 :severity="formData.quickLeave === 'half_afternoon' ? 'success' : 'secondary'" 
                 :outlined="formData.quickLeave !== 'half_afternoon'"
                 @click="setQuickLeave('half_afternoon')" size="small" />
-              <Button type="button" :label="'ลาเต็มวัน (09:00-18:00)'" 
+              <Button type="button" :label="`ลาเต็มวัน (${workHours.start_time}-${workHours.end_time})`" 
                 :severity="formData.quickLeave === 'full' ? 'success' : 'secondary'" 
                 :outlined="formData.quickLeave !== 'full'"
                 @click="setQuickLeave('full')" size="small" />
@@ -225,6 +225,7 @@ export default {
     Dropdown
   },
   async created() {
+    await this.loadWorkHours();
     await this.loadLeaveTypes();
     await this.loadUsers();
     await this.loadQuotaData();
@@ -252,28 +253,7 @@ export default {
         attachments: [],
         quickLeave: null
       },
-      allowedTimes: [
-        { label: '08:00', value: '08:00' },
-        { label: '08:30', value: '08:30' },
-        { label: '09:00', value: '09:00' },
-        { label: '09:30', value: '09:30' },
-        { label: '10:00', value: '10:00' },
-        { label: '10:30', value: '10:30' },
-        { label: '11:00', value: '11:00' },
-        { label: '11:30', value: '11:30' },
-        { label: '12:00', value: '12:00' },
-        { label: '13:00', value: '13:00' },
-        { label: '13:30', value: '13:30' },
-        { label: '14:00', value: '14:00' },
-        { label: '14:30', value: '14:30' },
-        { label: '15:00', value: '15:00' },
-        { label: '15:30', value: '15:30' },
-        { label: '16:00', value: '16:00' },
-        { label: '16:30', value: '16:30' },
-        { label: '17:00', value: '17:00' },
-        { label: '17:30', value: '17:30' },
-        { label: '18:00', value: '18:00' }
-      ],
+      allowedTimes: [],
       leaveTypes: [],
       delegationOptions: [
         { label: 'ไม่มีการมอบหมายงาน', value: 'no' },
@@ -285,7 +265,13 @@ export default {
       maxDisplayUsers: 50,
       quotaData: {},
       selectedQuota: null,
-      holidays: []
+      holidays: [],
+      workHours: {
+        start_time: '09:00',
+        end_time: '18:00',
+        lunch_start: '12:00',
+        lunch_end: '13:00'
+      }
     }
   },
   watch: {
@@ -501,6 +487,52 @@ export default {
         const response = await axios.get('/api/leave/holidays');
         this.holidays = response.data;
       } catch { /* ignore */ }
+    },
+
+    async loadWorkHours() {
+      try {
+        const role = localStorage.getItem('soc_role') || 'user';
+        const response = await axios.get(`/api/settings/role-work-hours/${role}`);
+        this.workHours = response.data;
+        this.generateAllowedTimes();
+      } catch {
+        // Use default work hours
+        this.workHours = {
+          start_time: '09:00',
+          end_time: '18:00',
+          lunch_start: '12:00',
+          lunch_end: '13:00'
+        };
+        this.generateAllowedTimes();
+      }
+    },
+
+    generateAllowedTimes() {
+      const times = [];
+      const [startH, startM] = this.workHours.start_time.split(':').map(Number);
+      const [endH, endM] = this.workHours.end_time.split(':').map(Number);
+      const [lunchStartH] = this.workHours.lunch_start.split(':').map(Number);
+      const [lunchEndH] = this.workHours.lunch_end.split(':').map(Number);
+      
+      let h = startH, m = startM;
+      while (h < endH || (h === endH && m <= endM)) {
+        // ข้ามช่วงพักเที่ยง (ยกเว้นเวลาเริ่มและสิ้นสุดพัก)
+        if (h >= lunchStartH && h < lunchEndH && !(h === lunchStartH && m === 0)) {
+          h = lunchEndH;
+          m = 0;
+          continue;
+        }
+        
+        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        times.push({ label: timeStr, value: timeStr });
+        
+        m += 30;
+        if (m >= 60) {
+          m = 0;
+          h++;
+        }
+      }
+      this.allowedTimes = times;
     },
 
     onLeaveTypeChange() {
@@ -813,15 +845,20 @@ export default {
       // ตั้งค่าวันสิ้นสุดเป็นวันเดียวกับวันเริ่ม
       this.formData.endDate = new Date(this.formData.startDate)
       
+      const startTime = this.workHours.start_time
+      const endTime = this.workHours.end_time
+      const lunchStart = this.workHours.lunch_start
+      const lunchEnd = this.workHours.lunch_end
+      
       if (type === 'half_morning') {
-        this.formData.startTime = '09:00'
-        this.formData.endTime = '12:00'
+        this.formData.startTime = startTime
+        this.formData.endTime = lunchStart
       } else if (type === 'half_afternoon') {
-        this.formData.startTime = '13:00'
-        this.formData.endTime = '18:00'
+        this.formData.startTime = lunchEnd
+        this.formData.endTime = endTime
       } else if (type === 'full') {
-        this.formData.startTime = '09:00'
-        this.formData.endTime = '18:00'
+        this.formData.startTime = startTime
+        this.formData.endTime = endTime
       }
       
       this.updateStartDateTime()

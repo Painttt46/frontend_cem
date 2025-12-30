@@ -51,6 +51,23 @@
         </template>
       </Card>
 
+      <!-- Role Work Hours -->
+      <Card class="setting-card" @click="navigateTo('role-work-hours')">
+        <template #content>
+          <div class="card-content">
+            <div class="card-header">
+              <i class="pi pi-clock card-icon"></i>
+              <Badge value="Active" severity="success" />
+            </div>
+            <h3>ตั้งค่าเวลาทำงานตาม Role</h3>
+            <p>กำหนดเวลาเริ่ม-เลิกงาน และพักเที่ยงของแต่ละ Role</p>
+            <div class="card-footer">
+              <i class="pi pi-arrow-right"></i>
+            </div>
+          </div>
+        </template>
+      </Card>
+
       <!-- Notifications -->
       <Card class="setting-card" @click="showComingSoon">
         <template #content>
@@ -117,6 +134,8 @@ const navigateTo = (section) => {
     router.push('/management/settings/role-permissions')
   } else if (section === 'leave-approval') {
     router.push('/management/settings/leave-approval')
+  } else if (section === 'role-work-hours') {
+    router.push('/management/settings/role-work-hours')
   }
 }
 
