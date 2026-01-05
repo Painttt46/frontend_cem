@@ -35,9 +35,9 @@
               <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
                 <i class="pi pi-users"></i>
                 <div class="assigned-users">
-                  <Badge v-for="(user, idx) in step.assigned_users" :key="idx" 
-                         :value="typeof user === 'object' ? user.name : user" 
-                         severity="info" />
+                  <span v-for="(user, idx) in step.assigned_users" :key="idx" class="user-badge">
+                    {{ typeof user === 'object' ? user.name : user }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -449,6 +449,15 @@ export default {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.user-badge {
+  background: #3b82f6;
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .empty-workflow {
