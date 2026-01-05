@@ -1,6 +1,7 @@
 <template>
   <div class="daily-work-container">
     <Toast />
+    <ConfirmDialog />
     
     <Card class="header-card">
       <template #header>
@@ -30,12 +31,26 @@
 import DailyWorkForm from './DailyWorkForm.vue'
 import DailyWorkList from './DailyWorkList.vue'
 import axios from '@/utils/axiosConfig'
+import { useConfirm } from 'primevue/useconfirm'
+import { useToast } from 'primevue/usetoast'
 
 export default {
   name: 'DailyWork',
   components: {
     DailyWorkForm,
     DailyWorkList
+  },
+  setup() {
+    return {
+      $confirm: useConfirm(),
+      $toast: useToast()
+    }
+  },
+  provide() {
+    return {
+      $confirm: useConfirm(),
+      $toast: useToast()
+    }
   },
   data() {
     return {

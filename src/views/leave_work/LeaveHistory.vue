@@ -45,7 +45,7 @@
 
         <Column header="จำนวน" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
+            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * hoursPerDay).toFixed(1) }} ชม.)
           </template>
         </Column>
 
@@ -262,16 +262,46 @@ export default {
       selectedUserName: '',
       selectedUserId: null,
       showRejectReasonDialog: false,
-      selectedRejectReason: ''
+      selectedRejectReason: '',
+      workHours: {
+        start_time: '09:00',
+        end_time: '18:00',
+        lunch_start: '12:00',
+        lunch_end: '13:00'
+      }
+    }
+  },
+  computed: {
+    hoursPerDay() {
+      const [ws] = this.workHours.start_time.split(':').map(Number)
+      const [we] = this.workHours.end_time.split(':').map(Number)
+      const [ls] = this.workHours.lunch_start.split(':').map(Number)
+      const [le] = this.workHours.lunch_end.split(':').map(Number)
+      return (ls - ws) + (we - le)
     }
   },
   async mounted() {
     await this.loadLeaveTypes()
+    await this.loadWorkHours()
   },
   created() {
     this.$http = axios
   },
   methods: {
+    async loadWorkHours() {
+      try {
+        const role = localStorage.getItem('soc_role') || 'user'
+        const response = await this.$http.get(`/api/settings/role-work-hours/${role}`)
+        this.workHours = {
+          start_time: response.data.start_time?.substring(0, 5) || '09:00',
+          end_time: response.data.end_time?.substring(0, 5) || '18:00',
+          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
+          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
+        }
+      } catch {
+        // Use default
+      }
+    },
     async loadLeaveTypes() {
       try {
         const response = await this.$http.get('/api/leave/leave-types')

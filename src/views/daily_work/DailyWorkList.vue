@@ -96,12 +96,15 @@
           </template>
         </Column>
 
-        <Column header="จัดการ" style="width: 80px;">
+        <Column header="จัดการ" style="width: 120px;">
           <template #body="slotProps">
-            <div class="action-buttons" v-if="slotProps.data">
-              <Button v-if="!isEditDisabled(slotProps.data)" icon="pi pi-pencil" size="small" severity="warning"
+            <div class="action-buttons" v-if="slotProps.data && isOwner(slotProps.data)">
+              <Button v-if="!isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'" 
+                icon="pi pi-pencil" size="small" severity="warning"
                 outlined @click="editRecord(slotProps.data)" v-tooltip="'แก้ไข'" />
-              <span v-else class="disabled-text">ไม่สามารถแก้ไขได้</span>
+              <Button v-if="!isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'" 
+                icon="pi pi-times" size="small" severity="danger"
+                outlined @click="confirmCancel(slotProps.data)" v-tooltip="'ยกเลิก'" />
             </div>
           </template>
         </Column>
@@ -255,6 +258,7 @@ export default {
     UserInfoDialog,
     EnhancedDataTable
   },
+  inject: ['$confirm', '$toast'],
   emits: ['refresh-data'],
   props: {
     records: {
@@ -367,6 +371,10 @@ export default {
           this.categoryOptions = []
         })
     },
+    isOwner(record) {
+      const currentUserId = localStorage.getItem('soc_user_id')
+      return record.user_id == currentUserId
+    },
     isEditDisabled(record) {
       if (!record || !record.work_date) {
         return true
@@ -384,6 +392,40 @@ export default {
 
       // ปิดการแก้ไขหลัง EDIT_CUTOFF_HOUR ของวันถัดไป
       return now > cutoff
+    },
+    confirmCancel(record) {
+      this.$confirm.require({
+        message: 'คุณต้องการยกเลิกงานนี้หรือไม่?',
+        header: 'ยืนยันการยกเลิก',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        acceptLabel: 'ยกเลิกงาน',
+        rejectLabel: 'ปิด',
+        accept: () => this.cancelRecord(record)
+      })
+    },
+    async cancelRecord(record) {
+      try {
+        await this.$http.put(`/api/daily-work/${record.id}`, {
+          ...record,
+          work_status: 'cancelled'
+        })
+        this.$toast.add({
+          severity: 'success',
+          summary: 'สำเร็จ',
+          detail: 'ยกเลิกงานเรียบร้อยแล้ว',
+          life: 3000
+        })
+        this.$emit('refresh-data')
+        this.loadWorkRecords()
+      } catch {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ผิดพลาด',
+          detail: 'ไม่สามารถยกเลิกงานได้',
+          life: 3000
+        })
+      }
     },
 
     async loadWorkRecords() {
