@@ -57,9 +57,7 @@ export default {
       currentTime: new Date(),
       workRecords: [],
       loading: false,
-      showWorkDialog: false,
-      checkInterval: null,
-      allCompleteNotificationSent: false
+      showWorkDialog: false
     }
   },
   computed: {
@@ -75,51 +73,6 @@ export default {
     }
   },
   methods: {
-    async checkMissingWorkNotification() {
-      const now = new Date()
-      const currentHour = now.getHours()
-      const currentMinute = now.getMinutes()
-      
-      
-      // ตรวจสอบว่าเป็นเวลา 9:30 น. หรือหลังจากนั้น
-      if (currentHour > 9 || (currentHour === 9 && currentMinute >= 30)) {
-        try {
-          const response = await axios.post('/api/daily-work/check-missing', {}, { silent: true })
-          
-          // Update notification status based on backend response
-          if (response.data.message.includes('Missing work')) {
-            this.allCompleteNotificationSent = false
-          } else if (response.data.message.includes('All complete') && !this.allCompleteNotificationSent) {
-            this.allCompleteNotificationSent = true
-            localStorage.setItem('allCompleteNotificationSent', 'true')
-          }
-        } catch { // ignore
-          
-        }
-      }
-    },
-
-    initializeNotificationCheck() {
-      // รีเซ็ต flag เมื่อเริ่มวันใหม่
-      const today = new Date().toISOString().split('T')[0]
-      const lastCheckDate = localStorage.getItem('lastWorkCheckDate')
-      if (lastCheckDate !== today) {
-        this.allCompleteNotificationSent = false
-        localStorage.setItem('lastWorkCheckDate', today)
-        localStorage.removeItem('allCompleteNotificationSent') // ลบ flag เก่า
-      } else {
-        this.allCompleteNotificationSent = localStorage.getItem('allCompleteNotificationSent') === 'true'
-      }
-      
-      // ตรวจสอบทุก 1 นาที
-      this.checkInterval = setInterval(() => {
-        this.checkMissingWorkNotification()
-      }, 1 * 60 * 1000) // 1 minute
-      
-      // ตรวจสอบทันทีเมื่อเริ่มต้น
-      this.checkMissingWorkNotification()
-    },
-
     showWorkForm() {
       this.showWorkDialog = true
     },
@@ -161,18 +114,10 @@ export default {
     // Listen for work record updates
     window.addEventListener('workRecordUpdated', this.handleWorkRecordUpdate)
     window.addEventListener('taskUpdated', this.handleWorkRecordUpdate)
-    
-    // Initialize notification check
-    this.initializeNotificationCheck()
   },
   beforeUnmount() {
     window.removeEventListener('workRecordUpdated', this.handleWorkRecordUpdate)
     window.removeEventListener('taskUpdated', this.handleWorkRecordUpdate)
-    
-    // Clear notification check interval
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval)
-    }
   },
 }
 </script>
