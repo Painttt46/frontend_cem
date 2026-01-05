@@ -96,18 +96,15 @@
           </template>
         </Column>
 
-        <Column header="จัดการ" style="width: 120px;">
+        <Column header="จัดการ" style="width: 120px; text-align: center;">
           <template #body="slotProps">
-            <div class="action-buttons" v-if="slotProps.data && isOwner(slotProps.data)">
-              <Button v-if="!isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'" 
-                icon="pi pi-pencil" size="small" severity="warning"
+            <div class="action-buttons" v-if="slotProps.data && isOwner(slotProps.data) && !isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'">
+              <Button icon="pi pi-pencil" size="small" severity="warning"
                 outlined @click="editRecord(slotProps.data)" v-tooltip="'แก้ไข'" />
-              <Button v-if="!isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'" 
-                icon="pi pi-times" size="small" severity="danger"
+              <Button icon="pi pi-times" size="small" severity="danger"
                 outlined @click="confirmCancel(slotProps.data)" v-tooltip="'ยกเลิก'" />
-              <span v-if="isEditDisabled(slotProps.data) || slotProps.data.work_status === 'cancelled'" class="text-muted">-</span>
             </div>
-            <span v-else class="text-muted">-</span>
+            <span v-else style="display: block; text-align: center;">-</span>
           </template>
         </Column>
 
