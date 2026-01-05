@@ -259,22 +259,12 @@ export default {
       return formatThai(start || end)
     },
     getStatusIcon(status) {
-      const icons = {
-        pending: 'pi pi-clock',
-        in_progress: 'pi pi-spin pi-spinner',
-        completed: 'pi pi-check-circle',
-        on_hold: 'pi pi-pause-circle'
-      }
-      return icons[status] || 'pi pi-circle'
+      if (!status) return 'pi pi-circle'
+      return 'pi pi-circle-fill'
     },
     getStatusLabel(status) {
-      const labels = {
-        pending: 'รอดำเนินการ',
-        in_progress: 'กำลังดำเนินการ',
-        completed: 'เสร็จสิ้น',
-        on_hold: 'หยุดชั่วคราว'
-      }
-      return labels[status] || status
+      if (!status) return 'ไม่ระบุ'
+      return status
     }
   }
 }
