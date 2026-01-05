@@ -54,7 +54,7 @@
       <div v-show="sidebarVisible" class="col-3 col-sm-3 col-md-2 col-lg-2 col-xl-2 bg-light p-0 sidebar-column">
         <div class="p-4 sidebar-container" style="height: 100%; padding-top: 0px !important">
           <div class="logo-section">
-            <img src="@/assets/images/GENT.png" alt="GENT Logo" style="max-width: 150px; height: auto;" />
+            <img src="@/assets/images/GENT.svg" alt="GENT Logo" style="max-width: 150px; height: auto;" />
           </div>
 
           <div class="datetime-section">
