@@ -34,7 +34,11 @@
               
               <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
                 <i class="pi pi-users"></i>
-                <span>{{ step.assigned_users.map(u => typeof u === 'object' ? u.name : u).join(', ') }}</span>
+                <div class="assigned-users">
+                  <Badge v-for="(user, idx) in step.assigned_users" :key="idx" 
+                         :value="typeof user === 'object' ? user.name : user" 
+                         severity="info" />
+                </div>
               </div>
             </div>
           </div>
@@ -50,7 +54,7 @@
 
     <!-- Step Dialog -->
     <Dialog v-model:visible="showStepDialog" :header="editingIndex !== null ? 'แก้ไข Step' : 'เพิ่ม Step'" 
-            :style="{width: '90vw', maxWidth: '1000px'}" modal :draggable="false" position="center">
+            :style="{width: '95vw', maxWidth: '1200px'}" modal :draggable="false" position="center">
       <div class="step-form">
         <div class="field">
           <label>ชื่อ Step Workflow <span class="required">*</span></label>
@@ -444,7 +448,7 @@ export default {
 .assigned-users {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .empty-workflow {

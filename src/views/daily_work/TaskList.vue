@@ -295,7 +295,7 @@
   </Dialog>
 
   <!-- Edit Task Dialog -->
-  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false" position="center">
+  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '95vw', maxWidth: '1200px' }" :draggable="false" position="center">
     <form @submit.prevent="updateTask" class="edit-form">
       <div class="form-grid">
         <div class="input-group">
