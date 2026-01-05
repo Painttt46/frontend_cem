@@ -6,7 +6,7 @@
       <div class="col-11 col-sm-8 col-md-6 col-xl-3 justify-content-center">
         <div class="card-body-1 ">
           <div class="text-center mb-3">
-            <img src="../assets/images/GENT.svg" alt="GENT Logo" style="max-width: 200px; height: auto;" />
+            <img src="/GENT.svg" alt="GENT Logo" style="max-width: 200px; height: auto;" />
           </div>
           <div class="">
             <h3 class="text-center text-white">GenT Excellency Management</h3>
