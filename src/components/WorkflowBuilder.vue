@@ -99,9 +99,15 @@
 
 <script>
 import axios from '@/utils/axiosConfig'
+import { useConfirm } from 'primevue/useconfirm'
 
 export default {
   name: 'WorkflowBuilder',
+  setup() {
+    return {
+      $confirm: useConfirm()
+    }
+  },
   props: {
     taskId: {
       type: Number,
