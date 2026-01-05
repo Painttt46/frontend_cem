@@ -35,7 +35,7 @@
               <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
                 <i class="pi pi-users"></i>
                 <div class="assigned-users">
-                  <Tag v-for="user in step.assigned_users" :key="user.id" :value="user.name" />
+                  <Tag v-for="(user, idx) in step.assigned_users" :key="idx" :value="user.name || user" />
                 </div>
               </div>
             </div>
@@ -52,7 +52,7 @@
 
     <!-- Step Dialog -->
     <Dialog v-model:visible="showStepDialog" :header="editingIndex !== null ? 'แก้ไข Step' : 'เพิ่ม Step'" 
-            :style="{width: '600px'}" modal>
+            :style="{width: '80vw', maxWidth: '900px'}" modal :draggable="false" position="center">
       <div class="step-form">
         <div class="field">
           <label>ชื่อ Step <span class="required">*</span></label>
@@ -130,7 +130,7 @@ export default {
         start_date: null,
         end_date: null,
         assigned_users: [],
-        status: '',
+        status: null,
         step_order: 0
       }
     }
@@ -162,7 +162,7 @@ export default {
         start_date: null,
         end_date: null,
         assigned_users: [],
-        status: 'pending',
+        status: null,
         step_order: this.steps.length
       }
     },
@@ -470,17 +470,27 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .field label {
   font-weight: 500;
   color: #374151;
+}
+
+.field :deep(input),
+.field :deep(textarea),
+.field :deep(.p-inputtext),
+.field :deep(.p-calendar),
+.field :deep(.p-multiselect) {
+  width: 100%;
 }
 
 .required {
