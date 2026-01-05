@@ -34,11 +34,7 @@
               
               <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
                 <i class="pi pi-users"></i>
-                <div class="assigned-users">
-                  <Tag v-for="(user, idx) in step.assigned_users" :key="idx">
-                    {{ typeof user === 'object' ? user.name : user }}
-                  </Tag>
-                </div>
+                <span>{{ step.assigned_users.map(u => typeof u === 'object' ? u.name : u).join(', ') }}</span>
               </div>
             </div>
           </div>
@@ -54,10 +50,10 @@
 
     <!-- Step Dialog -->
     <Dialog v-model:visible="showStepDialog" :header="editingIndex !== null ? 'แก้ไข Step' : 'เพิ่ม Step'" 
-            :style="{width: '80vw', maxWidth: '900px'}" modal :draggable="false" position="center">
+            :style="{width: '90vw', maxWidth: '1000px'}" modal :draggable="false" position="center">
       <div class="step-form">
         <div class="field">
-          <label>ชื่อ Step <span class="required">*</span></label>
+          <label>ชื่อ Step Workflow <span class="required">*</span></label>
           <InputText v-model="currentStep.step_name" placeholder="เช่น วางแผน, ออกแบบ, พัฒนา" />
         </div>
 

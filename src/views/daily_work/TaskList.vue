@@ -358,6 +358,13 @@
         </div>
 
         <div class="input-group full-width">
+          <label class="input-label">
+            <i class="pi pi-sitemap"></i> Workflow Steps
+          </label>
+          <WorkflowBuilder v-model="editFormData.steps" :taskId="editFormData.id" />
+        </div>
+
+        <div class="input-group full-width">
           <label class="input-label">ไฟล์แนบ</label>
           <div class="file-upload-section">
             <input type="file" ref="editFileInput" @change="handleEditFileUpload" 
@@ -411,12 +418,14 @@
 import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
 
 export default {
   name: 'TaskList',
   components: {
     EnhancedDataTable,
-    UserInfoDialog
+    UserInfoDialog,
+    WorkflowBuilder
   },
   created() {
     this.$http = axios
@@ -762,7 +771,8 @@ export default {
         project_start_date: parseDate(task.project_start_date),
         project_end_date: parseDate(task.project_end_date),
         existingFiles: [...(task.files || [])],
-        newFiles: []
+        newFiles: [],
+        steps: []
       }
       this.editDialog = true
     },
@@ -830,6 +840,24 @@ export default {
         }
         
         await this.$http.put(`/api/tasks/${this.editFormData.id}`, updateData)
+        
+        // Save workflow steps
+        if (this.editFormData.steps && this.editFormData.steps.length > 0) {
+          // Delete existing steps first
+          const existingSteps = await this.$http.get(`/api/task-steps/task/${this.editFormData.id}`)
+          for (const step of existingSteps.data) {
+            await this.$http.delete(`/api/task-steps/${step.id}`)
+          }
+          // Create new steps
+          for (const step of this.editFormData.steps) {
+            await this.$http.post('/api/task-steps', {
+              ...step,
+              task_id: this.editFormData.id,
+              start_date: formatDate(step.start_date),
+              end_date: formatDate(step.end_date)
+            })
+          }
+        }
         
         this.$toast.add({
           severity: 'success',
