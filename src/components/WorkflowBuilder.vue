@@ -84,8 +84,7 @@
 
         <div class="field">
           <label>สถานะ</label>
-          <Dropdown v-model="currentStep.status" :options="statusOptions" 
-                    optionLabel="label" optionValue="value" placeholder="เลือกสถานะ" />
+          <InputText v-model="currentStep.status" placeholder="เช่น รอดำเนินการ, กำลังทำ, เสร็จสิ้น" />
         </div>
       </div>
 
@@ -125,13 +124,15 @@ export default {
       users: [],
       showStepDialog: false,
       editingIndex: null,
-      currentStep: this.getEmptyStep(),
-      statusOptions: [
-        { label: '⏳ รอดำเนินการ', value: 'pending' },
-        { label: '🔄 กำลังดำเนินการ', value: 'in_progress' },
-        { label: '✅ เสร็จสิ้น', value: 'completed' },
-        { label: '⏸️ หยุดชั่วคราว', value: 'on_hold' }
-      ]
+      currentStep: {
+        step_name: '',
+        description: '',
+        start_date: null,
+        end_date: null,
+        assigned_users: [],
+        status: '',
+        step_order: 0
+      }
     }
   },
   watch: {
