@@ -105,7 +105,9 @@
               <Button v-if="!isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'" 
                 icon="pi pi-times" size="small" severity="danger"
                 outlined @click="confirmCancel(slotProps.data)" v-tooltip="'ยกเลิก'" />
+              <span v-if="isEditDisabled(slotProps.data) || slotProps.data.work_status === 'cancelled'" class="text-muted">-</span>
             </div>
+            <span v-else class="text-muted">-</span>
           </template>
         </Column>
 
