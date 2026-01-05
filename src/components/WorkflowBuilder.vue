@@ -35,7 +35,9 @@
               <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
                 <i class="pi pi-users"></i>
                 <div class="assigned-users">
-                  <Tag v-for="(user, idx) in step.assigned_users" :key="idx" :value="user.name || user" />
+                  <Tag v-for="(user, idx) in step.assigned_users" :key="idx">
+                    {{ typeof user === 'object' ? user.name : user }}
+                  </Tag>
                 </div>
               </div>
             </div>
