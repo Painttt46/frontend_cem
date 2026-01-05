@@ -1,0 +1,494 @@
+<template>
+  <div class="workflow-builder">
+    <div class="workflow-header">
+      <h3><i class="pi pi-sitemap"></i> Workflow Steps</h3>
+      <Button icon="pi pi-plus" label="เพิ่ม Step" @click="addStep" size="small" />
+    </div>
+
+    <div class="workflow-timeline" v-if="steps.length > 0">
+      <div v-for="(step, index) in steps" :key="step.id || index" class="workflow-step">
+        <div class="step-connector" v-if="index > 0"></div>
+        
+        <div class="step-card" :class="'status-' + step.status">
+          <div class="step-header">
+            <div class="step-number">{{ index + 1 }}</div>
+            <div class="step-status-badge">
+              <i :class="getStatusIcon(step.status)"></i>
+              {{ getStatusLabel(step.status) }}
+            </div>
+            <div class="step-actions">
+              <Button icon="pi pi-pencil" @click="editStep(index)" text size="small" />
+              <Button icon="pi pi-trash" @click="deleteStep(index)" text severity="danger" size="small" />
+            </div>
+          </div>
+
+          <div class="step-content">
+            <h4>{{ step.step_name || 'ไม่มีชื่อ' }}</h4>
+            <p v-if="step.description" class="step-description">{{ step.description }}</p>
+            
+            <div class="step-info">
+              <div class="info-item" v-if="step.start_date || step.end_date">
+                <i class="pi pi-calendar"></i>
+                <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
+              </div>
+              
+              <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
+                <i class="pi pi-users"></i>
+                <div class="assigned-users">
+                  <Tag v-for="user in step.assigned_users" :key="user.id" :value="user.name" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="empty-workflow">
+      <i class="pi pi-sitemap"></i>
+      <p>ยังไม่มี workflow steps</p>
+      <Button icon="pi pi-plus" label="เพิ่ม Step แรก" @click="addStep" />
+    </div>
+
+    <!-- Step Dialog -->
+    <Dialog v-model:visible="showStepDialog" :header="editingIndex !== null ? 'แก้ไข Step' : 'เพิ่ม Step'" 
+            :style="{width: '600px'}" modal>
+      <div class="step-form">
+        <div class="field">
+          <label>ชื่อ Step <span class="required">*</span></label>
+          <InputText v-model="currentStep.step_name" placeholder="เช่น วางแผน, ออกแบบ, พัฒนา" />
+        </div>
+
+        <div class="field">
+          <label>คำอธิบาย</label>
+          <Textarea v-model="currentStep.description" rows="3" placeholder="รายละเอียดของ step นี้" />
+        </div>
+
+        <div class="field-group">
+          <div class="field">
+            <label>วันเริ่มต้น</label>
+            <Calendar v-model="currentStep.start_date" dateFormat="yy-mm-dd" showIcon />
+          </div>
+          <div class="field">
+            <label>วันสิ้นสุด</label>
+            <Calendar v-model="currentStep.end_date" dateFormat="yy-mm-dd" showIcon />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>ผู้รับผิดชอบ</label>
+          <MultiSelect v-model="currentStep.assigned_users" :options="users" 
+                       optionLabel="name" placeholder="เลือกผู้รับผิดชอบ" 
+                       display="chip" filter />
+        </div>
+
+        <div class="field">
+          <label>สถานะ</label>
+          <Dropdown v-model="currentStep.status" :options="statusOptions" 
+                    optionLabel="label" optionValue="value" placeholder="เลือกสถานะ" />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="ยกเลิก" @click="showStepDialog = false" text />
+        <Button label="บันทึก" @click="saveStep" :disabled="!currentStep.step_name" />
+      </template>
+    </Dialog>
+  </div>
+</template>
+
+<script>
+import axios from '@/utils/axiosConfig'
+
+export default {
+  name: 'WorkflowBuilder',
+  props: {
+    taskId: {
+      type: Number,
+      default: null
+    },
+    modelValue: {
+      type: Array,
+      default: () => []
+    }
+  },
+  emits: ['update:modelValue'],
+  data() {
+    return {
+      steps: [],
+      users: [],
+      showStepDialog: false,
+      editingIndex: null,
+      currentStep: this.getEmptyStep(),
+      statusOptions: [
+        { label: '⏳ รอดำเนินการ', value: 'pending' },
+        { label: '🔄 กำลังดำเนินการ', value: 'in_progress' },
+        { label: '✅ เสร็จสิ้น', value: 'completed' },
+        { label: '⏸️ หยุดชั่วคราว', value: 'on_hold' }
+      ]
+    }
+  },
+  watch: {
+    modelValue: {
+      immediate: true,
+      handler(val) {
+        this.steps = val || []
+      }
+    },
+    taskId: {
+      immediate: true,
+      handler(val) {
+        if (val) {
+          this.loadSteps()
+        }
+      }
+    }
+  },
+  mounted() {
+    this.loadUsers()
+  },
+  methods: {
+    getEmptyStep() {
+      return {
+        step_name: '',
+        description: '',
+        start_date: null,
+        end_date: null,
+        assigned_users: [],
+        status: 'pending',
+        step_order: this.steps.length
+      }
+    },
+    async loadUsers() {
+      try {
+        const response = await axios.get('/api/users')
+        this.users = response.data.map(u => ({
+          id: u.id,
+          name: `${u.firstname} ${u.lastname}`
+        }))
+      } catch (error) {
+        console.error('Error loading users:', error)
+      }
+    },
+    async loadSteps() {
+      if (!this.taskId) return
+      try {
+        const response = await axios.get(`/api/task-steps/task/${this.taskId}`)
+        this.steps = response.data
+        this.$emit('update:modelValue', this.steps)
+      } catch (error) {
+        console.error('Error loading steps:', error)
+      }
+    },
+    addStep() {
+      this.currentStep = this.getEmptyStep()
+      this.editingIndex = null
+      this.showStepDialog = true
+    },
+    editStep(index) {
+      this.currentStep = { ...this.steps[index] }
+      // Convert date strings to Date objects
+      if (this.currentStep.start_date) {
+        this.currentStep.start_date = new Date(this.currentStep.start_date)
+      }
+      if (this.currentStep.end_date) {
+        this.currentStep.end_date = new Date(this.currentStep.end_date)
+      }
+      this.editingIndex = index
+      this.showStepDialog = true
+    },
+    saveStep() {
+      const stepData = {
+        ...this.currentStep,
+        step_order: this.editingIndex !== null ? this.editingIndex : this.steps.length,
+        start_date: this.currentStep.start_date ? this.formatDate(this.currentStep.start_date) : null,
+        end_date: this.currentStep.end_date ? this.formatDate(this.currentStep.end_date) : null
+      }
+
+      if (this.editingIndex !== null) {
+        this.steps[this.editingIndex] = stepData
+      } else {
+        this.steps.push(stepData)
+      }
+
+      this.$emit('update:modelValue', this.steps)
+      this.showStepDialog = false
+    },
+    deleteStep(index) {
+      this.$confirm.require({
+        message: 'คุณต้องการลบ step นี้หรือไม่?',
+        header: 'ยืนยันการลบ',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          this.steps.splice(index, 1)
+          // Update step_order
+          this.steps.forEach((step, idx) => {
+            step.step_order = idx
+          })
+          this.$emit('update:modelValue', this.steps)
+        }
+      })
+    },
+    formatDate(date) {
+      if (!date) return null
+      const d = new Date(date)
+      return d.toISOString().split('T')[0]
+    },
+    formatDateRange(start, end) {
+      if (!start && !end) return 'ไม่ระบุวันที่'
+      const formatThai = (date) => {
+        if (!date) return ''
+        return new Date(date).toLocaleDateString('th-TH', { 
+          day: 'numeric', 
+          month: 'short',
+          year: '2-digit'
+        })
+      }
+      if (start && end) {
+        return `${formatThai(start)} - ${formatThai(end)}`
+      }
+      return formatThai(start || end)
+    },
+    getStatusIcon(status) {
+      const icons = {
+        pending: 'pi pi-clock',
+        in_progress: 'pi pi-spin pi-spinner',
+        completed: 'pi pi-check-circle',
+        on_hold: 'pi pi-pause-circle'
+      }
+      return icons[status] || 'pi pi-circle'
+    },
+    getStatusLabel(status) {
+      const labels = {
+        pending: 'รอดำเนินการ',
+        in_progress: 'กำลังดำเนินการ',
+        completed: 'เสร็จสิ้น',
+        on_hold: 'หยุดชั่วคราว'
+      }
+      return labels[status] || status
+    }
+  }
+}
+</script>
+
+<style scoped>
+.workflow-builder {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.workflow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.workflow-header h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #2c3e50;
+}
+
+.workflow-timeline {
+  position: relative;
+}
+
+.workflow-step {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.step-connector {
+  position: absolute;
+  left: 24px;
+  top: -1.5rem;
+  width: 3px;
+  height: 1.5rem;
+  background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+}
+
+.step-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-left: 4px solid #3b82f6;
+  transition: all 0.3s ease;
+}
+
+.step-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+
+.step-card.status-completed {
+  border-left-color: #10b981;
+  background: linear-gradient(to right, #f0fdf4 0%, white 10%);
+}
+
+.step-card.status-in_progress {
+  border-left-color: #f59e0b;
+  background: linear-gradient(to right, #fffbeb 0%, white 10%);
+}
+
+.step-card.status-on_hold {
+  border-left-color: #6b7280;
+  background: linear-gradient(to right, #f9fafb 0%, white 10%);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.step-number {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.status-completed .step-number {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.status-in_progress .step-number {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.status-on_hold .step-number {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+.step-status-badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #3b82f6;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.status-completed .step-status-badge {
+  background: #f0fdf4;
+  color: #10b981;
+}
+
+.status-in_progress .step-status-badge {
+  background: #fffbeb;
+  color: #f59e0b;
+}
+
+.status-on_hold .step-status-badge {
+  background: #f9fafb;
+  color: #6b7280;
+}
+
+.step-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 0.25rem;
+}
+
+.step-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+  font-size: 1.125rem;
+}
+
+.step-description {
+  color: #64748b;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #475569;
+  font-size: 0.875rem;
+}
+
+.info-item i {
+  color: #94a3b8;
+}
+
+.assigned-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.empty-workflow {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+}
+
+.empty-workflow i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.3;
+}
+
+.empty-workflow p {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.125rem;
+}
+
+.step-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.field-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .field-group {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

@@ -50,6 +50,13 @@
           </div>
 
           <div class="input-group full-width">
+            <label class="input-label">
+              <i class="pi pi-sitemap"></i> Workflow Steps (ขั้นตอนการทำงาน)
+            </label>
+            <WorkflowBuilder v-model="formData.steps" />
+          </div>
+
+          <div class="input-group full-width">
             <label class="input-label">แนบไฟล์ (รูปภาพ, เอกสาร)</label>
             <div class="file-upload-wrapper">
               <input ref="fileInput" @change="handleFileUpload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
@@ -80,9 +87,13 @@
 
 <script>
 import axios from '@/utils/axiosConfig'
+import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
 
 export default {
   name: 'AddTaskForm',
+  components: {
+    WorkflowBuilder
+  },
   created() {
     this.$http = axios
   },
@@ -97,7 +108,8 @@ export default {
         projectEndDate: null,
         description: '',
         category: [],
-        files: []
+        files: [],
+        steps: []
       },
       categoryOptions: []
     }
@@ -193,7 +205,18 @@ export default {
           files: uploadedFiles
         }
 
-        await this.$http.post('/api/tasks', taskData)
+        const response = await this.$http.post('/api/tasks', taskData)
+        const taskId = response.data.id
+
+        // Save workflow steps if any
+        if (this.formData.steps && this.formData.steps.length > 0) {
+          for (const step of this.formData.steps) {
+            await this.$http.post('/api/task-steps', {
+              ...step,
+              task_id: taskId
+            })
+          }
+        }
 
         this.$toast.add({
           severity: 'success',
@@ -230,7 +253,8 @@ export default {
         projectEndDate: null,
         description: '',
         category: [],
-        files: []
+        files: [],
+        steps: []
       }
       const fileInput = document.getElementById('fileUpload')
       if (fileInput) fileInput.value = ''
