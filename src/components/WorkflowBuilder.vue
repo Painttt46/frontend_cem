@@ -6,33 +6,36 @@
     </div>
 
     <div class="workflow-timeline" v-if="steps.length > 0">
-      <div v-for="(step, index) in steps" :key="step.id || index" class="workflow-step"
-           draggable="true"
-           @dragstart="onDragStart($event, index)"
-           @dragover.prevent
-           @dragenter="onDragEnter($event, index)"
-           @dragleave="onDragLeave($event)"
-           @drop="onDrop($event, index)"
-           :class="{ 'drag-over': dragOverIndex === index }">
-        <div class="step-connector" v-if="index > 0"></div>
+      <template v-for="(step, index) in steps" :key="step.id || index">
+        <div class="step-arrow" v-if="index > 0">
+          <i class="pi pi-arrow-right"></i>
+        </div>
+        <div class="workflow-step"
+             draggable="true"
+             @dragstart="onDragStart($event, index)"
+             @dragover.prevent
+             @dragenter="onDragEnter($event, index)"
+             @dragleave="onDragLeave($event)"
+             @drop="onDrop($event, index)"
+             :class="{ 'drag-over': dragOverIndex === index }">
         
-        <div class="step-card" :class="'status-' + step.status">
-          <div class="step-header">
-            <div class="drag-handle" v-tooltip="'ลากเพื่อเรียงลำดับ'">
-              <i class="pi pi-bars"></i>
+          <div class="step-card" :class="'status-' + step.status">
+            <div class="step-header">
+              <div class="drag-handle" v-tooltip="'ลากเพื่อเรียงลำดับ'">
+                <i class="pi pi-bars"></i>
+              </div>
+              <div class="step-number">{{ index + 1 }}</div>
+              <div class="step-status-badge">
+                <i :class="getStatusIcon(step.status)"></i>
+                {{ getStatusLabel(step.status) }}
+              </div>
+              <div class="step-actions">
+                <Button icon="pi pi-pencil" @click="editStep(index)" text size="small" />
+                <Button icon="pi pi-trash" @click="deleteStep(index)" text severity="danger" size="small" />
+              </div>
             </div>
-            <div class="step-number">{{ index + 1 }}</div>
-            <div class="step-status-badge">
-              <i :class="getStatusIcon(step.status)"></i>
-              {{ getStatusLabel(step.status) }}
-            </div>
-            <div class="step-actions">
-              <Button icon="pi pi-pencil" @click="editStep(index)" text size="small" />
-              <Button icon="pi pi-trash" @click="deleteStep(index)" text severity="danger" size="small" />
-            </div>
-          </div>
 
-          <div class="step-content">
+            <div class="step-content">
             <h4>{{ step.step_name || 'ไม่มีชื่อ' }}</h4>
             <p v-if="step.description" class="step-description">{{ step.description }}</p>
             
@@ -53,7 +56,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </template>
     </div>
 
     <div v-else class="empty-workflow">
@@ -355,6 +358,15 @@ export default {
 
 .step-connector {
   display: none;
+}
+
+.step-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b82f6;
+  font-size: 1.25rem;
+  padding: 0 0.25rem;
 }
 
 .step-card {
