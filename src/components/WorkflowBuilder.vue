@@ -7,9 +7,6 @@
 
     <div class="workflow-timeline" v-if="steps.length > 0">
       <template v-for="(step, index) in steps" :key="step.id || index">
-        <div class="step-arrow" v-if="index > 0">
-          <i class="pi pi-arrow-right"></i>
-        </div>
         <div class="workflow-step"
              draggable="true"
              @dragstart="onDragStart($event, index)"
@@ -337,15 +334,21 @@ export default {
 .workflow-timeline {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.5rem;
   position: relative;
+  padding-left: 0.5rem;
 }
 
 .workflow-step {
   position: relative;
   flex: 0 0 auto;
-  width: 200px;
+  width: 180px;
   cursor: grab;
+  margin-left: 25px;
+}
+
+.workflow-step:first-child {
+  margin-left: 0;
 }
 
 .workflow-step:active {
@@ -365,9 +368,43 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.step-arrow i {
   color: #3b82f6;
-  font-size: 1.25rem;
-  padding: 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* ลูกศรติด block */
+.workflow-step {
+  position: relative;
+}
+
+.workflow-step:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid #3b82f6;
+}
+
+.workflow-step:not(:first-child)::after {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 3px;
+  background: #3b82f6;
 }
 
 .step-card {
