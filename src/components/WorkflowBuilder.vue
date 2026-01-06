@@ -6,11 +6,21 @@
     </div>
 
     <div class="workflow-timeline" v-if="steps.length > 0">
-      <div v-for="(step, index) in steps" :key="step.id || index" class="workflow-step">
+      <div v-for="(step, index) in steps" :key="step.id || index" class="workflow-step"
+           draggable="true"
+           @dragstart="onDragStart($event, index)"
+           @dragover.prevent
+           @dragenter="onDragEnter($event, index)"
+           @dragleave="onDragLeave($event)"
+           @drop="onDrop($event, index)"
+           :class="{ 'drag-over': dragOverIndex === index }">
         <div class="step-connector" v-if="index > 0"></div>
         
         <div class="step-card" :class="'status-' + step.status">
           <div class="step-header">
+            <div class="drag-handle" v-tooltip="'ลากเพื่อเรียงลำดับ'">
+              <i class="pi pi-bars"></i>
+            </div>
             <div class="step-number">{{ index + 1 }}</div>
             <div class="step-status-badge">
               <i :class="getStatusIcon(step.status)"></i>
@@ -126,6 +136,8 @@ export default {
       users: [],
       showStepDialog: false,
       editingIndex: null,
+      dragIndex: null,
+      dragOverIndex: null,
       currentStep: {
         step_name: '',
         description: '',
@@ -222,6 +234,32 @@ export default {
 
       this.$emit('update:modelValue', this.steps)
       this.showStepDialog = false
+    },
+    onDragStart(event, index) {
+      this.dragIndex = index
+      event.dataTransfer.effectAllowed = 'move'
+    },
+    onDragEnter(event, index) {
+      if (this.dragIndex !== index) {
+        this.dragOverIndex = index
+      }
+    },
+    onDragLeave() {
+      this.dragOverIndex = null
+    },
+    onDrop(event, index) {
+      event.preventDefault()
+      if (this.dragIndex !== null && this.dragIndex !== index) {
+        const item = this.steps.splice(this.dragIndex, 1)[0]
+        this.steps.splice(index, 0, item)
+        // Update step_order
+        this.steps.forEach((step, idx) => {
+          step.step_order = idx
+        })
+        this.$emit('update:modelValue', this.steps)
+      }
+      this.dragIndex = null
+      this.dragOverIndex = null
     },
     deleteStep(index) {
       this.$confirm.require({
@@ -337,6 +375,35 @@ export default {
 .step-card.status-on_hold {
   border-left-color: #6b7280;
   background: linear-gradient(to right, #f9fafb 0%, white 10%);
+}
+
+.workflow-step {
+  cursor: grab;
+}
+
+.workflow-step:active {
+  cursor: grabbing;
+}
+
+.workflow-step.drag-over .step-card {
+  border: 2px dashed #3b82f6;
+  background: #eff6ff;
+}
+
+.drag-handle {
+  cursor: grab;
+  padding: 0.5rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+}
+
+.drag-handle:hover {
+  color: #3b82f6;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
 }
 
 .step-header {
