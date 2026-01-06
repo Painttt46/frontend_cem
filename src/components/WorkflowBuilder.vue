@@ -6,6 +6,10 @@
     </div>
 
     <div class="workflow-timeline" ref="timeline" v-if="steps.length > 0">
+      <!-- เส้นเชื่อมระหว่างแถว -->
+      <div v-for="(conn, idx) in rowConnectors" :key="'conn-'+idx" 
+           class="row-connector" 
+           :style="conn"></div>
       <template v-for="(step, index) in steps" :key="step.id || index">
         <div class="workflow-step"
              :ref="el => stepRefs[index] = el"
@@ -143,6 +147,7 @@ export default {
       stepRefs: [],
       rowStarts: [],
       rowEnds: [],
+      rowConnectors: [],
       currentStep: {
         step_name: '',
         description: '',
@@ -191,7 +196,7 @@ export default {
   },
   methods: {
     calculateRows() {
-      if (!this.steps.length) return
+      if (!this.steps.length || !this.$refs.timeline) return
       const starts = [0]
       const ends = []
       let lastTop = null
@@ -205,8 +210,27 @@ export default {
         lastTop = top
       })
       if (this.steps.length > 0) ends.push(this.steps.length - 1)
+      
+      // คำนวณเส้นเชื่อมระหว่างแถว
+      const connectors = []
+      const timelineRect = this.$refs.timeline.getBoundingClientRect()
+      for (let i = 0; i < ends.length - 1; i++) {
+        const endEl = this.stepRefs[ends[i]]
+        const startEl = this.stepRefs[starts[i + 1]]
+        if (endEl && startEl) {
+          const endRect = endEl.getBoundingClientRect()
+          const startRect = startEl.getBoundingClientRect()
+          connectors.push({
+            left: (startRect.left - timelineRect.left + 27) + 'px',
+            top: (endRect.bottom - timelineRect.top + 2) + 'px',
+            width: (endRect.right - startRect.left - 27 + 25) + 'px'
+          })
+        }
+      }
+      
       if (JSON.stringify(starts) !== JSON.stringify(this.rowStarts)) this.rowStarts = starts
       if (JSON.stringify(ends) !== JSON.stringify(this.rowEnds)) this.rowEnds = ends
+      if (JSON.stringify(connectors) !== JSON.stringify(this.rowConnectors)) this.rowConnectors = connectors
     },
     getEmptyStep() {
       return {
@@ -372,9 +396,9 @@ export default {
 .workflow-timeline {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1.5rem 0.5rem;
   position: relative;
-  padding-left: 0.5rem;
+  padding: 0.5rem;
 }
 
 .workflow-step {
@@ -447,32 +471,30 @@ export default {
 
 /* ลูกศรชี้ลงสำหรับ step แรกของแถวใหม่ */
 .workflow-step.row-start:not(:first-child)::before {
-  left: -35px;
-  top: -15px;
+  left: 20px;
+  top: -12px;
   transform: none;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 10px solid #3b82f6;
+  border-bottom: none;
 }
 
 .workflow-step.row-start:not(:first-child)::after {
-  left: -28px;
-  top: -45px;
+  left: 24px;
+  top: -30px;
   width: 3px;
-  height: 32px;
+  height: 20px;
 }
 
 /* เส้นต่อจาก row-end ไปขึ้นบน */
-.workflow-step.row-end:not(:last-child)::marker {
-  display: none;
-}
-
 .workflow-step.row-end:not(:last-child) .step-card::after {
   content: '';
   position: absolute;
-  right: -30px;
+  right: -25px;
   top: 50%;
-  width: 30px;
+  transform: translateY(-50%);
+  width: 25px;
   height: 3px;
   background: #3b82f6;
 }
@@ -480,10 +502,21 @@ export default {
 .workflow-step.row-end:not(:last-child) .step-card::before {
   content: '';
   position: absolute;
-  right: -30px;
+  right: -25px;
   top: 50%;
   width: 3px;
-  height: calc(100% + 15px);
+  height: calc(50% + 22px);
+  background: #3b82f6;
+}
+
+/* เส้นแนวนอนบนสุดเชื่อม row-end กับ row-start */
+.workflow-timeline::before {
+  display: none;
+}
+
+.row-connector {
+  position: absolute;
+  height: 3px;
   background: #3b82f6;
 }
 
