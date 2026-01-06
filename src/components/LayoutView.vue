@@ -51,7 +51,7 @@
         </div>
       </Dialog>
 
-      <div v-show="sidebarVisible" class="sidebar-column bg-light p-0">
+      <div v-show="sidebarVisible" class="col-3 col-sm-3 col-md-2 col-lg-2 col-xl-2 bg-light p-0 sidebar-column">
         <div class="p-4 sidebar-container" style="height: 100%; padding-top: 0px !important">
           <div class="logo-section">
             <img src="@/assets/images/NGENT.png" alt="GENT Logo" style="max-width: 150px; height: auto;" />
@@ -127,7 +127,7 @@
         </div>
       </div>
 
-      <div :class="mainContentClass" class="main-column">
+      <div :class="mainContentClass" style="height: 100%; padding: 0; overflow: hidden;">
         <div class="pt-1 pb-3 container-fluid h-100 content-padding">
           <div class="main-content-wrapper">
             <ScrollPanel style="
@@ -179,11 +179,8 @@ const updateIsMobile = () => {
 };
 
 const mainContentClass = computed(() => {
-  if (isMobile.value) {
-    return 'col-12';
-  }
   return sidebarVisible.value
-    ? 'col-10'
+    ? 'col-9 col-sm-9 col-md-10 col-lg-10 col-xl-10'
     : 'col-12';
 });
 
@@ -310,7 +307,8 @@ const startCountdown = () => {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  left: 0.5rem;
+  right: var(--toggle-btn-right);
+  left: var(--toggle-btn-left);
   z-index: 1001;
   background: linear-gradient(135deg, #4A90E2, #D73527) !important;
   color: white !important;
@@ -324,12 +322,17 @@ const startCountdown = () => {
   align-items: center !important;
   justify-content: center !important;
   opacity: 0.3;
-  transition: opacity 0.3s ease, left 0.3s ease !important;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease !important;
 }
 
 .sidebar-toggle-btn:hover {
   opacity: 1;
   box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+}
+
+
+.sidebar-hidden .sidebar-toggle-btn {
+  right: auto;
 }
 
 .main-content-wrapper {
@@ -339,22 +342,8 @@ const startCountdown = () => {
   margin: 0;
 }
 
-/* Sidebar styling */
 .sidebar-column {
-  width: 200px;
-  min-width: 200px;
-  height: 100%;
-  overflow: hidden;
   transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.main-column {
-  height: 100%;
-  padding: 0;
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
 }
 
 .sidebar-container {
@@ -365,18 +354,13 @@ const startCountdown = () => {
 
 .logo-section {
   text-align: center;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
   border-bottom: 1px solid #e9ecef;
   margin-bottom: 1rem;
 }
 
-.logo-section img {
-  max-width: 120px;
-  height: auto;
-}
-
 .datetime-section {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .datetime-display {
@@ -384,11 +368,11 @@ const startCountdown = () => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 500;
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
-  padding: 0.5rem;
+  padding: 0.75rem;
   border-radius: 10px;
   margin: 0 0.5rem;
   box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
@@ -397,28 +381,12 @@ const startCountdown = () => {
 .nav-menu {
   flex: 1;
   overflow-y: auto;
-  padding: 0;
-  margin: 0;
-  list-style: none;
 }
 
-.nav-item {
-  margin: 0.25rem 0;
-}
-
-.nav-item h5 {
-  font-size: 0.85rem;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.nav-item i {
-  font-size: 1rem !important;
-}
-
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   color: black !important;
 }
 
@@ -426,7 +394,9 @@ h1, h2, h3, h4 {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white !important;
   border-radius: 8px;
+  border-radius: 5px;
   padding: 2px;
+  font-size: 20px;
 }
 
 .setting-button:hover {
@@ -439,69 +409,56 @@ h1, h2, h3, h4 {
 }
 
 .content-padding {
-  padding-right: 0.5rem;
-  padding-left: 0.5rem;
+  padding-right: 0;
+  padding-left: 1rem;
 }
 
-/* Desktop */
-@media (min-width: 769px) {
-  .sidebar-toggle-btn {
-    left: 210px;
+/* Responsive - ทุก device ที่หน้าจอเล็ก */
+@media (max-width: 768px) {
+  .content-padding {
+    padding-right: 1.3rem;
+    padding-left: 0.3rem;
   }
   
-  .sidebar-hidden .sidebar-toggle-btn {
-    left: 0.5rem;
+  .sidebar-toggle-btn {
+    top: 50%;
+    transform: translateY(-50%);
   }
-}
 
-/* Mobile */
-@media (max-width: 768px) {
+  :root {
+    --toggle-btn-right: 0.5rem;
+    --toggle-btn-left: auto;
+  }
+
+  .sidebar-hidden {
+    --toggle-btn-right: auto;
+    --toggle-btn-left: 0.5rem;
+  }
+
   .sidebar-column {
     position: fixed;
     top: 0;
     left: 0;
-    width: 85vw !important;
-    max-width: 300px;
-    height: 100vh !important;
-    z-index: 1000;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
-    background: #f8f9fa;
+    height: 100vh;
+    width: 100%;
+    z-index: 999;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    transform: translateX(0);
+    transition: transform 0.3s ease;
   }
-  
+
+  .main-content-wrapper {
+    padding: 0 0.5rem;
+    margin-left: 0;
+    margin-right: 0;
+    width: calc(100% + 3.3rem);
+  }
+}
+
+/* ซ่อน sidebar เมื่อหน้าจอเล็ก */
+@media (max-width: 768px) {
   .sidebar-hidden .sidebar-column {
     transform: translateX(-100%);
-  }
-  
-  .sidebar-toggle-btn {
-    left: 0.5rem;
-    z-index: 1002;
-  }
-  
-  .logo-section img {
-    max-width: 100px;
-  }
-  
-  .datetime-display {
-    font-size: 0.65rem;
-    padding: 0.4rem;
-  }
-  
-  .nav-item h5 {
-    font-size: 0.9rem;
-  }
-  
-  .nav-item i {
-    font-size: 1.1rem !important;
-  }
-  
-  .content-padding {
-    padding-right: 0.5rem;
-    padding-left: 0.5rem;
-  }
-  
-  .main-content-wrapper {
-    width: 100%;
-    padding: 0;
   }
 }
 
