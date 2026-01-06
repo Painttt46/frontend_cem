@@ -58,6 +58,15 @@
           </template>
         </Column>
 
+        <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 120px;">
+          <template #body="slotProps">
+            <span v-if="slotProps.data.step_name" class="step-badge">
+              <i class="pi pi-sitemap"></i> {{ slotProps.data.step_name }}
+            </span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </Column>
+
         <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
@@ -762,6 +771,26 @@ export default {
   margin: 0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.step-badge i {
+  font-size: 0.75rem;
+}
+
+.text-muted {
+  color: #9ca3af;
 }
 
 .badge-container {

@@ -12,10 +12,16 @@
                 filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO" :filterFields="['task_name', 'so_number', 'display']" />
             </div>
 
+            <div class="input-group" v-if="workflowSteps.length > 0">
+              <label for="stepId" class="input-label">เลือก Workflow Step</label>
+              <Dropdown id="stepId" v-model="formData.stepId" :options="workflowSteps" optionLabel="step_name" optionValue="id"
+                class="corporate-dropdown" placeholder="เลือก step (ถ้ามี)" showClear />
+            </div>
+
             <div class="input-group">
               <label for="workDate" class="input-label">วันที่ลงงาน *</label>
               <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="corporate-input"
-                required />
+                :minDate="minDate" required />
             </div>
 
             <div class="input-group">
@@ -202,8 +208,11 @@ export default {
   data() {
     return {
       tasks: [],
+      workflowSteps: [],
+      minDate: new Date(),
       formData: {
         taskId: null,
+        stepId: null,
         workDate: new Date(),
         startTime: new Date(),
         endTime: null,
@@ -373,8 +382,17 @@ export default {
         return []
       }
     },
-    onTaskChange() {
-      // Task changed
+    async onTaskChange() {
+      this.workflowSteps = []
+      this.formData.stepId = null
+      if (this.formData.taskId) {
+        try {
+          const response = await axios.get(`/api/task-steps/task/${this.formData.taskId}`)
+          this.workflowSteps = response.data || []
+        } catch (error) {
+          console.error('Error loading workflow steps:', error)
+        }
+      }
     },
     async submitForm() {
       if (!isRequired(this.formData.taskId)) {
@@ -412,6 +430,7 @@ export default {
 
         const workData = {
           task_id: this.formData.taskId,
+          step_id: this.formData.stepId || null,
           work_date: this.formatDate(this.formData.workDate),
           start_time: this.formatTime(this.formData.startTime),
           end_time: this.formatTime(this.formData.endTime),
@@ -483,14 +502,20 @@ export default {
     resetForm() {
       this.formData = {
         taskId: null,
+        stepId: null,
         workDate: new Date(),
         startTime: new Date(),
         endTime: null,
         workStatus: null,
         location: '',
         workDescription: '',
-        files: []
+        files: [],
+        createCalendarEvent: true,
+        attendees: [],
+        createTeamsMeeting: false,
+        eventDetails: ''
       }
+      this.workflowSteps = []
       const fileInput = document.getElementById('fileUpload')
       if (fileInput) fileInput.value = ''
     },
