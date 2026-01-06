@@ -5,7 +5,7 @@ import store from '@/store'
 // Configure axios defaults
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
-axios.defaults.timeout = 30000 // 30 seconds
+axios.defaults.timeout = 60000 // 30 seconds
 
 // Request interceptor
 axios.interceptors.request.use(
