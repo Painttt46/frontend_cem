@@ -17,7 +17,7 @@
                 <i class="pi pi-sitemap"></i> เลือก Workflow Step
               </label>
               <Dropdown id="stepId" v-model="formData.stepId" :options="workflowSteps" optionLabel="step_name" optionValue="id"
-                class="corporate-dropdown" placeholder="เลือก step (ถ้ามี)" showClear filter filterPlaceholder="ค้นหาชื่อ step...">
+                class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)" showClear filter filterPlaceholder="ค้นหาชื่อ step...">
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="selected-step">
                     <span class="step-number">{{ getStepNumber(slotProps.value) }}</span>
@@ -45,24 +45,6 @@
                   </div>
                 </template>
               </Dropdown>
-              
-              <!-- แสดง Workflow Timeline -->
-              <div v-if="workflowSteps.length > 1" class="workflow-preview">
-                <div class="workflow-steps-list">
-                  <div v-for="(step, index) in workflowSteps" :key="step.id" 
-                       class="workflow-step-item"
-                       :class="{ 'active': formData.stepId === step.id }">
-                    <div class="step-indicator">
-                      <div class="step-circle">{{ index + 1 }}</div>
-                      <div v-if="index < workflowSteps.length - 1" class="step-line"></div>
-                    </div>
-                    <div class="step-content-preview">
-                      <div class="step-title">{{ step.step_name }}</div>
-                      <div v-if="step.description" class="step-subtitle">{{ step.description }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div class="input-group">
@@ -696,6 +678,11 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding-right: 2rem;
+}
+
+.workflow-dropdown :deep(.p-dropdown-clear-icon) {
+  right: 2.5rem;
 }
 
 .step-number {
