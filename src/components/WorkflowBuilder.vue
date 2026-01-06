@@ -36,21 +36,22 @@
             </div>
 
             <div class="step-content">
-            <h4>{{ step.step_name || 'ไม่มีชื่อ' }}</h4>
-            <p v-if="step.description" class="step-description">{{ step.description }}</p>
-            
-            <div class="step-info">
-              <div class="info-item" v-if="step.start_date || step.end_date">
-                <i class="pi pi-calendar"></i>
-                <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
-              </div>
+              <h4>{{ step.step_name || 'ไม่มีชื่อ' }}</h4>
+              <p v-if="step.description" class="step-description">{{ step.description }}</p>
               
-              <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
-                <i class="pi pi-users"></i>
-                <div class="assigned-users">
-                  <span v-for="(user, idx) in step.assigned_users" :key="idx" class="user-badge">
-                    {{ typeof user === 'object' ? user.name : user }}
-                  </span>
+              <div class="step-info">
+                <div class="info-item" v-if="step.start_date || step.end_date">
+                  <i class="pi pi-calendar"></i>
+                  <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
+                </div>
+                
+                <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
+                  <i class="pi pi-users"></i>
+                  <div class="assigned-users">
+                    <span v-for="(user, idx) in step.assigned_users" :key="idx" class="user-badge">
+                      {{ typeof user === 'object' ? user.name : user }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
