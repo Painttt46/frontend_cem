@@ -331,34 +331,44 @@ export default {
 }
 
 .workflow-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   position: relative;
 }
 
 .workflow-step {
   position: relative;
-  margin-bottom: 1.5rem;
+  flex: 0 0 auto;
+  width: 200px;
+  cursor: grab;
+}
+
+.workflow-step:active {
+  cursor: grabbing;
+}
+
+.workflow-step.drag-over .step-card {
+  border: 2px dashed #3b82f6;
+  background: #eff6ff;
 }
 
 .step-connector {
-  position: absolute;
-  left: 24px;
-  top: -1.5rem;
-  width: 3px;
-  height: 1.5rem;
-  background: linear-gradient(to bottom, #3b82f6, #60a5fa);
+  display: none;
 }
 
 .step-card {
   background: white;
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-radius: 10px;
+  padding: 0.75rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border-left: 4px solid #3b82f6;
+  border-left: 3px solid #3b82f6;
   transition: all 0.3s ease;
+  height: 100%;
 }
 
 .step-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   transform: translateY(-2px);
 }
 
@@ -377,22 +387,9 @@ export default {
   background: linear-gradient(to right, #f9fafb 0%, white 10%);
 }
 
-.workflow-step {
-  cursor: grab;
-}
-
-.workflow-step:active {
-  cursor: grabbing;
-}
-
-.workflow-step.drag-over .step-card {
-  border: 2px dashed #3b82f6;
-  background: #eff6ff;
-}
-
 .drag-handle {
   cursor: grab;
-  padding: 0.5rem;
+  padding: 0.25rem;
   color: #9ca3af;
   display: flex;
   align-items: center;
@@ -409,13 +406,13 @@ export default {
 .step-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .step-number {
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
@@ -423,8 +420,8 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  font-size: 0.85rem;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .status-completed .step-number {
@@ -440,54 +437,37 @@ export default {
 }
 
 .step-status-badge {
-  padding: 0.375rem 0.75rem;
-  border-radius: 20px;
-  background: #eff6ff;
-  color: #3b82f6;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-}
-
-.status-completed .step-status-badge {
-  background: #f0fdf4;
-  color: #10b981;
-}
-
-.status-in_progress .step-status-badge {
-  background: #fffbeb;
-  color: #f59e0b;
-}
-
-.status-on_hold .step-status-badge {
-  background: #f9fafb;
-  color: #6b7280;
+  display: none;
 }
 
 .step-actions {
   margin-left: auto;
   display: flex;
-  gap: 0.25rem;
+  gap: 0.1rem;
 }
 
 .step-content h4 {
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
   color: #1e293b;
-  font-size: 1.125rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .step-description {
   color: #64748b;
-  margin: 0 0 1rem 0;
-  line-height: 1.5;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .step-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  display: none;
 }
 
 .info-item {
@@ -495,31 +475,32 @@ export default {
   align-items: center;
   gap: 0.5rem;
   color: #475569;
-  font-size: 0.875rem;
+  font-size: 0.75rem;
 }
 
 .info-item i {
   color: #94a3b8;
+  font-size: 0.7rem;
 }
 
 .assigned-users {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .user-badge {
   background: #3b82f6;
   color: #fff;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
   font-weight: 500;
 }
 
 .empty-workflow {
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 2rem 1rem;
   color: #94a3b8;
 }
 
