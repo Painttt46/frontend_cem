@@ -436,15 +436,21 @@ h4 {
   }
 
   .sidebar-column {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
-    width: 100%;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
     z-index: 999;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     transform: translateX(0);
     transition: transform 0.3s ease;
+    overflow-y: auto !important;
+  }
+
+  .sidebar-container {
+    min-height: 100% !important;
+    padding-bottom: 100px !important;
   }
 
   .main-content-wrapper {
