@@ -455,7 +455,7 @@ h4 {
 
   .main-content-wrapper {
     padding: 0;
-    margin-left: 0;
+    margin-left: 0.3rem;
     margin-right: 0;
     width: 100%;
   }
