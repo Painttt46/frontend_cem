@@ -190,14 +190,16 @@ export default {
     this.loadUsers()
     this.resizeObserver = new ResizeObserver(() => this.calculateRows())
     if (this.$refs.timeline) this.resizeObserver.observe(this.$refs.timeline)
+    window.addEventListener('resize', this.calculateRows)
   },
   beforeUnmount() {
     if (this.resizeObserver) this.resizeObserver.disconnect()
+    window.removeEventListener('resize', this.calculateRows)
   },
   methods: {
     calculateRows() {
       if (!this.steps.length || !this.$refs.timeline) return
-      const starts = [0]
+      const starts = []
       const ends = []
       let lastTop = null
       this.stepRefs.forEach((el, idx) => {
@@ -214,16 +216,16 @@ export default {
       // คำนวณเส้นเชื่อมระหว่างแถว
       const connectors = []
       const timelineRect = this.$refs.timeline.getBoundingClientRect()
-      for (let i = 0; i < ends.length - 1; i++) {
+      for (let i = 0; i < starts.length; i++) {
         const endEl = this.stepRefs[ends[i]]
-        const startEl = this.stepRefs[starts[i + 1]]
+        const startEl = this.stepRefs[starts[i]]
         if (endEl && startEl) {
           const endRect = endEl.getBoundingClientRect()
           const startRect = startEl.getBoundingClientRect()
           connectors.push({
             left: (startRect.left - timelineRect.left + 27) + 'px',
             top: (endRect.bottom - timelineRect.top + 2) + 'px',
-            width: (endRect.right - startRect.left - 27 + 25) + 'px'
+            width: (endRect.right - startRect.left - 5) + 'px'
           })
         }
       }
@@ -440,61 +442,57 @@ export default {
   font-weight: bold;
 }
 
-/* ลูกศรติด block */
-.workflow-step {
-  position: relative;
-}
-
-.workflow-step:not(:first-child)::before {
+/* ลูกศรติด block - ลูกศรปกติชี้ขวา */
+.workflow-step:not(:first-child):not(.row-start)::before {
   content: '';
   position: absolute;
-  left: -20px;
+  left: -18px;
   top: 50%;
   transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-left: 10px solid #3b82f6;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 9px solid #3b82f6;
 }
 
-.workflow-step:not(:first-child)::after {
+.workflow-step:not(:first-child):not(.row-start)::after {
   content: '';
   position: absolute;
-  left: -30px;
+  left: -27px;
   top: 50%;
   transform: translateY(-50%);
-  width: 12px;
+  width: 10px;
   height: 3px;
   background: #3b82f6;
 }
 
 /* ลูกศรชี้ลงสำหรับ step แรกของแถวใหม่ */
-.workflow-step.row-start:not(:first-child)::before {
+.workflow-step.row-start::before {
+  content: '';
+  position: absolute;
   left: 20px;
-  top: -12px;
-  transform: none;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 10px solid #3b82f6;
-  border-bottom: none;
+  top: -10px;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid #3b82f6;
 }
 
-.workflow-step.row-start:not(:first-child)::after {
+.workflow-step.row-start::after {
+  content: '';
+  position: absolute;
   left: 24px;
-  top: -30px;
+  top: -25px;
   width: 3px;
-  height: 20px;
+  height: 16px;
+  background: #3b82f6;
 }
 
-/* เส้นต่อจาก row-end ไปขึ้นบน */
+/* เส้นต่อจาก row-end ลงล่าง */
 .workflow-step.row-end:not(:last-child) .step-card::after {
   content: '';
   position: absolute;
-  right: -25px;
+  right: -20px;
   top: 50%;
-  transform: translateY(-50%);
-  width: 25px;
+  width: 20px;
   height: 3px;
   background: #3b82f6;
 }
@@ -502,10 +500,10 @@ export default {
 .workflow-step.row-end:not(:last-child) .step-card::before {
   content: '';
   position: absolute;
-  right: -25px;
+  right: -20px;
   top: 50%;
   width: 3px;
-  height: calc(50% + 22px);
+  height: calc(50% + 18px);
   background: #3b82f6;
 }
 
