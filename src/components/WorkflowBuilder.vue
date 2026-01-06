@@ -161,17 +161,6 @@ export default {
         this.steps = val || []
       }
     },
-    steps: {
-      handler() {
-        this.$nextTick(() => {
-          if (this.$refs.timeline && this.resizeObserver) {
-            this.resizeObserver.disconnect()
-            this.resizeObserver.observe(this.$refs.timeline)
-          }
-          this.calculateRows()
-        })
-      }
-    },
     taskId: {
       immediate: true,
       handler(val) {
@@ -183,30 +172,30 @@ export default {
   },
   mounted() {
     this.loadUsers()
-    this.resizeObserver = new ResizeObserver(() => this.calculateRows())
-    if (this.$refs.timeline) this.resizeObserver.observe(this.$refs.timeline)
+    window.addEventListener('resize', this.calculateRows)
   },
   beforeUnmount() {
-    if (this.resizeObserver) this.resizeObserver.disconnect()
+    window.removeEventListener('resize', this.calculateRows)
+  },
+  updated() {
+    this.$nextTick(() => this.calculateRows())
   },
   methods: {
     calculateRows() {
       if (!this.steps.length) return
-      const starts = [0]
-      const ends = []
+      this.rowStarts = [0]
+      this.rowEnds = []
       let lastTop = null
       this.stepRefs.forEach((el, idx) => {
         if (!el) return
         const top = el.getBoundingClientRect().top
         if (lastTop !== null && top > lastTop + 10) {
-          starts.push(idx)
-          ends.push(idx - 1)
+          this.rowStarts.push(idx)
+          this.rowEnds.push(idx - 1)
         }
         lastTop = top
       })
-      if (this.steps.length > 0) ends.push(this.steps.length - 1)
-      if (JSON.stringify(starts) !== JSON.stringify(this.rowStarts)) this.rowStarts = starts
-      if (JSON.stringify(ends) !== JSON.stringify(this.rowEnds)) this.rowEnds = ends
+      if (this.steps.length > 0) this.rowEnds.push(this.steps.length - 1)
     },
     getEmptyStep() {
       return {
