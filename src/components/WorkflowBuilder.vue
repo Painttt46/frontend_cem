@@ -342,7 +342,6 @@ export default {
 .workflow-step {
   position: relative;
   flex: 0 0 auto;
-  width: 180px;
   cursor: grab;
   margin-left: 25px;
 }
@@ -414,7 +413,7 @@ export default {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   border-left: 3px solid #3b82f6;
   transition: all 0.3s ease;
-  height: 100%;
+  min-height: fit-content;
 }
 
 .step-card:hover {
@@ -500,9 +499,7 @@ export default {
   margin: 0 0 0.25rem 0;
   color: #1e293b;
   font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-wrap: break-word;
 }
 
 .step-description {
@@ -510,10 +507,7 @@ export default {
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  word-wrap: break-word;
 }
 
 .step-info {
