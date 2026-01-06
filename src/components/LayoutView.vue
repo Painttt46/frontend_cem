@@ -457,7 +457,7 @@ h4 {
     padding: 0;
     margin-left: 0;
     margin-right: 0;
-    width: calc(100% + 2.3rem);
+    width: calc(100% + 2.4rem);
   }
 }
 
