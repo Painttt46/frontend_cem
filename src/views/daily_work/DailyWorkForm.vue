@@ -153,7 +153,7 @@
                 placeholder="หัวข้อ calendar event" required />
             </div>
 
- <div class="input-group">
+ <div class="input-group attendees-section">
               <label for="attendees" class="input-label">
                 <i class="pi pi-users"></i>
                 เชิญผู้เข้าร่วม
@@ -1297,6 +1297,10 @@ export default {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   outline: none;
+}
+
+.attendees-section {
+  margin-top: 2rem;
 }
 
 .input-group-row {
