@@ -19,7 +19,7 @@
              @dragenter="onDragEnter($event, index)"
              @dragleave="onDragLeave($event)"
              @drop="onDrop($event, index)"
-             :class="{ 'drag-over': dragOverIndex === index, 'row-start': rowStarts.includes(index), 'row-end': rowEnds.includes(index) }">
+             :class="{ 'drag-over': dragOverIndex === index, 'row-start': rowStarts.includes(index), 'row-end': rowEnds.includes(index), 'first-row': isFirstRow(index) }">
         
           <div class="step-card" :class="'status-' + step.status">
             <div class="step-header">
@@ -197,6 +197,10 @@ export default {
     window.removeEventListener('resize', this.calculateRows)
   },
   methods: {
+    isFirstRow(index) {
+      if (!this.rowStarts.length) return index === 0
+      return index < this.rowStarts[0]
+    },
     calculateRows() {
       if (!this.steps.length || !this.$refs.timeline) return
       const starts = []
@@ -222,10 +226,13 @@ export default {
         if (endEl && startEl) {
           const endRect = endEl.getBoundingClientRect()
           const startRect = startEl.getBoundingClientRect()
+          const leftPos = startRect.left - timelineRect.left + 27
+          const topPos = endRect.bottom - timelineRect.top + 2
+          const widthVal = endRect.right - startRect.left - 22
           connectors.push({
-            left: (startRect.left - timelineRect.left + 27) + 'px',
-            top: (endRect.bottom - timelineRect.top + 2) + 'px',
-            width: (endRect.right - startRect.left - 5) + 'px'
+            left: leftPos + 'px',
+            top: topPos + 'px',
+            width: widthVal + 'px'
           })
         }
       }
@@ -406,7 +413,8 @@ export default {
 .workflow-step {
   position: relative;
   flex: 0 0 auto;
-  width: 180px;
+  min-width: 120px;
+  max-width: 250px;
   cursor: grab;
   margin-left: 25px;
 }
@@ -443,7 +451,7 @@ export default {
 }
 
 /* ลูกศรติด block - ลูกศรปกติชี้ขวา */
-.workflow-step:not(:first-child):not(.row-start)::before {
+.workflow-step:not(:first-child):not(.row-start):not(.first-row)::before {
   content: '';
   position: absolute;
   left: -18px;
@@ -454,7 +462,7 @@ export default {
   border-left: 9px solid #3b82f6;
 }
 
-.workflow-step:not(:first-child):not(.row-start)::after {
+.workflow-step:not(:first-child):not(.row-start):not(.first-row)::after {
   content: '';
   position: absolute;
   left: -27px;
@@ -490,9 +498,9 @@ export default {
 .workflow-step.row-end:not(:last-child) .step-card::after {
   content: '';
   position: absolute;
-  right: -20px;
+  right: -15px;
   top: 50%;
-  width: 20px;
+  width: 15px;
   height: 3px;
   background: #3b82f6;
 }
@@ -500,10 +508,10 @@ export default {
 .workflow-step.row-end:not(:last-child) .step-card::before {
   content: '';
   position: absolute;
-  right: -20px;
+  right: -15px;
   top: 50%;
   width: 3px;
-  height: calc(50% + 18px);
+  height: calc(50% + 20px);
   background: #3b82f6;
 }
 
@@ -612,9 +620,6 @@ export default {
   margin: 0 0 0.25rem 0;
   color: #1e293b;
   font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .step-description {
