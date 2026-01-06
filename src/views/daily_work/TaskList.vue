@@ -201,7 +201,7 @@
       <div class="works-summary">
         <div class="summary-item">
           <i class="pi pi-calendar"></i>
-          <span>ทั้งหมด: <strong>{{ taskWorks.length }}</strong> รายการ</span>
+          <span>ทั้งหมด: <strong>{{ getActiveWorksCount() }}</strong> รายการ</span>
         </div>
         <div class="summary-item">
           <i class="pi pi-clock"></i>
@@ -231,6 +231,7 @@
               <th>ID</th>
               <th>วันที่</th>
               <th>ผู้ปฏิบัติงาน</th>
+              <th>ขั้นตอน</th>
               <th>เวลา</th>
               <th>ชั่วโมง</th>
               <th>สถานะ</th>
@@ -248,6 +249,12 @@
                 <span class="clickable-name" @click="showUserInfo(work.employee_name, work.user_id)">
                   {{ work.employee_name || 'ไม่ระบุ' }}
                 </span>
+              </td>
+              <td>
+                <span v-if="work.step_name" class="step-badge-small">
+                  <i class="pi pi-sitemap"></i> {{ work.step_name }}
+                </span>
+                <span v-else class="text-muted">-</span>
               </td>
               <td>{{ work.start_time }} - {{ work.end_time }}</td>
               <td class="text-center">{{ formatHoursMinutes(work.total_hours) }}</td>
@@ -933,9 +940,15 @@ export default {
         return date
       }
     },
+    getActiveWorksCount() {
+      if (!this.taskWorks || this.taskWorks.length === 0) return 0
+      return this.taskWorks.filter(work => work.work_status !== 'cancelled').length
+    },
     getTotalHours() {
       if (!this.taskWorks || this.taskWorks.length === 0) return '0 ชม. 0 นาที'
-      const total = this.taskWorks.reduce((sum, work) => sum + (parseFloat(work.total_hours) || 0), 0)
+      const total = this.taskWorks
+        .filter(work => work.work_status !== 'cancelled')
+        .reduce((sum, work) => sum + (parseFloat(work.total_hours) || 0), 0)
       const hours = Math.floor(total)
       const minutes = Math.round((total - hours) * 60)
       return `${hours} ชม. ${minutes} นาที`
@@ -1410,6 +1423,22 @@ export default {
 
 .works-table .text-center {
   text-align: center;
+}
+
+.step-badge-small {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.step-badge-small i {
+  font-size: 0.75rem;
 }
 
 .files-list {
