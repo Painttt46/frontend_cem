@@ -415,8 +415,14 @@ export default {
     async cancelRecord(record) {
       try {
         await this.$http.put(`/api/daily-work/${record.id}`, {
-          ...record,
-          work_status: 'cancelled'
+          step_id: record.step_id,
+          work_date: record.work_date,
+          start_time: record.start_time,
+          end_time: record.end_time,
+          work_status: 'cancelled',
+          location: record.location,
+          work_description: record.work_description,
+          files: record.files
         })
         this.$toast.add({
           severity: 'success',

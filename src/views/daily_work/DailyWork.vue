@@ -1,7 +1,6 @@
 <template>
   <div class="daily-work-container">
     <Toast />
-    <ConfirmDialog />
     
     <Card class="header-card">
       <template #header>

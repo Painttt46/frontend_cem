@@ -13,9 +13,56 @@
             </div>
 
             <div class="input-group" v-if="workflowSteps.length > 0">
-              <label for="stepId" class="input-label">เลือก Workflow Step</label>
+              <label for="stepId" class="input-label">
+                <i class="pi pi-sitemap"></i> เลือก Workflow Step
+              </label>
               <Dropdown id="stepId" v-model="formData.stepId" :options="workflowSteps" optionLabel="step_name" optionValue="id"
-                class="corporate-dropdown" placeholder="เลือก step (ถ้ามี)" showClear />
+                class="corporate-dropdown" placeholder="เลือก step (ถ้ามี)" showClear filter filterPlaceholder="ค้นหาชื่อ step...">
+                <template #value="slotProps">
+                  <div v-if="slotProps.value" class="selected-step">
+                    <span class="step-number">{{ getStepNumber(slotProps.value) }}</span>
+                    <span>{{ getStepName(slotProps.value) }}</span>
+                  </div>
+                  <span v-else>เลือก step (ถ้ามี)</span>
+                </template>
+                <template #option="slotProps">
+                  <div class="step-option">
+                    <div class="step-header-option">
+                      <span class="step-badge">{{ slotProps.index + 1 }}</span>
+                      <strong>{{ slotProps.option.step_name }}</strong>
+                    </div>
+                    <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
+                    <div class="step-meta">
+                      <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">
+                        <i class="pi pi-calendar"></i>
+                        {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
+                      </span>
+                      <span v-if="slotProps.option.status" class="meta-item status">
+                        <i class="pi pi-circle-fill"></i>
+                        {{ slotProps.option.status }}
+                      </span>
+                    </div>
+                  </div>
+                </template>
+              </Dropdown>
+              
+              <!-- แสดง Workflow Timeline -->
+              <div v-if="workflowSteps.length > 1" class="workflow-preview">
+                <div class="workflow-steps-list">
+                  <div v-for="(step, index) in workflowSteps" :key="step.id" 
+                       class="workflow-step-item"
+                       :class="{ 'active': formData.stepId === step.id }">
+                    <div class="step-indicator">
+                      <div class="step-circle">{{ index + 1 }}</div>
+                      <div v-if="index < workflowSteps.length - 1" class="step-line"></div>
+                    </div>
+                    <div class="step-content-preview">
+                      <div class="step-title">{{ step.step_name }}</div>
+                      <div v-if="step.description" class="step-subtitle">{{ step.description }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="input-group">
@@ -27,13 +74,13 @@
             <div class="input-group">
               <label for="startTime" class="input-label">เวลาเริ่มงาน *</label>
               <Calendar id="startTime" v-model="formData.startTime" timeOnly hourFormat="24" class="corporate-input"
-                required />
+                :manualInput="true" required />
             </div>
 
             <div class="input-group">
               <label for="endTime" class="input-label">เวลาสิ้นสุดงาน *</label>
               <Calendar id="endTime" v-model="formData.endTime" timeOnly hourFormat="24" class="corporate-input"
-                required />
+                :manualInput="true" required />
             </div>
 
             <div class="input-group">
@@ -96,6 +143,36 @@
                 สร้าง Calendar Event ใน Microsoft Teams
               </label>
             </div>
+
+            <div class="input-group full-width">
+              <label for="eventTitle" class="input-label">
+                <i class="pi pi-bookmark"></i>
+                หัวข้อ Calendar Event *
+              </label>
+              <InputText id="eventTitle" v-model="formData.eventTitle" class="corporate-input"
+                placeholder="หัวข้อ calendar event" required />
+            </div>
+
+            <div class="input-group-row">
+              <div class="input-group">
+                <label for="meetingStartTime" class="input-label">
+                  <i class="pi pi-clock"></i>
+                  เวลาเริ่ม Meeting
+                </label>
+                <Calendar id="meetingStartTime" v-model="formData.meetingStartTime" timeOnly hourFormat="24" 
+                  class="corporate-input" :manualInput="true" />
+              </div>
+
+              <div class="input-group">
+                <label for="meetingEndTime" class="input-label">
+                  <i class="pi pi-clock"></i>
+                  เวลาสิ้นสุด Meeting
+                </label>
+                <Calendar id="meetingEndTime" v-model="formData.meetingEndTime" timeOnly hourFormat="24" 
+                  class="corporate-input" :manualInput="true" />
+              </div>
+            </div>
+
  <div class="input-group">
               <label for="attendees" class="input-label">
                 <i class="pi pi-users"></i>
@@ -221,6 +298,9 @@ export default {
         workDescription: '',
         files: [],
         createCalendarEvent: true,
+        eventTitle: '',
+        meetingStartTime: new Date(),
+        meetingEndTime: null,
         attendees: [],
         createTeamsMeeting: false,
         eventDetails: ''
@@ -231,6 +311,26 @@ export default {
       attendeeOptions: [],
       newEmail: '',
       statusOptions: []
+    }
+  },
+  watch: {
+    'formData.taskId'(newVal) {
+      if (newVal) {
+        const task = this.tasks.find(t => t.id === newVal)
+        if (task) {
+          this.formData.eventTitle = `งาน: ${task.task_name}`
+        }
+      }
+    },
+    'formData.startTime'(newVal) {
+      if (newVal) {
+        this.formData.meetingStartTime = new Date(newVal)
+      }
+    },
+    'formData.endTime'(newVal) {
+      if (newVal) {
+        this.formData.meetingEndTime = new Date(newVal)
+      }
     }
   },
   computed: {
@@ -261,6 +361,23 @@ export default {
     window.removeEventListener('statusesUpdated', this.handleStatusesUpdate)
   },
   methods: {
+    getStepNumber(stepId) {
+      const index = this.workflowSteps.findIndex(s => s.id === stepId)
+      return index >= 0 ? index + 1 : ''
+    },
+    getStepName(stepId) {
+      const step = this.workflowSteps.find(s => s.id === stepId)
+      return step ? step.step_name : ''
+    },
+    formatDateRange(start, end) {
+      if (!start && !end) return ''
+      const formatDate = (date) => {
+        if (!date) return ''
+        return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+      }
+      if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
+      return formatDate(start || end)
+    },
     async loadUsers() {
       try {
         const response = await this.$http.get('/api/users')
@@ -442,6 +559,9 @@ export default {
           user_id: localStorage.getItem('soc_user_id'),
           submitted_at: new Date().toISOString(),
           create_calendar_event: this.formData.createCalendarEvent,
+          event_title: this.formData.eventTitle,
+          meeting_start_time: this.formatTime(this.formData.meetingStartTime),
+          meeting_end_time: this.formatTime(this.formData.meetingEndTime),
           attendees: this.formData.attendees,
           create_teams_meeting: this.formData.createTeamsMeeting,
           event_details: this.formData.eventDetails
@@ -511,6 +631,9 @@ export default {
         workDescription: '',
         files: [],
         createCalendarEvent: true,
+        eventTitle: '',
+        meetingStartTime: new Date(),
+        meetingEndTime: null,
         attendees: [],
         createTeamsMeeting: false,
         eventDetails: ''
@@ -569,8 +692,174 @@ export default {
   border: 1px solid #e9ecef;
 }
 
+.selected-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.step-option {
+  padding: 0.5rem 0;
+}
+
+.step-header-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.step-desc {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0.25rem 2rem;
+  line-height: 1.4;
+}
+
+.step-meta {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.25rem;
+  margin-left: 2rem;
+  font-size: 0.8rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #64748b;
+}
+
+.meta-item i {
+  font-size: 0.7rem;
+}
+
+.meta-item.status {
+  color: #10b981;
+}
+
+.workflow-preview {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.workflow-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.workflow-step-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  transition: all 0.2s;
+  border-radius: 6px;
+}
+
+.workflow-step-item.active {
+  background: #e0f2fe;
+  border-left: 3px solid #0284c7;
+}
+
+.step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  z-index: 1;
+}
+
+.workflow-step-item.active .step-circle {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+  transform: scale(1.1);
+}
+
+.step-line {
+  width: 3px;
+  flex: 1;
+  background: linear-gradient(to bottom, #3b82f6, #93c5fd);
+  margin-top: 0.25rem;
+  min-height: 30px;
+}
+
+.step-content-preview {
+  flex: 1;
+  padding-top: 0.25rem;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.step-subtitle {
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .daily-work-form {
   padding: 1rem;
+}
+
+.input-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .input-group-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 .form-grid {
