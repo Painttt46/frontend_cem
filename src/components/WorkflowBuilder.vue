@@ -5,17 +5,16 @@
       <Button icon="pi pi-plus" label="เพิ่ม Step" @click="addStep" size="small" />
     </div>
 
-    <div class="workflow-timeline" ref="timeline" v-if="steps.length > 0">
+    <div class="workflow-timeline" v-if="steps.length > 0">
       <template v-for="(step, index) in steps" :key="step.id || index">
         <div class="workflow-step"
-             :ref="el => stepRefs[index] = el"
              draggable="true"
              @dragstart="onDragStart($event, index)"
              @dragover.prevent
              @dragenter="onDragEnter($event, index)"
              @dragleave="onDragLeave($event)"
              @drop="onDrop($event, index)"
-             :class="{ 'drag-over': dragOverIndex === index, 'row-start': rowStarts.includes(index), 'row-end': rowEnds.includes(index) }">
+             :class="{ 'drag-over': dragOverIndex === index }">
         
           <div class="step-card" :class="'status-' + step.status">
             <div class="step-header">
@@ -140,9 +139,6 @@ export default {
       editingIndex: null,
       dragIndex: null,
       dragOverIndex: null,
-      stepRefs: [],
-      rowStarts: [],
-      rowEnds: [],
       currentStep: {
         step_name: '',
         description: '',
@@ -172,31 +168,8 @@ export default {
   },
   mounted() {
     this.loadUsers()
-    window.addEventListener('resize', this.calculateRows)
-  },
-  beforeUnmount() {
-    window.removeEventListener('resize', this.calculateRows)
-  },
-  updated() {
-    this.$nextTick(() => this.calculateRows())
   },
   methods: {
-    calculateRows() {
-      if (!this.steps.length) return
-      this.rowStarts = [0]
-      this.rowEnds = []
-      let lastTop = null
-      this.stepRefs.forEach((el, idx) => {
-        if (!el) return
-        const top = el.getBoundingClientRect().top
-        if (lastTop !== null && top > lastTop + 10) {
-          this.rowStarts.push(idx)
-          this.rowEnds.push(idx - 1)
-        }
-        lastTop = top
-      })
-      if (this.steps.length > 0) this.rowEnds.push(this.steps.length - 1)
-    },
     getEmptyStep() {
       return {
         step_name: '',
@@ -434,50 +407,7 @@ export default {
   background: #3b82f6;
 }
 
-/* ลูกศรชี้ลงสำหรับ step แรกของแถวใหม่ */
-.workflow-step.row-start:not(:first-child)::before {
-  left: -35px;
-  top: -15px;
-  transform: none;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-top: 10px solid #3b82f6;
-}
-
-.workflow-step.row-start:not(:first-child)::after {
-  left: -28px;
-  top: -45px;
-  width: 3px;
-  height: 32px;
-}
-
-/* เส้นต่อจาก row-end ไปขึ้นบน */
-.workflow-step.row-end:not(:last-child)::marker {
-  display: none;
-}
-
-.workflow-step.row-end:not(:last-child) .step-card::after {
-  content: '';
-  position: absolute;
-  right: -30px;
-  top: 50%;
-  width: 30px;
-  height: 3px;
-  background: #3b82f6;
-}
-
-.workflow-step.row-end:not(:last-child) .step-card::before {
-  content: '';
-  position: absolute;
-  right: -30px;
-  top: 50%;
-  width: 3px;
-  height: calc(100% + 15px);
-  background: #3b82f6;
-}
-
 .step-card {
-  position: relative;
   background: white;
   border-radius: 10px;
   padding: 0.75rem;
