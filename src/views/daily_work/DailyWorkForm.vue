@@ -153,26 +153,6 @@
                 placeholder="หัวข้อ calendar event" required />
             </div>
 
-            <div class="input-group-row">
-              <div class="input-group">
-                <label for="meetingStartTime" class="input-label">
-                  <i class="pi pi-clock"></i>
-                  เวลาเริ่ม Meeting
-                </label>
-                <Calendar id="meetingStartTime" v-model="formData.meetingStartTime" timeOnly hourFormat="24" 
-                  class="corporate-input" :manualInput="true" />
-              </div>
-
-              <div class="input-group">
-                <label for="meetingEndTime" class="input-label">
-                  <i class="pi pi-clock"></i>
-                  เวลาสิ้นสุด Meeting
-                </label>
-                <Calendar id="meetingEndTime" v-model="formData.meetingEndTime" timeOnly hourFormat="24" 
-                  class="corporate-input" :manualInput="true" />
-              </div>
-            </div>
-
  <div class="input-group">
               <label for="attendees" class="input-label">
                 <i class="pi pi-users"></i>
@@ -246,6 +226,26 @@
                   <i class="pi pi-info-circle"></i>
                   จะสร้าง Teams Meeting อัตโนมัติและส่งลิงก์ให้ผู้เข้าร่วมทุกคน
                 </small>
+              </div>
+            </div>
+
+            <div v-if="formData.createTeamsMeeting" class="input-group-row">
+              <div class="input-group">
+                <label for="meetingStartTime" class="input-label">
+                  <i class="pi pi-clock"></i>
+                  เวลาเริ่ม Meeting
+                </label>
+                <Calendar id="meetingStartTime" v-model="formData.meetingStartTime" timeOnly hourFormat="24" 
+                  class="corporate-input" :manualInput="true" />
+              </div>
+
+              <div class="input-group">
+                <label for="meetingEndTime" class="input-label">
+                  <i class="pi pi-clock"></i>
+                  เวลาสิ้นสุด Meeting
+                </label>
+                <Calendar id="meetingEndTime" v-model="formData.meetingEndTime" timeOnly hourFormat="24" 
+                  class="corporate-input" :manualInput="true" />
               </div>
             </div>
           </div>
@@ -1179,11 +1179,11 @@ export default {
 
 .calendar-options {
   margin: 1.5rem 0;
-  padding: 1.5rem;
-  background: #ffffff;
-  border: 2px solid #007bff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.1);
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
   animation: slideDown 0.3s ease-out;
 }
 
@@ -1202,29 +1202,120 @@ export default {
 .options-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #007bff;
-  margin-bottom: 1.5rem;
-  font-size: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e7ff;
 }
 
-.options-header i {
+.calendar-main-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: #1e40af;
   font-size: 1.1rem;
+  margin: 0;
+}
+
+.calendar-main-label i {
+  font-size: 1.3rem;
+  color: #3b82f6;
 }
 
 .input-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 500;
-  color: #495057;
+  font-weight: 600;
+  color: #374151;
   margin-bottom: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .input-label i {
-  color: #007bff;
+  color: #3b82f6;
   font-size: 1rem;
+}
+
+.teams-meeting-section {
+  background: #f0f9ff;
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 2px solid #bfdbfe;
+}
+
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #1e40af;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0;
+}
+
+.checkbox-label i {
+  color: #3b82f6;
+  font-size: 1.1rem;
+}
+
+.teams-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-left: 2rem;
+}
+
+.teams-hint i {
+  color: #3b82f6;
+}
+
+.event-details-group {
+  margin: 1.5rem 0;
+}
+
+.event-details-group textarea {
+  border: 2px solid #e0e7ff;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.event-details-group textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+.input-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #fefce8;
+  border-radius: 8px;
+  border: 2px dashed #fbbf24;
+}
+
+.input-group-row .input-label {
+  color: #92400e;
+}
+
+.input-group-row .input-label i {
+  color: #f59e0b;
 }
 
 .field-hint {
@@ -1236,12 +1327,6 @@ export default {
 
 .full-width {
   grid-column: 1 / -1;
-}
-
-.input-label {
-  font-weight: 500;
-  color: #495057;
-  font-size: 0.9rem;
 }
 
 .corporate-input,
