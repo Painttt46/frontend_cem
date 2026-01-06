@@ -486,7 +486,14 @@ export default {
 }
 
 .step-status-badge {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  padding: 0.125rem 0.5rem;
+  background: #f1f5f9;
+  border-radius: 12px;
 }
 
 .step-actions {
@@ -508,10 +515,14 @@ export default {
   font-size: 0.75rem;
   line-height: 1.3;
   word-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 .step-info {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .info-item {
