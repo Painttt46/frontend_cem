@@ -454,10 +454,10 @@ h4 {
   }
 
   .main-content-wrapper {
-    padding: 0 0.5rem;
+    padding: 0;
     margin-left: 0;
     margin-right: 0;
-    width: calc(100% + 3.3rem);
+    width: 100%;
   }
 }
 
