@@ -417,7 +417,7 @@ h4 {
 @media (max-width: 768px) {
   .content-padding {
     padding-right: 1.3rem;
-    padding-left: -0.2rem;
+    padding-left: 0;
   }
   
   .sidebar-toggle-btn {
