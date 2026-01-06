@@ -416,8 +416,8 @@ h4 {
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
   .content-padding {
-    padding-right: 1.3rem;
-    padding-left: 0.3rem;
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
   }
   
   .sidebar-toggle-btn {
