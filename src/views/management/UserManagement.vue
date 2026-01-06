@@ -126,10 +126,16 @@
       <div class="user-form">
         <div class="form-row">
           <div class="field">
+            <label>รหัสพนักงาน *</label>
+            <InputText v-model="userForm.employee_id" required placeholder="เช่น EMP001" />
+          </div>
+          <div class="field">
             <label>Username *</label>
             <InputText v-model="userForm.username" required />
           </div>
-          <div class="field" v-if="!editMode">
+        </div>
+        <div class="form-row" v-if="!editMode">
+          <div class="field">
             <label>Password *</label>
             <div class="password-wrapper">
               <InputText v-model="userForm.password" :type="showPassword ? 'text' : 'password'" 
@@ -214,6 +220,7 @@ const showPassword = ref(false)
 const newRoleInput = ref('')
 
 const userForm = ref({
+  employee_id: '',
   firstname: '',
   lastname: '',
   username: '',
@@ -339,6 +346,7 @@ const editUser = (user) => {
 
 const resetForm = () => {
   userForm.value = {
+    employee_id: '',
     firstname: '',
     lastname: '',
     username: '',
