@@ -55,14 +55,14 @@
 
             <div class="input-group">
               <label for="startTime" class="input-label">เวลาเริ่มงาน *</label>
-              <InputMask id="startTime" v-model="formData.startTimeText" mask="99:99" placeholder="HH:MM" 
-                class="corporate-input" inputmode="numeric" @change="parseStartTime" required />
+              <Calendar id="startTime" v-model="formData.startTime" timeOnly hourFormat="24" class="corporate-input"
+                :manualInput="true" required />
             </div>
 
             <div class="input-group">
               <label for="endTime" class="input-label">เวลาสิ้นสุดงาน *</label>
-              <InputMask id="endTime" v-model="formData.endTimeText" mask="99:99" placeholder="HH:MM" 
-                class="corporate-input" inputmode="numeric" @change="parseEndTime" required />
+              <Calendar id="endTime" v-model="formData.endTime" timeOnly hourFormat="24" class="corporate-input"
+                :manualInput="true" required />
             </div>
 
             <div class="input-group">
@@ -900,6 +900,15 @@ export default {
 /* Attendees Section Styling */
 .colleague-search {
   margin-bottom: 1rem;
+  width: 100%;
+}
+
+.colleague-search :deep(.p-autocomplete) {
+  width: 100%;
+}
+
+.colleague-search :deep(.p-autocomplete-input) {
+  width: 100%;
 }
 
 .email-input-section {
@@ -1498,6 +1507,29 @@ export default {
   .corporate-input,
   .corporate-dropdown {
     font-size: 16px;
+  }
+
+  .attendees-section {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .colleague-search :deep(.p-autocomplete) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .colleague-search :deep(.p-autocomplete-input) {
+    width: 100% !important;
+  }
+
+  .attendee-name {
+    word-break: break-all;
+    font-size: 0.85rem;
+  }
+
+  .input-with-button input {
+    min-width: 0;
   }
 }
 
