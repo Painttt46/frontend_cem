@@ -326,6 +326,11 @@ export default {
     }
   },
   watch: {
+    activeForm(newVal) {
+      if (newVal === 'borrow') {
+        this.loadLatestFuelLevel()
+      }
+    },
     selectedReturnBorrow(newVal) {
       this.$emit('updateReturnForm', 'borrowId', newVal)
       if (newVal && this.selectedBorrowDescription) {
