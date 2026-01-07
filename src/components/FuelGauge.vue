@@ -1,22 +1,23 @@
 <template>
   <div class="fuel-gauge-container">
     <div class="fuel-gauge">
-      <div class="gauge-body">
-        <div class="gauge-fill" :style="{ width: modelValue + '%', backgroundColor: fuelColor }"></div>
-        <div class="gauge-marks">
-          <span class="mark" v-for="n in 5" :key="n" :style="{ left: ((n-1) * 25) + '%' }"></span>
-        </div>
-        <div class="gauge-labels">
-          <span>E</span>
-          <span>1/4</span>
-          <span>1/2</span>
-          <span>3/4</span>
-          <span>F</span>
-        </div>
-      </div>
       <div class="fuel-icon">
         <i class="pi pi-bolt"></i>
       </div>
+      <div class="gauge-body">
+        <div class="gauge-fill" :style="{ width: modelValue + '%', backgroundColor: fuelColor }"></div>
+        <div class="gauge-marks">
+          <span class="mark major" v-for="n in 9" :key="'major'+n" :style="{ left: ((n-1) * 12.5) + '%' }"></span>
+          <span class="mark minor" v-for="n in 17" :key="'minor'+n" :style="{ left: ((n-1) * 6.25) + '%' }"></span>
+        </div>
+      </div>
+    </div>
+    <div class="gauge-labels">
+      <span>E</span>
+      <span>1/4</span>
+      <span>1/2</span>
+      <span>3/4</span>
+      <span>F</span>
     </div>
     <input 
       type="range" 
@@ -55,7 +56,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 1rem;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   border-radius: 12px;
@@ -71,9 +72,9 @@ export default {
 
 .gauge-body {
   flex: 1;
-  height: 40px;
+  height: 32px;
   background: #0f172a;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 2px solid #475569;
   position: relative;
   overflow: hidden;
@@ -82,7 +83,7 @@ export default {
 .gauge-fill {
   height: 100%;
   transition: width 0.3s ease, background-color 0.3s ease;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 
 .gauge-marks {
@@ -91,44 +92,49 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  display: flex;
 }
 
 .mark {
   position: absolute;
-  top: 0;
   bottom: 0;
+  background: rgba(255,255,255,0.5);
+}
+
+.mark.major {
   width: 2px;
-  background: rgba(255,255,255,0.3);
+  height: 100%;
+}
+
+.mark.minor {
+  width: 1px;
+  height: 50%;
 }
 
 .gauge-labels {
-  position: absolute;
-  bottom: -20px;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: space-between;
-  font-size: 0.7rem;
+  width: 100%;
+  padding: 0 40px 0 0;
+  font-size: 0.75rem;
   color: #94a3b8;
-  padding: 0 2px;
+  font-weight: 600;
 }
 
 .fuel-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   background: #334155;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fbbf24;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .fuel-slider {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   -webkit-appearance: none;
   height: 8px;
   background: #334155;
@@ -148,7 +154,6 @@ export default {
 
 .fuel-slider:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .fuel-slider:disabled::-webkit-slider-thumb {
