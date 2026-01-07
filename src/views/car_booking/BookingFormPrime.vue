@@ -344,7 +344,7 @@ export default {
   methods: {
     async loadLatestFuelLevel() {
       try {
-        const response = await this.$http.get('/api/car-bookings/latest-fuel')
+        const response = await this.$http.get('/api/car-booking/latest-fuel')
         this.fuelLevelBorrow = response.data.fuel_level || 50
         this.fuelLevelReturn = response.data.fuel_level || 50
       } catch {
