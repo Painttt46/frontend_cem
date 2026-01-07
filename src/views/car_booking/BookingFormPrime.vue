@@ -93,6 +93,11 @@
             </div>
           </div>
 
+          <div class="input-group full-width">
+            <label class="input-label">ระดับน้ำมัน (ก่อนใช้รถ)</label>
+            <FuelGauge v-model="fuelLevelBorrow" :disabled="true" />
+          </div>
+
           <div class="file-upload-section">
             <label class="upload-label">รูปภาพ</label>
             <div class="file-upload-wrapper">
@@ -171,6 +176,11 @@
               class="corporate-input readonly-field" />
           </div>
 
+          <div class="input-group full-width">
+            <label class="input-label">ระดับน้ำมัน (หลังใช้รถ) *</label>
+            <FuelGauge v-model="fuelLevelReturn" />
+          </div>
+
           <div class="file-upload-section">
             <label class="upload-label">รูปภาพ</label>
             <div class="file-upload-wrapper">
@@ -242,12 +252,14 @@ import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
 import axios from '@/utils/axiosConfig'
 import { isActive } from '@/utils/statusHelper'
+import FuelGauge from '@/components/FuelGauge.vue'
 
 export default {
   name: 'BookingFormPrime',
   components: {
     AutoComplete,
-    Dropdown
+    Dropdown,
+    FuelGauge
   },
   emits: ['close-form', 'submit-borrow', 'submit-return', 'submit-cancel', 'handle-image-upload', 'remove-image', 'update-borrow-form', 'updateReturnForm', 'update-cancel-form'],
   props: {
@@ -274,13 +286,16 @@ export default {
       filteredUsers: [],
       maxDisplayUsers: 50,
       selectedColleague: null,
-      projectOptions: []
+      projectOptions: [],
+      fuelLevelBorrow: 50,
+      fuelLevelReturn: 50
     }
   },
   async created() {
     this.$http = axios
     await this.loadUsers();
     await this.loadProjects();
+    await this.loadLatestFuelLevel();
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
   },
   computed: {
@@ -322,6 +337,16 @@ export default {
     }
   },
   methods: {
+    async loadLatestFuelLevel() {
+      try {
+        const response = await this.$http.get('/api/car-bookings/latest-fuel')
+        this.fuelLevelBorrow = response.data.fuel_level || 50
+        this.fuelLevelReturn = response.data.fuel_level || 50
+      } catch {
+        this.fuelLevelBorrow = 50
+        this.fuelLevelReturn = 50
+      }
+    },
     getImagePreview(image) {
       if (image instanceof File) {
         return URL.createObjectURL(image)
@@ -472,9 +497,9 @@ export default {
       this.showConfirm = false
 
       if (this.pendingAction === 'borrow') {
-        this.$emit('submit-borrow')
+        this.$emit('submit-borrow', { fuelLevelBorrow: this.fuelLevelBorrow })
       } else if (this.pendingAction === 'return') {
-        this.$emit('submit-return')
+        this.$emit('submit-return', { fuelLevelReturn: this.fuelLevelReturn })
       } else if (this.pendingAction === 'cancel') {
         this.$emit('submit-cancel')
       }

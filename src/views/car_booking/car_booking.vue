@@ -192,8 +192,15 @@ export default {
         // Must be active status (past borrow time, not returned)
         if (r.status !== 'active') return false
 
-        // Only borrower can return
-        return r.name === currentUserName
+        // Check if current user is borrower or colleague
+        const isBorrower = r.name === currentUserName
+        const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
+          r.colleagues.some(colleague => {
+            const colleagueName = typeof colleague === 'string' ? colleague : colleague?.name
+            return colleagueName === currentUserName
+          })
+
+        return isBorrower || isColleague
       })
     },
     pendingBorrows() {
@@ -478,7 +485,7 @@ export default {
         })
       }
     },
-    async submitBorrow() {
+    async submitBorrow(payload = {}) {
       try {
         const images = await this.convertImagesToBase64(this.borrowForm.images || [])
         const borrowData = {
@@ -491,7 +498,8 @@ export default {
           license: 'ชฮ-3706',
           colleagues: this.borrowForm.colleagues || [],
           images,
-          user_id: localStorage.getItem('soc_user_id')
+          user_id: localStorage.getItem('soc_user_id'),
+          fuel_level_borrow: payload.fuelLevelBorrow || null
         }
 
         await this.$http.post('/api/car-booking', borrowData)
@@ -525,7 +533,7 @@ export default {
         }
       }
     },
-    async submitReturn() {
+    async submitReturn(payload = {}) {
       const borrowId = this.returnForm.borrowId || this.$refs.bookingForm?.selectedReturnBorrow
 
       if (!borrowId) {
@@ -552,7 +560,8 @@ export default {
           return_description: this.returnForm.discription,
           return_time: currentTime,
           return_date: this.formatDateForDB(bangkokTime),
-          images
+          images,
+          fuel_level_return: payload.fuelLevelReturn || null
         }
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
