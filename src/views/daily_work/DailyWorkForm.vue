@@ -61,14 +61,9 @@
                 class="corporate-input" :manualInput="true" :pt="{
                   input: {
                     inputmode: 'numeric',
-                    type: 'tel',
-                    pattern: '[0-9]*',
-                    autocomplete: 'off',
-                    autocorrect: 'off',
-                    spellcheck: 'false'
+                    autocomplete: 'off'
                   }
-                }" @focus="focusCalendarInput('startTimeCal')" @pointerdown="focusCalendarInput('startTimeCal')"
-                required />
+                }" required />
             </div>
 
             <div class="input-group">
@@ -77,14 +72,9 @@
                 class="corporate-input" :manualInput="true" :pt="{
                   input: {
                     inputmode: 'numeric',
-                    type: 'tel',
-                    pattern: '[0-9]*',
-                    autocomplete: 'off',
-                    autocorrect: 'off',
-                    spellcheck: 'false'
+                    autocomplete: 'off'
                   }
-                }" @focus="focusCalendarInput('endTimeCal')" @pointerdown="focusCalendarInput('endTimeCal')"
-                required />
+                }" required />
             </div>
 
             <div class="input-group">
