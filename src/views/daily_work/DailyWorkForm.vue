@@ -55,14 +55,14 @@
 
             <div class="input-group">
               <label for="startTime" class="input-label">เวลาเริ่มงาน *</label>
-              <Calendar id="startTime" v-model="formData.startTime" timeOnly hourFormat="24" class="corporate-input"
-                :manualInput="true" required />
+              <InputMask id="startTime" v-model="formData.startTimeText" mask="99:99" placeholder="HH:MM" 
+                class="corporate-input" inputmode="numeric" @change="parseStartTime" required />
             </div>
 
             <div class="input-group">
               <label for="endTime" class="input-label">เวลาสิ้นสุดงาน *</label>
-              <Calendar id="endTime" v-model="formData.endTime" timeOnly hourFormat="24" class="corporate-input"
-                :manualInput="true" required />
+              <InputMask id="endTime" v-model="formData.endTimeText" mask="99:99" placeholder="HH:MM" 
+                class="corporate-input" inputmode="numeric" @change="parseEndTime" required />
             </div>
 
             <div class="input-group">
@@ -275,6 +275,8 @@ export default {
         workDate: new Date(),
         startTime: new Date(),
         endTime: null,
+        startTimeText: '',
+        endTimeText: '',
         workStatus: null,
         location: '',
         workDescription: '',
@@ -300,7 +302,7 @@ export default {
       if (newVal) {
         const task = this.tasks.find(t => t.id === newVal)
         if (task) {
-          this.formData.eventTitle = `งาน: ${task.task_name}`
+          this.formData.eventTitle = task.task_name
         }
       }
     },
@@ -335,6 +337,11 @@ export default {
   async mounted() {
     await this.loadTasks()
     this.loadStatusOptions()
+    
+    // ตั้งค่าเริ่มต้นเวลา
+    const now = new Date()
+    this.formData.startTimeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
+    this.parseStartTime()
 
     // Listen for status updates
     window.addEventListener('statusesUpdated', this.handleStatusesUpdate)
@@ -343,6 +350,28 @@ export default {
     window.removeEventListener('statusesUpdated', this.handleStatusesUpdate)
   },
   methods: {
+    parseStartTime() {
+      if (this.formData.startTimeText && this.formData.startTimeText.length === 5) {
+        const [hours, minutes] = this.formData.startTimeText.split(':').map(Number)
+        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+          const date = new Date()
+          date.setHours(hours, minutes, 0, 0)
+          this.formData.startTime = date
+          this.formData.meetingStartTime = new Date(date)
+        }
+      }
+    },
+    parseEndTime() {
+      if (this.formData.endTimeText && this.formData.endTimeText.length === 5) {
+        const [hours, minutes] = this.formData.endTimeText.split(':').map(Number)
+        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+          const date = new Date()
+          date.setHours(hours, minutes, 0, 0)
+          this.formData.endTime = date
+          this.formData.meetingEndTime = new Date(date)
+        }
+      }
+    },
     getStepNumber(stepId) {
       const index = this.workflowSteps.findIndex(s => s.id === stepId)
       return index >= 0 ? index + 1 : ''

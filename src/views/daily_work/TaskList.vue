@@ -24,7 +24,7 @@
           </template>
         </Column>
 
-        <Column field="so_number" header="เลข SO" class="hide-mobile">
+        <Column field="so_number" header="เลข SO">
           <template #body="slotProps">
             <div v-if="slotProps.data.so_number" class="so-number">
               {{ slotProps.data.so_number }}
@@ -33,13 +33,13 @@
           </template>
         </Column>
 
-        <Column field="contract_number" header="เลขที่สัญญา" class="hide-mobile">
+        <Column field="contract_number" header="เลขที่สัญญา">
           <template #body="slotProps">
             {{ slotProps.data.contract_number || '-' }}
           </template>
         </Column>
 
-        <Column field="sale_owner" header="Sale เจ้าของงาน" class="hide-mobile">
+        <Column field="sale_owner" header="Sale เจ้าของงาน">
           <template #body="slotProps">
             <div v-if="slotProps.data.sale_owner" class="sale-info">
               <i class="pi pi-user"></i>
@@ -66,13 +66,13 @@
           </template>
         </Column>
 
-        <Column field="project_end_date" header="วันสิ้นสุดโครงการ" :sortable="true" class="hide-mobile">
+        <Column field="project_end_date" header="วันสิ้นสุดโครงการ" :sortable="true">
           <template #body="slotProps">
             {{ slotProps.data.project_end_date ? formatDate(slotProps.data.project_end_date) : '-' }}
           </template>
         </Column>
 
-        <Column header="รายละเอียด" class="hide-mobile">
+        <Column header="รายละเอียด">
           <template #body="slotProps">
             <Button 
               label="ดูรายละเอียด" 

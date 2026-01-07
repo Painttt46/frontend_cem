@@ -37,7 +37,7 @@
           </template>
         </Column>
 
-        <Column field="employee_position" header="ตำแหน่ง" :sortable="true" class="hide-mobile">
+        <Column field="employee_position" header="ตำแหน่ง" :sortable="true">
           <template #body="slotProps">
             <span class="position-text">{{ slotProps.data.employee_position || 'ไม่ระบุ' }}</span>
           </template>
@@ -49,7 +49,7 @@
           </template>
         </Column> -->
 
-        <Column field="task_name" header="โครงการ" :sortable="true">
+        <Column field="task_name" header="โครงการ" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>
@@ -76,7 +76,7 @@
           </template>
         </Column>
 
-        <Column field="location" header="สถานที่" class="hide-mobile" />
+        <Column field="location" header="สถานที่" style="min-width: 100px;" />
 
         <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
           <template #body="slotProps">
@@ -98,7 +98,7 @@
           </template>
         </Column> -->
 
-        <Column header="รายละเอียดงาน" class="hide-mobile">
+        <Column header="รายละเอียดงาน">
           <template #body="slotProps">
             <Button label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined
               @click="showDetails(slotProps.data)" />
