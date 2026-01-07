@@ -9,15 +9,17 @@
               <label for="taskId" class="input-label">เลือกโครงการ *</label>
               <Dropdown id="taskId" v-model="formData.taskId" :options="tasks" optionLabel="display" optionValue="id"
                 class="corporate-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange"
-                filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO" :filterFields="['task_name', 'so_number', 'display']" />
+                filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
+                :filterFields="['task_name', 'so_number', 'display']" />
             </div>
 
             <div class="input-group" v-if="workflowSteps.length > 0">
               <label for="stepId" class="input-label">
                 <i class="pi pi-sitemap"></i> เลือก Workflow Step
               </label>
-              <Dropdown id="stepId" v-model="formData.stepId" :options="workflowSteps" optionLabel="step_name" optionValue="id"
-                class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)" showClear filter filterPlaceholder="ค้นหาชื่อ step...">
+              <Dropdown id="stepId" v-model="formData.stepId" :options="workflowSteps" optionLabel="step_name"
+                optionValue="id" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)" showClear
+                filter filterPlaceholder="ค้นหาชื่อ step...">
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="selected-step">
                     <span class="step-number">{{ getStepNumber(slotProps.value) }}</span>
@@ -55,14 +57,34 @@
 
             <div class="input-group">
               <label for="startTime" class="input-label">เวลาเริ่มงาน *</label>
-              <Calendar id="startTime" v-model="formData.startTime" timeOnly hourFormat="24" class="corporate-input"
-                :manualInput="true" required />
+              <Calendar id="startTime" ref="startTimeCal" v-model="formData.startTime" timeOnly hourFormat="24"
+                class="corporate-input" :manualInput="true" :pt="{
+                  input: {
+                    inputmode: 'numeric',
+                    type: 'tel',
+                    pattern: '[0-9]*',
+                    autocomplete: 'off',
+                    autocorrect: 'off',
+                    spellcheck: 'false'
+                  }
+                }" @focus="focusCalendarInput('startTimeCal')" @pointerdown="focusCalendarInput('startTimeCal')"
+                required />
             </div>
 
             <div class="input-group">
               <label for="endTime" class="input-label">เวลาสิ้นสุดงาน *</label>
-              <Calendar id="endTime" v-model="formData.endTime" timeOnly hourFormat="24" class="corporate-input"
-                :manualInput="true" required />
+              <Calendar id="endTime" ref="endTimeCal" v-model="formData.endTime" timeOnly hourFormat="24"
+                class="corporate-input" :manualInput="true" :pt="{
+                  input: {
+                    inputmode: 'numeric',
+                    type: 'tel',
+                    pattern: '[0-9]*',
+                    autocomplete: 'off',
+                    autocorrect: 'off',
+                    spellcheck: 'false'
+                  }
+                }" @focus="focusCalendarInput('endTimeCal')" @pointerdown="focusCalendarInput('endTimeCal')"
+                required />
             </div>
 
             <div class="input-group">
@@ -135,7 +157,7 @@
                 placeholder="หัวข้อ calendar event" required />
             </div>
 
- <div class="input-group attendees-section">
+            <div class="input-group attendees-section">
               <label for="attendees" class="input-label">
                 <i class="pi pi-users"></i>
                 เชิญผู้เข้าร่วม
@@ -217,8 +239,19 @@
                   <i class="pi pi-clock"></i>
                   เวลาเริ่ม Meeting
                 </label>
-                <Calendar id="meetingStartTime" v-model="formData.meetingStartTime" timeOnly hourFormat="24" 
-                  class="corporate-input" :manualInput="true" />
+
+                <Calendar id="meetingStartTime" ref="meetingStartTimeCal" v-model="formData.meetingStartTime" timeOnly
+                  hourFormat="24" class="corporate-input" :manualInput="true" :pt="{
+                    input: {
+                      inputmode: 'numeric',
+                      type: 'tel',
+                      pattern: '[0-9]*',
+                      autocomplete: 'off',
+                      autocorrect: 'off',
+                      spellcheck: 'false'
+                    }
+                  }" @focus="focusCalendarInput('meetingStartTimeCal')"
+                  @pointerdown="focusCalendarInput('meetingStartTimeCal')" />
               </div>
 
               <div class="input-group">
@@ -226,10 +259,22 @@
                   <i class="pi pi-clock"></i>
                   เวลาสิ้นสุด Meeting
                 </label>
-                <Calendar id="meetingEndTime" v-model="formData.meetingEndTime" timeOnly hourFormat="24" 
-                  class="corporate-input" :manualInput="true" />
+
+                <Calendar id="meetingEndTime" ref="meetingEndTimeCal" v-model="formData.meetingEndTime" timeOnly
+                  hourFormat="24" class="corporate-input" :manualInput="true" :pt="{
+                    input: {
+                      inputmode: 'numeric',
+                      type: 'tel',
+                      pattern: '[0-9]*',
+                      autocomplete: 'off',
+                      autocorrect: 'off',
+                      spellcheck: 'false'
+                    }
+                  }" @focus="focusCalendarInput('meetingEndTimeCal')"
+                  @pointerdown="focusCalendarInput('meetingEndTimeCal')" />
               </div>
             </div>
+
           </div>
 
           <div class="form-actions">
@@ -322,12 +367,12 @@ export default {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
         let end = new Date(this.formData.endTime)
-        
+
         // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
         if (end <= start) {
           end.setDate(end.getDate() + 1)
         }
-        
+
         const diff = (end - start) / (1000 * 60 * 60)
         return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
       }
@@ -337,7 +382,7 @@ export default {
   async mounted() {
     await this.loadTasks()
     this.loadStatusOptions()
-    
+
     // ตั้งค่าเริ่มต้นเวลา
     const now = new Date()
     this.formData.startTimeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
@@ -350,6 +395,14 @@ export default {
     window.removeEventListener('statusesUpdated', this.handleStatusesUpdate)
   },
   methods: {
+    focusCalendarInput(refName) {
+      this.$nextTick(() => {
+        const root = this.$refs[refName]?.$el
+        const input = root?.querySelector('input')
+        if (input && document.activeElement !== input) input.focus()
+      })
+    },
+
     parseStartTime() {
       if (this.formData.startTimeText && this.formData.startTimeText.length === 5) {
         const [hours, minutes] = this.formData.startTimeText.split(':').map(Number)
@@ -620,12 +673,12 @@ export default {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
         let end = new Date(this.formData.endTime)
-        
+
         // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
         if (end <= start) {
           end.setDate(end.getDate() + 1)
         }
-        
+
         return Math.max(0, (end - start) / (1000 * 60 * 60))
       }
       return 0
@@ -913,16 +966,20 @@ export default {
 
 .email-input-section {
   margin-bottom: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input-with-button {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  width: 100%;
 }
 
 .input-with-button input {
   flex: 1;
+  min-width: 0;
 }
 
 .add-email-btn {
@@ -951,6 +1008,8 @@ export default {
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .attendees-title {
@@ -983,6 +1042,8 @@ export default {
   border: 1px solid #dee2e6;
   border-radius: 6px;
   transition: all 0.2s ease;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .attendee-card:hover {
@@ -992,12 +1053,16 @@ export default {
 
 .attendee-details {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .attendee-name {
   font-weight: 500;
   color: #212529;
   font-size: 0.9rem;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .remove-btn {
@@ -1326,6 +1391,10 @@ export default {
 
 .attendees-section {
   margin-top: 2rem;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .input-group-row {
@@ -1531,9 +1600,22 @@ export default {
   .input-with-button input {
     min-width: 0;
   }
+
+  .selected-attendees {
+    padding: 0.75rem;
+  }
+
+  .attendee-card {
+    padding: 0.5rem;
+  }
+
+  .colleague-search :deep(.p-autocomplete-dropdown) {
+    width: 40px !important;
+  }
 }
 
 @media (max-width: 480px) {
+
   .daily-work-form {
     padding: 0.5rem;
   }
