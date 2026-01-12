@@ -643,6 +643,7 @@ export default {
 
       this.editFormData = {
         id: record.id,
+        step_id: record.step_id,
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
         end_time: this.parseTime(record.end_time),
@@ -731,6 +732,7 @@ export default {
         }
 
         const updateData = {
+          step_id: this.editFormData.step_id,
           work_date: formattedDate,
           start_time: this.editFormData.start_time_text + ':00',
           end_time: this.editFormData.end_time_text + ':00',
