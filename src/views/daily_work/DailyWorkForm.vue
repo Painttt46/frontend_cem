@@ -8,9 +8,23 @@
             <div class="input-group">
               <label for="taskId" class="input-label">เลือกโครงการ *</label>
               <Dropdown id="taskId" v-model="formData.taskId" :options="tasks" optionLabel="display" optionValue="id"
-                class="corporate-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange"
+                class="corporate-dropdown task-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange"
                 filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
-                :filterFields="['task_name', 'so_number', 'display']" />
+                :filterFields="['task_name', 'so_number', 'display']">
+                <template #value="slotProps">
+                  <div v-if="slotProps.value" class="task-selected">
+                    <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
+                    <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
+                  </div>
+                  <span v-else>เลือกโครงการที่ต้องการลงเวลา</span>
+                </template>
+                <template #option="slotProps">
+                  <div class="task-option">
+                    <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
+                    <span class="task-name-text">{{ slotProps.option.task_name }}</span>
+                  </div>
+                </template>
+              </Dropdown>
             </div>
 
             <div class="input-group" v-if="workflowSteps.length > 0">
@@ -57,24 +71,16 @@
 
             <div class="input-group">
               <label for="startTime" class="input-label">เวลาเริ่มงาน *</label>
-              <Calendar id="startTime" ref="startTimeCal" v-model="formData.startTime" timeOnly hourFormat="24"
-                class="corporate-input" :manualInput="true" :pt="{
-                  input: {
-                    inputmode: 'numeric',
-                    autocomplete: 'off'
-                  }
-                }" required />
+              <InputText id="startTime" v-model="formData.startTimeText" class="corporate-input"
+                placeholder="HH:MM" maxlength="5" inputmode="numeric"
+                @input="formatTimeInput('startTimeText')" @blur="parseStartTime" required />
             </div>
 
             <div class="input-group">
               <label for="endTime" class="input-label">เวลาสิ้นสุดงาน *</label>
-              <Calendar id="endTime" ref="endTimeCal" v-model="formData.endTime" timeOnly hourFormat="24"
-                class="corporate-input" :manualInput="true" :pt="{
-                  input: {
-                    inputmode: 'numeric',
-                    autocomplete: 'off'
-                  }
-                }" required />
+              <InputText id="endTime" v-model="formData.endTimeText" class="corporate-input"
+                placeholder="HH:MM" maxlength="5" inputmode="numeric"
+                @input="formatTimeInput('endTimeText')" @blur="parseEndTime" required />
             </div>
 
             <div class="input-group">
@@ -394,26 +400,35 @@ export default {
     },
 
     parseStartTime() {
-      if (this.formData.startTimeText && this.formData.startTimeText.length === 5) {
-        const [hours, minutes] = this.formData.startTimeText.split(':').map(Number)
-        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-          const date = new Date()
-          date.setHours(hours, minutes, 0, 0)
-          this.formData.startTime = date
-          this.formData.meetingStartTime = new Date(date)
-        }
+      const time = this.parseTimeText(this.formData.startTimeText)
+      if (time) {
+        this.formData.startTime = time
+        this.formData.meetingStartTime = new Date(time)
       }
     },
     parseEndTime() {
-      if (this.formData.endTimeText && this.formData.endTimeText.length === 5) {
-        const [hours, minutes] = this.formData.endTimeText.split(':').map(Number)
-        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-          const date = new Date()
-          date.setHours(hours, minutes, 0, 0)
-          this.formData.endTime = date
-          this.formData.meetingEndTime = new Date(date)
-        }
+      const time = this.parseTimeText(this.formData.endTimeText)
+      if (time) {
+        this.formData.endTime = time
+        this.formData.meetingEndTime = new Date(time)
       }
+    },
+    parseTimeText(text) {
+      if (!text || text.length < 5) return null
+      const [hours, minutes] = text.split(':').map(Number)
+      if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+        const date = new Date()
+        date.setHours(hours, minutes, 0, 0)
+        return date
+      }
+      return null
+    },
+    formatTimeInput(field) {
+      let value = this.formData[field].replace(/\D/g, '')
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + ':' + value.slice(2, 4)
+      }
+      this.formData[field] = value.slice(0, 5)
     },
     getStepNumber(stepId) {
       const index = this.workflowSteps.findIndex(s => s.id === stepId)
@@ -431,6 +446,14 @@ export default {
       }
       if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
       return formatDate(start || end)
+    },
+    getTaskSO(taskId) {
+      const task = this.tasks.find(t => t.id === taskId)
+      return task?.so_number || ''
+    },
+    getTaskName(taskId) {
+      const task = this.tasks.find(t => t.id === taskId)
+      return task?.task_name || ''
     },
     async loadUsers() {
       try {
@@ -674,12 +697,15 @@ export default {
       return 0
     },
     resetForm() {
+      const now = new Date()
       this.formData = {
         taskId: null,
         stepId: null,
         workDate: new Date(),
         startTime: new Date(),
         endTime: null,
+        startTimeText: now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'),
+        endTimeText: '',
         workStatus: null,
         location: '',
         workDescription: '',
@@ -744,6 +770,44 @@ export default {
 .form-card {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
+}
+
+/* Task Dropdown Styling */
+.task-dropdown {
+  width: 100%;
+}
+
+.task-dropdown :deep(.p-dropdown-label) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-selected,
+.task-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.so-badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.task-name-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .selected-step {
@@ -1385,6 +1449,31 @@ export default {
   max-width: 100%;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.attendees-section :deep(.p-autocomplete) {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+.attendees-section :deep(.p-autocomplete-input) {
+  width: 100% !important;
+  text-overflow: ellipsis;
+}
+
+.attendees-section :deep(.p-autocomplete-panel) {
+  max-width: calc(100vw - 2rem) !important;
+}
+
+.attendees-section .user-option {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.attendees-section .user-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .input-group-row {
