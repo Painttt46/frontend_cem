@@ -164,7 +164,7 @@
                 <AutoComplete ref="attendeeAutocomplete" v-model="selectedAttendee" :suggestions="filteredAttendees" @complete="searchAttendees"
                   @item-select="onAttendeeSelect" @dropdown-click="showAllAttendees" optionLabel="name"
                   placeholder="ค้นหาและเลือกผู้ใช้..." class="corporate-input attendee-autocomplete" :dropdown="true" :forceSelection="false"
-                  scrollHeight="200px" @hide="preventHide">
+                  scrollHeight="200px">
                   <template #option="slotProps">
                     <div class="user-option">
                       <div class="user-name">{{ slotProps.option.name }}</div>
@@ -487,19 +487,6 @@ export default {
       this.filteredAttendees = this.users.slice()
     },
 
-    preventHide(event) {
-      // ป้องกันไม่ให้ dropdown ปิดเมื่อกดที่อื่น
-      if (event) {
-        event.preventDefault()
-      }
-      // เปิด dropdown กลับ
-      this.$nextTick(() => {
-        if (this.$refs.attendeeAutocomplete) {
-          this.$refs.attendeeAutocomplete.show()
-        }
-      })
-    },
-
     onAttendeeSelect(event) {
       const attendee = event.value
       if (attendee && attendee.email) {
@@ -507,9 +494,11 @@ export default {
         if (!this.formData.attendees.includes(attendee.email)) {
           this.formData.attendees.push(attendee.email)
         }
-        // Clear selection
-        this.selectedAttendee = null
       }
+      // Clear selection
+      this.$nextTick(() => {
+        this.selectedAttendee = null
+      })
     },
 
     removeAttendee(index) {
