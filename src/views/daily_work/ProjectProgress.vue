@@ -166,7 +166,7 @@ export default {
         this.statuses = response.data
       } catch { /* ignore */ }
     },
-    onRowExpand(event) {
+    onRowExpand() {
       // Optional: Load steps on expand if not already loaded
     },
     getProjectProgress(project) {
