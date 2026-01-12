@@ -179,14 +179,14 @@
           <Calendar v-model="editFormData.work_date" dateFormat="dd/mm/yy" class="corporate-input" required />
         </div>
 
-        <div class="input-group">
-          <label class="input-label">เวลาเริ่มงาน *</label>
-          <InputText v-model="editFormData.start_time_text" class="corporate-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" @input="formatTimeInput('start_time_text')" required />
-        </div>
-
-        <div class="input-group">
-          <label class="input-label">เวลาสิ้นสุดงาน *</label>
-          <InputText v-model="editFormData.end_time_text" class="corporate-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" @input="formatTimeInput('end_time_text')" required />
+        <div class="input-group time-range-group">
+          <label class="input-label">ระยะเวลา *</label>
+          <div class="time-range-inputs">
+            <InputText v-model="editFormData.start_time_text" class="corporate-input time-input" placeholder="เริ่ม" maxlength="5" inputmode="numeric" @input="formatTimeInput('start_time_text')" required />
+            <span class="time-separator">-</span>
+            <InputText v-model="editFormData.end_time_text" class="corporate-input time-input" placeholder="สิ้นสุด" maxlength="5" inputmode="numeric" @input="formatTimeInput('end_time_text')" required />
+            <span class="time-total">({{ calculateEditHours }})</span>
+          </div>
         </div>
 
         <div class="input-group">
@@ -317,6 +317,17 @@ export default {
   computed: {
     workRecords() {
       return this.records && this.records.length > 0 ? this.records : this.localRecords
+    },
+    calculateEditHours() {
+      if (!this.editFormData.start_time_text || !this.editFormData.end_time_text) return '0.00 ชม.'
+      const start = this.editFormData.start_time_text.split(':')
+      const end = this.editFormData.end_time_text.split(':')
+      if (start.length < 2 || end.length < 2) return '0.00 ชม.'
+      const startMin = parseInt(start[0]) * 60 + parseInt(start[1])
+      const endMin = parseInt(end[0]) * 60 + parseInt(end[1])
+      let diff = endMin - startMin
+      if (diff < 0) diff += 24 * 60
+      return (diff / 60).toFixed(2) + ' ชม.'
     }
   },
   data() {
@@ -1019,6 +1030,28 @@ export default {
 
 .input-group.full-width {
   grid-column: 1 / -1;
+}
+
+.time-range-group .time-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-range-group .time-input {
+  width: 80px;
+  text-align: center;
+}
+
+.time-range-group .time-separator {
+  font-weight: bold;
+  color: #6c757d;
+}
+
+.time-range-group .time-total {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-left: 0.5rem;
 }
 
 .input-label {

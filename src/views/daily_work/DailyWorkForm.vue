@@ -69,23 +69,18 @@
                 :minDate="minDate" required />
             </div>
 
-            <div class="input-group">
-              <label for="startTime" class="input-label">เวลาเริ่มงาน *</label>
-              <InputText id="startTime" v-model="formData.startTimeText" class="corporate-input"
-                placeholder="HH:MM" maxlength="5" inputmode="numeric"
-                @input="formatTimeInput('startTimeText')" @blur="parseStartTime" required />
-            </div>
-
-            <div class="input-group">
-              <label for="endTime" class="input-label">เวลาสิ้นสุดงาน *</label>
-              <InputText id="endTime" v-model="formData.endTimeText" class="corporate-input"
-                placeholder="HH:MM" maxlength="5" inputmode="numeric"
-                @input="formatTimeInput('endTimeText')" @blur="parseEndTime" required />
-            </div>
-
-            <div class="input-group">
-              <label for="totalHours" class="input-label">ระยะเวลารวม</label>
-              <InputText id="totalHours" :value="calculateHours" readonly class="corporate-input readonly-field" />
+            <div class="input-group time-range-group">
+              <label class="input-label">ระยะเวลา *</label>
+              <div class="time-range-inputs">
+                <InputText id="startTime" v-model="formData.startTimeText" class="corporate-input time-input"
+                  placeholder="เริ่ม" maxlength="5" inputmode="numeric"
+                  @input="formatTimeInput('startTimeText')" @blur="parseStartTime" required />
+                <span class="time-separator">-</span>
+                <InputText id="endTime" v-model="formData.endTimeText" class="corporate-input time-input"
+                  placeholder="สิ้นสุด" maxlength="5" inputmode="numeric"
+                  @input="formatTimeInput('endTimeText')" @blur="parseEndTime" required />
+                <span class="time-total">({{ calculateHours }})</span>
+              </div>
             </div>
 
             <div class="input-group">
@@ -1044,6 +1039,28 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.time-range-group .time-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.time-range-group .time-input {
+  width: 80px;
+  text-align: center;
+}
+
+.time-range-group .time-separator {
+  font-weight: bold;
+  color: #6c757d;
+}
+
+.time-range-group .time-total {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-left: 0.5rem;
 }
 
 .checkbox-group {
