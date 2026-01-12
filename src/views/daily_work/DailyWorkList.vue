@@ -109,7 +109,7 @@
 
         <Column header="จัดการ" style="width: 120px; text-align: center;">
           <template #body="slotProps">
-            <div class="action-buttons" v-if="slotProps.data && isOwner(slotProps.data) && !isEditDisabled(slotProps.data) && slotProps.data.work_status !== 'cancelled'">
+            <div class="action-buttons" v-if="slotProps.data && (isAdmin() || (isOwner(slotProps.data) && !isEditDisabled(slotProps.data))) && slotProps.data.work_status !== 'cancelled'">
               <Button icon="pi pi-pencil" size="small" severity="warning"
                 outlined @click="editRecord(slotProps.data)" v-tooltip="'แก้ไข'" />
               <Button icon="pi pi-times" size="small" severity="danger"
@@ -386,6 +386,10 @@ export default {
     isOwner(record) {
       const currentUserId = localStorage.getItem('soc_user_id')
       return record.user_id == currentUserId
+    },
+    isAdmin() {
+      const role = localStorage.getItem('soc_role')
+      return role === 'admin'
     },
     isEditDisabled(record) {
       if (!record || !record.work_date) {
