@@ -331,8 +331,6 @@ export default {
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.95rem;
 }
-  color: #6366f1;
-}
 
 .content-card {
   border-radius: 12px;
