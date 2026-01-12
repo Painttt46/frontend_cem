@@ -224,20 +224,20 @@
             :style="{width: '450px'}" modal :draggable="false" position="center">
       <div class="edit-dialog-content">
         <div class="edit-field">
-          <label class="edit-label">ชื่อหมวดหมู่</label>
-          <InputText v-model="editingCategory.label" class="w-full" placeholder="กรอกชื่อหมวดหมู่" />
+          <label class="edit-label">ชื่อหมวดหมู่ (ไม่ต้องใส่ icon)</label>
+          <InputText v-model="editingCategoryName" class="w-full" placeholder="กรอกชื่อหมวดหมู่" />
         </div>
         
         <div class="edit-field">
-          <label class="edit-label">เลือกสี</label>
+          <label class="edit-label">เลือก Icon และสี</label>
           <Dropdown v-model="editingCategoryColor" :options="categoryIcons" 
-                    optionLabel="label" class="w-full" placeholder="เลือกสี">
+                    optionLabel="label" class="w-full" placeholder="เลือก icon และสี">
             <template #value="slotProps">
               <div v-if="slotProps.value" class="color-selected">
                 <span class="color-dot" :style="{ backgroundColor: slotProps.value.color }"></span>
                 <span>{{ slotProps.value.label }}</span>
               </div>
-              <span v-else>เลือกสี</span>
+              <span v-else>เลือก icon และสี</span>
             </template>
             <template #option="slotProps">
               <div class="color-option">
@@ -248,16 +248,16 @@
           </Dropdown>
         </div>
 
-        <div class="edit-preview" v-if="editingCategory.label">
+        <div class="edit-preview" v-if="editingCategoryName">
           <label class="edit-label">ตัวอย่าง</label>
-          <Badge :value="editingCategory.label" 
+          <Badge :value="getIconFromLabel(editingCategoryColor?.label) + ' ' + editingCategoryName" 
                  :style="{ backgroundColor: editingCategoryColor?.color || '#6c757d', color: '#fff' }" />
         </div>
       </div>
       <template #footer>
         <div class="dialog-footer">
           <Button label="ยกเลิก" @click="showEditCategoryDialog = false" severity="secondary" outlined />
-          <Button label="บันทึก" @click="saveEditCategory" :disabled="!editingCategory.label" />
+          <Button label="บันทึก" @click="saveEditCategory" :disabled="!editingCategoryName || !editingCategoryColor" />
         </div>
       </template>
     </Dialog>
@@ -267,20 +267,20 @@
             :style="{width: '450px'}" modal :draggable="false" position="center">
       <div class="edit-dialog-content">
         <div class="edit-field">
-          <label class="edit-label">ชื่อสถานะ</label>
-          <InputText v-model="editingStatus.label" class="w-full" placeholder="กรอกชื่อสถานะ" />
+          <label class="edit-label">ชื่อสถานะ (ไม่ต้องใส่ icon)</label>
+          <InputText v-model="editingStatusName" class="w-full" placeholder="กรอกชื่อสถานะ" />
         </div>
         
         <div class="edit-field">
-          <label class="edit-label">เลือกสี</label>
+          <label class="edit-label">เลือก Icon และสี</label>
           <Dropdown v-model="editingStatusColor" :options="statusIcons" 
-                    optionLabel="label" class="w-full" placeholder="เลือกสี">
+                    optionLabel="label" class="w-full" placeholder="เลือก icon และสี">
             <template #value="slotProps">
               <div v-if="slotProps.value" class="color-selected">
                 <span class="color-dot" :style="{ backgroundColor: slotProps.value.color }"></span>
                 <span>{{ slotProps.value.label }}</span>
               </div>
-              <span v-else>เลือกสี</span>
+              <span v-else>เลือก icon และสี</span>
             </template>
             <template #option="slotProps">
               <div class="color-option">
@@ -291,16 +291,16 @@
           </Dropdown>
         </div>
 
-        <div class="edit-preview" v-if="editingStatus.label">
+        <div class="edit-preview" v-if="editingStatusName">
           <label class="edit-label">ตัวอย่าง</label>
-          <Badge :value="editingStatus.label" 
+          <Badge :value="getIconFromLabel(editingStatusColor?.label) + ' ' + editingStatusName" 
                  :style="{ backgroundColor: editingStatusColor?.color || '#6c757d', color: '#fff' }" />
         </div>
       </div>
       <template #footer>
         <div class="dialog-footer">
           <Button label="ยกเลิก" @click="showEditStatusDialog = false" severity="secondary" outlined />
-          <Button label="บันทึก" @click="saveEditStatus" :disabled="!editingStatus.label" />
+          <Button label="บันทึก" @click="saveEditStatus" :disabled="!editingStatusName || !editingStatusColor" />
         </div>
       </template>
     </Dialog>
@@ -324,8 +324,10 @@ const newCategory = ref('')
 const newStatus = ref('')
 const editingCategory = ref({ label: '', value: '', color: '' })
 const editingCategoryColor = ref(null)
+const editingCategoryName = ref('')
 const editingStatus = ref({ label: '', value: '', color: '' })
 const editingStatusColor = ref(null)
+const editingStatusName = ref('')
 const newCategoryIcon = ref(null)
 const newStatusIcon = ref(null)
 
@@ -436,16 +438,33 @@ const addCategory = async () => {
   }
 }
 
+// Helper function to extract icon from label
+const getIconFromLabel = (label) => {
+  if (!label) return ''
+  const match = label.match(/^(\p{Emoji})/u)
+  return match ? match[1] : ''
+}
+
+// Helper function to extract name without icon
+const getNameFromLabel = (label) => {
+  if (!label) return ''
+  return label.replace(/^(\p{Emoji})\s*/u, '').trim()
+}
+
 const editCategory = (category) => {
   editingCategory.value = { ...category }
+  editingCategoryName.value = getNameFromLabel(category.label)
   editingCategoryColor.value = categoryIcons.value.find(c => c.color === category.color) || null
   showEditCategoryDialog.value = true
 }
 
 const saveEditCategory = async () => {
   try {
+    const icon = getIconFromLabel(editingCategoryColor.value?.label)
+    const newLabel = icon ? `${icon} ${editingCategoryName.value}` : editingCategoryName.value
     const updatedCategory = {
       ...editingCategory.value,
+      label: newLabel,
       color: editingCategoryColor.value?.color || editingCategory.value.color
     }
     await http.put(`/api/settings/categories/${editingCategory.value.value}`, updatedCategory)
@@ -542,14 +561,18 @@ const addStatus = async () => {
 
 const editStatus = (status) => {
   editingStatus.value = { ...status }
+  editingStatusName.value = getNameFromLabel(status.label)
   editingStatusColor.value = statusIcons.value.find(s => s.color === status.color) || null
   showEditStatusDialog.value = true
 }
 
 const saveEditStatus = async () => {
   try {
+    const icon = getIconFromLabel(editingStatusColor.value?.label)
+    const newLabel = icon ? `${icon} ${editingStatusName.value}` : editingStatusName.value
     const updatedStatus = {
       ...editingStatus.value,
+      label: newLabel,
       color: editingStatusColor.value?.color || editingStatus.value.color
     }
     await http.put(`/api/settings/statuses/${editingStatus.value.value}`, updatedStatus)
