@@ -3,25 +3,9 @@
     <Toast />
     
     <Card class="header-card">
-      <template #content>
-        <div class="header-content">
-          <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
-            <div class="header-title">
-              <i class="pi pi-chart-line header-icon"></i>
-              <h1>ขั้นตอนการดำเนินการโครงการ</h1>
-            </div>
-          </div>
-          <div class="header-right">
-            <span class="p-input-icon-left search-box">
-              <i class="pi pi-search" />
-              <InputText v-model="searchQuery" placeholder="ค้นหาโครงการ..." @input="onSearch" />
-            </span>
-            <span class="stat-item">
-              <i class="pi pi-folder"></i>
-              {{ filteredProjects.length }} โครงการ
-            </span>
-          </div>
+      <template #header>
+        <div class="main-header">
+          <h1><i class="pi pi-chart-line"></i> ขั้นตอนการดำเนินการโครงการ</h1>
         </div>
       </template>
     </Card>
@@ -29,8 +13,9 @@
     <Card class="content-card">
       <template #content>
         <DataTable :value="filteredProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
-          dataKey="id" :loading="loading" responsiveLayout="scroll" stripedRows
-          :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]">
+          dataKey="id" responsiveLayout="scroll" stripedRows
+          :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
+          @rowClick="onRowClick" class="clickable-rows">
           
           <Column :expander="true" style="width: 3rem" />
           
@@ -124,7 +109,6 @@ export default {
     return {
       projects: [],
       expandedRows: [],
-      loading: false,
       categories: [],
       statuses: [],
       searchQuery: ''
@@ -149,7 +133,6 @@ export default {
   },
   methods: {
     async loadProjects() {
-      this.loading = true
       try {
         const response = await this.$http.get('/api/tasks')
         this.projects = response.data
@@ -165,8 +148,6 @@ export default {
         }
       } catch (error) {
         console.error('Error loading projects:', error)
-      } finally {
-        this.loading = false
       }
     },
     async loadCategories() {
@@ -186,6 +167,15 @@ export default {
     },
     onRowExpand() {
       // Optional: Load steps on expand if not already loaded
+    },
+    onRowClick(event) {
+      const row = event.data
+      const index = this.expandedRows.findIndex(r => r.id === row.id)
+      if (index >= 0) {
+        this.expandedRows.splice(index, 1)
+      } else {
+        this.expandedRows.push(row)
+      }
     },
     getProjectProgress(project) {
       if (!project.steps || project.steps.length === 0) return 0
@@ -250,47 +240,43 @@ export default {
 
 .header-card {
   margin-bottom: 1.5rem;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
-  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
-.header-content {
+.header-card :deep(.p-card-body) {
+  padding: 0;
+  background: transparent;
+}
+
+.header-card :deep(.p-card-content) {
+  padding: 0;
+}
+
+.main-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0.5rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #4A90E2, #D73527);
+  color: white;
+  border-radius: 15px 15px 0 0;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  min-height: 80px;
 }
 
-.header-left {
+.main-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
-.header-title h1 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: white;
-}
-
-.header-icon {
+.main-header i {
   font-size: 1.5rem;
-  color: white;
-}
-
-.back-btn {
-  color: white !important;
-  border: 1px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 8px !important;
-}
-
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .header-right {
@@ -340,6 +326,7 @@ export default {
 .project-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 0.25rem;
 }
 
@@ -501,5 +488,8 @@ export default {
     align-items: flex-start;
     gap: 0.5rem;
   }
+}
+.clickable-rows :deep(.p-datatable-tbody > tr) {
+  cursor: pointer;
 }
 </style>
