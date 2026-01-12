@@ -97,7 +97,7 @@
 
         <div class="field">
           <label>สถานะ</label>
-          <InputText v-model="currentStep.status" placeholder="เช่น รอดำเนินการ, กำลังทำ, เสร็จสิ้น" />
+          <Dropdown v-model="currentStep.status" :options="stepStatusOptions" optionLabel="label" optionValue="value" placeholder="เลือกสถานะ" class="w-full" />
         </div>
       </div>
 
@@ -147,7 +147,8 @@ export default {
         assigned_users: [],
         status: null,
         step_order: 0
-      }
+      },
+      stepStatusOptions: []
     }
   },
   watch: {
@@ -168,8 +169,17 @@ export default {
   },
   mounted() {
     this.loadUsers()
+    this.loadStatusOptions()
   },
   methods: {
+    async loadStatusOptions() {
+      try {
+        const response = await axios.get('/api/settings/statuses')
+        this.stepStatusOptions = response.data
+      } catch {
+        // ignore
+      }
+    },
     getEmptyStep() {
       return {
         step_name: '',

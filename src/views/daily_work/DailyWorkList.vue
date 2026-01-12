@@ -58,22 +58,32 @@
           </template>
         </Column>
 
-        <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 120px; text-align: center;">
+        <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
-            <div style="text-align: center;">
-              <span v-if="slotProps.data.step_name" class="step-badge">
+            <div v-if="slotProps.data.step_name" class="step-info">
+              <div class="step-name">
                 <i class="pi pi-sitemap"></i> {{ slotProps.data.step_name }}
-              </span>
-              <span v-else class="text-muted">-</span>
+              </div>
+              <div v-if="slotProps.data.step_description" class="step-detail">
+                <i class="pi pi-info-circle"></i> {{ slotProps.data.step_description }}
+              </div>
+              <div v-if="slotProps.data.step_start_date || slotProps.data.step_end_date" class="step-detail">
+                <i class="pi pi-calendar"></i> {{ formatStepDateRange(slotProps.data.step_start_date, slotProps.data.step_end_date) }}
+              </div>
+              <div v-if="slotProps.data.step_assigned_users && slotProps.data.step_assigned_users.length > 0" class="step-detail">
+                <i class="pi pi-users"></i> {{ formatAssignedUsers(slotProps.data.step_assigned_users) }}
+              </div>
             </div>
+            <span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="getStatusLabel(slotProps.data.work_status)"
+              <Badge v-if="slotProps.data.work_status" :value="getStatusLabel(slotProps.data.work_status)"
                 :style="{ backgroundColor: getStatusColor(slotProps.data.work_status), color: '#fff' }" />
+              <span v-else class="text-muted">-</span>
             </div>
           </template>
         </Column>
@@ -393,6 +403,20 @@ export default {
         .catch(() => {
           this.categoryOptions = []
         })
+    },
+    formatStepDateRange(start, end) {
+      const formatDate = (date) => {
+        if (!date) return ''
+        return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+      }
+      if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
+      if (start) return `เริ่ม ${formatDate(start)}`
+      if (end) return `ถึง ${formatDate(end)}`
+      return ''
+    },
+    formatAssignedUsers(users) {
+      if (!users || users.length === 0) return ''
+      return users.map(u => u.name || u).join(', ')
     },
     isOwner(record) {
       const currentUserId = localStorage.getItem('soc_user_id')
@@ -827,6 +851,32 @@ export default {
 
 .text-muted {
   color: #9ca3af;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.step-name i {
+  color: #6366f1;
+  margin-right: 4px;
+}
+
+.step-detail {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.step-detail i {
+  margin-right: 4px;
+  font-size: 0.75rem;
 }
 
 .badge-container {

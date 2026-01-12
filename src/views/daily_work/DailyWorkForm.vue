@@ -83,22 +83,6 @@
               </div>
             </div>
 
-            <div class="input-group">
-              <label for="workStatus" class="input-label">สถานะงาน *</label>
-              <Dropdown id="workStatus" v-model="formData.workStatus" :options="statusOptions" optionLabel="label"
-                optionValue="value" class="corporate-dropdown" required>
-                <template #value="slotProps">
-                  <Badge v-if="slotProps.value" :value="getStatusLabelOnly(slotProps.value)"
-                    :style="{ backgroundColor: getStatusColor(slotProps.value), color: '#fff' }" />
-                  <span v-else>เลือกสถานะ</span>
-                </template>
-                <template #option="slotProps">
-                  <Badge :value="slotProps.option.label"
-                    :style="{ backgroundColor: slotProps.option.color || '#6c757d', color: '#fff' }" />
-                </template>
-              </Dropdown>
-            </div>
-
             <div class="input-group full-width">
               <label for="location" class="input-label">สถานที่ *</label>
               <InputText id="location" v-model="formData.location" required class="corporate-input"
@@ -442,6 +426,11 @@ export default {
       const step = this.workflowSteps.find(s => s.id === stepId)
       return step ? step.step_name : ''
     },
+    getSelectedStepStatus() {
+      if (!this.formData.stepId) return null
+      const step = this.workflowSteps.find(s => s.id === this.formData.stepId)
+      return step ? step.status : null
+    },
     formatDateRange(start, end) {
       if (!start && !end) return ''
       const formatDate = (date) => {
@@ -616,16 +605,6 @@ export default {
         return
       }
 
-      if (!isRequired(this.formData.workStatus)) {
-        this.$toast.add({
-          severity: 'error',
-          summary: 'ข้อมูลไม่ครบถ้วน',
-          detail: getValidationMessage('สถานะงาน', 'required'),
-          life: 3000
-        })
-        return
-      }
-
       if (!isValidTimeRange(this.formData.startTime, this.formData.endTime)) {
         this.$toast.add({
           severity: 'error',
@@ -639,6 +618,9 @@ export default {
       try {
         const uploadedFiles = await this.uploadFiles()
 
+        // Get step status if step is selected
+        const stepStatus = this.formData.stepId ? this.getSelectedStepStatus() : null;
+
         const workData = {
           task_id: this.formData.taskId,
           step_id: this.formData.stepId || null,
@@ -646,7 +628,7 @@ export default {
           start_time: this.formatTime(this.formData.startTime),
           end_time: this.formatTime(this.formData.endTime),
           total_hours: this.calculateTotalHours(),
-          work_status: this.formData.workStatus,
+          work_status: stepStatus,
           location: this.formData.location,
           work_description: this.formData.workDescription,
           files: uploadedFiles,
