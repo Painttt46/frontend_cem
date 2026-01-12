@@ -686,15 +686,15 @@ export default {
         const response = await this.$http.get('/api/tasks')
         // รองรับทั้ง format array ตรงๆ และ format ที่มี wrapper
         this.tasks = response.data.data || response.data || []
-        // โหลด steps พร้อมกันทุก task
-        await Promise.all(this.tasks.map(async (task) => {
+        // โหลด steps สำหรับแต่ละ task
+        for (const task of this.tasks) {
           try {
             const stepsResponse = await this.$http.get(`/api/task-steps/task/${task.id}`, { silent: true })
             task.steps = stepsResponse.data || []
           } catch {
             task.steps = []
           }
-        }))
+        }
       } catch (error) {
         this.tasks = []
         this.$toast.add({

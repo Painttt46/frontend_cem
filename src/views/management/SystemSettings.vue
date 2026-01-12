@@ -68,23 +68,6 @@
         </template>
       </Card>
 
-      <!-- Workflow Status Settings -->
-      <Card v-if="canAccess('/management/settings/workflow-status')" class="setting-card" @click="navigateTo('workflow-status')">
-        <template #content>
-          <div class="card-content">
-            <div class="card-header">
-              <i class="pi pi-sitemap card-icon"></i>
-              <Badge value="Active" severity="success" />
-            </div>
-            <h3>ตั้งค่าสถานะ Workflow</h3>
-            <p>กำหนดสถานะที่แสดงตามเงื่อนไขของ Workflow Step</p>
-            <div class="card-footer">
-              <i class="pi pi-arrow-right"></i>
-            </div>
-          </div>
-        </template>
-      </Card>
-
       <!-- Notifications -->
       <Card class="setting-card" @click="showComingSoon">
         <template #content>

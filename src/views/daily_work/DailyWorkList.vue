@@ -82,11 +82,12 @@
           </template>
         </Column>
 
-        <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 180px;">
+        <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="getLatestWorkingStep(slotProps.data)"
-                :style="{ backgroundColor: getLatestStepColor(slotProps.data), color: '#fff' }" />
+              <Badge v-if="slotProps.data.work_status" :value="getStatusLabel(slotProps.data.work_status)"
+                :style="{ backgroundColor: getStatusColor(slotProps.data.work_status), color: '#fff' }" />
+              <span v-else class="text-muted">-</span>
             </div>
           </template>
         </Column>
@@ -291,7 +292,6 @@ export default {
     // Load status options from localStorage
     this.loadStatusOptions()
     this.loadCategoryOptions()
-    this.loadTasksWithSteps()
 
     // Update current time every second for realtime button state
     setInterval(() => {
@@ -339,7 +339,6 @@ export default {
   data() {
     return {
       localRecords: [],
-      tasksWithSteps: [],
       detailDialog: false,
       selectedRecord: null,
       filesDialog: false,
@@ -367,43 +366,6 @@ export default {
     }
   },
   methods: {
-    getLatestWorkingStep(record) {
-      const task = this.getTaskById(record.task_id)
-      if (!task || !task.steps || task.steps.length === 0) return '-'
-      const workingSteps = task.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
-      if (workingSteps.length === 0) return '-'
-      return workingSteps[workingSteps.length - 1].step_name
-    },
-    getLatestStepColor(record) {
-      const task = this.getTaskById(record.task_id)
-      if (!task || !task.steps || task.steps.length === 0) return '#9ca3af'
-      const workingSteps = task.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
-      if (workingSteps.length === 0) return '#9ca3af'
-      const latestStep = workingSteps[workingSteps.length - 1]
-      if (latestStep.status === 'completed') return '#10b981'
-      return '#3b82f6'
-    },
-    getTaskById(taskId) {
-      return this.tasksWithSteps?.find(t => t.id === taskId)
-    },
-    async loadTasksWithSteps() {
-      try {
-        const response = await this.$http.get('/api/tasks', { silent: true })
-        const tasks = response.data.data || response.data || []
-        // โหลด steps พร้อมกันทุก task
-        await Promise.all(tasks.map(async (task) => {
-          try {
-            const stepsResponse = await this.$http.get(`/api/task-steps/task/${task.id}`, { silent: true })
-            task.steps = stepsResponse.data || []
-          } catch {
-            task.steps = []
-          }
-        }))
-        this.tasksWithSteps = tasks
-      } catch {
-        this.tasksWithSteps = []
-      }
-    },
     showUserInfo(userId) {
       if (userId) {
         this.selectedUserId = userId
