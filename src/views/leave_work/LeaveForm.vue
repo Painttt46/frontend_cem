@@ -367,8 +367,12 @@ export default {
           }
         }
         
-        const days = (totalHours / hoursPerDay).toFixed(1)
-        return `${days} วัน (${totalHours.toFixed(1)} ชม.)`
+        // ปัดเศษให้ถูกต้อง
+        const roundedHours = Math.round(totalHours * 10) / 10
+        const days = Math.round((roundedHours / hoursPerDay) * 10) / 10
+        const hoursDisplay = Number.isInteger(roundedHours) ? roundedHours : roundedHours.toFixed(1)
+        const daysDisplay = Number.isInteger(days) ? days : days.toFixed(1)
+        return `${daysDisplay} วัน (${hoursDisplay} ชม.)`
       }
       return '0 วัน (0 ชม.)'
     },
@@ -425,28 +429,31 @@ export default {
     
     // คำนวณชั่วโมงทำงานระหว่างสองเวลา (ใช้ workHours ของ role)
     calculateWorkHours(start, end) {
-      const startHour = start.getHours() + start.getMinutes() / 60
-      const endHour = end.getHours() + end.getMinutes() / 60
+      // คำนวณเป็นนาทีเพื่อหลีกเลี่ยง floating point error
+      const startMinutes = start.getHours() * 60 + start.getMinutes()
+      const endMinutes = end.getHours() * 60 + end.getMinutes()
       
       const [ws] = this.workHours.start_time.split(':').map(Number)
       const [we] = this.workHours.end_time.split(':').map(Number)
       const [ls] = this.workHours.lunch_start.split(':').map(Number)
       const [le] = this.workHours.lunch_end.split(':').map(Number)
       
-      let hours = 0
+      const wsMin = ws * 60, weMin = we * 60, lsMin = ls * 60, leMin = le * 60
+      
+      let minutes = 0
       // ช่วงเช้า
-      const morningStart = Math.max(startHour, ws)
-      const morningEnd = Math.min(endHour, ls)
+      const morningStart = Math.max(startMinutes, wsMin)
+      const morningEnd = Math.min(endMinutes, lsMin)
       if (morningEnd > morningStart) {
-        hours += morningEnd - morningStart
+        minutes += morningEnd - morningStart
       }
       // ช่วงบ่าย
-      const afternoonStart = Math.max(startHour, le)
-      const afternoonEnd = Math.min(endHour, we)
+      const afternoonStart = Math.max(startMinutes, leMin)
+      const afternoonEnd = Math.min(endMinutes, weMin)
       if (afternoonEnd > afternoonStart) {
-        hours += afternoonEnd - afternoonStart
+        minutes += afternoonEnd - afternoonStart
       }
-      return Math.max(0, hours)
+      return Math.max(0, minutes / 60)
     },
     
     async loadLeaveTypes() {
@@ -754,7 +761,9 @@ export default {
           }
         }
         
-        return parseFloat((totalHours / hoursPerDay).toFixed(2))
+        // ปัดเศษให้ถูกต้อง
+        const roundedHours = Math.round(totalHours * 10) / 10
+        return Math.round((roundedHours / hoursPerDay) * 10) / 10
       }
       return 0
     },
