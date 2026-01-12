@@ -57,6 +57,10 @@
                         <i class="pi pi-circle-fill"></i>
                         {{ slotProps.option.status }}
                       </span>
+                      <span v-if="slotProps.option.assigned_users && slotProps.option.assigned_users.length > 0" class="meta-item">
+                        <i class="pi pi-users"></i>
+                        {{ formatAssignedUsers(slotProps.option.assigned_users) }}
+                      </span>
                     </div>
                   </div>
                 </template>
@@ -430,6 +434,10 @@ export default {
       if (!this.formData.stepId) return null
       const step = this.workflowSteps.find(s => s.id === this.formData.stepId)
       return step ? step.status : null
+    },
+    formatAssignedUsers(users) {
+      if (!users || users.length === 0) return ''
+      return users.map(u => u.name || u).join(', ')
     },
     formatDateRange(start, end) {
       if (!start && !end) return ''
