@@ -623,6 +623,7 @@ export default {
       }
     },
     editRecord(record) {
+      console.log('record.work_date:', record.work_date);
 
       // Parse date โดยแยกเฉพาะวันที่
       let workDate = new Date();
@@ -630,14 +631,13 @@ export default {
         // แยกเอาเฉพาะส่วนวันที่จาก ISO string
         // "2025-10-14T17:00:00.000Z" -> "2025-10-14"
         const dateOnly = record.work_date.split('T')[0];
+        console.log('dateOnly:', dateOnly);
         const [year, month, day] = dateOnly.split('-').map(Number);
+        console.log('parsed:', year, month, day);
 
         // สร้าง Date ใหม่ (month ใน JS เริ่มจาก 0 แต่ใน ISO string เริ่มจาก 1)
-        workDate = new Date(year, month - 1, day);
-
-        // เพิ่มวันที่ขึ้น 1 วัน เพื่อชดเชย timezone offset
-        workDate.setDate(workDate.getDate() + 1);
-
+        workDate = new Date(year, month - 1, day, 12, 0, 0);
+        console.log('workDate:', workDate);
       }
 
 
