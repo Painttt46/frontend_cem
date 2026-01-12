@@ -161,10 +161,10 @@
 
               <!-- AutoComplete สำหรับเลือก attendees -->
               <div class="colleague-search">
-                <AutoComplete v-model="selectedAttendee" :suggestions="filteredAttendees" @complete="searchAttendees"
+                <AutoComplete v-model="selectedAttendee" :suggestions="filteredAttendees.slice(0, 10)" @complete="searchAttendees"
                   @item-select="onAttendeeSelect" @dropdown-click="showAllAttendees" optionLabel="name"
-                  placeholder="ค้นหาและเลือกผู้ใช้..." class="corporate-input" :dropdown="true" :forceSelection="false"
-                  :scrollHeight="200">
+                  placeholder="ค้นหาและเลือกผู้ใช้..." class="corporate-input attendee-autocomplete" :dropdown="true" :forceSelection="false"
+                  :virtualScrollerOptions="{ itemSize: 40 }" scrollHeight="250px">
                   <template #option="slotProps">
                     <div class="user-option">
                       <div class="user-name">{{ slotProps.option.name }}</div>
@@ -775,12 +775,27 @@ export default {
 /* Task Dropdown Styling */
 .task-dropdown {
   width: 100%;
+  max-width: 100%;
+}
+
+.task-dropdown :deep(.p-dropdown) {
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .task-dropdown :deep(.p-dropdown-label) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.task-dropdown :deep(.p-dropdown-panel) {
+  max-width: calc(100vw - 2rem) !important;
+}
+
+.task-dropdown :deep(.p-dropdown-items-wrapper) {
+  max-width: 100%;
 }
 
 .task-selected,
