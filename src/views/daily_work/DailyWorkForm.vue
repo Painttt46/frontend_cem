@@ -792,10 +792,19 @@ export default {
 
 .task-dropdown :deep(.p-dropdown-panel) {
   max-width: calc(100vw - 2rem) !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  width: auto !important;
 }
 
 .task-dropdown :deep(.p-dropdown-items-wrapper) {
   max-width: 100%;
+  overflow-x: hidden;
+}
+
+.task-dropdown :deep(.p-dropdown-item) {
+  white-space: normal;
+  word-break: break-word;
 }
 
 .task-selected,
@@ -1478,6 +1487,19 @@ export default {
 
 .attendees-section :deep(.p-autocomplete-panel) {
   max-width: calc(100vw - 2rem) !important;
+  left: 1rem !important;
+  right: 1rem !important;
+  width: auto !important;
+}
+
+.attendees-section :deep(.p-autocomplete-items) {
+  max-width: 100%;
+}
+
+.attendees-section :deep(.p-autocomplete-item) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .attendees-section .user-option {
