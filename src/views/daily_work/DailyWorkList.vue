@@ -70,8 +70,12 @@
               <div v-if="slotProps.data.step_start_date || slotProps.data.step_end_date" class="step-detail">
                 <i class="pi pi-calendar"></i> {{ formatStepDateRange(slotProps.data.step_start_date, slotProps.data.step_end_date) }}
               </div>
-              <div v-if="slotProps.data.step_assigned_users && slotProps.data.step_assigned_users.length > 0" class="step-detail">
-                <i class="pi pi-users"></i> {{ formatAssignedUsers(slotProps.data.step_assigned_users) }}
+              <div v-if="slotProps.data.step_assigned_users && slotProps.data.step_assigned_users.length > 0" class="step-detail step-users">
+                <i class="pi pi-users"></i>
+                <template v-for="(user, idx) in slotProps.data.step_assigned_users" :key="idx">
+                  <span class="clickable-name" @click="showUserInfo(user.id)">{{ user.name }}</span>
+                  <span v-if="idx < slotProps.data.step_assigned_users.length - 1">, </span>
+                </template>
               </div>
             </div>
             <span v-else class="text-muted">-</span>
