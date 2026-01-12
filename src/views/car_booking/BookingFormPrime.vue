@@ -71,7 +71,7 @@
                 <AutoComplete v-model="selectedColleague" :suggestions="filteredUsers" @complete="searchUsers"
                   @item-select="onColleagueSelect" @dropdown-click="showAllUsers" optionLabel="displayName"
                   placeholder="ค้นหาหรือเลือกผู้ร่วมงาน..." class="corporate-input" :dropdown="true"
-                  :forceSelection="false" :scrollHeight="200">
+                  :forceSelection="false" scrollHeight="200px">
                   <template #option="slotProps">
                     <div class="user-option">
                       <div class="user-name">{{ slotProps.option.displayName }}</div>
@@ -87,13 +87,10 @@
                   <div v-for="(colleague, index) in borrowForm.colleagues" :key="index" class="colleague-card">
                     <div class="colleague-details">
                       <div class="colleague-name">{{ colleague.name }}</div>
-                      <div class="colleague-position">
-                        <i class="pi pi-briefcase"></i>
-                        {{ colleague.position }}
-                      </div>
-                      <div class="colleague-department">
-                        <i class="pi pi-building"></i>
-                        {{ colleague.department }}
+                      <div class="colleague-info">
+                        <span v-if="colleague.position">{{ colleague.position }}</span>
+                        <span v-if="colleague.position && colleague.department"> - </span>
+                        <span v-if="colleague.department">{{ colleague.department }}</span>
                       </div>
                     </div>
                     <Button type="button" icon="pi pi-times" severity="danger" text rounded size="small"
@@ -600,6 +597,11 @@ export default {
   font-weight: 600;
   color: #212529;
   margin-bottom: 0.25rem;
+}
+
+.colleague-info {
+  font-size: 0.8rem;
+  color: #6c757d;
 }
 
 .colleague-position,
