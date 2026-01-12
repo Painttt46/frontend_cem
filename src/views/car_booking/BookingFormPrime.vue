@@ -867,8 +867,9 @@ export default {
 .task-selected,
 .task-option {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
+  max-width: 100%;
 }
 
 .so-badge {
@@ -885,5 +886,17 @@ export default {
   flex: 1;
   min-width: 0;
   word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.task-dropdown {
+  max-width: 100%;
+}
+
+.task-dropdown :deep(.p-dropdown-label) {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 </style>

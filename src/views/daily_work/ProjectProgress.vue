@@ -148,15 +148,15 @@ export default {
         const response = await this.$http.get('/api/tasks')
         this.projects = response.data
         
-        // Load steps for each project (silent to prevent loading flicker)
-        for (const project of this.projects) {
+        // Load steps พร้อมกันทุก project
+        await Promise.all(this.projects.map(async (project) => {
           try {
             const stepsResponse = await this.$http.get(`/api/task-steps/task/${project.id}`, { silent: true })
             project.steps = stepsResponse.data || []
           } catch {
             project.steps = []
           }
-        }
+        }))
       } catch (error) {
         console.error('Error loading projects:', error)
       }

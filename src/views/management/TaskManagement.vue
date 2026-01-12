@@ -74,17 +74,17 @@
       </Card>
 
       <!-- Status Management Card -->
-      <Card class="action-card" @click="showStatusDialog = true">
+      <Card class="action-card" @click="$router.push('/management/settings/workflow-status')">
         <template #content>
           <div class="action-content">
             <div class="action-header">
               <i class="pi pi-flag action-icon"></i>
               <h3>จัดการสถานะงาน</h3>
             </div>
-            <p>เพิ่ม แก้ไข หรือลบสถานะงาน</p>
+            <p>ตั้งค่าสถานะที่แสดงตามเงื่อนไข Workflow</p>
             <div class="action-stats">
-              <span class="stat-number">{{ workStatuses.length }}</span>
-              <span class="stat-label">สถานะ</span>
+              <span class="stat-number">5</span>
+              <span class="stat-label">เงื่อนไข</span>
             </div>
           </div>
         </template>
