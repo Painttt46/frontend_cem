@@ -10,6 +10,17 @@
       </template>
     </Card>
 
+    <div class="search-section">
+      <span class="p-input-icon-left search-box">
+        <i class="pi pi-search" />
+        <InputText v-model="searchQuery" placeholder="ค้นหาโครงการ..." />
+      </span>
+      <span class="stat-item">
+        <i class="pi pi-folder"></i>
+        {{ filteredProjects.length }} โครงการ
+      </span>
+    </div>
+
     <Card class="content-card">
       <template #content>
         <DataTable :value="filteredProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
@@ -170,11 +181,11 @@ export default {
     },
     onRowClick(event) {
       const row = event.data
-      const index = this.expandedRows.findIndex(r => r.id === row.id)
-      if (index >= 0) {
-        this.expandedRows.splice(index, 1)
+      const isExpanded = this.expandedRows.some(r => r.id === row.id)
+      if (isExpanded) {
+        this.expandedRows = this.expandedRows.filter(r => r.id !== row.id)
       } else {
-        this.expandedRows.push(row)
+        this.expandedRows = [...this.expandedRows, row]
       }
     },
     getProjectProgress(project) {
@@ -279,10 +290,13 @@ export default {
   font-size: 1.5rem;
 }
 
-.header-right {
+.search-section {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .search-box {
@@ -292,14 +306,8 @@ export default {
 .search-box input {
   padding-left: 2.5rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  border: 1px solid #d1d5db;
   width: 250px;
-}
-
-.search-box input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
 }
 
 .search-box i {
@@ -314,7 +322,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: #6b7280;
   font-size: 0.95rem;
 }
 
