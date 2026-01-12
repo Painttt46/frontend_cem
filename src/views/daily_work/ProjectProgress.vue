@@ -119,7 +119,7 @@ export default {
   data() {
     return {
       projects: [],
-      expandedRows: [],
+      expandedRows: {},
       categories: [],
       statuses: [],
       searchQuery: ''
@@ -181,11 +181,11 @@ export default {
     },
     onRowClick(event) {
       const row = event.data
-      const isExpanded = this.expandedRows.some(r => r.id === row.id)
-      if (isExpanded) {
-        this.expandedRows = this.expandedRows.filter(r => r.id !== row.id)
+      if (this.expandedRows[row.id]) {
+        delete this.expandedRows[row.id]
+        this.expandedRows = { ...this.expandedRows }
       } else {
-        this.expandedRows = [...this.expandedRows, row]
+        this.expandedRows = { ...this.expandedRows, [row.id]: true }
       }
     },
     getProjectProgress(project) {
