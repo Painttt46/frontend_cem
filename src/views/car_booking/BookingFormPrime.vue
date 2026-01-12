@@ -326,8 +326,13 @@ export default {
     }
   },
   watch: {
+    showForm(newVal) {
+      if (newVal && this.activeForm === 'borrow') {
+        this.loadLatestFuelLevel()
+      }
+    },
     activeForm(newVal) {
-      if (newVal === 'borrow') {
+      if (newVal === 'borrow' && this.showForm) {
         this.loadLatestFuelLevel()
       }
     },
