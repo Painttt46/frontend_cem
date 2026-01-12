@@ -133,6 +133,8 @@
                 <Badge :value="category.label" :style="{ backgroundColor: category.color || '#6c757d', color: '#fff' }" />
               </div>
               <div class="item-actions">
+                <Button icon="pi pi-pencil" class="p-button-text p-button-sm" 
+                        @click="editCategory(category)" v-tooltip="'แก้ไข'" />
                 <Button icon="pi pi-arrow-up" class="p-button-text p-button-sm" 
                         @click="moveCategoryUp(index)" :disabled="index === 0" 
                         v-tooltip="'เลื่อนขึ้น'" />
@@ -196,6 +198,8 @@
                 <Badge :value="status.label" :style="{ backgroundColor: status.color || '#6c757d', color: '#fff' }" />
               </div>
               <div class="item-actions">
+                <Button icon="pi pi-pencil" class="p-button-text p-button-sm" 
+                        @click="editStatus(status)" v-tooltip="'แก้ไข'" />
                 <Button icon="pi pi-arrow-up" class="p-button-text p-button-sm" 
                         @click="moveStatusUp(index)" :disabled="index === 0" 
                         v-tooltip="'เลื่อนขึ้น'" />
@@ -214,6 +218,70 @@
         <Button label="ปิด" @click="closeStatusDialog" />
       </template>
     </Dialog>
+
+    <!-- Edit Category Dialog -->
+    <Dialog v-model:visible="showEditCategoryDialog" header="แก้ไขหมวดหมู่" 
+            :style="{width: '500px'}" modal :draggable="false" position="center">
+      <div class="dialog-content">
+        <div class="flex flex-column gap-3">
+          <div class="field">
+            <label>ชื่อหมวดหมู่</label>
+            <InputText v-model="editingCategory.label" class="w-full" />
+          </div>
+          <div class="field">
+            <label>สี</label>
+            <Dropdown v-model="editingCategoryColor" :options="categoryIcons" 
+                      optionLabel="label" class="w-full">
+              <template #value="slotProps">
+                <Badge v-if="slotProps.value" :value="editingCategory.label || 'ตัวอย่าง'" 
+                       :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
+                <span v-else>เลือกสี</span>
+              </template>
+              <template #option="slotProps">
+                <Badge :value="slotProps.option.label" 
+                       :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
+              </template>
+            </Dropdown>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" @click="showEditCategoryDialog = false" text />
+        <Button label="บันทึก" @click="saveEditCategory" />
+      </template>
+    </Dialog>
+
+    <!-- Edit Status Dialog -->
+    <Dialog v-model:visible="showEditStatusDialog" header="แก้ไขสถานะ" 
+            :style="{width: '500px'}" modal :draggable="false" position="center">
+      <div class="dialog-content">
+        <div class="flex flex-column gap-3">
+          <div class="field">
+            <label>ชื่อสถานะ</label>
+            <InputText v-model="editingStatus.label" class="w-full" />
+          </div>
+          <div class="field">
+            <label>สี</label>
+            <Dropdown v-model="editingStatusColor" :options="statusIcons" 
+                      optionLabel="label" class="w-full">
+              <template #value="slotProps">
+                <Badge v-if="slotProps.value" :value="editingStatus.label || 'ตัวอย่าง'" 
+                       :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
+                <span v-else>เลือกสี</span>
+              </template>
+              <template #option="slotProps">
+                <Badge :value="slotProps.option.label" 
+                       :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
+              </template>
+            </Dropdown>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" @click="showEditStatusDialog = false" text />
+        <Button label="บันทึก" @click="saveEditStatus" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -228,8 +296,14 @@ const http = axios
 // Data
 const showCategoriesDialog = ref(false)
 const showStatusDialog = ref(false)
+const showEditCategoryDialog = ref(false)
+const showEditStatusDialog = ref(false)
 const newCategory = ref('')
 const newStatus = ref('')
+const editingCategory = ref({ label: '', value: '', color: '' })
+const editingCategoryColor = ref(null)
+const editingStatus = ref({ label: '', value: '', color: '' })
+const editingStatusColor = ref(null)
 const newCategoryIcon = ref(null)
 const newStatusIcon = ref(null)
 
@@ -340,6 +414,38 @@ const addCategory = async () => {
   }
 }
 
+const editCategory = (category) => {
+  editingCategory.value = { ...category }
+  editingCategoryColor.value = categoryIcons.value.find(c => c.color === category.color) || null
+  showEditCategoryDialog.value = true
+}
+
+const saveEditCategory = async () => {
+  try {
+    const updatedCategory = {
+      ...editingCategory.value,
+      color: editingCategoryColor.value?.color || editingCategory.value.color
+    }
+    await http.put(`/api/settings/categories/${editingCategory.value.value}`, updatedCategory)
+    await loadCategories()
+    window.dispatchEvent(new CustomEvent('categoriesUpdated'))
+    showEditCategoryDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: 'สำเร็จ',
+      detail: 'แก้ไขหมวดหมู่เรียบร้อย',
+      life: 3000
+    })
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'ข้อผิดพลาด',
+      detail: 'ไม่สามารถแก้ไขหมวดหมู่ได้',
+      life: 3000
+    })
+  }
+}
+
 const removeCategory = async (categoryValue) => {
   try {
     await http.delete(`/api/settings/categories/${categoryValue}`)
@@ -409,6 +515,38 @@ const addStatus = async () => {
         life: 3000
       })
     }
+  }
+}
+
+const editStatus = (status) => {
+  editingStatus.value = { ...status }
+  editingStatusColor.value = statusIcons.value.find(s => s.color === status.color) || null
+  showEditStatusDialog.value = true
+}
+
+const saveEditStatus = async () => {
+  try {
+    const updatedStatus = {
+      ...editingStatus.value,
+      color: editingStatusColor.value?.color || editingStatus.value.color
+    }
+    await http.put(`/api/settings/statuses/${editingStatus.value.value}`, updatedStatus)
+    await loadStatuses()
+    window.dispatchEvent(new CustomEvent('statusesUpdated'))
+    showEditStatusDialog.value = false
+    toast.add({
+      severity: 'success',
+      summary: 'สำเร็จ',
+      detail: 'แก้ไขสถานะเรียบร้อย',
+      life: 3000
+    })
+  } catch {
+    toast.add({
+      severity: 'error',
+      summary: 'ข้อผิดพลาด',
+      detail: 'ไม่สามารถแก้ไขสถานะได้',
+      life: 3000
+    })
   }
 }
 
