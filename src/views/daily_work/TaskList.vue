@@ -88,8 +88,8 @@
         <Column header="สถานะ" style="text-align: center; min-width: 180px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="getLatestWorkingStep(slotProps.data)" 
-                     :style="{ backgroundColor: getLatestStepColor(slotProps.data), color: '#fff', fontWeight: 'bold' }" />
+              <Badge :value="getStatusLabel(slotProps.data.status) || '-'" 
+                     :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
             </div>
           </template>
         </Column>
