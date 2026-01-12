@@ -137,10 +137,10 @@ export default {
         const response = await this.$http.get('/api/tasks')
         this.projects = response.data
         
-        // Load steps for each project
+        // Load steps for each project (silent to prevent loading flicker)
         for (const project of this.projects) {
           try {
-            const stepsResponse = await this.$http.get(`/api/task-steps/task/${project.id}`)
+            const stepsResponse = await this.$http.get(`/api/task-steps/task/${project.id}`, { silent: true })
             project.steps = stepsResponse.data || []
           } catch {
             project.steps = []
@@ -152,13 +152,13 @@ export default {
     },
     async loadCategories() {
       try {
-        const response = await this.$http.get('/api/settings/categories')
+        const response = await this.$http.get('/api/settings/categories', { silent: true })
         this.categories = response.data
       } catch { /* ignore */ }
     },
     async loadStatuses() {
       try {
-        const response = await this.$http.get('/api/settings/statuses')
+        const response = await this.$http.get('/api/settings/statuses', { silent: true })
         this.statuses = response.data
       } catch { /* ignore */ }
     },
