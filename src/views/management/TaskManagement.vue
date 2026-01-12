@@ -221,65 +221,87 @@
 
     <!-- Edit Category Dialog -->
     <Dialog v-model:visible="showEditCategoryDialog" header="แก้ไขหมวดหมู่" 
-            :style="{width: '500px'}" modal :draggable="false" position="center">
-      <div class="dialog-content">
-        <div class="flex flex-column gap-3">
-          <div class="field">
-            <label>ชื่อหมวดหมู่</label>
-            <InputText v-model="editingCategory.label" class="w-full" />
-          </div>
-          <div class="field">
-            <label>สี</label>
-            <Dropdown v-model="editingCategoryColor" :options="categoryIcons" 
-                      optionLabel="label" class="w-full">
-              <template #value="slotProps">
-                <Badge v-if="slotProps.value" :value="editingCategory.label || 'ตัวอย่าง'" 
-                       :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
-                <span v-else>เลือกสี</span>
-              </template>
-              <template #option="slotProps">
-                <Badge :value="slotProps.option.label" 
-                       :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
-              </template>
-            </Dropdown>
-          </div>
+            :style="{width: '450px'}" modal :draggable="false" position="center">
+      <div class="edit-dialog-content">
+        <div class="edit-field">
+          <label class="edit-label">ชื่อหมวดหมู่</label>
+          <InputText v-model="editingCategory.label" class="w-full" placeholder="กรอกชื่อหมวดหมู่" />
+        </div>
+        
+        <div class="edit-field">
+          <label class="edit-label">เลือกสี</label>
+          <Dropdown v-model="editingCategoryColor" :options="categoryIcons" 
+                    optionLabel="label" class="w-full" placeholder="เลือกสี">
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="color-selected">
+                <span class="color-dot" :style="{ backgroundColor: slotProps.value.color }"></span>
+                <span>{{ slotProps.value.label }}</span>
+              </div>
+              <span v-else>เลือกสี</span>
+            </template>
+            <template #option="slotProps">
+              <div class="color-option">
+                <span class="color-dot" :style="{ backgroundColor: slotProps.option.color }"></span>
+                <span>{{ slotProps.option.label }}</span>
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+
+        <div class="edit-preview" v-if="editingCategory.label">
+          <label class="edit-label">ตัวอย่าง</label>
+          <Badge :value="editingCategory.label" 
+                 :style="{ backgroundColor: editingCategoryColor?.color || '#6c757d', color: '#fff' }" />
         </div>
       </div>
       <template #footer>
-        <Button label="ยกเลิก" @click="showEditCategoryDialog = false" text />
-        <Button label="บันทึก" @click="saveEditCategory" />
+        <div class="dialog-footer">
+          <Button label="ยกเลิก" @click="showEditCategoryDialog = false" severity="secondary" outlined />
+          <Button label="บันทึก" @click="saveEditCategory" :disabled="!editingCategory.label" />
+        </div>
       </template>
     </Dialog>
 
     <!-- Edit Status Dialog -->
     <Dialog v-model:visible="showEditStatusDialog" header="แก้ไขสถานะ" 
-            :style="{width: '500px'}" modal :draggable="false" position="center">
-      <div class="dialog-content">
-        <div class="flex flex-column gap-3">
-          <div class="field">
-            <label>ชื่อสถานะ</label>
-            <InputText v-model="editingStatus.label" class="w-full" />
-          </div>
-          <div class="field">
-            <label>สี</label>
-            <Dropdown v-model="editingStatusColor" :options="statusIcons" 
-                      optionLabel="label" class="w-full">
-              <template #value="slotProps">
-                <Badge v-if="slotProps.value" :value="editingStatus.label || 'ตัวอย่าง'" 
-                       :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
-                <span v-else>เลือกสี</span>
-              </template>
-              <template #option="slotProps">
-                <Badge :value="slotProps.option.label" 
-                       :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
-              </template>
-            </Dropdown>
-          </div>
+            :style="{width: '450px'}" modal :draggable="false" position="center">
+      <div class="edit-dialog-content">
+        <div class="edit-field">
+          <label class="edit-label">ชื่อสถานะ</label>
+          <InputText v-model="editingStatus.label" class="w-full" placeholder="กรอกชื่อสถานะ" />
+        </div>
+        
+        <div class="edit-field">
+          <label class="edit-label">เลือกสี</label>
+          <Dropdown v-model="editingStatusColor" :options="statusIcons" 
+                    optionLabel="label" class="w-full" placeholder="เลือกสี">
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="color-selected">
+                <span class="color-dot" :style="{ backgroundColor: slotProps.value.color }"></span>
+                <span>{{ slotProps.value.label }}</span>
+              </div>
+              <span v-else>เลือกสี</span>
+            </template>
+            <template #option="slotProps">
+              <div class="color-option">
+                <span class="color-dot" :style="{ backgroundColor: slotProps.option.color }"></span>
+                <span>{{ slotProps.option.label }}</span>
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+
+        <div class="edit-preview" v-if="editingStatus.label">
+          <label class="edit-label">ตัวอย่าง</label>
+          <Badge :value="editingStatus.label" 
+                 :style="{ backgroundColor: editingStatusColor?.color || '#6c757d', color: '#fff' }" />
         </div>
       </div>
       <template #footer>
-        <Button label="ยกเลิก" @click="showEditStatusDialog = false" text />
-        <Button label="บันทึก" @click="saveEditStatus" />
+        <div class="dialog-footer">
+          <Button label="ยกเลิก" @click="showEditStatusDialog = false" severity="secondary" outlined />
+          <Button label="บันทึก" @click="saveEditStatus" :disabled="!editingStatus.label" />
+        </div>
       </template>
     </Dialog>
   </div>
@@ -890,5 +912,55 @@ onMounted(() => {
   .action-content h3 {
     font-size: 1.1rem;
   }
+}
+
+/* Edit Dialog Styles */
+.edit-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem 0;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.edit-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.edit-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  align-items: flex-start;
+}
+
+.color-selected,
+.color-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 </style>
