@@ -12,10 +12,14 @@
               <h1>ขั้นตอนการดำเนินการโครงการ</h1>
             </div>
           </div>
-          <div class="header-stats">
+          <div class="header-right">
+            <span class="p-input-icon-left search-box">
+              <i class="pi pi-search" />
+              <InputText v-model="searchQuery" placeholder="ค้นหาโครงการ..." @input="onSearch" />
+            </span>
             <span class="stat-item">
               <i class="pi pi-folder"></i>
-              {{ projects.length }} โครงการ
+              {{ filteredProjects.length }} โครงการ
             </span>
           </div>
         </div>
@@ -24,7 +28,7 @@
 
     <Card class="content-card">
       <template #content>
-        <DataTable :value="projects" :expandedRows="expandedRows" @rowExpand="onRowExpand"
+        <DataTable :value="filteredProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
           dataKey="id" :loading="loading" responsiveLayout="scroll" stripedRows
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]">
           
@@ -32,11 +36,9 @@
           
           <Column field="task_name" header="ชื่อโครงการ" :sortable="true" style="min-width: 200px;">
             <template #body="slotProps">
-              <div class="project-name">
-                <strong>{{ slotProps.data.task_name }}</strong>
-                <div v-if="slotProps.data.so_number" class="so-number">
-                  SO: {{ slotProps.data.so_number }}
-                </div>
+              <div class="project-info">
+                <div class="project-name">{{ slotProps.data.task_name }}</div>
+                <Badge v-if="slotProps.data.so_number" :value="slotProps.data.so_number" severity="info" />
               </div>
             </template>
           </Column>
@@ -124,7 +126,20 @@ export default {
       expandedRows: [],
       loading: false,
       categories: [],
-      statuses: []
+      statuses: [],
+      searchQuery: ''
+    }
+  },
+  computed: {
+    filteredProjects() {
+      if (!this.searchQuery) return this.projects
+      const query = this.searchQuery.toLowerCase()
+      return this.projects.filter(p => 
+        p.task_name?.toLowerCase().includes(query) ||
+        p.so_number?.toLowerCase().includes(query) ||
+        p.category?.toLowerCase().includes(query) ||
+        p.sale_owner?.toLowerCase().includes(query)
+      )
     }
   },
   mounted() {
@@ -165,6 +180,9 @@ export default {
         const response = await this.$http.get('/api/settings/statuses')
         this.statuses = response.data
       } catch { /* ignore */ }
+    },
+    onSearch() {
+      // Search is handled by computed property
     },
     onRowExpand() {
       // Optional: Load steps on expand if not already loaded
@@ -233,13 +251,19 @@ export default {
 .header-card {
   margin-bottom: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #4A90E2, #D73527);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5rem;
 }
 
 .header-left {
@@ -248,34 +272,66 @@ export default {
   gap: 1rem;
 }
 
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .header-title h1 {
   margin: 0;
-  font-size: 1.5rem;
-  color: #1f2937;
+  font-size: 1.25rem;
+  color: white;
 }
 
 .header-icon {
-  font-size: 1.75rem;
-  color: #6366f1;
+  font-size: 1.5rem;
+  color: white;
 }
 
-.header-stats {
+.back-btn {
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  border-radius: 8px !important;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.header-right {
   display: flex;
+  align-items: center;
   gap: 1.5rem;
+}
+
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  padding-left: 2.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  width: 250px;
+}
+
+.search-box input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.search-box i {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.9);
   font-size: 0.95rem;
+}
+  color: #6366f1;
 }
 
 .content-card {
@@ -283,14 +339,17 @@ export default {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.project-name strong {
-  color: #1f2937;
+.project-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.so-number {
-  font-size: 0.85rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
+.project-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+  color: #1f2937;
 }
 
 .progress-info {
