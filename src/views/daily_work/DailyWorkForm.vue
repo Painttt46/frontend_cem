@@ -160,13 +160,13 @@
               </label>
 
               <!-- AutoComplete สำหรับเลือก attendees -->
-              <div class="colleague-search" @click.stop>
-                <AutoComplete ref="attendeeAutocomplete" v-model="selectedAttendee" :suggestions="filteredAttendees.slice(0, 5)" @complete="searchAttendees"
+              <div class="colleague-search">
+                <AutoComplete ref="attendeeAutocomplete" v-model="selectedAttendee" :suggestions="filteredAttendees" @complete="searchAttendees"
                   @item-select="onAttendeeSelect" @dropdown-click="showAllAttendees" optionLabel="name"
                   placeholder="ค้นหาและเลือกผู้ใช้..." class="corporate-input attendee-autocomplete" :dropdown="true" :forceSelection="false"
-                  scrollHeight="200px">
+                  scrollHeight="200px" @hide="preventHide">
                   <template #option="slotProps">
-                    <div class="user-option" @click.stop>
+                    <div class="user-option">
                       <div class="user-name">{{ slotProps.option.name }}</div>
                     </div>
                   </template>
@@ -485,6 +485,19 @@ export default {
 
     showAllAttendees() {
       this.filteredAttendees = this.users.slice()
+    },
+
+    preventHide(event) {
+      // ป้องกันไม่ให้ dropdown ปิดเมื่อกดที่อื่น
+      if (event) {
+        event.preventDefault()
+      }
+      // เปิด dropdown กลับ
+      this.$nextTick(() => {
+        if (this.$refs.attendeeAutocomplete) {
+          this.$refs.attendeeAutocomplete.show()
+        }
+      })
     },
 
     onAttendeeSelect(event) {
