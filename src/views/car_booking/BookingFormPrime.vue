@@ -867,10 +867,10 @@ export default {
 .task-selected,
 .task-option {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
   max-width: 100%;
+  overflow: hidden;
 }
 
 .so-badge {
@@ -886,6 +886,8 @@ export default {
 .task-name-text {
   flex: 1;
   min-width: 0;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>
