@@ -168,6 +168,7 @@
                   <template #option="slotProps">
                     <div class="user-option">
                       <div class="user-name">{{ slotProps.option.name }}</div>
+                      <div class="user-role">{{ slotProps.option.position }} - {{ slotProps.option.department }}</div>
                     </div>
                   </template>
                 </AutoComplete>
@@ -189,7 +190,15 @@
                 <div class="attendees-list">
                   <div v-for="(attendee, index) in formData.attendees" :key="index" class="attendee-card">
                     <div class="attendee-details">
-                      <div class="attendee-name">{{ attendee }}</div>
+                      <div class="attendee-name">{{ attendee.name || attendee }}</div>
+                      <div v-if="attendee.position" class="attendee-position">
+                        <i class="pi pi-briefcase"></i>
+                        {{ attendee.position }}
+                      </div>
+                      <div v-if="attendee.department" class="attendee-department">
+                        <i class="pi pi-building"></i>
+                        {{ attendee.department }}
+                      </div>
                     </div>
                     <Button type="button" icon="pi pi-times" severity="danger" text rounded size="small"
                       @click="removeAttendee(index)" class="remove-btn" />
@@ -476,7 +485,9 @@ export default {
         // ค้นหาจาก users ที่โหลดมา
         this.filteredAttendees = this.users.filter(user =>
           user.name.toLowerCase().includes(query) ||
-          user.email.toLowerCase().includes(query)
+          user.email.toLowerCase().includes(query) ||
+          (user.position && user.position.toLowerCase().includes(query)) ||
+          (user.department && user.department.toLowerCase().includes(query))
         )
       } else {
         this.filteredAttendees = this.users.slice()
@@ -491,8 +502,14 @@ export default {
       const attendee = event.value
       if (attendee && attendee.email) {
         // ตรวจสอบว่าไม่ได้เลือกซ้ำ
-        if (!this.formData.attendees.includes(attendee.email)) {
-          this.formData.attendees.push(attendee.email)
+        const exists = this.formData.attendees.some(a => a.email === attendee.email)
+        if (!exists) {
+          this.formData.attendees.push({
+            email: attendee.email,
+            name: attendee.name,
+            position: attendee.position || '',
+            department: attendee.department || ''
+          })
         }
       }
       // Clear selection
@@ -509,8 +526,9 @@ export default {
       if (this.selectedAttendee && typeof this.selectedAttendee === 'string') {
         const email = this.selectedAttendee.trim()
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (emailRegex.test(email) && !this.formData.attendees.includes(email)) {
-          this.formData.attendees.push(email)
+        const exists = this.formData.attendees.some(a => a.email === email)
+        if (emailRegex.test(email) && !exists) {
+          this.formData.attendees.push({ email, name: email, position: '', department: '' })
           this.selectedAttendee = null
         }
       }
@@ -524,8 +542,9 @@ export default {
 
     addNewEmail() {
       const email = this.newEmail.trim()
-      if (this.isValidEmail(email) && !this.formData.attendees.includes(email)) {
-        this.formData.attendees.push(email)
+      const exists = this.formData.attendees.some(a => a.email === email)
+      if (this.isValidEmail(email) && !exists) {
+        this.formData.attendees.push({ email, name: email, position: '', department: '' })
         this.newEmail = ''
       }
     },
@@ -533,8 +552,9 @@ export default {
     addSelectedAttendees() {
       // เพิ่ม attendees ที่เลือกจาก dropdown เข้าไปใน chips
       this.selectedAttendees.forEach(email => {
-        if (!this.formData.attendees.includes(email)) {
-          this.formData.attendees.push(email)
+        const exists = this.formData.attendees.some(a => a.email === email)
+        if (!exists) {
+          this.formData.attendees.push({ email, name: email, position: '', department: '' })
         }
       })
       // Clear selection หลังจากเพิ่มแล้ว
@@ -1147,6 +1167,20 @@ export default {
   overflow-wrap: break-word;
 }
 
+.attendee-position,
+.attendee-department {
+  font-size: 0.8rem;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.attendee-position i,
+.attendee-department i {
+  font-size: 0.7rem;
+}
+
 .remove-btn {
   width: 28px;
   height: 28px;
@@ -1190,6 +1224,11 @@ export default {
   font-weight: 500;
   color: #212529;
   font-size: 0.9rem;
+}
+
+.user-role {
+  font-size: 0.8rem;
+  color: #6c757d;
 }
 
 /* Input Styling */

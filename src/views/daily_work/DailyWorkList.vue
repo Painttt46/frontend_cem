@@ -58,12 +58,14 @@
           </template>
         </Column>
 
-        <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 120px;">
+        <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 120px; text-align: center;">
           <template #body="slotProps">
-            <span v-if="slotProps.data.step_name" class="step-badge">
-              <i class="pi pi-sitemap"></i> {{ slotProps.data.step_name }}
-            </span>
-            <span v-else class="text-muted">-</span>
+            <div style="text-align: center;">
+              <span v-if="slotProps.data.step_name" class="step-badge">
+                <i class="pi pi-sitemap"></i> {{ slotProps.data.step_name }}
+              </span>
+              <span v-else class="text-muted">-</span>
+            </div>
           </template>
         </Column>
 
@@ -179,12 +181,12 @@
 
         <div class="input-group">
           <label class="input-label">เวลาเริ่มงาน *</label>
-          <Calendar v-model="editFormData.start_time" timeOnly hourFormat="24" class="corporate-input" required />
+          <InputText v-model="editFormData.start_time_text" class="corporate-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" @input="formatTimeInput('start_time_text')" required />
         </div>
 
         <div class="input-group">
           <label class="input-label">เวลาสิ้นสุดงาน *</label>
-          <Calendar v-model="editFormData.end_time" timeOnly hourFormat="24" class="corporate-input" required />
+          <InputText v-model="editFormData.end_time_text" class="corporate-input" placeholder="HH:MM" maxlength="5" inputmode="numeric" @input="formatTimeInput('end_time_text')" required />
         </div>
 
         <div class="input-group">
@@ -332,6 +334,8 @@ export default {
         work_date: null,
         start_time: null,
         end_time: null,
+        start_time_text: '',
+        end_time_text: '',
         work_status: null,
         location: '',
         work_description: '',
@@ -627,6 +631,8 @@ export default {
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
         end_time: this.parseTime(record.end_time),
+        start_time_text: record.start_time?.substring(0, 5) || '',
+        end_time_text: record.end_time?.substring(0, 5) || '',
         work_status: record.work_status,
         location: record.location || '',
         work_description: record.work_description || '',
@@ -634,6 +640,13 @@ export default {
         newFiles: []
       }
       this.editDialog = true
+    },
+    formatTimeInput(field) {
+      let value = this.editFormData[field].replace(/\D/g, '')
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + ':' + value.slice(2, 4)
+      }
+      this.editFormData[field] = value.slice(0, 5)
     },
     parseTime(timeString) {
       if (!timeString) return null
@@ -704,8 +717,8 @@ export default {
 
         const updateData = {
           work_date: formattedDate,
-          start_time: this.formatTimeForAPI(this.editFormData.start_time),
-          end_time: this.formatTimeForAPI(this.editFormData.end_time),
+          start_time: this.editFormData.start_time_text + ':00',
+          end_time: this.editFormData.end_time_text + ':00',
           work_status: this.editFormData.work_status,
           location: this.editFormData.location,
           work_description: this.editFormData.work_description,
