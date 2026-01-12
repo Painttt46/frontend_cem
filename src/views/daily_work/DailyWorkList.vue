@@ -185,74 +185,66 @@
   </Dialog>
 
   <!-- Edit Record Dialog -->
-  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '800px' }" position="center" :draggable="false">
+  <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '600px' }" position="center" :draggable="false">
     <form @submit.prevent="updateRecord" class="edit-form">
-      <div class="form-grid">
-        <div class="input-group">
-          <label class="input-label">วันที่ลงงาน *</label>
-          <Calendar v-model="editFormData.work_date" dateFormat="dd/mm/yy" class="corporate-input" required />
-        </div>
-
-        <div class="input-group time-range-group">
-          <label class="input-label">ระยะเวลา *</label>
-          <div class="time-range-inputs">
-            <InputText v-model="editFormData.start_time_text" class="corporate-input time-input" placeholder="เริ่ม" maxlength="5" inputmode="numeric" @input="formatTimeInput('start_time_text')" required />
-            <span class="time-separator">-</span>
-            <InputText v-model="editFormData.end_time_text" class="corporate-input time-input" placeholder="สิ้นสุด" maxlength="5" inputmode="numeric" @input="formatTimeInput('end_time_text')" required />
-            <span class="time-total">({{ calculateEditHours }})</span>
+      <div class="edit-form-content">
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-calendar"></i> วันที่ลงงาน</label>
+            <Calendar v-model="editFormData.work_date" dateFormat="dd/mm/yy" class="w-full" required showIcon />
           </div>
         </div>
 
-        <div class="input-group">
-          <label class="input-label">สถานะงาน *</label>
-          <Dropdown v-model="editFormData.work_status" :options="statusOptions" optionLabel="label" optionValue="value"
-            class="corporate-dropdown" required>
-            <template #value="slotProps">
-              <span v-if="slotProps.value">{{ getStatusLabelFromOptions(slotProps.value) }}</span>
-              <span v-else>เลือกสถานะ</span>
-            </template>
-            <template #option="slotProps">
-              <span>{{ slotProps.option.label }}</span>
-            </template>
-          </Dropdown>
-        </div>
-
-        <div class="input-group full-width">
-          <label class="input-label">สถานที่ *</label>
-          <InputText v-model="editFormData.location" required class="corporate-input" />
-        </div>
-
-        <div class="input-group full-width">
-          <label class="input-label">รายละเอียดงาน *</label>
-          <Textarea v-model="editFormData.work_description" rows="4" required class="corporate-input" />
-        </div>
-
-        <div class="input-group full-width">
-          <label class="input-label">ไฟล์แนบ</label>
-          <div class="file-upload-section">
-            <input type="file" ref="editFileInput" @change="handleEditFileUpload"
-              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple class="file-input" style="display: none;">
-            <Button type="button" label="เพิ่มไฟล์" icon="pi pi-upload" severity="secondary" outlined
-              @click="$refs.editFileInput.click()" />
-          </div>
-
-          <!-- แสดงไฟล์เดิม -->
-          <div v-if="editFormData.existingFiles?.length > 0" class="existing-files">
-            <h4>ไฟล์เดิม:</h4>
-            <div v-for="(file, index) in editFormData.existingFiles" :key="index" class="file-item">
-              <i class="pi pi-file"></i>
-              <span class="file-name">{{ file }}</span>
-              <Button icon="pi pi-times" size="small" severity="danger" text @click="removeExistingFile(index)" />
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-clock"></i> ระยะเวลา</label>
+            <div class="time-range-inputs">
+              <InputText v-model="editFormData.start_time_text" class="time-input" placeholder="เริ่ม" maxlength="5" inputmode="numeric" @input="formatTimeInput('start_time_text')" required />
+              <span class="time-separator">-</span>
+              <InputText v-model="editFormData.end_time_text" class="time-input" placeholder="สิ้นสุด" maxlength="5" inputmode="numeric" @input="formatTimeInput('end_time_text')" required />
+              <span class="time-total">{{ calculateEditHours }}</span>
             </div>
           </div>
+        </div>
 
-          <!-- แสดงไฟล์ใหม่ -->
-          <div v-if="editFormData.newFiles?.length > 0" class="new-files">
-            <h4>ไฟล์ใหม่:</h4>
-            <div v-for="(file, index) in editFormData.newFiles" :key="index" class="file-item">
-              <i class="pi pi-file"></i>
-              <span class="file-name">{{ file.name }}</span>
-              <Button icon="pi pi-times" size="small" severity="danger" text @click="removeNewFile(index)" />
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-map-marker"></i> สถานที่</label>
+            <InputText v-model="editFormData.location" required class="w-full" placeholder="ระบุสถานที่" />
+          </div>
+        </div>
+
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-align-left"></i> รายละเอียดงาน</label>
+            <Textarea v-model="editFormData.work_description" rows="3" required class="w-full" placeholder="รายละเอียดงานที่ทำ" />
+          </div>
+        </div>
+
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-paperclip"></i> ไฟล์แนบ</label>
+            <div class="file-upload-area">
+              <input type="file" ref="editFileInput" @change="handleEditFileUpload"
+                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display: none;">
+              <Button type="button" label="เพิ่มไฟล์" icon="pi pi-upload" severity="secondary" outlined size="small"
+                @click="$refs.editFileInput.click()" />
+            </div>
+
+            <div v-if="editFormData.existingFiles?.length > 0" class="file-list">
+              <div v-for="(file, index) in editFormData.existingFiles" :key="'existing-'+index" class="file-chip">
+                <i class="pi pi-file"></i>
+                <span>{{ file }}</span>
+                <i class="pi pi-times remove-file" @click="removeExistingFile(index)"></i>
+              </div>
+            </div>
+
+            <div v-if="editFormData.newFiles?.length > 0" class="file-list new">
+              <div v-for="(file, index) in editFormData.newFiles" :key="'new-'+index" class="file-chip new">
+                <i class="pi pi-file"></i>
+                <span>{{ file.name }}</span>
+                <i class="pi pi-times remove-file" @click="removeNewFile(index)"></i>
+              </div>
             </div>
           </div>
         </div>
@@ -1067,8 +1059,74 @@ export default {
   line-height: 1.3;
 }
 
+/* Edit Form Styles */
 .edit-form {
-  padding: 1rem 0;
+  padding: 0;
+}
+
+.edit-form-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.edit-row {
+  width: 100%;
+}
+
+.edit-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.edit-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.edit-label i {
+  color: #6366f1;
+  font-size: 0.85rem;
+}
+
+.file-upload-area {
+  margin-bottom: 0.75rem;
+}
+
+.file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: #f3f4f6;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.file-chip.new {
+  background: #dbeafe;
+}
+
+.file-chip .remove-file {
+  cursor: pointer;
+  color: #ef4444;
+  font-size: 0.75rem;
+}
+
+.file-chip .remove-file:hover {
+  color: #dc2626;
 }
 
 .form-grid {
