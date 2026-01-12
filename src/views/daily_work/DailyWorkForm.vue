@@ -626,9 +626,6 @@ export default {
       try {
         const uploadedFiles = await this.uploadFiles()
 
-        // Get step status if step is selected
-        const stepStatus = this.formData.stepId ? this.getSelectedStepStatus() : null;
-
         const workData = {
           task_id: this.formData.taskId,
           step_id: this.formData.stepId || null,
@@ -636,7 +633,6 @@ export default {
           start_time: this.formatTime(this.formData.startTime),
           end_time: this.formatTime(this.formData.endTime),
           total_hours: this.calculateTotalHours(),
-          work_status: stepStatus,
           location: this.formData.location,
           work_description: this.formData.workDescription,
           files: uploadedFiles,
