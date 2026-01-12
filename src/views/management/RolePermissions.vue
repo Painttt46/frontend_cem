@@ -122,19 +122,20 @@ const newPermission = ref({
 const pages = ref([
   { id: 1, name: 'งานรายวัน', path: '/daily_work', icon: 'pi pi-home', hasAccess: false },
   { id: 2, name: 'โครงการ', path: '/projects', icon: 'pi pi-briefcase', hasAccess: false },
-  { id: 3, name: 'โปรไฟล์', path: '/profile', icon: 'pi pi-user', hasAccess: false },
-  { id: 4, name: 'จองรถ', path: '/car_booking', icon: 'pi pi-car', hasAccess: false },
-  { id: 5, name: 'ลางาน', path: '/leave_work', icon: 'pi pi-calendar-times', hasAccess: false },
-  { id: 6, name: 'อนุมัติลางาน', path: '/leave_work/approve', icon: 'pi pi-check-circle', hasAccess: false },
-  { id: 7, name: 'ระบบจัดการ', path: '/management', icon: 'pi pi-cog', hasAccess: false },
-  { id: 8, name: 'จัดการผู้ใช้งาน', path: '/management/users', icon: 'pi pi-users', hasAccess: false },
-  { id: 9, name: 'จัดการงาน', path: '/management/tasks', icon: 'pi pi-briefcase', hasAccess: false },
-  { id: 10, name: 'ตั้งค่าระบบ', path: '/management/settings', icon: 'pi pi-cog', hasAccess: false },
-  { id: 11, name: 'จัดการสิทธิ์', path: '/management/settings/role-permissions', icon: 'pi pi-shield', hasAccess: false },
-  { id: 12, name: 'Dashboard', path: '/management/dashboard', icon: 'pi pi-chart-bar', hasAccess: false },
-  { id: 13, name: 'จัดการการลา', path: '/management/leave', icon: 'pi pi-calendar', hasAccess: false },
-  { id: 14, name: 'ตั้งค่าผู้อนุมัติลา', path: '/management/settings/leave-approval', icon: 'pi pi-user-edit', hasAccess: false },
-  { id: 15, name: 'ตั้งค่าเวลาทำงานตาม Role', path: '/management/settings/role-work-hours', icon: 'pi pi-clock', hasAccess: false }
+  { id: 3, name: 'ขั้นตอนการดำเนินการโครงการ', path: '/project-progress', icon: 'pi pi-chart-line', hasAccess: false },
+  { id: 4, name: 'โปรไฟล์', path: '/profile', icon: 'pi pi-user', hasAccess: false },
+  { id: 5, name: 'จองรถ', path: '/car_booking', icon: 'pi pi-car', hasAccess: false },
+  { id: 6, name: 'ลางาน', path: '/leave_work', icon: 'pi pi-calendar-times', hasAccess: false },
+  { id: 7, name: 'อนุมัติลางาน', path: '/leave_work/approve', icon: 'pi pi-check-circle', hasAccess: false },
+  { id: 8, name: 'ระบบจัดการ', path: '/management', icon: 'pi pi-cog', hasAccess: false },
+  { id: 9, name: 'จัดการผู้ใช้งาน', path: '/management/users', icon: 'pi pi-users', hasAccess: false },
+  { id: 10, name: 'จัดการงาน', path: '/management/tasks', icon: 'pi pi-briefcase', hasAccess: false },
+  { id: 11, name: 'ตั้งค่าระบบ', path: '/management/settings', icon: 'pi pi-cog', hasAccess: false },
+  { id: 12, name: 'จัดการสิทธิ์', path: '/management/settings/role-permissions', icon: 'pi pi-shield', hasAccess: false },
+  { id: 13, name: 'Dashboard', path: '/management/dashboard', icon: 'pi pi-chart-bar', hasAccess: false },
+  { id: 14, name: 'จัดการการลา', path: '/management/leave', icon: 'pi pi-calendar', hasAccess: false },
+  { id: 15, name: 'ตั้งค่าผู้อนุมัติลา', path: '/management/settings/leave-approval', icon: 'pi pi-user-edit', hasAccess: false },
+  { id: 16, name: 'ตั้งค่าเวลาทำงานตาม Role', path: '/management/settings/role-work-hours', icon: 'pi pi-clock', hasAccess: false }
 ])
 
 onMounted(async () => {

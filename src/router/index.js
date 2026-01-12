@@ -9,6 +9,7 @@ const CarBookingHome = () => import('../views/car_booking/car_booking.vue')
 const LeaveWork = () => import('../views/leave_work/LeaveWork.vue')
 const DailyWork = () => import('../views/daily_work/DailyWork.vue')
 const Projects = () => import('../views/projects/Projects.vue')
+const ProjectProgress = () => import('../views/daily_work/ProjectProgress.vue')
 const ManagementView = () => import('../views/ManagementView.vue')
 const UserManagement = () => import('../views/management/UserManagement.vue')
 const TaskManagement = () => import('../views/management/TaskManagement.vue')
@@ -68,6 +69,12 @@ const routes = [
     name: 'projects-main',
     component: Projects,
     meta: { requiresAuth: true, requiresPermission: '/projects', title: 'โครงการ - Gent-CEM' },
+  },
+  {
+    path: '/project-progress',
+    name: 'project-progress',
+    component: ProjectProgress,
+    meta: { requiresAuth: true, requiresPermission: '/project-progress', title: 'ขั้นตอนการดำเนินการโครงการ - Gent-CEM' },
   },
   {
     path: '/management',
