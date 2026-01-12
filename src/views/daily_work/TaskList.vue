@@ -85,13 +85,11 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="text-align: center; min-width: 140px;">
+        <Column header="สถานะ" style="text-align: center; min-width: 180px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge v-if="slotProps.data.status && workStatuses.find(s => s.value === slotProps.data.status)" 
-                     :value="getStatusLabel(slotProps.data.status)" 
-                     :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
-              <span v-else class="no-status">-</span>
+              <Badge :value="getLatestWorkingStep(slotProps.data)" 
+                     :style="{ backgroundColor: getLatestStepColor(slotProps.data), color: '#fff', fontWeight: 'bold' }" />
             </div>
           </template>
         </Column>
@@ -669,11 +667,34 @@ export default {
       }
       return status?.color || '#9e9e9e'
     },
+    getLatestWorkingStep(task) {
+      if (!task.steps || task.steps.length === 0) return '-'
+      const workingSteps = task.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
+      if (workingSteps.length === 0) return '-'
+      return workingSteps[workingSteps.length - 1].step_name
+    },
+    getLatestStepColor(task) {
+      if (!task.steps || task.steps.length === 0) return '#9ca3af'
+      const workingSteps = task.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
+      if (workingSteps.length === 0) return '#9ca3af'
+      const latestStep = workingSteps[workingSteps.length - 1]
+      if (latestStep.status === 'completed') return '#10b981'
+      return '#3b82f6'
+    },
     async loadTasks() {
       try {
         const response = await this.$http.get('/api/tasks')
         // รองรับทั้ง format array ตรงๆ และ format ที่มี wrapper
         this.tasks = response.data.data || response.data || []
+        // โหลด steps สำหรับแต่ละ task
+        for (const task of this.tasks) {
+          try {
+            const stepsResponse = await this.$http.get(`/api/task-steps/task/${task.id}`, { silent: true })
+            task.steps = stepsResponse.data || []
+          } catch {
+            task.steps = []
+          }
+        }
       } catch (error) {
         this.tasks = []
         this.$toast.add({

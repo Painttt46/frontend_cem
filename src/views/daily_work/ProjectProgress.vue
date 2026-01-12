@@ -47,10 +47,10 @@
             </template>
           </Column>
 
-          <Column field="status" header="สถานะโครงการ" :sortable="true" style="min-width: 140px;">
+          <Column field="status" header="สถานะโครงการ" :sortable="true" style="min-width: 180px;">
             <template #body="slotProps">
-              <Badge :value="slotProps.data.status || 'ไม่ระบุ'"
-                :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff' }" />
+              <Badge :value="getLatestWorkingStep(slotProps.data)"
+                :style="{ backgroundColor: getLatestStepColor(slotProps.data), color: '#fff' }" />
             </template>
           </Column>
 
@@ -71,24 +71,24 @@
               
               <div v-if="slotProps.data.steps && slotProps.data.steps.length > 0" class="steps-timeline">
                 <div v-for="(step, index) in slotProps.data.steps" :key="step.id" 
-                     class="step-item" :class="{ 'completed': step.status === 'completed', 'in-progress': step.status === 'in_progress' }">
+                     class="step-item" :class="getStepClass(step)">
                   <div class="step-number">{{ index + 1 }}</div>
                   <div class="step-content">
                     <div class="step-header">
                       <span class="step-name">{{ step.step_name }}</span>
-                      <Badge :value="getStepStatusLabel(step.status)" 
-                             :style="{ backgroundColor: getStepStatusColor(step.status), color: '#fff' }" />
+                      <Badge :value="getStepStatusLabel(step)" 
+                             :style="{ backgroundColor: getStepStatusColor(step), color: '#fff' }" />
                     </div>
                     <div v-if="step.description" class="step-description">{{ step.description }}</div>
                     <div class="step-meta">
-                      <span v-if="step.start_date || step.end_date" class="meta-item">
+                      <div v-if="step.start_date || step.end_date" class="meta-item">
                         <i class="pi pi-calendar"></i>
                         {{ formatDateRange(step.start_date, step.end_date) }}
-                      </span>
-                      <span v-if="step.assigned_users && step.assigned_users.length > 0" class="meta-item">
+                      </div>
+                      <div class="meta-item">
                         <i class="pi pi-users"></i>
-                        {{ formatAssignedUsers(step.assigned_users) }}
-                      </span>
+                        {{ step.assigned_users && step.assigned_users.length > 0 ? formatAssignedUsers(step.assigned_users) : 'ยังไม่มีผู้รับผิดชอบ' }}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -206,23 +206,96 @@ export default {
       const st = this.statuses.find(s => s.value === status || s.label === status)
       return st?.color || '#6c757d'
     },
-    getStepStatusLabel(status) {
-      const labels = {
-        'pending': 'รอดำเนินการ',
-        'in_progress': 'กำลังดำเนินการ',
-        'completed': 'เสร็จสิ้น',
-        'cancelled': 'ยกเลิก'
-      }
-      return labels[status] || status || 'ไม่ระบุ'
+    getLatestWorkingStep(project) {
+      if (!project.steps || project.steps.length === 0) return '-'
+      // หา step ล่าสุดที่มีคนลงงาน (มี assigned_users)
+      const workingSteps = project.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
+      if (workingSteps.length === 0) return '-'
+      // เอา step ล่าสุด
+      const latestStep = workingSteps[workingSteps.length - 1]
+      return latestStep.step_name
     },
-    getStepStatusColor(status) {
-      const colors = {
-        'pending': '#f59e0b',
-        'in_progress': '#3b82f6',
-        'completed': '#10b981',
-        'cancelled': '#ef4444'
+    getLatestStepColor(project) {
+      if (!project.steps || project.steps.length === 0) return '#9ca3af'
+      const workingSteps = project.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
+      if (workingSteps.length === 0) return '#9ca3af'
+      const latestStep = workingSteps[workingSteps.length - 1]
+      return this.getStepStatusColor(latestStep)
+    },
+    getStepStatusLabel(step) {
+      // เสร็จสิ้น
+      if (step.status === 'completed') return 'เสร็จสิ้น'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // เกินวันสิ้นสุดแล้วยังไม่ complete
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'เกินกำหนด'
       }
-      return colors[status] || '#6c757d'
+      
+      // ถึงเวลาเริ่มแล้วยังไม่มีคนลงงาน
+      if (step.start_date && (!step.assigned_users || step.assigned_users.length === 0)) {
+        const startDate = new Date(step.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (today >= startDate) return 'รอผู้รับผิดชอบ'
+      }
+      
+      // มีพนักงานเข้ามาทำ
+      if (step.assigned_users && step.assigned_users.length > 0) return 'กำลังดำเนินการ'
+      // ยังไม่มีพนักงาน
+      return 'รอดำเนินการ'
+    },
+    getStepStatusColor(step) {
+      // เสร็จสิ้น = เขียว
+      if (step.status === 'completed') return '#10b981'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // เกินวันสิ้นสุดแล้วยังไม่ complete = แดง
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return '#ef4444'
+      }
+      
+      // ถึงเวลาเริ่มแล้วยังไม่มีคนลงงาน = เหลือง
+      if (step.start_date && (!step.assigned_users || step.assigned_users.length === 0)) {
+        const startDate = new Date(step.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (today >= startDate) return '#f59e0b'
+      }
+      
+      // มีพนักงานเข้ามาทำ = ฟ้า
+      if (step.assigned_users && step.assigned_users.length > 0) return '#3b82f6'
+      // ยังไม่มีพนักงาน = เทา
+      return '#9ca3af'
+    },
+    getStepClass(step) {
+      if (step.status === 'completed') return 'completed'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // เกินวันสิ้นสุด
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'overdue'
+      }
+      
+      // ถึงเวลาเริ่มแล้วยังไม่มีคนลงงาน
+      if (step.start_date && (!step.assigned_users || step.assigned_users.length === 0)) {
+        const startDate = new Date(step.start_date)
+        startDate.setHours(0, 0, 0, 0)
+        if (today >= startDate) return 'warning'
+      }
+      
+      if (step.assigned_users && step.assigned_users.length > 0) return 'in-progress'
+      return 'pending'
     },
     formatDateRange(start, end) {
       const formatDate = (date) => {
@@ -360,69 +433,137 @@ export default {
 
 /* Workflow Expansion */
 .workflow-expansion {
-  padding: 1.5rem;
-  background: #f9fafb;
-  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
   margin: 0.5rem 0;
 }
 
 .workflow-expansion h4 {
-  margin: 0 0 1rem 0;
-  color: #374151;
+  margin: 0 0 1.5rem 0;
+  color: #1e293b;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.workflow-expansion h4 i {
+  color: #4A90E2;
 }
 
 .steps-timeline {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  position: relative;
+  padding-left: 1rem;
+}
+
+.steps-timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 20px;
+  bottom: 20px;
+  width: 2px;
+  background: linear-gradient(to bottom, #e2e8f0, #cbd5e1);
 }
 
 .step-item {
   display: flex;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 1.25rem;
+  padding: 1.25rem;
   background: white;
-  border-radius: 8px;
-  border-left: 4px solid #d1d5db;
-  transition: all 0.2s;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.step-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateX(4px);
+}
+
+.step-item:last-child {
+  margin-bottom: 0;
 }
 
 .step-item.completed {
-  border-left-color: #10b981;
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
 }
 
 .step-item.in-progress {
-  border-left-color: #3b82f6;
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+}
+
+.step-item.pending {
+  border-color: #9ca3af;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.step-item.warning {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.step-item.overdue {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
 }
 
 .step-number {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #e5e7eb;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  color: #6b7280;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #64748b;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
 }
 
 .step-item.completed .step-number {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981, #059669);
   color: white;
 }
 
 .step-item.in-progress .step-number {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+}
+
+.step-item.pending .step-number {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  color: white;
+}
+
+.step-item.warning .step-number {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.step-item.overdue .step-number {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   color: white;
 }
 
 .step-content {
   flex: 1;
+  min-width: 0;
 }
 
 .step-header {
@@ -430,43 +571,57 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  gap: 0.75rem;
 }
 
 .step-name {
   font-weight: 600;
-  color: #1f2937;
+  color: #1e293b;
+  font-size: 1rem;
 }
 
 .step-description {
   font-size: 0.9rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
+  color: #64748b;
+  margin-bottom: 0.75rem;
+  line-height: 1.5;
 }
 
 .step-meta {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8rem;
-  color: #9ca3af;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #64748b;
+  background: #f1f5f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
 }
 
 .meta-item i {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
 }
 
 .no-steps {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  color: #9ca3af;
-  font-style: italic;
+  gap: 0.75rem;
+  color: #94a3b8;
+  padding: 2rem;
+  text-align: center;
+}
+
+.no-steps i {
+  font-size: 2.5rem;
+  color: #cbd5e1;
 }
 
 .empty-state {
@@ -484,19 +639,59 @@ export default {
   .project-progress {
     padding: 1rem;
   }
-  
-  .header-content {
+
+  .main-header {
     flex-direction: column;
     gap: 1rem;
-    align-items: flex-start;
+    text-align: center;
+    padding: 1.5rem;
   }
-  
+
+  .main-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .search-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box input {
+    width: 100%;
+  }
+
   .step-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
+
+  .step-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
 }
+
+@media (max-width: 480px) {
+  .project-progress {
+    padding: 0.5rem;
+  }
+
+  .main-header {
+    padding: 1rem;
+  }
+
+  .main-header h1 {
+    font-size: 1.3rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .stat-item {
+    font-size: 0.85rem;
+  }
+}
+
 .clickable-rows :deep(.p-datatable-tbody > tr) {
   cursor: pointer;
 }
