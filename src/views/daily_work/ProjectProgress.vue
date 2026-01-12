@@ -26,7 +26,7 @@
         <DataTable :value="filteredProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
           dataKey="id" responsiveLayout="scroll" stripedRows
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
-          @rowClick="onRowClick" class="clickable-rows">
+          @row-click="onRowClick" class="clickable-rows">
           
           <Column :expander="true" style="width: 3rem" />
           
