@@ -160,13 +160,13 @@
               </label>
 
               <!-- AutoComplete สำหรับเลือก attendees -->
-              <div class="colleague-search">
-                <AutoComplete v-model="selectedAttendee" :suggestions="filteredAttendees.slice(0, 10)" @complete="searchAttendees"
+              <div class="colleague-search" @click.stop>
+                <AutoComplete ref="attendeeAutocomplete" v-model="selectedAttendee" :suggestions="filteredAttendees.slice(0, 5)" @complete="searchAttendees"
                   @item-select="onAttendeeSelect" @dropdown-click="showAllAttendees" optionLabel="name"
                   placeholder="ค้นหาและเลือกผู้ใช้..." class="corporate-input attendee-autocomplete" :dropdown="true" :forceSelection="false"
-                  :virtualScrollerOptions="{ itemSize: 40 }" scrollHeight="250px">
+                  scrollHeight="200px">
                   <template #option="slotProps">
-                    <div class="user-option">
+                    <div class="user-option" @click.stop>
                       <div class="user-name">{{ slotProps.option.name }}</div>
                     </div>
                   </template>
@@ -791,10 +791,11 @@ export default {
 }
 
 .task-dropdown :deep(.p-dropdown-panel) {
+  position: fixed !important;
   max-width: calc(100vw - 2rem) !important;
   left: 1rem !important;
   right: 1rem !important;
-  width: auto !important;
+  width: calc(100vw - 2rem) !important;
 }
 
 .task-dropdown :deep(.p-dropdown-items-wrapper) {
@@ -805,15 +806,16 @@ export default {
 .task-dropdown :deep(.p-dropdown-item) {
   white-space: normal;
   word-break: break-word;
+  max-width: 100%;
 }
 
 .task-selected,
 .task-option {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   max-width: 100%;
-  overflow: hidden;
+  width: 100%;
 }
 
 .so-badge {
@@ -829,9 +831,9 @@ export default {
 .task-name-text {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .selected-step {
@@ -1486,10 +1488,11 @@ export default {
 }
 
 .attendees-section :deep(.p-autocomplete-panel) {
+  position: fixed !important;
   max-width: calc(100vw - 2rem) !important;
   left: 1rem !important;
   right: 1rem !important;
-  width: auto !important;
+  width: calc(100vw - 2rem) !important;
 }
 
 .attendees-section :deep(.p-autocomplete-items) {
@@ -1500,6 +1503,7 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .attendees-section .user-option {
