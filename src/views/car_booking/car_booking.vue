@@ -567,6 +567,12 @@ export default {
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
 
         await this.loadRecords()
+        
+        // Reload fuel level in child component before closing
+        if (this.$refs.bookingForm) {
+          await this.$refs.bookingForm.loadLatestFuelLevel()
+        }
+        
         this.closeForm()
 
         this.$toast.add({

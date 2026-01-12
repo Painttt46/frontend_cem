@@ -30,8 +30,24 @@
           <div class="input-group">
             <label for="project" class="input-label">โครงการ *</label>
             <Dropdown id="project" v-model="selectedProject" :options="projectOptions" 
-              optionLabel="label" optionValue="value" placeholder="เลือกโครงการ"
-              required class="corporate-input" filter />
+              optionLabel="display" optionValue="task_name" placeholder="เลือกโครงการ"
+              required class="corporate-input task-dropdown" filter 
+              filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
+              :filterFields="['task_name', 'so_number', 'display']">
+              <template #value="slotProps">
+                <div v-if="slotProps.value" class="task-selected">
+                  <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
+                  <span class="task-name-text">{{ slotProps.value }}</span>
+                </div>
+                <span v-else>เลือกโครงการ</span>
+              </template>
+              <template #option="slotProps">
+                <div class="task-option">
+                  <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
+                  <span class="task-name-text">{{ slotProps.option.task_name }}</span>
+                </div>
+              </template>
+            </Dropdown>
           </div>
 
 
@@ -357,6 +373,10 @@ export default {
         this.fuelLevelReturn = 50
       }
     },
+    getTaskSO(taskName) {
+      const task = this.projectOptions.find(t => t.task_name === taskName)
+      return task?.so_number || ''
+    },
     getImagePreview(image) {
       if (image instanceof File) {
         return URL.createObjectURL(image)
@@ -386,8 +406,8 @@ export default {
           this.projectOptions = response.data
             .filter(task => isActive(task.status))
             .map(task => ({
-              label: task.task_name,
-              value: task.task_name
+              ...task,
+              display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
             }))
         }
       } catch { // ignore
@@ -835,5 +855,33 @@ export default {
   .confirm-buttons {
     flex-direction: column;
   }
+}
+
+/* Task Dropdown Styling */
+.task-dropdown :deep(.p-dropdown-panel) {
+  max-width: calc(100vw - 2rem) !important;
+}
+
+.task-selected,
+.task-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.so-badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.task-name-text {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
 }
 </style>
