@@ -1459,12 +1459,12 @@ export default {
 
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
   }
 
   .task-info {
@@ -1472,25 +1472,57 @@ export default {
   }
 
   .task-name {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     line-height: 1.2;
+  }
+
+  .step-info {
+    padding-left: 0.4rem;
+  }
+
+  .step-name {
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .step-badge-small {
+    width: 18px;
+    height: 18px;
+  }
+
+  .step-status-tag {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .step-detail {
+    font-size: 0.7rem;
   }
 }
 
 @media (max-width: 480px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .custom-id-badge {
-    font-size: 0.7rem;
-    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+    padding: 0.25rem 0.4rem;
+  }
+
+  .step-name {
+    font-size: 0.75rem;
+  }
+
+  .step-status-tag {
+    display: none;
   }
 }
 </style>

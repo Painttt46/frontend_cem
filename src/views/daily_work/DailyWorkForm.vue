@@ -1903,7 +1903,7 @@ export default {
 
   .corporate-input,
   .corporate-dropdown {
-    font-size: 16px;
+    font-size: 16px !important;
   }
 
   .attendees-section {
@@ -1940,10 +1940,60 @@ export default {
   .colleague-search :deep(.p-autocomplete-dropdown) {
     width: 40px !important;
   }
+
+  /* Step chips responsive */
+  .selected-chips {
+    gap: 0.35rem;
+  }
+
+  .step-chip {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .chip-name {
+    font-size: 0.8rem;
+    word-break: break-word;
+  }
+
+  .chip-details {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-left: 1.5rem;
+    font-size: 0.7rem;
+  }
+
+  .chip-badge {
+    width: 18px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+
+  /* Dropdown options responsive */
+  .step-option {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .step-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 0.65rem;
+  }
+
+  .step-desc {
+    font-size: 0.75rem;
+    margin-left: 1.5rem;
+  }
+
+  .step-meta {
+    margin-left: 1.5rem;
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 480px) {
-
   .daily-work-form {
     padding: 0.5rem;
   }
@@ -1954,6 +2004,20 @@ export default {
 
   .form-grid {
     gap: 0.75rem;
+  }
+
+  .chip-main {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .chip-status {
+    margin-left: 0;
+    font-size: 0.65rem;
+  }
+
+  .chip-details {
+    margin-left: 0;
   }
 }
 </style>
