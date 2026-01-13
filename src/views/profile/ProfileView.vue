@@ -289,7 +289,7 @@ function changePassword() {
 <style scoped>
 .profile-container {
   padding: 1.5rem 0.5rem;
-  max-width: 90%;
+  max-width: 96%;
   margin: 0 auto;
   background: #f5f5f5;
   min-height: 100vh;
