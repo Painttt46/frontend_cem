@@ -38,9 +38,20 @@
                   <div v-if="slotProps.value && slotProps.value.length > 0" class="selected-chips">
                     <div v-for="stepId in slotProps.value" :key="stepId" class="step-chip" 
                       :style="{ borderLeftColor: getStepStatusColor(getStepById(stepId)), background: getStepStatusColor(getStepById(stepId)) + '15' }">
-                      <span class="chip-badge" :style="{ background: getStepStatusColor(getStepById(stepId)) }">{{ getStepNumber(stepId) }}</span>
-                      <span class="chip-name">{{ getStepById(stepId)?.step_name }}</span>
-                      <span class="chip-status">{{ getStepStatusLabel(getStepById(stepId)) }}</span>
+                      <div class="chip-main">
+                        <span class="chip-badge" :style="{ background: getStepStatusColor(getStepById(stepId)) }">{{ getStepNumber(stepId) }}</span>
+                        <span class="chip-name">{{ getStepById(stepId)?.step_name }}</span>
+                        <span class="chip-status" :style="{ color: getStepStatusColor(getStepById(stepId)) }">{{ getStepStatusLabel(getStepById(stepId)) }}</span>
+                        <i class="pi pi-times chip-remove" @click.stop="removeStep(stepId)"></i>
+                      </div>
+                      <div class="chip-details">
+                        <span v-if="getStepById(stepId)?.start_date || getStepById(stepId)?.end_date" class="chip-meta">
+                          <i class="pi pi-calendar"></i> {{ formatDateRange(getStepById(stepId)?.start_date, getStepById(stepId)?.end_date) }}
+                        </span>
+                        <span v-if="getStepById(stepId)?.assigned_users?.length > 0" class="chip-meta">
+                          <i class="pi pi-users"></i> {{ formatAssignedUsers(getStepById(stepId).assigned_users) }}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <span v-else class="placeholder-text">เลือก step (ถ้ามี)</span>
@@ -454,6 +465,9 @@ export default {
       if (step.status === 'completed') return '#10b981'
       if (step.has_work_logged) return '#3b82f6'
       return '#9ca3af'
+    },
+    removeStep(stepId) {
+      this.formData.stepIds = this.formData.stepIds.filter(id => id !== stepId)
     },
     formatAssignedUsers(users) {
       if (!users || users.length === 0) return ''
@@ -971,18 +985,25 @@ export default {
 
 .selected-chips {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .step-chip {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.6rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.6rem;
   border-left: 3px solid;
   border-radius: 0 6px 6px 0;
   font-size: 0.85rem;
+}
+
+.chip-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .chip-badge {
@@ -995,6 +1016,7 @@ export default {
   color: white;
   font-size: 0.7rem;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .chip-name {
@@ -1004,7 +1026,36 @@ export default {
 
 .chip-status {
   font-size: 0.75rem;
+  margin-left: auto;
+}
+
+.chip-remove {
+  cursor: pointer;
+  color: #94a3b8;
+  padding: 0.2rem;
+  margin-left: 0.25rem;
+}
+
+.chip-remove:hover {
+  color: #ef4444;
+}
+
+.chip-details {
+  display: flex;
+  gap: 1rem;
+  margin-left: 1.75rem;
+  font-size: 0.75rem;
+}
+
+.chip-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   color: #64748b;
+}
+
+.chip-meta i {
+  font-size: 0.65rem;
 }
 
 .placeholder-text {
