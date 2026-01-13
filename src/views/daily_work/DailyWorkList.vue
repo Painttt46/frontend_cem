@@ -545,6 +545,7 @@ export default {
       return time.toTimeString().split(' ')[0]
     },
     getStatusLabel(value) {
+      if (value === 'cancelled') return 'ยกเลิก'
       const status = this.statusOptions.find(s => s.value === value)
       if (status && status.label) {
         return status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
@@ -560,6 +561,7 @@ export default {
       return value
     },
     getStatusColor(value) {
+      if (value === 'cancelled') return '#ef4444'
       const status = this.statusOptions.find(s => s.value === value)
       return status?.color || '#6c757d'
     },

@@ -644,6 +644,7 @@ export default {
     },
     getStatusLabel(statusValue) {
       if (!statusValue) return '-'
+      if (statusValue === 'cancelled') return 'ยกเลิก'
       // ลอง match ด้วย value ก่อน
       let status = this.workStatuses.find(s => s.value === statusValue)
       // ถ้าไม่เจอ ลอง match ด้วย label
@@ -659,6 +660,7 @@ export default {
     },
     getStatusColor(statusValue) {
       if (!statusValue) return '#9e9e9e'
+      if (statusValue === 'cancelled') return '#ef4444'
       // ลอง match ด้วย value ก่อน
       let status = this.workStatuses.find(s => s.value === statusValue)
       // ถ้าไม่เจอ ลอง match ด้วย label
