@@ -33,7 +33,18 @@
               </label>
               <MultiSelect id="stepId" v-model="formData.stepIds" :options="workflowSteps" optionLabel="step_name"
                 optionValue="id" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
-                filter filterPlaceholder="ค้นหาชื่อ step..." display="chip" :maxSelectedLabels="3">
+                filter filterPlaceholder="ค้นหาชื่อ step...">
+                <template #value="slotProps">
+                  <div v-if="slotProps.value && slotProps.value.length > 0" class="selected-chips">
+                    <div v-for="stepId in slotProps.value" :key="stepId" class="step-chip" 
+                      :style="{ borderLeftColor: getStepStatusColor(getStepById(stepId)), background: getStepStatusColor(getStepById(stepId)) + '15' }">
+                      <span class="chip-badge" :style="{ background: getStepStatusColor(getStepById(stepId)) }">{{ getStepNumber(stepId) }}</span>
+                      <span class="chip-name">{{ getStepById(stepId)?.step_name }}</span>
+                      <span class="chip-status">{{ getStepStatusLabel(getStepById(stepId)) }}</span>
+                    </div>
+                  </div>
+                  <span v-else class="placeholder-text">เลือก step (ถ้ามี)</span>
+                </template>
                 <template #option="slotProps">
                   <div class="step-option" :style="{ borderLeftColor: getStepStatusColor(slotProps.option) }">
                     <div class="step-header-option">
@@ -58,32 +69,6 @@
                   </div>
                 </template>
               </MultiSelect>
-              <!-- แสดงรายละเอียด steps ที่เลือก -->
-              <div v-if="formData.stepIds && formData.stepIds.length > 0" class="selected-steps-detail">
-                <div v-for="step in selectedSteps" :key="step.id" class="selected-step-item" 
-                  :style="{ borderLeftColor: getStepStatusColor(step) }">
-                  <div class="step-header-option">
-                    <span class="step-badge" :style="{ background: getStepStatusColor(step) }">
-                      {{ getStepNumber(step.id) }}
-                    </span>
-                    <strong>{{ step.step_name }}</strong>
-                    <span class="step-status-tag" :style="{ background: getStepStatusColor(step) }">
-                      {{ getStepStatusLabel(step) }}
-                    </span>
-                  </div>
-                  <div v-if="step.description" class="step-desc">{{ step.description }}</div>
-                  <div class="step-meta">
-                    <span v-if="step.start_date || step.end_date" class="meta-item">
-                      <i class="pi pi-calendar"></i>
-                      {{ formatDateRange(step.start_date, step.end_date) }}
-                    </span>
-                    <span v-if="step.assigned_users?.length > 0" class="meta-item">
-                      <i class="pi pi-users"></i>
-                      {{ formatAssignedUsers(step.assigned_users) }}
-                    </span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <div class="input-group">
@@ -982,6 +967,48 @@ export default {
   border-radius: 10px;
   color: white;
   margin-left: auto;
+}
+
+.selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.step-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border-left: 3px solid;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.85rem;
+}
+
+.chip-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.chip-name {
+  font-weight: 500;
+  color: #334155;
+}
+
+.chip-status {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.placeholder-text {
+  color: #94a3b8;
 }
 
 .workflow-preview {

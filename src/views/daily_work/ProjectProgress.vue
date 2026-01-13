@@ -293,7 +293,7 @@ export default {
         if (today >= startDate) return 'warning'
       }
       
-      if (step.assigned_users && step.assigned_users.length > 0) return 'in-progress'
+      if (step.has_work_logged) return 'in-progress'
       return 'pending'
     },
     formatDateRange(start, end) {
