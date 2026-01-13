@@ -426,18 +426,12 @@ export default {
       return step ? step.step_name : ''
     },
     getStepStatusLabel(step) {
-      if (step.status) {
-        const status = this.statusOptions.find(s => s.value === step.status)
-        if (status) return status.label
-      }
+      if (step.status === 'completed') return 'เสร็จสิ้น'
       if (step.has_work_logged) return 'กำลังดำเนินการ'
       return 'รอดำเนินการ'
     },
     getStepStatusColor(step) {
-      if (step.status) {
-        const status = this.statusOptions.find(s => s.value === step.status)
-        if (status && status.color) return status.color
-      }
+      if (step.status === 'completed') return '#10b981'
       if (step.has_work_logged) return '#3b82f6'
       return '#9ca3af'
     },
