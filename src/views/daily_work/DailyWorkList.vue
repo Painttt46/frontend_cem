@@ -559,11 +559,10 @@ export default {
       }
       return value
     },
-    getStepColor(record) {
-      // ถ้ามี record นี้แสดงว่ามีการลงงานแล้ว = กำลังดำเนินการ (ฟ้า)
+    getStepColor() {
       return '#3b82f6'
     },
-    getStepLabel(record) {
+    getStepLabel() {
       return 'กำลังดำเนินการ'
     },
     getStatusLabelFromOptions(value) {
