@@ -288,7 +288,6 @@ function changePassword() {
 </script>
 <style scoped>
 .profile-container {
-  padding: 2rem 1rem;
   max-width: 1400px;
   margin: 0 auto;
   background: #f5f5f5;
