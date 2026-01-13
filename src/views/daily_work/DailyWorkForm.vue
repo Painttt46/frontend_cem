@@ -35,9 +35,9 @@
                 optionValue="id" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
                 filter filterPlaceholder="ค้นหาชื่อ step..." display="chip" :maxSelectedLabels="3">
                 <template #option="slotProps">
-                  <div class="step-option">
+                  <div class="step-option" :style="{ borderLeftColor: getStepStatusColor(slotProps.option) }">
                     <div class="step-header-option">
-                      <span class="step-badge">{{ slotProps.index + 1 }}</span>
+                      <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(slotProps.option) }">{{ slotProps.index + 1 }}</span>
                       <strong>{{ slotProps.option.step_name }}</strong>
                     </div>
                     <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
@@ -58,6 +58,32 @@
                   </div>
                 </template>
               </MultiSelect>
+              <!-- แสดงรายละเอียด steps ที่เลือก -->
+              <div v-if="formData.stepIds && formData.stepIds.length > 0" class="selected-steps-detail">
+                <div v-for="stepId in formData.stepIds" :key="stepId" class="selected-step-item" 
+                  :style="{ borderLeftColor: getStepStatusColor(getStepById(stepId)) }">
+                  <div class="step-header-option">
+                    <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(getStepById(stepId)) }">
+                      {{ getStepNumber(stepId) }}
+                    </span>
+                    <strong>{{ getStepById(stepId)?.step_name }}</strong>
+                    <span class="step-status-tag" :style="{ backgroundColor: getStepStatusColor(getStepById(stepId)) }">
+                      {{ getStepStatusLabel(getStepById(stepId)) }}
+                    </span>
+                  </div>
+                  <div v-if="getStepById(stepId)?.description" class="step-desc">{{ getStepById(stepId).description }}</div>
+                  <div class="step-meta">
+                    <span v-if="getStepById(stepId)?.start_date || getStepById(stepId)?.end_date" class="meta-item">
+                      <i class="pi pi-calendar"></i>
+                      {{ formatDateRange(getStepById(stepId)?.start_date, getStepById(stepId)?.end_date) }}
+                    </span>
+                    <span v-if="getStepById(stepId)?.assigned_users?.length > 0" class="meta-item">
+                      <i class="pi pi-users"></i>
+                      {{ formatAssignedUsers(getStepById(stepId).assigned_users) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div class="input-group">
@@ -420,6 +446,9 @@ export default {
     getStepNumber(stepId) {
       const index = this.workflowSteps.findIndex(s => s.id === stepId)
       return index >= 0 ? index + 1 : ''
+    },
+    getStepById(stepId) {
+      return this.workflowSteps.find(s => s.id === stepId)
     },
     getStepName(stepId) {
       const step = this.workflowSteps.find(s => s.id === stepId)
@@ -869,7 +898,11 @@ export default {
 }
 
 .step-option {
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid #9ca3af;
+  margin: 0.25rem 0;
+  border-radius: 0 4px 4px 0;
+  background: #f8fafc;
 }
 
 .step-header-option {
@@ -885,7 +918,7 @@ export default {
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: #9ca3af;
   color: white;
   border-radius: 50%;
   font-size: 0.75rem;
@@ -905,6 +938,7 @@ export default {
   margin-top: 0.25rem;
   margin-left: 2rem;
   font-size: 0.8rem;
+  flex-wrap: wrap;
 }
 
 .meta-item {
@@ -920,6 +954,28 @@ export default {
 
 .meta-item.status {
   color: #10b981;
+}
+
+.selected-steps-detail {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.selected-step-item {
+  padding: 0.75rem;
+  border-left: 4px solid #9ca3af;
+  border-radius: 0 6px 6px 0;
+  background: #f8fafc;
+}
+
+.step-status-tag {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  color: white;
+  margin-left: auto;
 }
 
 .workflow-preview {
