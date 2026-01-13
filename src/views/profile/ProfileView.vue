@@ -288,8 +288,8 @@ function changePassword() {
 </script>
 <style scoped>
 .profile-container {
-  padding: 1.5rem;
-  max-width: 1200px;
+  padding: 2rem 1rem;
+  max-width: 1400px;
   margin: 0 auto;
   background: #f5f5f5;
   min-height: 100vh;
@@ -318,8 +318,8 @@ function changePassword() {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 2rem 3rem;
+  margin-bottom: 2rem;
 }
 
 .form-field {
@@ -341,7 +341,7 @@ function changePassword() {
 .form-actions {
   display: flex;
   justify-content: flex-start;
-  padding-top: 1rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #e5e7eb;
 }
 
