@@ -1,93 +1,97 @@
 <template>
-  <Toast />
-  <transition-group name="p-message" tag="div">
-      <Message v-for="msg of messages" :key="msg.id" :severity="msg.severity">{{ msg.content }}</Message>
-  </transition-group>
+  <div class="profile-container">
+    <Toast />
+    <transition-group name="p-message" tag="div">
+        <Message v-for="msg of messages" :key="msg.id" :severity="msg.severity">{{ msg.content }}</Message>
+    </transition-group>
 
-  <form @submit.prevent="updateUser">
+    <Card class="profile-card">
+      <template #title>
+        <div class="card-header">
+          <i class="pi pi-user"></i>
+          <span>ข้อมูลส่วนตัว</span>
+        </div>
+      </template>
+      <template #content>
+        <form @submit.prevent="updateUser">
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="username">ชื่อผู้ใช้</label>
+              <InputText id="username" v-model="username" />
+            </div>
+            <div class="form-field">
+              <label for="firstName">ชื่อ <span class="required">*</span></label>
+              <InputText id="firstName" v-model="firstName" required />
+            </div>
+            <div class="form-field">
+              <label for="lastName">นามสกุล <span class="required">*</span></label>
+              <InputText id="lastName" v-model="lastName" required />
+            </div>
+            <div class="form-field">
+              <label for="email">Email <span class="required">*</span></label>
+              <InputText id="email" v-model="email" type="email" required />
+            </div>
+            <div class="form-field">
+              <label for="phone">เบอร์โทร</label>
+              <InputText id="phone" v-model="phone" placeholder="0xx-xxx-xxxx" />
+            </div>
+            <div class="form-field">
+              <label for="employeeId">รหัสพนักงาน</label>
+              <InputText id="employeeId" v-model="employeeId" disabled />
+            </div>
+            <div class="form-field">
+              <label for="position">ตำแหน่ง</label>
+              <InputText id="position" v-model="position" disabled />
+            </div>
+            <div class="form-field">
+              <label for="department">แผนก</label>
+              <InputText id="department" v-model="department" disabled />
+            </div>
+          </div>
+          <div class="form-actions">
+            <Button type="submit" label="บันทึก" icon="pi pi-check" />
+          </div>
+        </form>
+      </template>
+    </Card>
 
-      <div class="flex flex-column">
-          <div class="row mt-4">
-              <h5 class="col-12">
-                  ข้อมูลส่วนตัว
-              </h5>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="username">ชื่อผู้ใช้</label>
-                  <InputText class="w-100" type="text" id="username" v-model="username" />
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="firstName">ชื่อ <span class="required">*</span></label>
-                  <InputText class="w-100" type="text" id="firstName" v-model="firstName" required />
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="lastName">นามสกุล <span class="required">*</span></label>
-                  <InputText class="w-100" type="text" id="lastName" v-model="lastName"  required/>
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="email">Email <span class="required">*</span></label>
-                  <InputText class="w-100" type="email" id="email" v-model="email" required />
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="phone">เบอร์โทร</label>
-                  <InputText class="w-100" type="text" id="phone" v-model="phone" placeholder="0xx-xxx-xxxx" />
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="employeeId">รหัสพนักงาน</label>
-                  <InputText class="w-100" type="text" id="employeeId" v-model="employeeId" disabled />
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="position">ตำแหน่ง</label>
-                  <InputText class="w-100" type="text" id="position" v-model="position" disabled />
-              </div>
-              <div class="col-12 col-md-6 mt-2 pt-2">
-                  <label for="department">แผนก</label>
-                  <InputText class="w-100" type="text" id="department" v-model="department" disabled />
-              </div>
+    <Card class="profile-card mt-4">
+      <template #title>
+        <div class="card-header">
+          <i class="pi pi-lock"></i>
+          <span>เปลี่ยนรหัสผ่าน</span>
+        </div>
+      </template>
+      <template #content>
+        <form>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="currentPassword">รหัสผ่านปัจจุบัน</label>
+              <Password id="currentPassword" v-model="currentPassword" 
+                       toggle-mask :feedback="false" placeholder="กรอกรหัสผ่านปัจจุบัน" />
+            </div>
+            <div class="form-field">
+              <label for="newPassword">รหัสผ่านใหม่</label>
+              <Password id="newPassword" v-model="newPassword" 
+                       toggle-mask :feedback="true" placeholder="กรอกรหัสผ่านใหม่" />
+            </div>
+            <div class="form-field">
+              <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
+              <Password id="confirmPassword" v-model="confirmPassword" 
+                       toggle-mask :feedback="false" placeholder="ยืนยันรหัสผ่านใหม่" />
+            </div>
           </div>
-          <div class="row">
-              <div class="col-12 col-md-3 mt-4">
-                  <button type="submit" class="btn btn-success btn-block w-100">บันทึก</button>
-              </div>
+          <div class="form-actions">
+            <Button type="button" @click="confirmChangePassword" 
+                    :disabled="!canChangePassword" 
+                    label="เปลี่ยนรหัสผ่าน" 
+                    icon="pi pi-key" 
+                    severity="danger" />
           </div>
-      </div>
-  </form>
-  <Divider class=" mt-3 pt-3" />
-  <form>
-      <div class="flex flex-column">
-          <div class="row">
-              <h5 class="col-12">
-                  เปลี่ยนรหัสผ่าน
-              </h5>
-              <div class="col-12 mt-3">
-                  <div class="row">
-                      <div class="col-12 col-md-4 mt-2">
-                          <label for="currentPassword">รหัสผ่านปัจจุบัน</label>
-                          <Password class="w-100" id="currentPassword" v-model="currentPassword" 
-                                   toggle-mask :feedback="false" placeholder="กรอกรหัสผ่านปัจจุบัน" />
-                      </div>
-                      <div class="col-12 col-md-4 mt-2">
-                          <label for="newPassword">รหัสผ่านใหม่</label>
-                          <Password class="w-100" id="newPassword" v-model="newPassword" 
-                                   toggle-mask :feedback="true" placeholder="กรอกรหัสผ่านใหม่" />
-                      </div>
-                      <div class="col-12 col-md-4 mt-2">
-                          <label for="confirmPassword">ยืนยันรหัสผ่านใหม่</label>
-                          <Password class="w-100" id="confirmPassword" v-model="confirmPassword" 
-                                   toggle-mask :feedback="false" placeholder="ยืนยันรหัสผ่านใหม่" />
-                      </div>
-                  </div>
-              </div>
-          </div>
-          <div class="mt-4">
-              <Button type="button" @click="confirmChangePassword" 
-                      :disabled="!canChangePassword" 
-                      class="btn btn-danger btn-block">
-                  เปลี่ยนรหัสผ่าน
-              </Button>
-          </div>
-      </div>
-  </form>
-
+        </form>
+      </template>
+    </Card>
+  </div>
 </template>
 <script setup>
 import { ref, onMounted, computed } from "vue";
@@ -282,4 +286,95 @@ function changePassword() {
 }
 
 </script>
-<style></style>
+<style scoped>
+.profile-container {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+.profile-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #2c3e50;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.card-header i {
+  font-size: 1.5rem;
+  color: #3b82f6;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-field label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card-header {
+    font-size: 1.1rem;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 0.75rem;
+  }
+
+  .form-field label {
+    font-size: 0.9rem;
+  }
+}
+</style>
