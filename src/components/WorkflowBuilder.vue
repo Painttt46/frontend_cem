@@ -92,7 +92,18 @@
           <label>ผู้รับผิดชอบ</label>
           <MultiSelect v-model="currentStep.assigned_users" :options="users" 
                        optionLabel="name" placeholder="เลือกผู้รับผิดชอบ" 
-                       display="chip" filter />
+                       display="chip" filter filterPlaceholder="ค้นหาชื่อ...">
+            <template #option="slotProps">
+              <div class="user-option">
+                <div class="user-name">{{ slotProps.option.name }}</div>
+                <div class="user-info" v-if="slotProps.option.position || slotProps.option.department">
+                  <span v-if="slotProps.option.position">{{ slotProps.option.position }}</span>
+                  <span v-if="slotProps.option.position && slotProps.option.department"> | </span>
+                  <span v-if="slotProps.option.department">{{ slotProps.option.department }}</span>
+                </div>
+              </div>
+            </template>
+          </MultiSelect>
         </div>
 
         <div class="field">
@@ -196,7 +207,9 @@ export default {
         const response = await axios.get('/api/users')
         this.users = response.data.map(u => ({
           id: u.id,
-          name: `${u.firstname} ${u.lastname}`
+          name: `${u.firstname} ${u.lastname}`,
+          position: u.position || '',
+          department: u.department || ''
         }))
       } catch (error) {
         console.error('Error loading users:', error)
@@ -615,6 +628,22 @@ export default {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.user-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-option .user-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.user-option .user-info {
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 
 @media (max-width: 768px) {
