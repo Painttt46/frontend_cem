@@ -208,16 +208,15 @@ export default {
     },
     getLatestWorkingStep(project) {
       if (!project.steps || project.steps.length === 0) return '-'
-      // หา step ล่าสุดที่มีคนลงงาน (มี assigned_users)
-      const workingSteps = project.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
+      // หา step ล่าสุดที่มีการลงงานจริง
+      const workingSteps = project.steps.filter(s => s.has_work_logged)
       if (workingSteps.length === 0) return '-'
-      // เอา step ล่าสุด
       const latestStep = workingSteps[workingSteps.length - 1]
       return latestStep.step_name
     },
     getLatestStepColor(project) {
       if (!project.steps || project.steps.length === 0) return '#9ca3af'
-      const workingSteps = project.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
+      const workingSteps = project.steps.filter(s => s.has_work_logged)
       if (workingSteps.length === 0) return '#9ca3af'
       const latestStep = workingSteps[workingSteps.length - 1]
       return this.getStepStatusColor(latestStep)
@@ -243,9 +242,9 @@ export default {
         if (today >= startDate) return 'รอผู้รับผิดชอบ'
       }
       
-      // มีพนักงานเข้ามาทำ
-      if (step.assigned_users && step.assigned_users.length > 0) return 'กำลังดำเนินการ'
-      // ยังไม่มีพนักงาน
+      // มีการลงงานจริง = กำลังดำเนินการ
+      if (step.has_work_logged) return 'กำลังดำเนินการ'
+      // ยังไม่มีการลงงาน
       return 'รอดำเนินการ'
     },
     getStepStatusColor(step) {
@@ -269,9 +268,9 @@ export default {
         if (today >= startDate) return '#f59e0b'
       }
       
-      // มีพนักงานเข้ามาทำ = ฟ้า
-      if (step.assigned_users && step.assigned_users.length > 0) return '#3b82f6'
-      // ยังไม่มีพนักงาน = เทา
+      // มีการลงงานจริง = ฟ้า
+      if (step.has_work_logged) return '#3b82f6'
+      // ยังไม่มีการลงงาน = เทา
       return '#9ca3af'
     },
     getStepClass(step) {

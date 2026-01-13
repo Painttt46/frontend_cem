@@ -122,13 +122,34 @@ const normalizeText = (text) => {
   return String(text).toLowerCase().trim()
 }
 
+// Convert date formats for search (e.g., "16/01/2026" -> matches "2026-01-16")
+const normalizeDateFormats = (text) => {
+  if (!text) return []
+  const str = String(text)
+  const formats = [str]
+  
+  // If it's a date in YYYY-MM-DD format, add DD/MM/YYYY format
+  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (isoMatch) {
+    formats.push(`${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`)
+  }
+  
+  return formats
+}
+
+// Check if query matches any date format
+const matchesDateFormat = (value, query) => {
+  const formats = normalizeDateFormats(value)
+  return formats.some(f => normalizeText(f).includes(query))
+}
+
 // Deep search in nested objects and arrays
 const deepSearch = (obj, query) => {
   if (obj === null || obj === undefined) return false
   
-  // String or number - direct match
+  // String or number - direct match or date format match
   if (typeof obj === 'string' || typeof obj === 'number') {
-    return normalizeText(obj).includes(query)
+    return normalizeText(obj).includes(query) || matchesDateFormat(obj, query)
   }
   
   // Array - search each element

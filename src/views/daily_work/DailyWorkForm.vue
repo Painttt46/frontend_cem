@@ -29,18 +29,11 @@
 
             <div class="input-group" v-if="workflowSteps.length > 0">
               <label for="stepId" class="input-label">
-                <i class="pi pi-sitemap"></i> เลือก Workflow Step
+                <i class="pi pi-sitemap"></i> เลือก Workflow Step (เลือกได้หลายรายการ)
               </label>
-              <Dropdown id="stepId" v-model="formData.stepId" :options="workflowSteps" optionLabel="step_name"
-                optionValue="id" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)" showClear
-                filter filterPlaceholder="ค้นหาชื่อ step...">
-                <template #value="slotProps">
-                  <div v-if="slotProps.value" class="selected-step">
-                    <span class="step-number">{{ getStepNumber(slotProps.value) }}</span>
-                    <span>{{ getStepName(slotProps.value) }}</span>
-                  </div>
-                  <span v-else>เลือก step (ถ้ามี)</span>
-                </template>
+              <MultiSelect id="stepId" v-model="formData.stepIds" :options="workflowSteps" optionLabel="step_name"
+                optionValue="id" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
+                filter filterPlaceholder="ค้นหาชื่อ step..." display="chip" :maxSelectedLabels="3">
                 <template #option="slotProps">
                   <div class="step-option">
                     <div class="step-header-option">
@@ -53,9 +46,9 @@
                         <i class="pi pi-calendar"></i>
                         {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
                       </span>
-                      <span v-if="slotProps.option.status" class="meta-item status">
+                      <span v-if="getStepStatusLabel(slotProps.option)" class="meta-item status" :style="{ color: getStepStatusColor(slotProps.option) }">
                         <i class="pi pi-circle-fill"></i>
-                        {{ slotProps.option.status }}
+                        {{ getStepStatusLabel(slotProps.option) }}
                       </span>
                       <span v-if="slotProps.option.assigned_users && slotProps.option.assigned_users.length > 0" class="meta-item">
                         <i class="pi pi-users"></i>
@@ -64,7 +57,7 @@
                     </div>
                   </div>
                 </template>
-              </Dropdown>
+              </MultiSelect>
             </div>
 
             <div class="input-group">
@@ -281,6 +274,7 @@ import axios from '@/utils/axiosConfig'
 import Checkbox from 'primevue/checkbox'
 import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
+import MultiSelect from 'primevue/multiselect'
 
 import { isRequired, isValidTimeRange, getValidationMessage } from '@/utils/validation'
 import { isActive } from '@/utils/statusHelper'
@@ -290,7 +284,8 @@ export default {
   components: {
     Checkbox,
     AutoComplete,
-    Button
+    Button,
+    MultiSelect
   },
   created() {
     this.$http = axios
@@ -304,7 +299,7 @@ export default {
       minDate: new Date(),
       formData: {
         taskId: null,
-        stepId: null,
+        stepIds: [],
         workDate: new Date(),
         startTime: new Date(),
         endTime: null,
@@ -430,10 +425,21 @@ export default {
       const step = this.workflowSteps.find(s => s.id === stepId)
       return step ? step.step_name : ''
     },
-    getSelectedStepStatus() {
-      if (!this.formData.stepId) return null
-      const step = this.workflowSteps.find(s => s.id === this.formData.stepId)
-      return step ? step.status : null
+    getStepStatusLabel(step) {
+      if (step.status) {
+        const status = this.statusOptions.find(s => s.value === step.status)
+        if (status) return status.label
+      }
+      if (step.has_work_logged) return 'กำลังดำเนินการ'
+      return 'รอดำเนินการ'
+    },
+    getStepStatusColor(step) {
+      if (step.status) {
+        const status = this.statusOptions.find(s => s.value === step.status)
+        if (status && status.color) return status.color
+      }
+      if (step.has_work_logged) return '#3b82f6'
+      return '#9ca3af'
     },
     formatAssignedUsers(users) {
       if (!users || users.length === 0) return ''
@@ -592,7 +598,7 @@ export default {
     },
     async onTaskChange() {
       this.workflowSteps = []
-      this.formData.stepId = null
+      this.formData.stepIds = []
       if (this.formData.taskId) {
         try {
           const response = await axios.get(`/api/task-steps/task/${this.formData.taskId}`)
@@ -625,28 +631,33 @@ export default {
 
       try {
         const uploadedFiles = await this.uploadFiles()
+        const stepIds = this.formData.stepIds && this.formData.stepIds.length > 0 
+          ? this.formData.stepIds 
+          : [null]
 
-        const workData = {
-          task_id: this.formData.taskId,
-          step_id: this.formData.stepId || null,
-          work_date: this.formatDate(this.formData.workDate),
-          start_time: this.formatTime(this.formData.startTime),
-          end_time: this.formatTime(this.formData.endTime),
-          total_hours: this.calculateTotalHours(),
-          location: this.formData.location,
-          work_description: this.formData.workDescription,
-          files: uploadedFiles,
-          user_id: localStorage.getItem('soc_user_id'),
-          submitted_at: new Date().toISOString(),
-          create_calendar_event: this.formData.createCalendarEvent,
-          event_title: this.formData.eventTitle,
-          meeting_start_time: this.formatTime(this.formData.meetingStartTime),
-          meeting_end_time: this.formatTime(this.formData.meetingEndTime),
-          attendees: this.formData.attendees,
-          create_teams_meeting: this.formData.createTeamsMeeting,
-          event_details: this.formData.eventDetails
+        for (const stepId of stepIds) {
+          const workData = {
+            task_id: this.formData.taskId,
+            step_id: stepId,
+            work_date: this.formatDate(this.formData.workDate),
+            start_time: this.formatTime(this.formData.startTime),
+            end_time: this.formatTime(this.formData.endTime),
+            total_hours: this.calculateTotalHours(),
+            location: this.formData.location,
+            work_description: this.formData.workDescription,
+            files: uploadedFiles,
+            user_id: localStorage.getItem('soc_user_id'),
+            submitted_at: new Date().toISOString(),
+            create_calendar_event: this.formData.createCalendarEvent,
+            event_title: this.formData.eventTitle,
+            meeting_start_time: this.formatTime(this.formData.meetingStartTime),
+            meeting_end_time: this.formatTime(this.formData.meetingEndTime),
+            attendees: this.formData.attendees,
+            create_teams_meeting: this.formData.createTeamsMeeting,
+            event_details: this.formData.eventDetails
+          }
+          await this.$http.post('/api/daily-work', workData)
         }
-        await this.$http.post('/api/daily-work', workData)
 
         this.$toast.add({
           severity: 'success',
@@ -703,7 +714,7 @@ export default {
       const now = new Date()
       this.formData = {
         taskId: null,
-        stepId: null,
+        stepIds: [],
         workDate: new Date(),
         startTime: new Date(),
         endTime: null,
