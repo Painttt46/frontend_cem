@@ -20,7 +20,7 @@
           </template>
         </Column>
 
-        <Column field="borrowRecord.name" header="ผู้ใช้" :sortable="true" style="min-width: 100px;">
+        <Column field="borrowRecord.name" header="ผู้ใช้" :sortable="true" style="min-width: 130px;">
           <template #body="slotProps">
             <span class="clickable-name" @click="showUserInfo(slotProps.data.borrowRecord.user_id)">
               {{ slotProps.data.borrowRecord.name }}
@@ -29,7 +29,7 @@
         </Column>
         <Column field="borrowRecord.time" header="เวลาใช้" />
         <Column field="borrowRecord.location" header="สถานที่" />
-        <Column field="borrowRecord.project" header="โครงการ" style="min-width: 120px;" />
+        <Column field="borrowRecord.project" header="โครงการ" style="min-width: 150px;" />
         
         <Column header="ผู้ร่วมงาน" style="min-width: 120px;">
           <template #body="slotProps">
@@ -49,7 +49,7 @@
           </template>
         </Column>
 
-        <Column header="ผู้คืน" style="min-width: 100px;">
+        <Column header="ผู้คืน" style="min-width: 130px;">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.name" 
                   class="clickable-name" 
