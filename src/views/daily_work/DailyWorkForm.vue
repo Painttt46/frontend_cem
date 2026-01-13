@@ -60,26 +60,26 @@
               </MultiSelect>
               <!-- แสดงรายละเอียด steps ที่เลือก -->
               <div v-if="formData.stepIds && formData.stepIds.length > 0" class="selected-steps-detail">
-                <div v-for="stepId in formData.stepIds" :key="stepId" class="selected-step-item" 
-                  :style="{ borderLeftColor: getStepStatusColor(getStepById(stepId)) }">
+                <div v-for="step in selectedSteps" :key="step.id" class="selected-step-item" 
+                  :style="{ borderLeftColor: getStepStatusColor(step) }">
                   <div class="step-header-option">
-                    <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(getStepById(stepId)) }">
-                      {{ getStepNumber(stepId) }}
+                    <span class="step-badge" :style="{ background: getStepStatusColor(step) }">
+                      {{ getStepNumber(step.id) }}
                     </span>
-                    <strong>{{ getStepById(stepId)?.step_name }}</strong>
-                    <span class="step-status-tag" :style="{ backgroundColor: getStepStatusColor(getStepById(stepId)) }">
-                      {{ getStepStatusLabel(getStepById(stepId)) }}
+                    <strong>{{ step.step_name }}</strong>
+                    <span class="step-status-tag" :style="{ background: getStepStatusColor(step) }">
+                      {{ getStepStatusLabel(step) }}
                     </span>
                   </div>
-                  <div v-if="getStepById(stepId)?.description" class="step-desc">{{ getStepById(stepId).description }}</div>
+                  <div v-if="step.description" class="step-desc">{{ step.description }}</div>
                   <div class="step-meta">
-                    <span v-if="getStepById(stepId)?.start_date || getStepById(stepId)?.end_date" class="meta-item">
+                    <span v-if="step.start_date || step.end_date" class="meta-item">
                       <i class="pi pi-calendar"></i>
-                      {{ formatDateRange(getStepById(stepId)?.start_date, getStepById(stepId)?.end_date) }}
+                      {{ formatDateRange(step.start_date, step.end_date) }}
                     </span>
-                    <span v-if="getStepById(stepId)?.assigned_users?.length > 0" class="meta-item">
+                    <span v-if="step.assigned_users?.length > 0" class="meta-item">
                       <i class="pi pi-users"></i>
-                      {{ formatAssignedUsers(getStepById(stepId).assigned_users) }}
+                      {{ formatAssignedUsers(step.assigned_users) }}
                     </span>
                   </div>
                 </div>
@@ -372,6 +372,10 @@ export default {
     }
   },
   computed: {
+    selectedSteps() {
+      if (!this.formData.stepIds || this.formData.stepIds.length === 0) return []
+      return this.formData.stepIds.map(id => this.workflowSteps.find(s => s.id === id)).filter(Boolean)
+    },
     calculateHours() {
       if (this.formData.startTime && this.formData.endTime) {
         const start = new Date(this.formData.startTime)
