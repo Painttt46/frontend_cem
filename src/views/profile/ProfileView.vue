@@ -11,42 +11,42 @@
               <h5 class="col-12">
                   ข้อมูลส่วนตัว
               </h5>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="username">ชื่อผู้ใช้</label>
                   <InputText class="w-100" type="text" id="username" v-model="username" />
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="firstName">ชื่อ <span class="required">*</span></label>
                   <InputText class="w-100" type="text" id="firstName" v-model="firstName" required />
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="lastName">นามสกุล <span class="required">*</span></label>
                   <InputText class="w-100" type="text" id="lastName" v-model="lastName"  required/>
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="email">Email <span class="required">*</span></label>
                   <InputText class="w-100" type="email" id="email" v-model="email" required />
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="phone">เบอร์โทร</label>
                   <InputText class="w-100" type="text" id="phone" v-model="phone" placeholder="0xx-xxx-xxxx" />
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="employeeId">รหัสพนักงาน</label>
                   <InputText class="w-100" type="text" id="employeeId" v-model="employeeId" disabled />
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="position">ตำแหน่ง</label>
                   <InputText class="w-100" type="text" id="position" v-model="position" disabled />
               </div>
-              <div class="col-5 mt-2 pt-2">
+              <div class="col-12 col-md-6 mt-2 pt-2">
                   <label for="department">แผนก</label>
                   <InputText class="w-100" type="text" id="department" v-model="department" disabled />
               </div>
           </div>
           <div class="row">
-              <div class="col-1 ml-8">
-                  <button type="submit" class="btn btn-success btn-block  mt-4">บันทึก</button>
+              <div class="col-12 col-md-3 mt-4">
+                  <button type="submit" class="btn btn-success btn-block w-100">บันทึก</button>
               </div>
           </div>
       </div>
