@@ -44,6 +44,7 @@
                         <span class="chip-status" :style="{ color: getStepStatusColor(getStepById(stepId)) }">{{ getStepStatusLabel(getStepById(stepId)) }}</span>
                         <i class="pi pi-times chip-remove" @click.stop="removeStep(stepId)"></i>
                       </div>
+                      <div v-if="getStepById(stepId)?.description" class="chip-desc">{{ getStepById(stepId).description }}</div>
                       <div class="chip-details">
                         <span v-if="getStepById(stepId)?.start_date || getStepById(stepId)?.end_date" class="chip-meta">
                           <i class="pi pi-calendar"></i> {{ formatDateRange(getStepById(stepId)?.start_date, getStepById(stepId)?.end_date) }}
@@ -61,16 +62,15 @@
                     <div class="step-header-option">
                       <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(slotProps.option) }">{{ slotProps.index + 1 }}</span>
                       <strong>{{ slotProps.option.step_name }}</strong>
+                      <span class="step-status-inline" :style="{ color: getStepStatusColor(slotProps.option) }">
+                        <i class="pi pi-circle-fill"></i> {{ getStepStatusLabel(slotProps.option) }}
+                      </span>
                     </div>
                     <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
                     <div class="step-meta">
                       <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">
                         <i class="pi pi-calendar"></i>
                         {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
-                      </span>
-                      <span v-if="getStepStatusLabel(slotProps.option)" class="meta-item status" :style="{ color: getStepStatusColor(slotProps.option) }">
-                        <i class="pi pi-circle-fill"></i>
-                        {{ getStepStatusLabel(slotProps.option) }}
                       </span>
                       <span v-if="slotProps.option.assigned_users && slotProps.option.assigned_users.length > 0" class="meta-item">
                         <i class="pi pi-users"></i>
@@ -1047,6 +1047,13 @@ export default {
   font-size: 0.75rem;
 }
 
+.chip-desc {
+  margin-left: 1.75rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.3;
+}
+
 .chip-meta {
   display: flex;
   align-items: center;
@@ -1056,6 +1063,18 @@ export default {
 
 .chip-meta i {
   font-size: 0.65rem;
+}
+
+.step-status-inline {
+  margin-left: auto;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.step-status-inline i {
+  font-size: 0.5rem;
 }
 
 .placeholder-text {

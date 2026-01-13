@@ -60,12 +60,19 @@
 
         <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.step_name" class="step-info">
+            <div v-if="slotProps.data.step_name" class="step-info" 
+              :style="{ borderLeftColor: getStepColor(slotProps.data) }">
               <div class="step-name">
-                <i class="pi pi-sitemap"></i> {{ slotProps.data.step_name }}
+                <span class="step-badge-small" :style="{ background: getStepColor(slotProps.data) }">
+                  <i class="pi pi-sitemap"></i>
+                </span>
+                {{ slotProps.data.step_name }}
+                <span class="step-status-tag" :style="{ background: getStepColor(slotProps.data) }">
+                  {{ getStepLabel(slotProps.data) }}
+                </span>
               </div>
               <div v-if="slotProps.data.step_description" class="step-detail">
-                <i class="pi pi-info-circle"></i> {{ slotProps.data.step_description }}
+                {{ slotProps.data.step_description }}
               </div>
               <div v-if="slotProps.data.step_start_date || slotProps.data.step_end_date" class="step-detail">
                 <i class="pi pi-calendar"></i> {{ formatStepDateRange(slotProps.data.step_start_date, slotProps.data.step_end_date) }}
@@ -552,6 +559,13 @@ export default {
       }
       return value
     },
+    getStepColor(record) {
+      // ถ้ามี record นี้แสดงว่ามีการลงงานแล้ว = กำลังดำเนินการ (ฟ้า)
+      return '#3b82f6'
+    },
+    getStepLabel(record) {
+      return 'กำลังดำเนินการ'
+    },
     getStatusLabelFromOptions(value) {
       const status = this.statusOptions.find(s => s.value === value)
       if (status && status.label) {
@@ -855,11 +869,40 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  padding-left: 0.5rem;
+  border-left: 3px solid #9ca3af;
 }
 
 .step-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
   color: #333;
+}
+
+.step-badge-small {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.step-badge-small i {
+  font-size: 0.7rem;
+}
+
+.step-status-tag {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 8px;
+  color: white;
+  margin-left: auto;
+}
 }
 
 .step-name i {
