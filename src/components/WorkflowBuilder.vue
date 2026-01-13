@@ -16,15 +16,15 @@
              @drop="onDrop($event, index)"
              :class="{ 'drag-over': dragOverIndex === index }">
         
-          <div class="step-card" :class="'status-' + step.status">
+          <div class="step-card" :class="getStepClass(step)">
             <div class="step-header">
               <div class="drag-handle" v-tooltip="'ลากเพื่อเรียงลำดับ'">
                 <i class="pi pi-bars"></i>
               </div>
               <div class="step-number">{{ index + 1 }}</div>
               <div class="step-status-badge">
-                <i :class="getStatusIcon(step.status)"></i>
-                {{ getStatusLabel(step.status) }}
+                <i :class="getStatusIcon(step)"></i>
+                {{ getStepStatusLabel(step) }}
               </div>
               <div class="step-actions">
                 <Button icon="pi pi-pencil" @click="editStep(index)" text size="small" />
@@ -320,13 +320,24 @@ export default {
       }
       return formatThai(start || end)
     },
-    getStatusIcon(status) {
-      if (!status) return 'pi pi-circle'
-      return 'pi pi-circle-fill'
+    getStatusIcon(step) {
+      if (step.status === 'completed') return 'pi pi-check-circle'
+      if (step.has_work_logged) return 'pi pi-spin pi-spinner'
+      return 'pi pi-circle'
     },
     getStatusLabel(status) {
       if (!status) return 'ไม่ระบุ'
       return status
+    },
+    getStepStatusLabel(step) {
+      if (step.status === 'completed') return 'เสร็จสิ้น'
+      if (step.has_work_logged) return 'กำลังดำเนินการ'
+      return 'รอดำเนินการ'
+    },
+    getStepClass(step) {
+      if (step.status === 'completed') return 'status-completed'
+      if (step.has_work_logged) return 'status-in_progress'
+      return 'status-pending'
     }
   }
 }
@@ -450,8 +461,13 @@ export default {
 }
 
 .step-card.status-in_progress {
-  border-left-color: #f59e0b;
-  background: linear-gradient(to right, #fffbeb 0%, white 10%);
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, #eff6ff 0%, white 10%);
+}
+
+.step-card.status-pending {
+  border-left-color: #9ca3af;
+  background: linear-gradient(to right, #f9fafb 0%, white 10%);
 }
 
 .step-card.status-on_hold {
@@ -501,7 +517,11 @@ export default {
 }
 
 .status-in_progress .step-number {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.status-pending .step-number {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
 }
 
 .status-on_hold .step-number {
