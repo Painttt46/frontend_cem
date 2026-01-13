@@ -18,7 +18,7 @@
           </template>
         </Column>
 
-        <Column field="task_name" header="ชื่อโครงการ" :sortable="true" style="min-width: 150px; max-width: 250px;">
+        <Column field="task_name" header="ชื่อโครงการ" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
             <div class="task-name">{{ slotProps.data.task_name }}</div>
           </template>
@@ -33,13 +33,13 @@
           </template>
         </Column>
 
-        <Column field="contract_number" header="เลขที่สัญญา">
+        <Column field="contract_number" header="เลขที่สัญญา" style="min-width: 120px;">
           <template #body="slotProps">
             {{ slotProps.data.contract_number || '-' }}
           </template>
         </Column>
 
-        <Column field="sale_owner" header="Sale เจ้าของงาน">
+        <Column field="sale_owner" header="Sale เจ้าของงาน" style="min-width: 120px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.sale_owner" class="sale-info">
               <i class="pi pi-user"></i>

@@ -20,7 +20,7 @@
           </template>
         </Column>
 
-        <Column field="borrowRecord.name" header="ผู้ใช้" :sortable="true">
+        <Column field="borrowRecord.name" header="ผู้ใช้" :sortable="true" style="min-width: 100px;">
           <template #body="slotProps">
             <span class="clickable-name" @click="showUserInfo(slotProps.data.borrowRecord.user_id)">
               {{ slotProps.data.borrowRecord.name }}
@@ -29,7 +29,7 @@
         </Column>
         <Column field="borrowRecord.time" header="เวลาใช้" />
         <Column field="borrowRecord.location" header="สถานที่" />
-        <Column field="borrowRecord.project" header="โครงการ" />
+        <Column field="borrowRecord.project" header="โครงการ" style="min-width: 120px;" />
         
         <Column header="ผู้ร่วมงาน" style="min-width: 120px;">
           <template #body="slotProps">
@@ -49,7 +49,7 @@
           </template>
         </Column>
 
-        <Column header="ผู้คืน">
+        <Column header="ผู้คืน" style="min-width: 100px;">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.name" 
                   class="clickable-name" 
@@ -583,7 +583,25 @@ export default {
 @media (max-width: 768px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+  }
+  
+  .history-table :deep(.p-datatable-thead > tr > th) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  
+  .history-table :deep(.hide-mobile) {
+    display: none !important;
+  }
+  
+  .clickable-name {
+    font-size: 0.85rem;
+  }
+  
+  .ticket-id {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
   }
 }
 
