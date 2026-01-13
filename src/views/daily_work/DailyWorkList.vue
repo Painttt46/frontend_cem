@@ -903,7 +903,6 @@ export default {
   color: white;
   margin-left: auto;
 }
-}
 
 .step-name i {
   color: #6366f1;
