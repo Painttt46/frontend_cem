@@ -68,7 +68,7 @@ export default {
       }
     },
     initDragScroll() {
-      let startX, scrollLeft, wrapper = null, moved = false
+      let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
         // Skip if clicking on text content
@@ -79,7 +79,6 @@ export default {
         
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
-        moved = false
       })
 
       document.addEventListener('mousemove', (e) => {
@@ -87,7 +86,6 @@ export default {
         
         const diffX = Math.abs(e.pageX - startX)
         if (diffX > 10) {
-          moved = true
           wrapper.style.cursor = 'grabbing'
           const walk = (e.pageX - startX) * 1.5
           wrapper.scrollLeft = scrollLeft - walk
@@ -100,7 +98,6 @@ export default {
         }
         wrapper = null
         startX = undefined
-        moved = false
       })
     }
   }
