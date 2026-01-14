@@ -68,40 +68,39 @@ export default {
       }
     },
     initDragScroll() {
-      let startX, startY, scrollLeft, wrapper = null
+      let startX, scrollLeft, wrapper = null, moved = false
 
       document.addEventListener('mousedown', (e) => {
+        // Skip if clicking on text content
+        if (e.target.closest('td, th, .task-name, .so-badge, .customer-badge, span, a, button')) return
+        
         wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
         if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return
         
         startX = e.pageX
-        startY = e.pageY
         scrollLeft = wrapper.scrollLeft
+        moved = false
       })
 
       document.addEventListener('mousemove', (e) => {
         if (!wrapper || startX === undefined) return
         
         const diffX = Math.abs(e.pageX - startX)
-        const diffY = Math.abs(e.pageY - startY)
-        
-        // Start drag only if moved horizontally more than vertically and > 5px
-        if (diffX > 5 && diffX > diffY) {
+        if (diffX > 10) {
+          moved = true
           wrapper.style.cursor = 'grabbing'
-          wrapper.style.userSelect = 'none'
           const walk = (e.pageX - startX) * 1.5
           wrapper.scrollLeft = scrollLeft - walk
-          e.preventDefault()
         }
       })
 
       document.addEventListener('mouseup', () => {
         if (wrapper) {
           wrapper.style.cursor = ''
-          wrapper.style.userSelect = ''
         }
         wrapper = null
         startX = undefined
+        moved = false
       })
     }
   }

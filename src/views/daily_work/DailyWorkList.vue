@@ -1551,28 +1551,25 @@ export default {
   }
 }
 
-.task-badges {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+.so-badge {
+  background: #0ea5e9;
+  color: #fff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
   margin-top: 0.25rem;
 }
 
-.so-badge {
-  background: #3b82f6;
-  color: #fff;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
 .customer-badge {
-  background: #8b5cf6;
+  background: #f59e0b;
   color: #fff;
-  padding: 0.15rem 0.5rem;
+  padding: 0.15rem 0.4rem;
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 500;
+  display: inline-block;
+  margin-top: 0.25rem;
 }
 </style>
