@@ -72,38 +72,19 @@ export default {
 
       document.addEventListener('mousedown', (e) => {
         wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
-        console.log('=== DRAG SCROLL DEBUG ===')
-        console.log('Target:', e.target)
-        console.log('Target tag:', e.target.tagName)
-        console.log('Wrapper found:', !!wrapper)
-        
-        if (!wrapper) {
-          console.log('No wrapper - exit')
-          return
-        }
-        
-        console.log('scrollWidth:', wrapper.scrollWidth, 'clientWidth:', wrapper.clientWidth)
-        if (wrapper.scrollWidth <= wrapper.clientWidth) {
-          console.log('No scrollbar - exit')
+        if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) {
           wrapper = null
           return
         }
         
         const tag = e.target.tagName.toLowerCase()
-        const childNodes = Array.from(e.target.childNodes)
-        const hasDirectText = childNodes.some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
-        
-        console.log('Tag:', tag)
-        console.log('Child nodes:', childNodes.length)
-        console.log('Has direct text:', hasDirectText)
+        const hasDirectText = Array.from(e.target.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
         
         if (['span', 'a', 'button', 'input', 'textarea', 'label'].includes(tag) || hasDirectText) {
-          console.log('Text element - allow highlight')
           wrapper = null
           return
         }
         
-        console.log('Empty area - start drag scroll')
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
         e.preventDefault()
@@ -117,10 +98,7 @@ export default {
       })
 
       document.addEventListener('mouseup', () => {
-        if (wrapper) {
-          console.log('Drag end')
-          wrapper.style.cursor = ''
-        }
+        if (wrapper) wrapper.style.cursor = ''
         wrapper = null
         startX = undefined
       })

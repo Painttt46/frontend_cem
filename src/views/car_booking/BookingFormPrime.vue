@@ -30,14 +30,14 @@
           <div class="input-group">
             <label for="project" class="input-label">โครงการ *</label>
             <Dropdown id="project" v-model="selectedProject" :options="projectOptions" 
-              optionLabel="display" optionValue="task_name" placeholder="เลือกโครงการ"
+              optionLabel="display" optionValue="id" placeholder="เลือกโครงการ"
               required class="corporate-input task-dropdown" filter 
               filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
               :filterFields="['task_name', 'so_number', 'display']">
               <template #value="slotProps">
                 <div v-if="slotProps.value" class="task-selected">
                   <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
-                  <span class="task-name-text">{{ slotProps.value }}</span>
+                  <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
                 </div>
                 <span v-else>เลือกโครงการ</span>
               </template>
@@ -331,10 +331,10 @@ export default {
     },
     selectedProject: {
       get() {
-        return this.borrowForm.project
+        return this.borrowForm.task_id
       },
       set(value) {
-        this.$emit('update-borrow-form', { field: 'project', value })
+        this.$emit('update-borrow-form', { field: 'task_id', value })
       }
     }
   },
@@ -370,9 +370,13 @@ export default {
         this.fuelLevelReturn = 50
       }
     },
-    getTaskSO(taskName) {
-      const task = this.projectOptions.find(t => t.task_name === taskName)
+    getTaskSO(taskId) {
+      const task = this.projectOptions.find(t => t.id === taskId)
       return task?.so_number || ''
+    },
+    getTaskName(taskId) {
+      const task = this.projectOptions.find(t => t.id === taskId)
+      return task?.task_name || ''
     },
     getImagePreview(image) {
       if (image instanceof File) {

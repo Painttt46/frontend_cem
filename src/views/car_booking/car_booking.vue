@@ -140,7 +140,7 @@ export default {
         license: 'ชฮ-3706',
         time: '',
         location: '',
-        project: '',
+        task_id: null,
         discription: '',
         colleagues: [],
         images: []
@@ -491,7 +491,7 @@ export default {
         const borrowData = {
           type: 'borrow',
           location: this.borrowForm.location,
-          project: this.borrowForm.project,
+          task_id: this.borrowForm.task_id,
           description: this.borrowForm.discription,
           selected_date: this.formatDateForDB(this.selectedDate),
           time: this.borrowForm.time,
@@ -682,7 +682,7 @@ export default {
         license: 'ชฮ-3706',
         time: '',
         location: '',
-        project: '',
+        task_id: null,
         discription: '',
         colleagues: [],
         images: []

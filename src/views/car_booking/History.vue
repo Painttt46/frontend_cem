@@ -29,7 +29,15 @@
         </Column>
         <Column field="borrowRecord.time" header="เวลาใช้" />
         <Column field="borrowRecord.location" header="สถานที่" />
-        <Column field="borrowRecord.project" header="โครงการ" style="min-width: 150px;" />
+        <Column field="borrowRecord.project" header="โครงการ" style="min-width: 200px;">
+          <template #body="slotProps">
+            <div class="task-info">
+              <div class="task-name">{{ slotProps.data.borrowRecord.project || '-' }}</div>
+              <span v-if="slotProps.data.borrowRecord.so_number" class="so-badge">{{ slotProps.data.borrowRecord.so_number }}</span>
+              <span v-if="slotProps.data.borrowRecord.customer_info" class="customer-badge">{{ slotProps.data.borrowRecord.customer_info }}</span>
+            </div>
+          </template>
+        </Column>
         
         <Column header="ผู้ร่วมงาน" style="min-width: 120px;">
           <template #body="slotProps">
@@ -633,5 +641,39 @@ export default {
 .clickable-name:hover {
   color: #764ba2;
   text-decoration: underline;
+}
+
+.task-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.so-badge {
+  background: #0ea5e9;
+  color: #fff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: block;
+  width: fit-content;
+  margin-top: 0.25rem;
+}
+
+.customer-badge {
+  background: #f59e0b;
+  color: #fff;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: block;
+  width: fit-content;
+  margin-top: 0.25rem;
 }
 </style>
