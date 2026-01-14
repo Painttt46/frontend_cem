@@ -10,12 +10,5 @@
 .p-datatable-wrapper,
 .works-table-wrapper,
 .history-table-wrapper {
-  cursor: grab;
   overflow-x: auto;
-}
-
-.p-datatable-wrapper:active,
-.works-table-wrapper:active,
-.history-table-wrapper:active {
-  cursor: grabbing;
 }

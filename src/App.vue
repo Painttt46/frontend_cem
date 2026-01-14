@@ -68,31 +68,43 @@ export default {
       }
     },
     initDragScroll() {
+      let startX, startY, scrollLeft, isDragging = false, wrapper = null
+
       document.addEventListener('mousedown', (e) => {
-        const wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
+        wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
         if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return
         
-        wrapper.dataset.dragging = 'true'
-        wrapper.dataset.startX = e.pageX
-        wrapper.dataset.scrollLeft = wrapper.scrollLeft
-        wrapper.style.cursor = 'grabbing'
-        wrapper.style.userSelect = 'none'
+        startX = e.pageX
+        startY = e.pageY
+        scrollLeft = wrapper.scrollLeft
+        isDragging = false
       })
 
       document.addEventListener('mousemove', (e) => {
-        const wrapper = document.querySelector('[data-dragging="true"]')
-        if (!wrapper) return
-        e.preventDefault()
-        const walk = (e.pageX - wrapper.dataset.startX) * 1.5
-        wrapper.scrollLeft = wrapper.dataset.scrollLeft - walk
+        if (!wrapper || startX === undefined) return
+        
+        const diffX = Math.abs(e.pageX - startX)
+        const diffY = Math.abs(e.pageY - startY)
+        
+        // Start drag only if moved horizontally more than vertically and > 5px
+        if (diffX > 5 && diffX > diffY) {
+          isDragging = true
+          wrapper.style.cursor = 'grabbing'
+          wrapper.style.userSelect = 'none'
+          const walk = (e.pageX - startX) * 1.5
+          wrapper.scrollLeft = scrollLeft - walk
+          e.preventDefault()
+        }
       })
 
       document.addEventListener('mouseup', () => {
-        const wrapper = document.querySelector('[data-dragging="true"]')
-        if (!wrapper) return
-        wrapper.dataset.dragging = 'false'
-        wrapper.style.cursor = 'grab'
-        wrapper.style.userSelect = ''
+        if (wrapper) {
+          wrapper.style.cursor = ''
+          wrapper.style.userSelect = ''
+        }
+        wrapper = null
+        startX = undefined
+        isDragging = false
       })
     }
   }

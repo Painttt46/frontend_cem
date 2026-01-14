@@ -53,10 +53,8 @@
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>
-              <div v-if="slotProps.data.so_number || slotProps.data.customer_info" class="task-badges">
-                <span v-if="slotProps.data.so_number" class="so-badge">{{ slotProps.data.so_number }}</span>
-                <span v-if="slotProps.data.customer_info" class="customer-badge">{{ slotProps.data.customer_info }}</span>
-              </div>
+              <div v-if="slotProps.data.so_number" class="so-badge">{{ slotProps.data.so_number }}</div>
+              <div v-if="slotProps.data.customer_info" class="customer-badge">{{ slotProps.data.customer_info }}</div>
             </div>
           </template>
         </Column>
