@@ -871,14 +871,13 @@ export default {
         
         await this.$http.put(`/api/tasks/${this.editFormData.id}`, updateData)
         
-        // Save workflow steps
+        // Save workflow steps - ลบ steps เก่าก่อนเสมอ
+        const existingSteps = await this.$http.get(`/api/task-steps/task/${this.editFormData.id}`)
+        for (const step of existingSteps.data) {
+          await this.$http.delete(`/api/task-steps/${step.id}`)
+        }
+        // Create new steps
         if (this.editFormData.steps && this.editFormData.steps.length > 0) {
-          // Delete existing steps first
-          const existingSteps = await this.$http.get(`/api/task-steps/task/${this.editFormData.id}`)
-          for (const step of existingSteps.data) {
-            await this.$http.delete(`/api/task-steps/${step.id}`)
-          }
-          // Create new steps
           for (const step of this.editFormData.steps) {
             await this.$http.post('/api/task-steps', {
               ...step,
