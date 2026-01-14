@@ -71,30 +71,30 @@ export default {
       let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
-        // หา scrollable container
         const el = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container')
-        console.log('mousedown - el:', el, 'target:', e.target.tagName)
         if (!el) return
         
         wrapper = el
-        console.log('scrollWidth:', wrapper.scrollWidth, 'clientWidth:', wrapper.clientWidth)
         if (wrapper.scrollWidth <= wrapper.clientWidth) {
-          console.log('no scroll needed')
           wrapper = null
           return
         }
         
         const tag = e.target.tagName.toLowerCase()
-        const hasDirectText = Array.from(e.target.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
-        console.log('tag:', tag, 'hasDirectText:', hasDirectText)
         
-        if (['span', 'a', 'button', 'input', 'textarea', 'label', 'i'].includes(tag) || hasDirectText) {
-          console.log('text element - skip')
+        // td, th, tr, div ให้ drag ได้ ยกเว้นมี text โดยตรงที่ไม่ใช่ whitespace
+        if (['td', 'th', 'tr', 'div', 'table', 'tbody', 'thead'].includes(tag)) {
+          // เช็คว่าคลิกโดน text จริงไหม
+          const range = document.caretRangeFromPoint(e.clientX, e.clientY)
+          if (range && range.startContainer.nodeType === Node.TEXT_NODE && range.startContainer.textContent.trim()) {
+            wrapper = null
+            return
+          }
+        } else if (['span', 'a', 'button', 'input', 'textarea', 'label', 'i', 'p'].includes(tag)) {
           wrapper = null
           return
         }
         
-        console.log('start drag')
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
         e.preventDefault()
