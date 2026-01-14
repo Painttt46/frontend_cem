@@ -8,7 +8,9 @@
 
 /* Table horizontal drag scroll */
 .p-datatable-wrapper,
+.p-datatable-table-container,
 .works-table-wrapper,
-.history-table-wrapper {
+.history-table-wrapper,
+[class*="table-wrapper"] {
   overflow-x: auto;
 }

@@ -71,7 +71,15 @@ export default {
       let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
-        wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
+        // หา scrollable container ที่ใกล้ที่สุด
+        const scrollable = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container, table, [style*="overflow"]')
+        if (!scrollable) return
+        
+        // หา parent ที่มี overflow-x: auto/scroll
+        wrapper = scrollable.closest('.p-datatable-wrapper') || 
+                  scrollable.parentElement?.closest('[class*="wrapper"], [class*="table"]') ||
+                  scrollable
+        
         if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) {
           wrapper = null
           return
@@ -80,7 +88,7 @@ export default {
         const tag = e.target.tagName.toLowerCase()
         const hasDirectText = Array.from(e.target.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
         
-        if (['span', 'a', 'button', 'input', 'textarea', 'label'].includes(tag) || hasDirectText) {
+        if (['span', 'a', 'button', 'input', 'textarea', 'label', 'i'].includes(tag) || hasDirectText) {
           wrapper = null
           return
         }
