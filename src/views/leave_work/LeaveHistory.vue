@@ -45,7 +45,7 @@
 
         <Column header="จำนวน" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * hoursPerDay).toFixed(1) }} ชม.)
+            {{ slotProps.data.total_days }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
         </Column>
 
@@ -273,11 +273,13 @@ export default {
   },
   computed: {
     hoursPerDay() {
-      const [ws] = this.workHours.start_time.split(':').map(Number)
-      const [we] = this.workHours.end_time.split(':').map(Number)
-      const [ls] = this.workHours.lunch_start.split(':').map(Number)
-      const [le] = this.workHours.lunch_end.split(':').map(Number)
-      return (ls - ws) + (we - le)
+      const [wsH, wsM] = this.workHours.start_time.split(':').map(Number)
+      const [weH, weM] = this.workHours.end_time.split(':').map(Number)
+      const [lsH, lsM] = this.workHours.lunch_start.split(':').map(Number)
+      const [leH, leM] = this.workHours.lunch_end.split(':').map(Number)
+      const morning = (lsH * 60 + (lsM || 0)) - (wsH * 60 + (wsM || 0))
+      const afternoon = (weH * 60 + (weM || 0)) - (leH * 60 + (leM || 0))
+      return (morning + afternoon) / 60
     }
   },
   async mounted() {
@@ -301,6 +303,52 @@ export default {
       } catch {
         // Use default
       }
+    },
+    calculateHours(data) {
+      const start = new Date(data.start_datetime)
+      const end = new Date(data.end_datetime)
+      const [ws] = this.workHours.start_time.split(':').map(Number)
+      const [we] = this.workHours.end_time.split(':').map(Number)
+      const [ls] = this.workHours.lunch_start.split(':').map(Number)
+      const [le] = this.workHours.lunch_end.split(':').map(Number)
+      
+      const startDate = new Date(start); startDate.setHours(0,0,0,0)
+      const endDate = new Date(end); endDate.setHours(0,0,0,0)
+      let totalMinutes = 0
+      
+      const calcDayMinutes = (s, e) => {
+        const sMin = s.getHours() * 60 + s.getMinutes()
+        const eMin = e.getHours() * 60 + e.getMinutes()
+        const wsMin = ws * 60, weMin = we * 60, lsMin = ls * 60, leMin = le * 60
+        let mins = 0
+        const mStart = Math.max(sMin, wsMin), mEnd = Math.min(eMin, lsMin)
+        if (mEnd > mStart) mins += mEnd - mStart
+        const aStart = Math.max(sMin, leMin), aEnd = Math.min(eMin, weMin)
+        if (aEnd > aStart) mins += aEnd - aStart
+        return Math.max(0, mins)
+      }
+      
+      if (startDate.getTime() === endDate.getTime()) {
+        totalMinutes = calcDayMinutes(start, end)
+      } else {
+        const current = new Date(startDate)
+        while (current <= endDate) {
+          const day = current.getDay()
+          if (day !== 0 && day !== 6) {
+            if (current.getTime() === startDate.getTime()) {
+              const dayEnd = new Date(current); dayEnd.setHours(we, 0, 0, 0)
+              totalMinutes += calcDayMinutes(start, dayEnd)
+            } else if (current.getTime() === endDate.getTime()) {
+              const dayStart = new Date(current); dayStart.setHours(ws, 0, 0, 0)
+              totalMinutes += calcDayMinutes(dayStart, end)
+            } else {
+              totalMinutes += ((ls - ws) + (we - le)) * 60
+            }
+          }
+          current.setDate(current.getDate() + 1)
+        }
+      }
+      return (totalMinutes / 60).toFixed(1)
     },
     async loadLeaveTypes() {
       try {

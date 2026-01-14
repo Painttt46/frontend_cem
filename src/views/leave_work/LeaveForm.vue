@@ -367,11 +367,10 @@ export default {
           }
         }
         
-        // ปัดเศษให้ถูกต้อง
-        const roundedHours = Math.round(totalHours * 10) / 10
-        const days = Math.round((roundedHours / hoursPerDay) * 10) / 10
-        const hoursDisplay = Number.isInteger(roundedHours) ? roundedHours : roundedHours.toFixed(1)
-        const daysDisplay = Number.isInteger(days) ? days : days.toFixed(1)
+        // แสดงชั่วโมงจริง และวันที่ปัดเศษ 2 ตำแหน่ง
+        const days = Math.round((totalHours / hoursPerDay) * 100) / 100
+        const hoursDisplay = Number.isInteger(totalHours) ? totalHours : totalHours.toFixed(1)
+        const daysDisplay = Number.isInteger(days) ? days : days.toFixed(2)
         return `${daysDisplay} วัน (${hoursDisplay} ชม.)`
       }
       return '0 วัน (0 ชม.)'
@@ -761,9 +760,8 @@ export default {
           }
         }
         
-        // ปัดเศษให้ถูกต้อง
-        const roundedHours = Math.round(totalHours * 10) / 10
-        return Math.round((roundedHours / hoursPerDay) * 10) / 10
+        // ปัดเศษเป็น 2 ตำแหน่งเพื่อความแม่นยำ
+        return Math.round((totalHours / hoursPerDay) * 100) / 100
       }
       return 0
     },
