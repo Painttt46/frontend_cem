@@ -68,7 +68,7 @@ export default {
       }
     },
     initDragScroll() {
-      let startX, startY, scrollLeft, isDragging = false, wrapper = null
+      let startX, startY, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
         wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
@@ -77,7 +77,6 @@ export default {
         startX = e.pageX
         startY = e.pageY
         scrollLeft = wrapper.scrollLeft
-        isDragging = false
       })
 
       document.addEventListener('mousemove', (e) => {
@@ -88,7 +87,6 @@ export default {
         
         // Start drag only if moved horizontally more than vertically and > 5px
         if (diffX > 5 && diffX > diffY) {
-          isDragging = true
           wrapper.style.cursor = 'grabbing'
           wrapper.style.userSelect = 'none'
           const walk = (e.pageX - startX) * 1.5
@@ -104,7 +102,6 @@ export default {
         }
         wrapper = null
         startX = undefined
-        isDragging = false
       })
     }
   }
