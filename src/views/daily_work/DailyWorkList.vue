@@ -53,7 +53,10 @@
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>
-              <div v-if="slotProps.data.so_number" class="so-number">{{ slotProps.data.so_number }}</div>
+              <div v-if="slotProps.data.so_number || slotProps.data.customer_info" class="task-badges">
+                <span v-if="slotProps.data.so_number" class="so-badge">{{ slotProps.data.so_number }}</span>
+                <span v-if="slotProps.data.customer_info" class="customer-badge">{{ slotProps.data.customer_info }}</span>
+              </div>
             </div>
           </template>
         </Column>
@@ -195,6 +198,14 @@
   <Dialog v-model:visible="editDialog" modal header="แก้ไขรายการงาน" :style="{ width: '90vw', maxWidth: '600px' }" position="center" :draggable="false">
     <form @submit.prevent="updateRecord" class="edit-form">
       <div class="edit-form-content">
+        <div class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-briefcase"></i> โครงการ</label>
+            <Dropdown v-model="editFormData.task_id" :options="tasks" optionLabel="display" optionValue="id"
+              class="w-full" placeholder="เลือกโครงการ" filter filterPlaceholder="ค้นหาโครงการ" />
+          </div>
+        </div>
+
         <div class="edit-row">
           <div class="edit-field">
             <label class="edit-label"><i class="pi pi-calendar"></i> วันที่ลงงาน</label>
@@ -346,6 +357,7 @@ export default {
   data() {
     return {
       localRecords: [],
+      tasks: [],
       detailDialog: false,
       selectedRecord: null,
       filesDialog: false,
@@ -355,6 +367,7 @@ export default {
       editDialog: false,
       editFormData: {
         id: null,
+        task_id: null,
         work_date: null,
         start_time: null,
         end_time: null,
@@ -372,7 +385,21 @@ export default {
       selectedUserId: null
     }
   },
+  mounted() {
+    this.loadTasks()
+  },
   methods: {
+    async loadTasks() {
+      try {
+        const response = await this.$http.get('/api/tasks')
+        this.tasks = (response.data || []).map(task => ({
+          ...task,
+          display: task.so_number ? `[${task.so_number}] ${task.task_name}` : task.task_name
+        }))
+      } catch (error) {
+        console.error('Error loading tasks:', error)
+      }
+    },
     showUserInfo(userId) {
       if (userId) {
         this.selectedUserId = userId
@@ -678,6 +705,7 @@ export default {
 
       this.editFormData = {
         id: record.id,
+        task_id: record.task_id,
         step_id: record.step_id,
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
@@ -767,6 +795,7 @@ export default {
         }
 
         const updateData = {
+          task_id: this.editFormData.task_id,
           step_id: this.editFormData.step_id,
           work_date: formattedDate,
           start_time: this.editFormData.start_time_text + ':00',
@@ -1524,5 +1553,30 @@ export default {
   .step-status-tag {
     display: none;
   }
+}
+
+.task-badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.so-badge {
+  background: #3b82f6;
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.customer-badge {
+  background: #8b5cf6;
+  color: #fff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 </style>

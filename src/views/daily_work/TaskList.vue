@@ -39,6 +39,12 @@
           </template>
         </Column>
 
+        <Column field="customer_info" header="ข้อมูลลูกค้า" style="min-width: 150px;">
+          <template #body="slotProps">
+            {{ slotProps.data.customer_info || '-' }}
+          </template>
+        </Column>
+
         <Column field="sale_owner" header="Sale เจ้าของงาน" style="min-width: 150px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.sale_owner" class="sale-info">
@@ -304,22 +310,22 @@
     <form @submit.prevent="updateTask" class="edit-form">
       <div class="form-grid">
         <div class="input-group">
-          <label class="input-label">SO Number</label>
+          <label class="input-label">เลข SO (Project)</label>
           <InputText v-model="editFormData.so_number" class="corporate-input" />
         </div>
 
         <div class="input-group">
-          <label class="input-label">ชื่องาน *</label>
+          <label class="input-label">ชื่องาน / โครงการ *</label>
           <InputText v-model="editFormData.task_name" required class="corporate-input" />
         </div>
         
         <div class="input-group">
-          <label class="input-label">Contract Number</label>
+          <label class="input-label">เลขที่สัญญา</label>
           <InputText v-model="editFormData.contract_number" class="corporate-input" />
         </div>
         
         <div class="input-group">
-          <label class="input-label">Sale Owner</label>
+          <label class="input-label">Sale เจ้าของงาน</label>
           <InputText v-model="editFormData.sale_owner" class="corporate-input" />
         </div>
 
@@ -1277,7 +1283,7 @@ export default {
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 1rem 2rem;
   margin-bottom: 1.5rem;
 }
 
