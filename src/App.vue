@@ -71,28 +71,30 @@ export default {
       let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
-        // หา scrollable container ที่ใกล้ที่สุด
-        const scrollable = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container, table, [style*="overflow"]')
-        if (!scrollable) return
+        // หา scrollable container
+        const el = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container')
+        console.log('mousedown - el:', el, 'target:', e.target.tagName)
+        if (!el) return
         
-        // หา parent ที่มี overflow-x: auto/scroll
-        wrapper = scrollable.closest('.p-datatable-wrapper') || 
-                  scrollable.parentElement?.closest('[class*="wrapper"], [class*="table"]') ||
-                  scrollable
-        
-        if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) {
+        wrapper = el
+        console.log('scrollWidth:', wrapper.scrollWidth, 'clientWidth:', wrapper.clientWidth)
+        if (wrapper.scrollWidth <= wrapper.clientWidth) {
+          console.log('no scroll needed')
           wrapper = null
           return
         }
         
         const tag = e.target.tagName.toLowerCase()
         const hasDirectText = Array.from(e.target.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+        console.log('tag:', tag, 'hasDirectText:', hasDirectText)
         
         if (['span', 'a', 'button', 'input', 'textarea', 'label', 'i'].includes(tag) || hasDirectText) {
+          console.log('text element - skip')
           wrapper = null
           return
         }
         
+        console.log('start drag')
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
         e.preventDefault()
