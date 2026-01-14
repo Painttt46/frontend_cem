@@ -71,12 +71,14 @@ export default {
       let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
-        // ถ้าคลิกที่ข้อความ ให้ highlight ได้ปกติ
-        const isText = e.target.closest('td, th, span, a, button, input, textarea, .task-name, .so-badge, .customer-badge, .p-badge')
-        if (isText) return
-        
         wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
         if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return
+        
+        // เช็คว่าคลิกโดนข้อความจริงไหม
+        const range = document.caretRangeFromPoint(e.clientX, e.clientY)
+        if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
+          return // คลิกโดนข้อความ ให้ highlight ได้
+        }
         
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
