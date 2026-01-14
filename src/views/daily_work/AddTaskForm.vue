@@ -25,20 +25,20 @@
           </div>
 
           <div class="input-group">
-            <label for="customerInfo" class="input-label">ข้อมูลลูกค้า</label>
-            <InputText id="customerInfo" v-model="formData.customerInfo" class="corporate-input" />
-          </div>
-
-          <div class="input-group half-width">
-            <label for="projectStartDate" class="input-label">เวลาเริ่มโครงการ</label>
+            <label for="projectStartDate" class="input-label">วันเริ่มโครงการ</label>
             <Calendar id="projectStartDate" v-model="formData.projectStartDate" dateFormat="dd/mm/yy"
               class="corporate-input" />
           </div>
 
-          <div class="input-group half-width">
-            <label for="projectEndDate" class="input-label">สิ้นสุดโครงการ</label>
+          <div class="input-group">
+            <label for="projectEndDate" class="input-label">วันสิ้นสุดโครงการ</label>
             <Calendar id="projectEndDate" v-model="formData.projectEndDate" dateFormat="dd/mm/yy"
               :minDate="formData.projectStartDate" class="corporate-input" />
+          </div>
+
+          <div class="input-group">
+            <label for="customerInfo" class="input-label">ข้อมูลลูกค้า</label>
+            <InputText id="customerInfo" v-model="formData.customerInfo" class="corporate-input" />
           </div>
 
           <div class="input-group">

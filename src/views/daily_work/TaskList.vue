@@ -304,13 +304,13 @@
     <form @submit.prevent="updateTask" class="edit-form">
       <div class="form-grid">
         <div class="input-group">
-          <label class="input-label">ชื่องาน *</label>
-          <InputText v-model="editFormData.task_name" required class="corporate-input" />
-        </div>
-        
-        <div class="input-group">
           <label class="input-label">SO Number</label>
           <InputText v-model="editFormData.so_number" class="corporate-input" />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">ชื่องาน *</label>
+          <InputText v-model="editFormData.task_name" required class="corporate-input" />
         </div>
         
         <div class="input-group">
@@ -324,11 +324,6 @@
         </div>
 
         <div class="input-group">
-          <label class="input-label">ข้อมูลลูกค้า</label>
-          <InputText v-model="editFormData.customer_info" class="corporate-input" />
-        </div>
-
-        <div class="input-group">
           <label class="input-label">วันเริ่มโครงการ</label>
           <Calendar v-model="editFormData.project_start_date" dateFormat="dd/mm/yy" class="corporate-input" />
         </div>
@@ -337,6 +332,11 @@
           <label class="input-label">วันสิ้นสุดโครงการ</label>
           <Calendar v-model="editFormData.project_end_date" dateFormat="dd/mm/yy" 
                     :minDate="editFormData.project_start_date" class="corporate-input" />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label">ข้อมูลลูกค้า</label>
+          <InputText v-model="editFormData.customer_info" class="corporate-input" />
         </div>
 
         <div class="input-group">
