@@ -310,13 +310,13 @@
     <form @submit.prevent="updateTask" class="edit-form">
       <div class="form-grid">
         <div class="input-group">
-          <label class="input-label">เลข SO (Project)</label>
-          <InputText v-model="editFormData.so_number" class="corporate-input" />
+          <label class="input-label">ชื่อโครงการ *</label>
+          <InputText v-model="editFormData.task_name" required class="corporate-input" />
         </div>
 
         <div class="input-group">
-          <label class="input-label">ชื่องาน / โครงการ *</label>
-          <InputText v-model="editFormData.task_name" required class="corporate-input" />
+          <label class="input-label">เลข SO (Project)</label>
+          <InputText v-model="editFormData.so_number" class="corporate-input" />
         </div>
         
         <div class="input-group">

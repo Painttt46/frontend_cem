@@ -49,7 +49,7 @@
           </template>
         </Column> -->
 
-        <Column field="task_name" header="โครงการ" :sortable="true" style="min-width: 200px;">
+        <Column field="task_name" header="โครงการ" :sortable="true" style="min-width: 280px;">
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>

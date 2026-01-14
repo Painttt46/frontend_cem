@@ -35,6 +35,9 @@ export default {
     this.tokenCheckInterval = setInterval(() => {
       this.checkTokenExpiration()
     }, 60000)
+
+    // Enable drag scroll for tables
+    this.initDragScroll()
   },
   beforeUnmount() {
     if (this.tokenCheckInterval) {
@@ -63,6 +66,34 @@ export default {
       } catch {
         // ignore parse errors
       }
+    },
+    initDragScroll() {
+      document.addEventListener('mousedown', (e) => {
+        const wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
+        if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return
+        
+        wrapper.dataset.dragging = 'true'
+        wrapper.dataset.startX = e.pageX
+        wrapper.dataset.scrollLeft = wrapper.scrollLeft
+        wrapper.style.cursor = 'grabbing'
+        wrapper.style.userSelect = 'none'
+      })
+
+      document.addEventListener('mousemove', (e) => {
+        const wrapper = document.querySelector('[data-dragging="true"]')
+        if (!wrapper) return
+        e.preventDefault()
+        const walk = (e.pageX - wrapper.dataset.startX) * 1.5
+        wrapper.scrollLeft = wrapper.dataset.scrollLeft - walk
+      })
+
+      document.addEventListener('mouseup', () => {
+        const wrapper = document.querySelector('[data-dragging="true"]')
+        if (!wrapper) return
+        wrapper.dataset.dragging = 'false'
+        wrapper.style.cursor = 'grab'
+        wrapper.style.userSelect = ''
+      })
     }
   }
 };
