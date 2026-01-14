@@ -324,6 +324,11 @@
         </div>
 
         <div class="input-group">
+          <label class="input-label">ข้อมูลลูกค้า</label>
+          <InputText v-model="editFormData.customer_info" class="corporate-input" />
+        </div>
+
+        <div class="input-group">
           <label class="input-label">วันเริ่มโครงการ</label>
           <Calendar v-model="editFormData.project_start_date" dateFormat="dd/mm/yy" class="corporate-input" />
         </div>
@@ -486,6 +491,7 @@ export default {
         so_number: '',
         contract_number: '',
         sale_owner: '',
+        customer_info: '',
         description: '',
         category: [],
         project_start_date: null,
@@ -795,6 +801,7 @@ export default {
         so_number: task.so_number || '',
         contract_number: task.contract_number || '',
         sale_owner: task.sale_owner || '',
+        customer_info: task.customer_info || '',
         description: task.description || '',
         category: this.parseCategoryArray(task.category),
         status: task.status || null,
@@ -861,6 +868,7 @@ export default {
           so_number: this.editFormData.so_number,
           contract_number: this.editFormData.contract_number,
           sale_owner: this.editFormData.sale_owner,
+          customer_info: this.editFormData.customer_info,
           description: this.editFormData.description,
           category: Array.isArray(this.editFormData.category) ? this.editFormData.category.join(',') : this.editFormData.category,
           status: this.editFormData.status,

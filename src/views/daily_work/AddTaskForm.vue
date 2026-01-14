@@ -25,12 +25,17 @@
           </div>
 
           <div class="input-group">
+            <label for="customerInfo" class="input-label">ข้อมูลลูกค้า</label>
+            <InputText id="customerInfo" v-model="formData.customerInfo" class="corporate-input" />
+          </div>
+
+          <div class="input-group half-width">
             <label for="projectStartDate" class="input-label">เวลาเริ่มโครงการ</label>
             <Calendar id="projectStartDate" v-model="formData.projectStartDate" dateFormat="dd/mm/yy"
               class="corporate-input" />
           </div>
 
-          <div class="input-group">
+          <div class="input-group half-width">
             <label for="projectEndDate" class="input-label">สิ้นสุดโครงการ</label>
             <Calendar id="projectEndDate" v-model="formData.projectEndDate" dateFormat="dd/mm/yy"
               :minDate="formData.projectStartDate" class="corporate-input" />
@@ -104,6 +109,7 @@ export default {
         soNumber: '',
         contractNumber: '',
         saleOwner: '',
+        customerInfo: '',
         projectStartDate: null,
         projectEndDate: null,
         description: '',
@@ -198,6 +204,7 @@ export default {
           so_number: this.formData.soNumber,
           contract_number: this.formData.contractNumber,
           sale_owner: this.formData.saleOwner,
+          customer_info: this.formData.customerInfo,
           project_start_date: formatDate(this.formData.projectStartDate),
           project_end_date: formatDate(this.formData.projectEndDate),
           description: this.formData.description,
@@ -249,6 +256,7 @@ export default {
         soNumber: '',
         contractNumber: '',
         saleOwner: '',
+        customerInfo: '',
         projectStartDate: null,
         projectEndDate: null,
         description: '',
@@ -298,6 +306,10 @@ export default {
 
 .full-width {
   grid-column: 1 / -1;
+}
+
+.half-width {
+  grid-column: span 1;
 }
 
 .input-label {
