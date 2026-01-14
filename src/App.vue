@@ -71,31 +71,27 @@ export default {
       let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
-        // Skip if clicking on text content
-        if (e.target.closest('td, th, .task-name, .so-badge, .customer-badge, span, a, button')) return
+        // ถ้าคลิกที่ข้อความ ให้ highlight ได้ปกติ
+        const isText = e.target.closest('td, th, span, a, button, input, textarea, .task-name, .so-badge, .customer-badge, .p-badge')
+        if (isText) return
         
         wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
         if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return
         
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
+        e.preventDefault()
       })
 
       document.addEventListener('mousemove', (e) => {
         if (!wrapper || startX === undefined) return
-        
-        const diffX = Math.abs(e.pageX - startX)
-        if (diffX > 10) {
-          wrapper.style.cursor = 'grabbing'
-          const walk = (e.pageX - startX) * 1.5
-          wrapper.scrollLeft = scrollLeft - walk
-        }
+        wrapper.style.cursor = 'grabbing'
+        const walk = (e.pageX - startX) * 1.5
+        wrapper.scrollLeft = scrollLeft - walk
       })
 
       document.addEventListener('mouseup', () => {
-        if (wrapper) {
-          wrapper.style.cursor = ''
-        }
+        if (wrapper) wrapper.style.cursor = ''
         wrapper = null
         startX = undefined
       })
