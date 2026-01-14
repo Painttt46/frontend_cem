@@ -72,14 +72,38 @@ export default {
 
       document.addEventListener('mousedown', (e) => {
         wrapper = e.target.closest('.p-datatable-wrapper, .works-table-wrapper, .history-table-wrapper')
-        if (!wrapper || wrapper.scrollWidth <= wrapper.clientWidth) return
+        console.log('=== DRAG SCROLL DEBUG ===')
+        console.log('Target:', e.target)
+        console.log('Target tag:', e.target.tagName)
+        console.log('Wrapper found:', !!wrapper)
         
-        // เช็คว่าคลิกโดนข้อความจริงไหม
-        const range = document.caretRangeFromPoint(e.clientX, e.clientY)
-        if (range && range.startContainer.nodeType === Node.TEXT_NODE) {
-          return // คลิกโดนข้อความ ให้ highlight ได้
+        if (!wrapper) {
+          console.log('No wrapper - exit')
+          return
         }
         
+        console.log('scrollWidth:', wrapper.scrollWidth, 'clientWidth:', wrapper.clientWidth)
+        if (wrapper.scrollWidth <= wrapper.clientWidth) {
+          console.log('No scrollbar - exit')
+          wrapper = null
+          return
+        }
+        
+        const tag = e.target.tagName.toLowerCase()
+        const childNodes = Array.from(e.target.childNodes)
+        const hasDirectText = childNodes.some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+        
+        console.log('Tag:', tag)
+        console.log('Child nodes:', childNodes.length)
+        console.log('Has direct text:', hasDirectText)
+        
+        if (['span', 'a', 'button', 'input', 'textarea', 'label'].includes(tag) || hasDirectText) {
+          console.log('Text element - allow highlight')
+          wrapper = null
+          return
+        }
+        
+        console.log('Empty area - start drag scroll')
         startX = e.pageX
         scrollLeft = wrapper.scrollLeft
         e.preventDefault()
@@ -93,7 +117,10 @@ export default {
       })
 
       document.addEventListener('mouseup', () => {
-        if (wrapper) wrapper.style.cursor = ''
+        if (wrapper) {
+          console.log('Drag end')
+          wrapper.style.cursor = ''
+        }
         wrapper = null
         startX = undefined
       })
