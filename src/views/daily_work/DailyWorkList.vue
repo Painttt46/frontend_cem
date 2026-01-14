@@ -310,6 +310,7 @@ export default {
     // Load status options from localStorage
     this.loadStatusOptions()
     this.loadCategoryOptions()
+    this.loadTasks()
 
     // Update current time every second for realtime button state
     setInterval(() => {
@@ -384,9 +385,6 @@ export default {
       showUserDialog: false,
       selectedUserId: null
     }
-  },
-  mounted() {
-    this.loadTasks()
   },
   methods: {
     async loadTasks() {
