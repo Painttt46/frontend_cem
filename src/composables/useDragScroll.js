@@ -18,30 +18,45 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
       return
     }
 
+    // ถ้าคลิกที่ text ให้ select ได้
+    if (e.target.closest('td, th, span, div')) {
+      const selection = window.getSelection()
+      if (selection && selection.toString().length > 0) {
+        return
+      }
+    }
+
     isDragging.value = true
     hasMoved.value = false
     startX.value = e.pageX - target.offsetLeft
     startY.value = e.pageY - target.offsetTop
     scrollLeft.value = target.scrollLeft
     scrollTop.value = target.scrollTop
-    target.style.cursor = 'grabbing'
-    target.style.userSelect = 'none'
   }
 
   const handleMouseMove = (e) => {
     if (!isDragging.value) return
-    e.preventDefault()
-
+    
     const target = e.target.closest(selector)
     if (!target) return
 
-    hasMoved.value = true
-    const x = e.pageX - target.offsetLeft
-    const y = e.pageY - target.offsetTop
-    const walkX = (x - startX.value) * 1.5
-    const walkY = (y - startY.value) * 1.5
-    target.scrollLeft = scrollLeft.value - walkX
-    target.scrollTop = scrollTop.value - walkY
+    const moveX = Math.abs(e.pageX - (startX.value + target.offsetLeft))
+    const moveY = Math.abs(e.pageY - (startY.value + target.offsetTop))
+    
+    // ถ้าเลื่อนมากกว่า 5px ถึงจะถือว่า drag
+    if (moveX > 5 || moveY > 5) {
+      e.preventDefault()
+      hasMoved.value = true
+      target.style.cursor = 'grabbing'
+      target.style.userSelect = 'none'
+      
+      const x = e.pageX - target.offsetLeft
+      const y = e.pageY - target.offsetTop
+      const walkX = (x - startX.value) * 1.5
+      const walkY = (y - startY.value) * 1.5
+      target.scrollLeft = scrollLeft.value - walkX
+      target.scrollTop = scrollTop.value - walkY
+    }
   }
 
   const handleMouseUp = (e) => {
@@ -50,14 +65,7 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
     const target = e.target.closest(selector)
     if (target) {
       target.style.cursor = 'grab'
-      // ถ้าไม่ได้เลื่อน ให้ select text ได้
-      if (!hasMoved.value) {
-        target.style.userSelect = 'text'
-      } else {
-        setTimeout(() => {
-          target.style.userSelect = 'text'
-        }, 10)
-      }
+      target.style.userSelect = 'text'
     }
 
     isDragging.value = false
