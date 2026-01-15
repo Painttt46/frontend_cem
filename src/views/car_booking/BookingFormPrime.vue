@@ -111,6 +111,11 @@
             <FuelGauge v-model="fuelLevelBorrow" :disabled="true" />
           </div>
 
+          <div class="input-group full-width">
+            <label class="input-label">บัตร Easy Pass (ก่อนใช้รถ)</label>
+            <EasyPassCard v-model="easyPassBorrow" :disabled="true" />
+          </div>
+
           <div class="file-upload-section">
             <label class="upload-label">รูปภาพ</label>
             <div class="file-upload-wrapper">
@@ -194,6 +199,11 @@
             <FuelGauge v-model="fuelLevelReturn" />
           </div>
 
+          <div class="input-group full-width">
+            <label class="input-label">บัตร Easy Pass (หลังใช้รถ) *</label>
+            <EasyPassCard v-model="easyPassReturn" />
+          </div>
+
           <div class="file-upload-section">
             <label class="upload-label">รูปภาพ</label>
             <div class="file-upload-wrapper">
@@ -266,13 +276,15 @@ import Dropdown from 'primevue/dropdown'
 import axios from '@/utils/axiosConfig'
 import { isActive } from '@/utils/statusHelper'
 import FuelGauge from '@/components/FuelGauge.vue'
+import EasyPassCard from '@/components/EasyPassCard.vue'
 
 export default {
   name: 'BookingFormPrime',
   components: {
     AutoComplete,
     Dropdown,
-    FuelGauge
+    FuelGauge,
+    EasyPassCard
   },
   emits: ['close-form', 'submit-borrow', 'submit-return', 'submit-cancel', 'handle-image-upload', 'remove-image', 'update-borrow-form', 'updateReturnForm', 'update-cancel-form'],
   props: {
@@ -301,7 +313,9 @@ export default {
       selectedColleague: null,
       projectOptions: [],
       fuelLevelBorrow: 50,
-      fuelLevelReturn: 50
+      fuelLevelReturn: 50,
+      easyPassBorrow: 500,
+      easyPassReturn: 500
     }
   },
   async created() {
@@ -365,9 +379,13 @@ export default {
         const response = await this.$http.get('/api/car-booking/latest-fuel')
         this.fuelLevelBorrow = response.data.fuel_level || 50
         this.fuelLevelReturn = response.data.fuel_level || 50
+        this.easyPassBorrow = response.data.easy_pass_balance || 500
+        this.easyPassReturn = response.data.easy_pass_balance || 500
       } catch {
         this.fuelLevelBorrow = 50
         this.fuelLevelReturn = 50
+        this.easyPassBorrow = 500
+        this.easyPassReturn = 500
       }
     },
     getTaskSO(taskId) {
@@ -528,9 +546,9 @@ export default {
       this.showConfirm = false
 
       if (this.pendingAction === 'borrow') {
-        this.$emit('submit-borrow', { fuelLevelBorrow: this.fuelLevelBorrow })
+        this.$emit('submit-borrow', { fuelLevelBorrow: this.fuelLevelBorrow, easyPassBorrow: this.easyPassBorrow })
       } else if (this.pendingAction === 'return') {
-        this.$emit('submit-return', { fuelLevelReturn: this.fuelLevelReturn })
+        this.$emit('submit-return', { fuelLevelReturn: this.fuelLevelReturn, easyPassReturn: this.easyPassReturn })
       } else if (this.pendingAction === 'cancel') {
         this.$emit('submit-cancel')
       }

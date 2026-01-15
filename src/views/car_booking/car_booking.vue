@@ -499,7 +499,8 @@ export default {
           colleagues: this.borrowForm.colleagues || [],
           images,
           user_id: localStorage.getItem('soc_user_id'),
-          fuel_level_borrow: payload.fuelLevelBorrow || null
+          fuel_level_borrow: payload.fuelLevelBorrow || null,
+          easy_pass_borrow: payload.easyPassBorrow || null
         }
 
         await this.$http.post('/api/car-booking', borrowData)
@@ -561,7 +562,8 @@ export default {
           return_time: currentTime,
           return_date: this.formatDateForDB(bangkokTime),
           images,
-          fuel_level_return: payload.fuelLevelReturn || null
+          fuel_level_return: payload.fuelLevelReturn || null,
+          easy_pass_return: payload.easyPassReturn || null
         }
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
