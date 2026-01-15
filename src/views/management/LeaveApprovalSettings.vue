@@ -105,7 +105,7 @@ import { useToast } from 'primevue/usetoast'
 import axios from '@/utils/axiosConfig'
 import { useDragScroll } from '@/composables/useDragScroll'
 
-nuseDragScroll('.p-datatable-wrapper')
+useDragScroll('.p-datatable-wrapper')
 const toast = useToast()
 
 const level1Approvers = ref([])

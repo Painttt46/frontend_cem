@@ -356,7 +356,7 @@ import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import { isCompleted, isActive } from '@/utils/statusHelper'
 import { useDragScroll } from '@/composables/useDragScroll'
 
-nuseDragScroll('.p-datatable-wrapper')
+useDragScroll('.p-datatable-wrapper')
 const { handleError } = useErrorHandler()
 const loading = ref(false)
 const leaveTypeColors = ref({})
