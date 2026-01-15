@@ -5,7 +5,7 @@ export default {
   methods: {
     setupDragScroll() {
       let isDragging = false
-      let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0, hasMoved = false
+      let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0
 
       const handleMouseDown = (e) => {
         const target = e.target.closest('.p-datatable-wrapper')
@@ -15,7 +15,6 @@ export default {
         if (selection && selection.toString().length > 0) return
         
         isDragging = true
-        hasMoved = false
         startX = e.pageX - target.offsetLeft
         startY = e.pageY - target.offsetTop
         scrollLeft = target.scrollLeft
@@ -32,7 +31,6 @@ export default {
         
         if (moveX > 5 || moveY > 5) {
           e.preventDefault()
-          hasMoved = true
           target.style.cursor = 'grabbing'
           target.style.userSelect = 'none'
           
@@ -51,7 +49,6 @@ export default {
           target.style.userSelect = 'text'
         }
         isDragging = false
-        hasMoved = false
       }
 
       document.addEventListener('mousedown', handleMouseDown)
