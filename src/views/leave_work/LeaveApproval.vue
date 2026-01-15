@@ -225,10 +225,10 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
-import { useDragScroll } from '@/composables/useDragScroll'
 
-useDragScroll('.p-datatable-wrapper')
+import dragScroll from '@/mixins/dragScroll'
 export default {
+  mixins: [dragScroll],
   name: 'LeaveApproval',
   components: {
     UserInfoDialog

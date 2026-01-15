@@ -346,6 +346,9 @@
 </template>
 
 <script setup>
+import { useDragScroll } from '@/composables/useDragScroll'
+useDragScroll('.p-datatable-wrapper')
+
 import { ref, onMounted, nextTick, watch, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
@@ -354,9 +357,7 @@ import userService from '@/services/userService'
 import dailyWorkService from '@/services/dailyWorkService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import { isCompleted, isActive } from '@/utils/statusHelper'
-import { useDragScroll } from '@/composables/useDragScroll'
 
-useDragScroll('.p-datatable-wrapper')
 const { handleError } = useErrorHandler()
 const loading = ref(false)
 const leaveTypeColors = ref({})

@@ -100,12 +100,13 @@
 </template>
 
 <script setup>
+import { useDragScroll } from '@/composables/useDragScroll'
+useDragScroll('.p-datatable-wrapper')
+
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from '@/utils/axiosConfig'
-import { useDragScroll } from '@/composables/useDragScroll'
 
-useDragScroll('.p-datatable-wrapper')
 const toast = useToast()
 
 const level1Approvers = ref([])

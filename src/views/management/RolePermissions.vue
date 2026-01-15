@@ -100,13 +100,14 @@
 </template>
 
 <script setup>
+import { useDragScroll } from '@/composables/useDragScroll'
+useDragScroll('.p-datatable-wrapper')
+
 import { ref, watch, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
-import { useDragScroll } from '@/composables/useDragScroll'
 
-useDragScroll('.p-datatable-wrapper')
 const toast = useToast()
 const confirm = useConfirm()
 const selectedRole = ref(null)

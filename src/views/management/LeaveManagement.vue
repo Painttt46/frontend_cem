@@ -205,6 +205,9 @@
 </template>
 
 <script setup>
+import { useDragScroll } from '@/composables/useDragScroll'
+useDragScroll('.p-datatable-wrapper')
+
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -213,9 +216,7 @@ import Calendar from 'primevue/calendar'
 import Chip from 'primevue/chip'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
-import { useDragScroll } from '@/composables/useDragScroll'
 
-useDragScroll('.p-datatable-wrapper')
 const toast = useToast()
 const confirm = useConfirm()
 const users = ref([])
