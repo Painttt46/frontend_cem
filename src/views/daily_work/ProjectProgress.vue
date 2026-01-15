@@ -152,8 +152,11 @@ export default {
         const target = e.target.closest('.p-datatable-wrapper')
         if (!target || e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar')) return
         
-        const selection = window.getSelection()
-        if (selection && selection.toString().length > 0) return
+        // ถ้าคลิกที่ text ให้ select ได้
+        if (e.target.nodeType === Node.TEXT_NODE || 
+            e.target.closest('td, th, span, div, p, label')) {
+          return
+        }
         
         isDragging = true
         startX = e.pageX - target.offsetLeft

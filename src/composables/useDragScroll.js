@@ -18,16 +18,13 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
       return
     }
 
-    // ถ้าคลิกที่ text ให้ select ได้
-    if (e.target.closest('td, th, span, div')) {
-      const selection = window.getSelection()
-      if (selection && selection.toString().length > 0) {
-        return
-      }
+    // ถ้าคลิกที่ text node หรือ element ที่มี text ให้ select ได้
+    if (e.target.nodeType === Node.TEXT_NODE || 
+        e.target.closest('td, th, span, div, p, label')) {
+      return
     }
 
     isDragging.value = true
-    hasMoved.value = false
     startX.value = e.pageX - target.offsetLeft
     startY.value = e.pageY - target.offsetTop
     scrollLeft.value = target.scrollLeft
