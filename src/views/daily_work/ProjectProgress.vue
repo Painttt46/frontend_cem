@@ -206,7 +206,23 @@ export default {
       if (!document.getElementById('drag-scroll-style')) {
         const style = document.createElement('style')
         style.id = 'drag-scroll-style'
-        style.textContent = '.p-datatable-wrapper { cursor: grab; user-select: text; }'
+        style.textContent = `
+          .p-datatable-wrapper {
+            cursor: grab;
+          }
+          .p-datatable-wrapper td,
+          .p-datatable-wrapper th,
+          .p-datatable-wrapper span,
+          .p-datatable-wrapper p,
+          .p-datatable-wrapper label {
+            cursor: text;
+          }
+          .p-datatable-wrapper button,
+          .p-datatable-wrapper a,
+          .p-datatable-wrapper input {
+            cursor: pointer;
+          }
+        `
         document.head.appendChild(style)
       }
     },

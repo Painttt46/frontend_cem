@@ -92,16 +92,24 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
     document.addEventListener('mouseleave', handleMouseLeave)
 
     // เพิ่ม cursor style
-    const style = document.createElement('style')
-    style.id = 'drag-scroll-style'
     if (!document.getElementById('drag-scroll-style')) {
+      const style = document.createElement('style')
+      style.id = 'drag-scroll-style'
       style.textContent = `
         ${selector} {
           cursor: grab;
-          user-select: text;
         }
-        ${selector}:active {
-          cursor: grabbing;
+        ${selector} td,
+        ${selector} th,
+        ${selector} span,
+        ${selector} p,
+        ${selector} label {
+          cursor: text;
+        }
+        ${selector} button,
+        ${selector} a,
+        ${selector} input {
+          cursor: pointer;
         }
       `
       document.head.appendChild(style)
