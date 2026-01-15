@@ -138,11 +138,64 @@ export default {
     }
   },
   mounted() {
+    this.setupDragScroll()
     this.loadProjects()
     this.loadCategories()
     this.loadStatuses()
   },
   methods: {
+    setupDragScroll() {
+      let isDragging = false
+      let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0, hasMoved = false
+
+      const handleMouseDown = (e) => {
+        const target = e.target.closest('.p-datatable-wrapper')
+        if (!target || e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar')) return
+        
+        isDragging = true
+        hasMoved = false
+        startX = e.pageX - target.offsetLeft
+        startY = e.pageY - target.offsetTop
+        scrollLeft = target.scrollLeft
+        scrollTop = target.scrollTop
+        target.style.cursor = 'grabbing'
+        target.style.userSelect = 'none'
+      }
+
+      const handleMouseMove = (e) => {
+        if (!isDragging) return
+        e.preventDefault()
+        const target = e.target.closest('.p-datatable-wrapper')
+        if (!target) return
+        
+        hasMoved = true
+        const x = e.pageX - target.offsetLeft
+        const y = e.pageY - target.offsetTop
+        target.scrollLeft = scrollLeft - (x - startX) * 1.5
+        target.scrollTop = scrollTop - (y - startY) * 1.5
+      }
+
+      const handleMouseUp = (e) => {
+        if (!isDragging) return
+        const target = e.target.closest('.p-datatable-wrapper')
+        if (target) {
+          target.style.cursor = 'grab'
+          setTimeout(() => { target.style.userSelect = 'text' }, hasMoved ? 10 : 0)
+        }
+        isDragging = false
+      }
+
+      document.addEventListener('mousedown', handleMouseDown)
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      
+      if (!document.getElementById('drag-scroll-style')) {
+        const style = document.createElement('style')
+        style.id = 'drag-scroll-style'
+        style.textContent = '.p-datatable-wrapper { cursor: grab; user-select: text; }'
+        document.head.appendChild(style)
+      }
+    },
     async loadProjects() {
       try {
         const response = await this.$http.get('/api/tasks')

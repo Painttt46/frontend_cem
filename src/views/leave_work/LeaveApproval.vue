@@ -225,7 +225,9 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import { useDragScroll } from '@/composables/useDragScroll'
 
+nuseDragScroll('.p-datatable-wrapper')
 export default {
   name: 'LeaveApproval',
   components: {

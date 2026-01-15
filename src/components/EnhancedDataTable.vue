@@ -76,6 +76,9 @@
 <script setup>
 /* eslint-disable no-undef */
 import { ref, computed, useSlots } from 'vue'
+import { useDragScroll } from '@/composables/useDragScroll'
+
+useDragScroll('.p-datatable-wrapper')
 
 const props = defineProps({
   data: {

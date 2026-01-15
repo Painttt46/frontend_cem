@@ -213,7 +213,9 @@ import Calendar from 'primevue/calendar'
 import Chip from 'primevue/chip'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
+import { useDragScroll } from '@/composables/useDragScroll'
 
+nuseDragScroll('.p-datatable-wrapper')
 const toast = useToast()
 const confirm = useConfirm()
 const users = ref([])
