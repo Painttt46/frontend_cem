@@ -113,7 +113,7 @@
 
           <div class="input-group full-width">
             <label class="input-label">บัตร Easy Pass (ก่อนใช้รถ)</label>
-            <EasyPassCard v-model="easyPassBorrow" :disabled="true" />
+            <EasyPassCard v-model="easyPassBorrow" :maxAmount="3000" :disabled="true" />
           </div>
 
           <div class="file-upload-section">
@@ -201,7 +201,7 @@
 
           <div class="input-group full-width">
             <label class="input-label">บัตร Easy Pass (หลังใช้รถ) *</label>
-            <EasyPassCard v-model="easyPassReturn" />
+            <EasyPassCard v-model="easyPassReturn" :maxAmount="3000" />
           </div>
 
           <div class="file-upload-section">

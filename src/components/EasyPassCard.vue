@@ -13,11 +13,25 @@
         </div>
       </div>
       
-      <div class="card-balance">
+      <div class="card-balance" @dblclick="startEdit" :class="{ editable: !disabled }">
         <div class="balance-label">ยอดเงินคงเหลือ</div>
-        <div class="balance-amount">
+        <div class="balance-amount" v-if="!isEditing">
           <span class="currency">฿</span>
           <span class="amount">{{ formatMoney(modelValue) }}</span>
+          <i v-if="!disabled" class="pi pi-pencil edit-hint"></i>
+        </div>
+        <div class="balance-input" v-else>
+          <span class="currency">฿</span>
+          <input 
+            ref="editInput"
+            type="number" 
+            v-model.number="editValue" 
+            @blur="confirmEdit"
+            @keyup.enter="confirmEdit"
+            @keyup.escape="cancelEdit"
+            :max="maxAmount"
+            min="0"
+          />
         </div>
       </div>
       
@@ -58,6 +72,12 @@ export default {
     disabled: { type: Boolean, default: false }
   },
   emits: ['update:modelValue'],
+  data() {
+    return {
+      isEditing: false,
+      editValue: 0
+    }
+  },
   computed: {
     percentage() {
       return (this.modelValue / this.maxAmount) * 100
@@ -71,6 +91,23 @@ export default {
   methods: {
     formatMoney(val) {
       return val.toLocaleString()
+    },
+    startEdit() {
+      if (this.disabled) return
+      this.editValue = this.modelValue
+      this.isEditing = true
+      this.$nextTick(() => {
+        this.$refs.editInput?.focus()
+        this.$refs.editInput?.select()
+      })
+    },
+    confirmEdit() {
+      let val = Math.max(0, Math.min(this.maxAmount, this.editValue || 0))
+      this.$emit('update:modelValue', val)
+      this.isEditing = false
+    },
+    cancelEdit() {
+      this.isEditing = false
     }
   }
 }
@@ -165,6 +202,22 @@ export default {
   margin: 1.5rem 0;
 }
 
+.card-balance.editable {
+  cursor: pointer;
+}
+
+.card-balance.editable:hover .edit-hint {
+  opacity: 1;
+}
+
+.edit-hint {
+  font-size: 0.75rem;
+  color: #60a5fa;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
 .balance-label {
   font-size: 0.75rem;
   color: #94a3b8;
@@ -178,6 +231,32 @@ export default {
   align-items: baseline;
   justify-content: center;
   gap: 4px;
+}
+
+.balance-input {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.balance-input input {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid #60a5fa;
+  border-radius: 8px;
+  color: #fff;
+  text-align: center;
+  width: 150px;
+  padding: 0.25rem;
+  outline: none;
+}
+
+.balance-input input::-webkit-inner-spin-button,
+.balance-input input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .currency {
