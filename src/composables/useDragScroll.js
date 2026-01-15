@@ -14,18 +14,26 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
     if (!target) return
 
     // ถ้าคลิกที่ input, button, link ให้ทำงานปกติ
-    if (e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar')) {
+    if (e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar, .p-button')) {
       return
     }
 
-    // ถ้าคลิกที่ element ที่มี text content โดยตรง ให้ select ได้
-    const hasTextContent = e.target.childNodes && 
-      Array.from(e.target.childNodes).some(node => 
+    // ถ้าคลิกที่ Badge หรือ icon ให้ drag ได้
+    if (e.target.closest('.p-badge, i')) {
+      isDragging.value = true
+      startX.value = e.pageX - target.offsetLeft
+      startY.value = e.pageY - target.offsetTop
+      scrollLeft.value = target.scrollLeft
+      scrollTop.value = target.scrollTop
+      return
+    }
+
+    // ถ้าคลิกที่ span หรือ div ที่มี text โดยตรง ให้ select ได้
+    if (e.target.tagName === 'SPAN' || e.target.tagName === 'DIV') {
+      const hasDirectText = Array.from(e.target.childNodes).some(node => 
         node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
       )
-    
-    if (hasTextContent) {
-      return
+      if (hasDirectText) return
     }
 
     isDragging.value = true

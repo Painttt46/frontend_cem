@@ -150,16 +150,24 @@ export default {
 
       const handleMouseDown = (e) => {
         const target = e.target.closest('.p-datatable-wrapper')
-        if (!target || e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar')) return
+        if (!target || e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar, .p-button')) return
         
-        // ถ้าคลิกที่ element ที่มี text content โดยตรง ให้ select ได้
-        const hasTextContent = e.target.childNodes && 
-          Array.from(e.target.childNodes).some(node => 
+        // ถ้าคลิกที่ Badge หรือ icon ให้ drag ได้
+        if (e.target.closest('.p-badge, i')) {
+          isDragging = true
+          startX = e.pageX - target.offsetLeft
+          startY = e.pageY - target.offsetTop
+          scrollLeft = target.scrollLeft
+          scrollTop = target.scrollTop
+          return
+        }
+        
+        // ถ้าคลิกที่ span หรือ div ที่มี text โดยตรง ให้ select ได้
+        if (e.target.tagName === 'SPAN' || e.target.tagName === 'DIV') {
+          const hasDirectText = Array.from(e.target.childNodes).some(node => 
             node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
           )
-        
-        if (hasTextContent) {
-          return
+          if (hasDirectText) return
         }
         
         isDragging = true
