@@ -203,24 +203,12 @@ export default {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       
-      if (!document.getElementById('drag-scroll-style')) {
+      if (!document.getElementById('drag-scroll-style-project')) {
         const style = document.createElement('style')
-        style.id = 'drag-scroll-style'
+        style.id = 'drag-scroll-style-project'
         style.textContent = `
-          .p-datatable-wrapper {
-            cursor: grab;
-          }
-          .p-datatable-wrapper td,
-          .p-datatable-wrapper th,
-          .p-datatable-wrapper span,
-          .p-datatable-wrapper p,
-          .p-datatable-wrapper label {
-            cursor: text;
-          }
-          .p-datatable-wrapper button,
-          .p-datatable-wrapper a,
-          .p-datatable-wrapper input {
-            cursor: pointer;
+          .p-datatable-wrapper * {
+            cursor: default !important;
           }
         `
         document.head.appendChild(style)

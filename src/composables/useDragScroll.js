@@ -96,20 +96,8 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
       const style = document.createElement('style')
       style.id = 'drag-scroll-style'
       style.textContent = `
-        ${selector} {
-          cursor: grab;
-        }
-        ${selector} td,
-        ${selector} th,
-        ${selector} span,
-        ${selector} p,
-        ${selector} label {
-          cursor: text;
-        }
-        ${selector} button,
-        ${selector} a,
-        ${selector} input {
-          cursor: pointer;
+        ${selector} * {
+          cursor: default !important;
         }
       `
       document.head.appendChild(style)
