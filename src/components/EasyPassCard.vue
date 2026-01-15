@@ -1,23 +1,36 @@
 <template>
-  <div class="easypass-container">
-    <div class="easypass-card">
-      <div class="card-icon">
-        <i class="pi pi-credit-card"></i>
-      </div>
-      <div class="card-body">
-        <div class="card-fill" :style="{ width: percentage + '%', backgroundColor: cardColor }"></div>
-        <div class="card-marks">
-          <span class="mark major" v-for="n in 5" :key="n" :style="{ left: ((n-1) * 25) + '%' }"></span>
+  <div class="easypass-wrapper">
+    <div class="easypass-card" :class="{ disabled }">
+      <div class="card-header">
+        <div class="card-logo">
+          <span class="logo-text">easy</span>
+          <span class="logo-pass">PASS</span>
+        </div>
+        <div class="card-chip">
+          <div class="chip-lines">
+            <span></span><span></span><span></span><span></span>
+          </div>
         </div>
       </div>
+      
+      <div class="card-balance">
+        <div class="balance-label">ยอดเงินคงเหลือ</div>
+        <div class="balance-amount">
+          <span class="currency">฿</span>
+          <span class="amount">{{ formatMoney(modelValue) }}</span>
+        </div>
+      </div>
+      
+      <div class="card-bar">
+        <div class="bar-fill" :style="{ width: percentage + '%', background: barGradient }"></div>
+      </div>
+      
+      <div class="card-footer">
+        <div class="card-number">**** **** **** 3706</div>
+        <div class="card-type">EXPRESSWAY</div>
+      </div>
     </div>
-    <div class="card-labels">
-      <span>0</span>
-      <span>{{ formatMoney(maxAmount / 4) }}</span>
-      <span>{{ formatMoney(maxAmount / 2) }}</span>
-      <span>{{ formatMoney(maxAmount * 3 / 4) }}</span>
-      <span>{{ formatMoney(maxAmount) }}</span>
-    </div>
+    
     <input 
       type="range" 
       :value="modelValue" 
@@ -28,7 +41,10 @@
       class="card-slider"
       :disabled="disabled"
     />
-    <div class="card-value">฿{{ formatMoney(modelValue) }}</div>
+    <div class="slider-labels">
+      <span>฿0</span>
+      <span>฿{{ formatMoney(maxAmount) }}</span>
+    </div>
   </div>
 </template>
 
@@ -46,10 +62,10 @@ export default {
     percentage() {
       return (this.modelValue / this.maxAmount) * 100
     },
-    cardColor() {
-      if (this.percentage <= 25) return '#ef4444'
-      if (this.percentage <= 50) return '#f59e0b'
-      return '#22c55e'
+    barGradient() {
+      if (this.percentage <= 25) return 'linear-gradient(90deg, #ef4444, #f87171)'
+      if (this.percentage <= 50) return 'linear-gradient(90deg, #f59e0b, #fbbf24)'
+      return 'linear-gradient(90deg, #22c55e, #4ade80)'
     }
   },
   methods: {
@@ -61,96 +77,176 @@ export default {
 </script>
 
 <style scoped>
-.easypass-container {
+.easypass-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #1e3a5f 0%, #0d2137 100%);
-  border-radius: 12px;
-  border: 2px solid #2563eb;
+  gap: 0.75rem;
 }
 
 .easypass-card {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.card-body {
-  flex: 1;
-  height: 32px;
-  background: #0f172a;
-  border-radius: 6px;
-  border: 2px solid #3b82f6;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0c1929 50%, #1a365d 100%);
+  border-radius: 16px;
+  padding: 1.25rem;
+  color: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1) inset;
   position: relative;
   overflow: hidden;
+  min-height: 180px;
 }
 
-.card-fill {
-  height: 100%;
-  transition: width 0.3s ease, background-color 0.3s ease;
-  border-radius: 4px;
-}
-
-.card-marks {
+.easypass-card::before {
+  content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.card-marks .mark {
-  position: absolute;
-  bottom: 0;
-  width: 2px;
+  top: -50%;
+  right: -50%;
+  width: 100%;
   height: 100%;
-  background: rgba(255,255,255,0.3);
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
 }
 
-.card-labels {
+.easypass-card.disabled {
+  opacity: 0.85;
+}
+
+.card-header {
   display: flex;
   justify-content: space-between;
-  width: 100%;
-  padding: 0 40px 0 0;
-  font-size: 0.7rem;
-  color: #93c5fd;
-  font-weight: 600;
+  align-items: flex-start;
+  margin-bottom: 1rem;
 }
 
-.card-icon {
-  width: 32px;
-  height: 32px;
-  background: #1e40af;
-  border-radius: 50%;
+.card-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #60a5fa;
+  letter-spacing: -1px;
+}
+
+.logo-pass {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 1px;
+}
+
+.card-chip {
+  width: 45px;
+  height: 35px;
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.chip-lines {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  width: 60%;
+  height: 60%;
+}
+
+.chip-lines span {
+  background: rgba(0,0,0,0.2);
+  border-radius: 1px;
+}
+
+.card-balance {
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.balance-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.25rem;
+}
+
+.balance-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
+.currency {
+  font-size: 1.5rem;
   color: #60a5fa;
-  font-size: 1rem;
+  font-weight: 300;
+}
+
+.amount {
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(180deg, #fff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 10px rgba(255,255,255,0.2);
+}
+
+.card-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.card-number {
+  letter-spacing: 2px;
+  font-family: monospace;
+}
+
+.card-type {
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .card-slider {
   width: 100%;
-  margin-top: 0.5rem;
   -webkit-appearance: none;
   height: 8px;
-  background: #1e3a5f;
+  background: linear-gradient(90deg, #1e3a5f, #0c1929);
   border-radius: 4px;
   outline: none;
+  border: 1px solid #334155;
 }
 
 .card-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  background: #3b82f6;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid #fff;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .card-slider:disabled {
@@ -160,12 +256,13 @@ export default {
 
 .card-slider:disabled::-webkit-slider-thumb {
   cursor: not-allowed;
+  background: #64748b;
 }
 
-.card-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #60a5fa;
-  text-shadow: 0 0 10px rgba(96, 165, 250, 0.5);
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
 }
 </style>
