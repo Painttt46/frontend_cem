@@ -11,9 +11,13 @@ export default {
         const target = e.target.closest('.p-datatable-wrapper')
         if (!target || e.target.closest('input, button, a, .p-checkbox, .p-dropdown, .p-calendar')) return
         
-        // ถ้าคลิกที่ text ให้ select ได้
-        if (e.target.nodeType === Node.TEXT_NODE || 
-            e.target.closest('td, th, span, div, p, label')) {
+        // ถ้าคลิกที่ element ที่มี text content โดยตรง ให้ select ได้
+        const hasTextContent = e.target.childNodes && 
+          Array.from(e.target.childNodes).some(node => 
+            node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+          )
+        
+        if (hasTextContent) {
           return
         }
         

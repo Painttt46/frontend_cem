@@ -18,9 +18,13 @@ export function useDragScroll(selector = '.p-datatable-wrapper') {
       return
     }
 
-    // ถ้าคลิกที่ text node หรือ element ที่มี text ให้ select ได้
-    if (e.target.nodeType === Node.TEXT_NODE || 
-        e.target.closest('td, th, span, div, p, label')) {
+    // ถ้าคลิกที่ element ที่มี text content โดยตรง ให้ select ได้
+    const hasTextContent = e.target.childNodes && 
+      Array.from(e.target.childNodes).some(node => 
+        node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+      )
+    
+    if (hasTextContent) {
       return
     }
 
