@@ -14,16 +14,21 @@
     <div v-else>
       <LayoutView />
     </div>
+
+    <!-- Chat Widget - show when logged in -->
+    <ChatWidget v-if="$router.currentRoute.value.fullPath !== '/login'" />
   </div>
 </template>
 
 <script>
 import LayoutView from './components/LayoutView.vue';
+import ChatWidget from './components/ChatWidget.vue';
 
 export default {
   name: 'App',
   components: {
     LayoutView,
+    ChatWidget,
   },
   data() {
     return {
