@@ -56,10 +56,8 @@ import axios from 'axios';
 
 const GENT_URL = process.env.VUE_APP_GENT_URL || 'http://localhost:3002/webhook';
 
-const backendApi = axios.create({
-  baseURL: process.env.VUE_APP_API_URL || '/api',
-  timeout: 10000
-});
+// axios instance แยกสำหรับ chat - ไม่ผ่าน interceptor ของ app
+const chatAxios = axios.create();
 
 export default {
   name: 'ChatWidget',
@@ -107,8 +105,9 @@ export default {
 
         // เช็คลางานรออนุมัติ (สำหรับ admin/hr)
         if (role === 'admin' || role === 'hr') {
-          const { data: leaves } = await backendApi.get('/leave', {
-            headers: { Authorization: `Bearer ${token}` }
+          const { data: leaves } = await chatAxios.get('/api/leave', {
+            headers: { Authorization: `Bearer ${token}` },
+            silent: true
           });
           const pending = leaves?.filter(l => l.status === 'pending') || [];
           if (pending.length > 0) {
@@ -118,8 +117,9 @@ export default {
 
         // เช็คการจองรถรออนุมัติ
         if (role === 'admin') {
-          const { data: bookings } = await backendApi.get('/car-booking', {
-            headers: { Authorization: `Bearer ${token}` }
+          const { data: bookings } = await chatAxios.get('/api/car-booking', {
+            headers: { Authorization: `Bearer ${token}` },
+            silent: true
           });
           const pending = bookings?.filter(b => b.status === 'pending') || [];
           if (pending.length > 0) {
@@ -156,7 +156,7 @@ export default {
       this.scrollToBottom();
 
       try {
-        const { data } = await axios.post(GENT_URL, { 
+        const { data } = await chatAxios.post(GENT_URL, { 
           text,
           from: {
             id: localStorage.getItem('soc_user_id') || 'anonymous',

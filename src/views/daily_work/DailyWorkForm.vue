@@ -248,8 +248,7 @@
                     input: {
                       autocomplete: 'off'
                     }
-                  }" @focus="focusCalendarInput('meetingStartTimeCal')"
-                  @pointerdown="focusCalendarInput('meetingStartTimeCal')" />
+                  }" @update:modelValue="onMeetingTimeChange" />
               </div>
 
               <div class="input-group">
@@ -263,8 +262,7 @@
                     input: {
                       autocomplete: 'off'
                     }
-                  }" @focus="focusCalendarInput('meetingEndTimeCal')"
-                  @pointerdown="focusCalendarInput('meetingEndTimeCal')" />
+                  }" @update:modelValue="onMeetingTimeChange" />
               </div>
             </div>
 
@@ -400,6 +398,10 @@ export default {
         const input = root?.querySelector('input')
         if (input && document.activeElement !== input) input.focus()
       })
+    },
+    onMeetingTimeChange() {
+      // Force reactivity when meeting time changes via Calendar picker
+      console.log('Meeting time updated:', this.formData.meetingStartTime, this.formData.meetingEndTime)
     },
 
     parseStartTime() {
