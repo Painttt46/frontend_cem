@@ -42,7 +42,7 @@
       </div>
 
       <div class="chat-input">
-        <input v-model="input" @keyup.enter="send" placeholder="พิมพ์ข้อความ..." :disabled="loading" />
+        <input ref="chatInput" v-model="input" @keyup.enter="send" placeholder="พิมพ์ข้อความ..." :disabled="loading" />
         <button @click="send" :disabled="loading || !input.trim()">
           <i class="pi pi-send" />
         </button>
@@ -172,6 +172,7 @@ export default {
       
       this.loading = false;
       this.scrollToBottom();
+      this.$nextTick(() => this.$refs.chatInput?.focus());
     },
     clearChat() {
       this.messages = [];
