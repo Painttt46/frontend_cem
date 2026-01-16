@@ -62,7 +62,11 @@ export default {
       this.scrollToBottom();
 
       try {
-        const { data } = await axios.post(process.env.VUE_APP_GENT_URL || 'http://localhost:3000/api/webhook', { text });
+        const { data } = await axios.post(
+          process.env.VUE_APP_GENT_URL || 'http://localhost:3000/api/webhook',
+          { text },
+          { withCredentials: false }
+        );
         this.messages.push({ role: 'bot', text: data.text || 'ไม่มีการตอบกลับ' });
       } catch (e) {
         this.messages.push({ role: 'bot', text: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่' });
