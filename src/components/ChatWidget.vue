@@ -163,7 +163,9 @@ export default {
             name: localStorage.getItem('soc_user') || 'User'
           }
         }, { timeout: 120000, withCredentials: false });
-        this.messages.push({ role: 'bot', text: data.text || 'ไม่มีการตอบกลับ' });
+        // Handle both text and card format
+        const botText = data.text || data.attachments?.[0]?.content?.body?.find(b => b.spacing === 'Medium')?.text || 'ไม่มีการตอบกลับ';
+        this.messages.push({ role: 'bot', text: botText });
       } catch (e) {
         this.messages.push({ role: 'bot', text: e.response?.data?.text || '❌ เกิดข้อผิดพลาด' });
       }
