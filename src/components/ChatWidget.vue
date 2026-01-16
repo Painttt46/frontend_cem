@@ -41,6 +41,13 @@
 <script>
 import axios from 'axios';
 
+// สร้าง axios instance แยกสำหรับ chat bot
+const chatApi = axios.create({
+  baseURL: process.env.VUE_APP_GENT_URL || 'http://localhost:3000/api/webhook',
+  timeout: 120000,
+  withCredentials: false
+});
+
 export default {
   name: 'ChatWidget',
   data() {
@@ -62,11 +69,7 @@ export default {
       this.scrollToBottom();
 
       try {
-        const { data } = await axios.post(
-          process.env.VUE_APP_GENT_URL || 'http://localhost:3000/api/webhook',
-          { text },
-          { withCredentials: false }
-        );
+        const { data } = await chatApi.post('', { text });
         this.messages.push({ role: 'bot', text: data.text || 'ไม่มีการตอบกลับ' });
       } catch (e) {
         const errText = e.response?.data?.text || '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
