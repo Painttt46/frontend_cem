@@ -69,7 +69,8 @@ export default {
         );
         this.messages.push({ role: 'bot', text: data.text || 'ไม่มีการตอบกลับ' });
       } catch (e) {
-        this.messages.push({ role: 'bot', text: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่' });
+        const errText = e.response?.data?.text || '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
+        this.messages.push({ role: 'bot', text: errText });
       }
       
       this.loading = false;
@@ -91,54 +92,63 @@ export default {
 <style scoped>
 .chat-widget {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   z-index: 9999;
-  font-family: inherit;
+  font-family: "Prompt", sans-serif;
 }
 
 .chat-toggle {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4A90E2, #D73527);
   border: none;
   color: white;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  transition: transform 0.2s;
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.chat-toggle:hover { transform: scale(1.1); }
+.chat-toggle:hover { 
+  transform: scale(1.1); 
+  box-shadow: 0 6px 20px rgba(74, 144, 226, 0.5);
+}
 
 .chat-panel {
   position: absolute;
   bottom: 70px;
   right: 0;
-  width: 350px;
-  height: 450px;
-  background: white;
+  width: 360px;
+  height: 480px;
+  background: #fff;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .chat-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
-  padding: 16px;
+  padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-weight: 600;
+  font-size: 15px;
 }
 .chat-avatar {
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: white;
+  padding: 4px;
+  object-fit: contain;
 }
 
 .chat-messages {
@@ -147,7 +157,8 @@ export default {
   padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  background: #f8f9fa;
 }
 
 .message { display: flex; }
@@ -155,28 +166,30 @@ export default {
 .message.bot { justify-content: flex-start; }
 
 .bubble {
-  max-width: 80%;
+  max-width: 85%;
   padding: 10px 14px;
   border-radius: 16px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
+  word-break: break-word;
 }
 .user .bubble {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4A90E2, #3a7bc8);
   color: white;
   border-bottom-right-radius: 4px;
 }
 .bot .bubble {
-  background: #f0f0f0;
+  background: white;
   color: #333;
   border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .typing span {
   display: inline-block;
   width: 8px;
   height: 8px;
-  background: #999;
+  background: #4A90E2;
   border-radius: 50%;
   margin: 0 2px;
   animation: bounce 1.4s infinite ease-in-out both;
@@ -193,24 +206,47 @@ export default {
   border-top: 1px solid #eee;
   display: flex;
   gap: 8px;
+  background: white;
 }
 .chat-input input {
   flex: 1;
-  padding: 10px 14px;
+  padding: 10px 16px;
   border: 1px solid #ddd;
-  border-radius: 20px;
+  border-radius: 24px;
   outline: none;
   font-size: 14px;
+  font-family: inherit;
 }
-.chat-input input:focus { border-color: #667eea; }
+.chat-input input:focus { 
+  border-color: #4A90E2; 
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
 .chat-input button {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4A90E2, #D73527);
   border: none;
   color: white;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
 }
+.chat-input button:hover:not(:disabled) { transform: scale(1.05); }
 .chat-input button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .chat-widget {
+    bottom: 16px;
+    right: 16px;
+  }
+  .chat-panel {
+    width: calc(100vw - 32px);
+    height: 60vh;
+    right: 0;
+  }
+}
 </style>
