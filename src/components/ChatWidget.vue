@@ -54,11 +54,7 @@
 <script>
 import axios from 'axios';
 
-const chatApi = axios.create({
-  baseURL: process.env.VUE_APP_GENT_URL || 'http://localhost:3002/webhook',
-  timeout: 120000,
-  withCredentials: false
-});
+const GENT_URL = process.env.VUE_APP_GENT_URL || 'http://localhost:3002/webhook';
 
 const backendApi = axios.create({
   baseURL: process.env.VUE_APP_API_URL || '/api',
@@ -160,13 +156,13 @@ export default {
       this.scrollToBottom();
 
       try {
-        const { data } = await chatApi.post('', { 
+        const { data } = await axios.post(GENT_URL, { 
           text,
           from: {
             id: localStorage.getItem('soc_user_id') || 'anonymous',
             name: localStorage.getItem('soc_user') || 'User'
           }
-        });
+        }, { timeout: 120000, withCredentials: false });
         this.messages.push({ role: 'bot', text: data.text || 'ไม่มีการตอบกลับ' });
       } catch (e) {
         this.messages.push({ role: 'bot', text: e.response?.data?.text || '❌ เกิดข้อผิดพลาด' });

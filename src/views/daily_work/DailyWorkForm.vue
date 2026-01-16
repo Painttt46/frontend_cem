@@ -246,12 +246,7 @@
                 <Calendar id="meetingStartTime" ref="meetingStartTimeCal" v-model="formData.meetingStartTime" timeOnly
                   hourFormat="24" class="corporate-input" :manualInput="true" :pt="{
                     input: {
-                      inputmode: 'numeric',
-                      type: 'tel',
-                      pattern: '[0-9]*',
-                      autocomplete: 'off',
-                      autocorrect: 'off',
-                      spellcheck: 'false'
+                      autocomplete: 'off'
                     }
                   }" @focus="focusCalendarInput('meetingStartTimeCal')"
                   @pointerdown="focusCalendarInput('meetingStartTimeCal')" />
@@ -266,12 +261,7 @@
                 <Calendar id="meetingEndTime" ref="meetingEndTimeCal" v-model="formData.meetingEndTime" timeOnly
                   hourFormat="24" class="corporate-input" :manualInput="true" :pt="{
                     input: {
-                      inputmode: 'numeric',
-                      type: 'tel',
-                      pattern: '[0-9]*',
-                      autocomplete: 'off',
-                      autocorrect: 'off',
-                      spellcheck: 'false'
+                      autocomplete: 'off'
                     }
                   }" @focus="focusCalendarInput('meetingEndTimeCal')"
                   @pointerdown="focusCalendarInput('meetingEndTimeCal')" />
