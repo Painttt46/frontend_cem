@@ -5,7 +5,15 @@ import store from '@/store'
 // Configure axios defaults
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
-axios.defaults.timeout = 60000 // 30 seconds
+axios.defaults.timeout = 60000 // 60 seconds
+
+// Track pending requests for loading state
+let pendingRequests = 0
+
+function updateLoading(increment) {
+  pendingRequests = Math.max(0, pendingRequests + increment)
+  store.dispatch('setLoading', pendingRequests > 0)
+}
 
 // Request interceptor
 axios.interceptors.request.use(
@@ -19,9 +27,9 @@ axios.interceptors.request.use(
       return Promise.reject(error)
     }
     
-    // Show loading only if not silent
+    // Track loading
     if (!config.silent) {
-      store.dispatch('setLoading', true)
+      updateLoading(1)
     }
     
     // Add token to Authorization header
@@ -32,7 +40,9 @@ axios.interceptors.request.use(
     return config
   },
   (error) => {
-    store.dispatch('setLoading', false)
+    if (!error.config?.silent) {
+      updateLoading(-1)
+    }
     return Promise.reject(error)
   }
 )
@@ -40,21 +50,19 @@ axios.interceptors.request.use(
 // Response interceptor
 axios.interceptors.response.use(
   (response) => {
-    // Hide loading only if not silent
     if (!response.config.silent) {
-      store.dispatch('setLoading', false)
+      updateLoading(-1)
     }
     return response
   },
   (error) => {
-    // Hide loading only if not silent request
-    if (!error.config?.silent) {
-      store.dispatch('setLoading', false)
+    // Always decrement loading for non-silent requests
+    if (!error.config?.silent && error.config) {
+      updateLoading(-1)
     }
     
     // Handle different error types
     if (error.response) {
-      // Server responded with error status
       const { status, data } = error.response
       
       switch (status) {
@@ -62,12 +70,10 @@ axios.interceptors.response.use(
           // Unauthorized - clear all auth data and redirect to login
           localStorage.clear()
           sessionStorage.clear()
-          // Clear all cookies
           document.cookie.split(";").forEach((c) => {
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
           })
           
-          // Redirect to login
           if (router.currentRoute.value.path !== '/login') {
             router.push('/login')
           }
@@ -75,22 +81,18 @@ axios.interceptors.response.use(
           break
           
         case 403:
-          // Forbidden
           error.userMessage = 'คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้'
           break
           
         case 404:
-          // Not found
           error.userMessage = 'ไม่พบข้อมูลที่ต้องการ'
           break
           
         case 422:
-          // Validation error
           error.userMessage = data.error || 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'
           break
           
         case 429:
-          // Too many requests
           error.userMessage = 'คำขอมากเกินไป กรุณารอสักครู่แล้วลองใหม่'
           break
           
@@ -98,7 +100,6 @@ axios.interceptors.response.use(
         case 502:
         case 503:
         case 504:
-          // Server error
           error.userMessage = 'เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง'
           break
           
@@ -106,7 +107,6 @@ axios.interceptors.response.use(
           error.userMessage = data.error || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
       }
     } else if (error.request) {
-      // Request was made but no response
       if (error.code === 'ECONNABORTED') {
         error.userMessage = 'การเชื่อมต่อหมดเวลา กรุณาลองใหม่อีกครั้ง'
       } else if (error.code === 'ERR_NETWORK') {
@@ -115,15 +115,19 @@ axios.interceptors.response.use(
         error.userMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้'
       }
     } else if (error.silent) {
-      // Silent error - don't log
       return Promise.reject(error)
     } else {
-      // Something else happened
       error.userMessage = 'เกิดข้อผิดพลาดที่ไม่คาดคิด'
     }
     
     return Promise.reject(error)
   }
 )
+
+// Reset loading state (can be called manually if needed)
+export function resetLoading() {
+  pendingRequests = 0
+  store.dispatch('setLoading', false)
+}
 
 export default axios

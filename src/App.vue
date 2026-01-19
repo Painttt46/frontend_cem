@@ -23,6 +23,7 @@
 <script>
 import LayoutView from './components/LayoutView.vue';
 import ChatWidget from './components/ChatWidget.vue';
+import { resetLoading } from './utils/axiosConfig';
 
 export default {
   name: 'App',
@@ -32,7 +33,23 @@ export default {
   },
   data() {
     return {
-      tokenCheckInterval: null
+      tokenCheckInterval: null,
+      loadingTimeout: null
+    }
+  },
+  watch: {
+    // Auto reset loading if stuck for more than 15 seconds
+    '$store.state.loading'(isLoading) {
+      if (this.loadingTimeout) {
+        clearTimeout(this.loadingTimeout)
+        this.loadingTimeout = null
+      }
+      if (isLoading) {
+        this.loadingTimeout = setTimeout(() => {
+          console.warn('Loading stuck - auto reset')
+          resetLoading()
+        }, 15000)
+      }
     }
   },
   mounted() {
@@ -47,6 +64,9 @@ export default {
   beforeUnmount() {
     if (this.tokenCheckInterval) {
       clearInterval(this.tokenCheckInterval)
+    }
+    if (this.loadingTimeout) {
+      clearTimeout(this.loadingTimeout)
     }
   },
   methods: {
