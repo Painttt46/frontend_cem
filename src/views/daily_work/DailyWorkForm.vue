@@ -490,6 +490,13 @@ export default {
           name: `${user.firstname} ${user.lastname}`.trim(),
           email: user.email
         }))
+        // เพิ่ม hardcoded group email
+        this.users.unshift({
+          name: 'Engineers Group',
+          email: 'engineers@gent-s.com',
+          position: 'Group Email',
+          department: ''
+        })
         this.attendeeOptions = this.users
       } catch { // ignore
 
