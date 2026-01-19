@@ -495,7 +495,7 @@ export default {
           name: 'Engineers Group',
           email: 'engineers@gent-s.com',
           position: 'Group Email',
-          department: ''
+          department: 'Engineer'
         })
         this.attendeeOptions = this.users
       } catch { // ignore
