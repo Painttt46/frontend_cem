@@ -232,10 +232,10 @@ export default {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: TH Sarabun New, Sarabun, Arial;">
         
-        <table border="0" cellpadding="0" style="width:100%; margin-bottom:15px; background:#e0f2fe;">
+        <table border="0" cellpadding="10" style="width:100%; margin-bottom:15px; background:#e0f2fe;">
           <tr>
-            <td style="text-align:center; padding:15px;">
-              <table border="0" align="center"><tr><td><img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'"/></td></tr></table>
+            <td colspan="9" style="text-align:center; padding:15px;">
+              <img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'"/>
               <div style="font-size:20pt; font-weight:bold; color:#1e40af; margin-top:5px;">GENT SOLUTION</div>
               <div style="font-size:14pt; color:#475569;">รายงานสรุปการลางาน | วันที่: ${today} | ช่วง: ${dateRange}</div>
             </td>
