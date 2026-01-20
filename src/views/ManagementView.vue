@@ -331,21 +331,6 @@ const getActionSeverity = (action) => {
   return severities[action] || 'info'
 }
 
-const getTableLabel = (table) => {
-  const labels = {
-    users: '👤 ผู้ใช้งาน', 
-    tasks: '📋 โครงการ', 
-    task_steps: '📝 ขั้นตอนโครงการ',
-    leave_requests: '🏖️ การลา',
-    car_bookings: '🚗 การจองรถ', 
-    daily_work_records: '📅 งานรายวัน',
-    role_permissions: '🔐 สิทธิ์การเข้าถึง', 
-    settings: '⚙️ ตั้งค่าระบบ',
-    files: '📁 ไฟล์'
-  }
-  return labels[table] || table
-}
-
 // สร้างข้อความสรุปที่เข้าใจง่าย
 const getSummaryText = (log) => {
   const action = log.action
