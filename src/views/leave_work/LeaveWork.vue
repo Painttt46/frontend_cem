@@ -20,7 +20,7 @@
           <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
         </Button>
       </div>
-      <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="secondary" size="small" outlined>
+      <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning" size="small" outlined>
         <span class="btn-text">Export</span>
       </Button>
     </div>
@@ -201,20 +201,24 @@ export default {
       // เรียงตามวันที่เริ่มลา
       records = [...records].sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
 
-      // สรุปภาพรวม
+      // คำนวณชั่วโมงจาก total_days * 8 แล้วปัดเศษ
+      const calcHours = (r) => Math.round((parseFloat(r.total_days) || 0) * 8)
+
+      // สรุปภาพรวม (นับเฉพาะอนุมัติ)
+      const approvedRecords = records.filter(r => r.status === 'approved')
       const summary = {
         total: records.length,
-        totalHours: records.reduce((sum, r) => sum + ((parseFloat(r.total_days) || 0) * 8), 0),
-        approved: records.filter(r => r.status === 'approved').length,
+        totalHours: approvedRecords.reduce((sum, r) => sum + calcHours(r), 0),
+        approved: approvedRecords.length,
         pending: records.filter(r => r.status === 'pending').length,
         rejected: records.filter(r => r.status === 'rejected').length,
         byType: {}
       }
-      records.forEach(r => {
+      approvedRecords.forEach(r => {
         const type = r.leave_type || 'อื่นๆ'
         if (!summary.byType[type]) summary.byType[type] = { count: 0, hours: 0 }
         summary.byType[type].count++
-        summary.byType[type].hours += (parseFloat(r.total_days) || 0) * 8
+        summary.byType[type].hours += calcHours(r)
       })
 
       const statusMap = { pending: 'รออนุมัติ', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ' }
@@ -246,8 +250,6 @@ export default {
           .summary-label { color: #64748b; }
           .summary-value { font-weight: bold; color: #1e293b; }
           .footer { margin-top: 30px; font-size: 14pt; }
-          .signature { margin-top: 50px; }
-          .sig-line { display: inline-block; width: 200px; border-bottom: 1px solid #000; margin: 0 30px; }
         </style>
         </head><body>
         <div class="header">บริษัท เจนที โซลูชั่น จำกัด</div>
@@ -277,7 +279,7 @@ export default {
             <th>ประเภทการลา</th>
             <th>วันที่เริ่มลา</th>
             <th>วันที่สิ้นสุด</th>
-            <th>จำนวน(วัน)</th>
+            <th>จำนวน(ชม.)</th>
             <th>เหตุผล</th>
             <th>สถานะ</th>
           </tr>`
@@ -291,7 +293,7 @@ export default {
           <td>${r.leave_type || '-'}</td>
           <td style="text-align:center">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH') : '-'}</td>
           <td style="text-align:center">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH') : '-'}</td>
-          <td style="text-align:center">${r.total_days || '-'}</td>
+          <td style="text-align:center">${calcHours(r)} ชม.</td>
           <td>${r.reason || '-'}</td>
           <td style="text-align:center" class="${statusClass}">${statusMap[r.status] || r.status}</td>
         </tr>`
@@ -299,10 +301,6 @@ export default {
 
       html += `</table>
         <div class="footer">จำนวนรายการทั้งหมด: ${records.length} รายการ</div>
-        <div class="signature">
-          <span>ผู้จัดทำ <span class="sig-line"></span></span>
-          <span>ผู้ตรวจสอบ <span class="sig-line"></span></span>
-        </div>
         </body></html>`
 
       const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
