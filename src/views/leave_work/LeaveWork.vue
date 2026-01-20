@@ -198,8 +198,8 @@ export default {
         return
       }
 
-      // เรียงตามวันที่เริ่มลา
-      records = [...records].sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+      // เรียงจากวันล่าสุดไปเก่าสุด
+      records = [...records].sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
 
       // คำนวณชั่วโมงจาก total_days * 8 แล้วปัดเศษ
       const calcHours = (r) => Math.round((parseFloat(r.total_days) || 0) * 8)
@@ -235,23 +235,23 @@ export default {
         <table border="0" cellpadding="10" style="width:100%; margin-bottom:15px; background:#e0f2fe;">
           <tr>
             <td colspan="9" style="text-align:center; padding:15px;">
-              <img src="${window.location.origin}/NGENT.png" width="50" height="50" style="vertical-align:middle;" onerror="this.style.display='none'"/>
-              <span style="font-size:20pt; font-weight:bold; color:#1e40af; margin-left:10px; vertical-align:middle;">GENT SOLUTION</span><br/>
-              <span style="font-size:14pt; color:#475569;">รายงานสรุปการลางาน | วันที่: ${today} | ช่วง: ${dateRange}</span>
+              <div><img src="${window.location.origin}/NGENT.png" width="50" height="50" onerror="this.style.display='none'"/></div>
+              <div style="font-size:20pt; font-weight:bold; color:#1e40af; margin-top:5px;">GENT SOLUTION</div>
+              <div style="font-size:14pt; color:#475569;">รายงานสรุปการลางาน | วันที่: ${today} | ช่วง: ${dateRange}</div>
             </td>
           </tr>
         </table>
         
         <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; margin-bottom:15px;">
-          <tr><td colspan="5" style="font-size:14pt; font-weight:bold; color:#1e40af; background:#dbeafe;">สรุปภาพรวม (เฉพาะที่อนุมัติ)</td></tr>
+          <tr><td colspan="9" style="font-size:14pt; font-weight:bold; color:#1e40af; background:#dbeafe;">สรุปภาพรวม (เฉพาะที่อนุมัติ)</td></tr>
           <tr style="text-align:center;">
-            <td style="background:#fff; width:20%;"><div style="font-size:11pt; color:#666;">รายการทั้งหมด</div><div style="font-size:18pt; font-weight:bold;">${summary.total}</div></td>
-            <td style="background:#fff; width:20%;"><div style="font-size:11pt; color:#666;">รวมชั่วโมงลา</div><div style="font-size:18pt; font-weight:bold;">${summary.totalHours} ชม.</div></td>
-            <td style="background:#dcfce7; width:20%;"><div style="font-size:11pt; color:#166534;">อนุมัติแล้ว</div><div style="font-size:18pt; font-weight:bold; color:#166534;">${summary.approved}</div></td>
-            <td style="background:#fef3c7; width:20%;"><div style="font-size:11pt; color:#92400e;">รออนุมัติ</div><div style="font-size:18pt; font-weight:bold; color:#92400e;">${summary.pending}</div></td>
-            <td style="background:#fee2e2; width:20%;"><div style="font-size:11pt; color:#991b1b;">ไม่อนุมัติ</div><div style="font-size:18pt; font-weight:bold; color:#991b1b;">${summary.rejected}</div></td>
+            <td style="background:#fff;" colspan="2"><div style="font-size:11pt; color:#666;">รายการทั้งหมด</div><div style="font-size:18pt; font-weight:bold;">${summary.total}</div></td>
+            <td style="background:#fff;" colspan="2"><div style="font-size:11pt; color:#666;">รวมชั่วโมงลา</div><div style="font-size:18pt; font-weight:bold;">${summary.totalHours} ชม.</div></td>
+            <td style="background:#dcfce7;" colspan="2"><div style="font-size:11pt; color:#166534;">อนุมัติแล้ว</div><div style="font-size:18pt; font-weight:bold; color:#166534;">${summary.approved}</div></td>
+            <td style="background:#fef3c7;" colspan="2"><div style="font-size:11pt; color:#92400e;">รออนุมัติ</div><div style="font-size:18pt; font-weight:bold; color:#92400e;">${summary.pending}</div></td>
+            <td style="background:#fee2e2;"><div style="font-size:11pt; color:#991b1b;">ไม่อนุมัติ</div><div style="font-size:18pt; font-weight:bold; color:#991b1b;">${summary.rejected}</div></td>
           </tr>
-          <tr><td colspan="5" style="font-size:12pt; background:#fff;">แยกตามประเภท: ${Object.entries(summary.byType).map(([type, data]) => `<b>${type}</b> ${data.count} ครั้ง (${data.hours} ชม.)`).join(' | ')}</td></tr>
+          <tr><td colspan="9" style="font-size:12pt; background:#fff;">แยกตามประเภท: ${Object.entries(summary.byType).map(([type, data]) => `<b>${type}</b> ${data.count} ครั้ง (${data.hours} ชม.)`).join(' | ')}</td></tr>
         </table>
 
         <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">
