@@ -337,18 +337,19 @@ const getSummaryText = (log) => {
   const table = log.table_name
   const name = log.record_name || ''
   
-  if (action === 'LOGIN') return `เข้าสู่ระบบ`
-  if (action === 'LOGOUT') return `ออกจากระบบ`
+  if (action === 'LOGIN') return ''
+  if (action === 'LOGOUT') return ''
   
-  const actionText = { CREATE: 'สร้าง', UPDATE: 'แก้ไข', DELETE: 'ลบ' }[action] || action
   const tableText = {
     users: 'ผู้ใช้', tasks: 'โครงการ', task_steps: 'ขั้นตอน',
     leave_requests: 'คำขอลา', car_bookings: 'การจองรถ',
-    daily_work_records: 'บันทึกงาน', settings: 'การตั้งค่า',
+    daily_work_records: 'บันทึกงาน', settings: 'ตั้งค่า',
     role_permissions: 'สิทธิ์', files: 'ไฟล์'
-  }[table] || table
+  }[table] || ''
   
-  return `${actionText}${tableText}: ${name}`
+  // ถ้า name มีข้อมูลแล้ว ไม่ต้องใส่ tableText ซ้ำ
+  if (name) return name
+  return tableText
 }
 
 const formatJson = (data) => {
