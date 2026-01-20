@@ -154,21 +154,216 @@
         </template>
       </Card>
     </div>
+
+    <!-- Audit Log Section -->
+    <Card class="mt-4">
+      <template #title>
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-history"></i>
+          <span>ประวัติการแก้ไขล่าสุด</span>
+          <Button icon="pi pi-refresh" text rounded size="small" @click="loadAuditLogs" :loading="loadingLogs" />
+        </div>
+      </template>
+      <template #content>
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-2 mb-3">
+          <Dropdown v-model="logFilter.table_name" :options="tableOptions" optionLabel="label" optionValue="value" 
+            placeholder="ทุกหมวด" class="w-10rem" @change="loadAuditLogs" showClear />
+          <Dropdown v-model="logFilter.action" :options="actionOptions" optionLabel="label" optionValue="value" 
+            placeholder="ทุกการกระทำ" class="w-10rem" @change="loadAuditLogs" showClear />
+          <Calendar v-model="logFilter.dateRange" selectionMode="range" dateFormat="dd/mm/yy" 
+            placeholder="ช่วงวันที่" class="w-12rem" @date-select="loadAuditLogs" showButtonBar />
+        </div>
+
+        <!-- Log Table -->
+        <DataTable :value="auditLogs" :loading="loadingLogs" stripedRows size="small" 
+          :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
+          emptyMessage="ไม่พบประวัติการแก้ไข">
+          <Column field="created_at" header="เวลา" style="width: 140px">
+            <template #body="{ data }">
+              <span class="text-sm">{{ formatDate(data.created_at) }}</span>
+            </template>
+          </Column>
+          <Column field="user_name" header="ผู้ใช้" style="width: 120px">
+            <template #body="{ data }">
+              <div class="flex align-items-center gap-1">
+                <i class="pi pi-user text-xs"></i>
+                <span>{{ data.user_name || 'System' }}</span>
+              </div>
+            </template>
+          </Column>
+          <Column field="action" header="การกระทำ" style="width: 100px">
+            <template #body="{ data }">
+              <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" />
+            </template>
+          </Column>
+          <Column field="table_name" header="หมวด" style="width: 120px">
+            <template #body="{ data }">
+              <span class="text-sm">{{ getTableLabel(data.table_name) }}</span>
+            </template>
+          </Column>
+          <Column field="record_name" header="รายการ">
+            <template #body="{ data }">
+              <span>{{ data.record_name || `#${data.record_id}` }}</span>
+            </template>
+          </Column>
+          <Column header="รายละเอียด" style="width: 100px">
+            <template #body="{ data }">
+              <Button icon="pi pi-eye" text rounded size="small" @click="showLogDetail(data)" 
+                v-tooltip="'ดูรายละเอียด'" v-if="data.old_data || data.new_data" />
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
+
+    <!-- Detail Dialog -->
+    <Dialog v-model:visible="detailDialog" header="รายละเอียดการแก้ไข" :style="{ width: '600px' }" modal>
+      <div v-if="selectedLog">
+        <div class="grid">
+          <div class="col-6">
+            <p class="text-sm text-500 mb-1">ผู้แก้ไข</p>
+            <p class="font-semibold">{{ selectedLog.user_name }}</p>
+          </div>
+          <div class="col-6">
+            <p class="text-sm text-500 mb-1">เวลา</p>
+            <p class="font-semibold">{{ formatDate(selectedLog.created_at) }}</p>
+          </div>
+          <div class="col-6">
+            <p class="text-sm text-500 mb-1">การกระทำ</p>
+            <Badge :value="getActionLabel(selectedLog.action)" :severity="getActionSeverity(selectedLog.action)" />
+          </div>
+          <div class="col-6">
+            <p class="text-sm text-500 mb-1">IP Address</p>
+            <p class="font-semibold">{{ selectedLog.ip_address || '-' }}</p>
+          </div>
+        </div>
+        
+        <Divider />
+        
+        <div v-if="selectedLog.old_data" class="mb-3">
+          <p class="text-sm text-500 mb-2"><i class="pi pi-minus-circle text-red-500"></i> ข้อมูลเดิม</p>
+          <pre class="bg-red-50 p-2 border-round text-sm overflow-auto" style="max-height: 200px">{{ formatJson(selectedLog.old_data) }}</pre>
+        </div>
+        
+        <div v-if="selectedLog.new_data">
+          <p class="text-sm text-500 mb-2"><i class="pi pi-plus-circle text-green-500"></i> ข้อมูลใหม่</p>
+          <pre class="bg-green-50 p-2 border-round text-sm overflow-auto" style="max-height: 200px">{{ formatJson(selectedLog.new_data) }}</pre>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { usePermissions } from '@/composables/usePermissions'
+import axios from 'axios'
 
 const router = useRouter()
 const toast = useToast()
 const { loadPermissions, hasAccess } = usePermissions()
 
+// Audit Log State
+const auditLogs = ref([])
+const loadingLogs = ref(false)
+const detailDialog = ref(false)
+const selectedLog = ref(null)
+const logFilter = ref({
+  table_name: null,
+  action: null,
+  dateRange: null
+})
+
+const tableOptions = [
+  { label: 'ผู้ใช้งาน', value: 'users' },
+  { label: 'โครงการ', value: 'tasks' },
+  { label: 'การลา', value: 'leave_requests' },
+  { label: 'การจองรถ', value: 'car_bookings' },
+  { label: 'งานรายวัน', value: 'daily_work_records' },
+  { label: 'สิทธิ์การเข้าถึง', value: 'role_permissions' },
+  { label: 'ตั้งค่าระบบ', value: 'settings' }
+]
+
+const actionOptions = [
+  { label: 'สร้าง', value: 'CREATE' },
+  { label: 'แก้ไข', value: 'UPDATE' },
+  { label: 'ลบ', value: 'DELETE' },
+  { label: 'เข้าสู่ระบบ', value: 'LOGIN' },
+  { label: 'ออกจากระบบ', value: 'LOGOUT' }
+]
+
+const loadAuditLogs = async () => {
+  loadingLogs.value = true
+  try {
+    const params = new URLSearchParams()
+    if (logFilter.value.table_name) params.append('table_name', logFilter.value.table_name)
+    if (logFilter.value.action) params.append('action', logFilter.value.action)
+    if (logFilter.value.dateRange?.[0]) {
+      params.append('start_date', logFilter.value.dateRange[0].toISOString().split('T')[0])
+    }
+    if (logFilter.value.dateRange?.[1]) {
+      params.append('end_date', logFilter.value.dateRange[1].toISOString().split('T')[0])
+    }
+    params.append('limit', '50')
+
+    const response = await axios.get(`/api/audit-logs?${params}`)
+    auditLogs.value = response.data.data || []
+  } catch (error) {
+    console.error('Load audit logs error:', error)
+    auditLogs.value = []
+  } finally {
+    loadingLogs.value = false
+  }
+}
+
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleString('th-TH', { 
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
+}
+
+const getActionLabel = (action) => {
+  const labels = { CREATE: 'สร้าง', UPDATE: 'แก้ไข', DELETE: 'ลบ', LOGIN: 'เข้าสู่ระบบ', LOGOUT: 'ออกจากระบบ' }
+  return labels[action] || action
+}
+
+const getActionSeverity = (action) => {
+  const severities = { CREATE: 'success', UPDATE: 'warning', DELETE: 'danger', LOGIN: 'info', LOGOUT: 'secondary' }
+  return severities[action] || 'info'
+}
+
+const getTableLabel = (table) => {
+  const labels = {
+    users: 'ผู้ใช้งาน', tasks: 'โครงการ', leave_requests: 'การลา',
+    car_bookings: 'การจองรถ', daily_work_records: 'งานรายวัน',
+    role_permissions: 'สิทธิ์', settings: 'ตั้งค่า'
+  }
+  return labels[table] || table
+}
+
+const formatJson = (data) => {
+  try {
+    const obj = typeof data === 'string' ? JSON.parse(data) : data
+    return JSON.stringify(obj, null, 2)
+  } catch {
+    return data
+  }
+}
+
+const showLogDetail = (log) => {
+  selectedLog.value = log
+  detailDialog.value = true
+}
+
 onMounted(() => {
   loadPermissions()
+  loadAuditLogs()
 })
 
 const navigateTo = (section) => {
