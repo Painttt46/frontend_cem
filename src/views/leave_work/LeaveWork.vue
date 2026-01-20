@@ -232,15 +232,19 @@ export default {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: TH Sarabun New, Sarabun, Arial;">
         
-        <table border="0" cellpadding="5" style="margin-bottom:10px;">
+        <table border="0" cellpadding="0" cellspacing="0" style="width:100%; margin-bottom:20px;">
           <tr>
-            <td rowspan="3" style="width:80px;"><img src="${window.location.origin}/NGENT.png" width="70" height="70" onerror="this.style.display='none'"/></td>
-            <td style="font-size:20pt; font-weight:bold; color:#1e40af;">GENT SOLUTION CO., LTD.</td>
-            <td style="text-align:right; font-size:12pt;">วันที่พิมพ์: ${today}</td>
-          </tr>
-          <tr>
-            <td style="font-size:16pt; color:#475569;">รายงานสรุปการลางานของพนักงาน</td>
-            <td style="text-align:right; font-size:12pt;">ช่วงเวลา: ${dateRange}</td>
+            <td style="width:90px; vertical-align:middle; padding:10px;">
+              <img src="${window.location.origin}/NGENT.png" width="80" height="80" onerror="this.style.display='none'"/>
+            </td>
+            <td style="vertical-align:middle; padding-left:15px; border-left:4px solid #1e40af;">
+              <div style="font-size:24pt; font-weight:bold; color:#1e40af;">GENT SOLUTION CO., LTD.</div>
+              <div style="font-size:18pt; color:#64748b; margin-top:5px;">รายงานสรุปการลางานของพนักงาน</div>
+            </td>
+            <td style="vertical-align:top; text-align:right; width:200px;">
+              <div style="font-size:11pt; color:#64748b; margin-bottom:5px;">วันที่พิมพ์: <b>${today}</b></div>
+              <div style="font-size:11pt; color:#64748b;">ช่วงเวลา: <b>${dateRange}</b></div>
+            </td>
           </tr>
         </table>
         
