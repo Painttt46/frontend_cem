@@ -120,9 +120,9 @@
           </div>
         </div>
         <div class="field">
-          <label>โควต้าเริ่มต้น (วัน/ปี)</label>
-          <InputNumber v-model="editingLeaveTypeData.default_quota" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" />
-          <small class="field-hint">โควต้าที่พนักงานใหม่จะได้รับ</small>
+          <label>โควต้าเริ่มต้น (ชม./ปี)</label>
+          <InputNumber v-model="editingLeaveTypeData.default_quota_hours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
+          <small class="field-hint">{{ (editingLeaveTypeData.default_quota_hours / 8).toFixed(1) }} วัน (1 วัน = 8 ชม.)</small>
         </div>
         <div class="field">
           <label>ต้องลาล่วงหน้า (วัน)</label>
@@ -563,7 +563,10 @@ const deleteLeaveType = async (leaveType) => {
 }
 
 const editLeaveType = (type) => {
-  editingLeaveTypeData.value = { ...type }
+  editingLeaveTypeData.value = { 
+    ...type,
+    default_quota_hours: (type.default_quota || 0) * 8
+  }
   showEditLeaveTypeDialog.value = true
 }
 
@@ -576,7 +579,7 @@ const saveLeaveType = async () => {
       display_name: editingLeaveTypeData.value.label,
       color: editingLeaveTypeData.value.color,
       advance_days: editingLeaveTypeData.value.advance_days,
-      default_quota: editingLeaveTypeData.value.default_quota
+      default_quota: editingLeaveTypeData.value.default_quota_hours / 8
     })
 
     toast.add({

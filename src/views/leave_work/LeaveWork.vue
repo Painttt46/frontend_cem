@@ -11,15 +11,17 @@
 
     <!-- Action Buttons -->
     <div class="action-buttons" v-if="permissionsLoaded">
-      <Button @click="showLeaveForm" class="leave-btn" icon="pi pi-plus" raised>
-        <span class="btn-text">แจ้งลางาน</span>
-      </Button>
-      <Button v-if="canApproveLeave" @click="showApprovalForm" class="approval-btn" icon="pi pi-check-circle" raised>
-        <span class="btn-text">อนุมัติการลา</span>
-        <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
-      </Button>
-      <Button @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="success" raised>
-        <span class="btn-text">Export รายงาน</span>
+      <div class="left-buttons">
+        <Button @click="showLeaveForm" class="leave-btn" icon="pi pi-plus" raised>
+          <span class="btn-text">แจ้งลางาน</span>
+        </Button>
+        <Button v-if="canApproveLeave" @click="showApprovalForm" class="approval-btn" icon="pi pi-check-circle" raised>
+          <span class="btn-text">อนุมัติการลา</span>
+          <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
+        </Button>
+      </div>
+      <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="secondary" size="small" outlined>
+        <span class="btn-text">Export</span>
       </Button>
     </div>
 
@@ -202,7 +204,7 @@ export default {
       // สรุปภาพรวม
       const summary = {
         total: records.length,
-        totalDays: records.reduce((sum, r) => sum + (parseFloat(r.total_days) || 0), 0),
+        totalHours: records.reduce((sum, r) => sum + ((parseFloat(r.total_days) || 0) * 8), 0),
         approved: records.filter(r => r.status === 'approved').length,
         pending: records.filter(r => r.status === 'pending').length,
         rejected: records.filter(r => r.status === 'rejected').length,
@@ -210,9 +212,9 @@ export default {
       }
       records.forEach(r => {
         const type = r.leave_type || 'อื่นๆ'
-        if (!summary.byType[type]) summary.byType[type] = { count: 0, days: 0 }
+        if (!summary.byType[type]) summary.byType[type] = { count: 0, hours: 0 }
         summary.byType[type].count++
-        summary.byType[type].days += parseFloat(r.total_days) || 0
+        summary.byType[type].hours += (parseFloat(r.total_days) || 0) * 8
       })
 
       const statusMap = { pending: 'รออนุมัติ', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ' }
@@ -226,24 +228,24 @@ export default {
         <head><meta charset="UTF-8">
         <style>
           body { font-family: 'TH Sarabun New', 'Sarabun', sans-serif; }
-          .header { text-align: center; font-size: 18pt; font-weight: bold; }
-          .sub-header { text-align: center; font-size: 14pt; margin-bottom: 10px; }
-          .date-info { text-align: right; font-size: 11pt; }
-          .range-info { text-align: right; font-size: 11pt; margin-bottom: 15px; }
-          table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-          th { background-color: #1e40af; color: white; font-weight: bold; padding: 10px; border: 1px solid #000; font-size: 12pt; }
-          td { padding: 8px; border: 1px solid #000; font-size: 11pt; }
+          .header { text-align: center; font-size: 22pt; font-weight: bold; }
+          .sub-header { text-align: center; font-size: 16pt; margin-bottom: 10px; }
+          .date-info { text-align: right; font-size: 14pt; }
+          .range-info { text-align: right; font-size: 14pt; margin-bottom: 15px; }
+          table { border-collapse: collapse; width: auto; margin-top: 10px; }
+          th { background-color: #1e40af; color: white; font-weight: bold; padding: 8px 12px; border: 1px solid #000; font-size: 14pt; white-space: nowrap; }
+          td { padding: 6px 10px; border: 1px solid #000; font-size: 14pt; }
           tr:nth-child(even) { background-color: #f3f4f6; }
           .status-approved { color: #059669; font-weight: bold; }
           .status-pending { color: #d97706; font-weight: bold; }
           .status-rejected { color: #dc2626; font-weight: bold; }
           .summary-box { background: #f0f9ff; border: 1px solid #0284c7; padding: 15px; margin: 15px 0; border-radius: 5px; }
-          .summary-title { font-size: 14pt; font-weight: bold; color: #0369a1; margin-bottom: 10px; }
+          .summary-title { font-size: 16pt; font-weight: bold; color: #0369a1; margin-bottom: 10px; }
           .summary-grid { display: flex; gap: 20px; flex-wrap: wrap; }
-          .summary-item { font-size: 11pt; }
+          .summary-item { font-size: 14pt; }
           .summary-label { color: #64748b; }
           .summary-value { font-weight: bold; color: #1e293b; }
-          .footer { margin-top: 30px; font-size: 10pt; }
+          .footer { margin-top: 30px; font-size: 14pt; }
           .signature { margin-top: 50px; }
           .sig-line { display: inline-block; width: 200px; border-bottom: 1px solid #000; margin: 0 30px; }
         </style>
@@ -257,13 +259,13 @@ export default {
           <div class="summary-title">📊 สรุปภาพรวม</div>
           <div class="summary-grid">
             <div class="summary-item"><span class="summary-label">รายการทั้งหมด:</span> <span class="summary-value">${summary.total} รายการ</span></div>
-            <div class="summary-item"><span class="summary-label">รวมวันลา:</span> <span class="summary-value">${summary.totalDays} วัน</span></div>
+            <div class="summary-item"><span class="summary-label">รวมชั่วโมงลา:</span> <span class="summary-value">${summary.totalHours} ชม.</span></div>
             <div class="summary-item"><span class="summary-label">อนุมัติแล้ว:</span> <span class="summary-value" style="color:#059669">${summary.approved} รายการ</span></div>
             <div class="summary-item"><span class="summary-label">รออนุมัติ:</span> <span class="summary-value" style="color:#d97706">${summary.pending} รายการ</span></div>
             <div class="summary-item"><span class="summary-label">ไม่อนุมัติ:</span> <span class="summary-value" style="color:#dc2626">${summary.rejected} รายการ</span></div>
           </div>
           <div style="margin-top:10px"><span class="summary-label">แยกตามประเภท:</span> 
-            ${Object.entries(summary.byType).map(([type, data]) => `<span class="summary-value">${type}</span> ${data.count} ครั้ง (${data.days} วัน)`).join(' | ')}
+            ${Object.entries(summary.byType).map(([type, data]) => `<span class="summary-value">${type}</span> ${data.count} ครั้ง (${data.hours} ชม.)`).join(' | ')}
           </div>
         </div>
 
@@ -576,8 +578,25 @@ export default {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
+}
+
+.action-buttons .left-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.export-btn {
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+}
+
+.export-btn .btn-text {
+  margin-left: 0.3rem;
+  font-size: 0.875rem;
 }
 
 .leave-btn {
@@ -774,13 +793,21 @@ export default {
   }
 
   .action-buttons {
-    justify-content: center;
     flex-direction: column;
   }
 
-  .leave-btn, .approval-btn, .export-btn {
+  .action-buttons .left-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .leave-btn, .approval-btn {
     width: 100% !important;
     min-width: auto !important;
+  }
+
+  .export-btn {
+    align-self: flex-end;
   }
 }
 
