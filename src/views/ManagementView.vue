@@ -206,21 +206,23 @@
               </div>
             </template>
           </Column>
-          <Column header="การกระทำ" style="width: 15%;" headerClass="text-center" bodyClass="text-center">
+          <Column header="การกระทำ" style="width: 15%;" headerClass="text-center">
             <template #body="{ data }">
-              <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" class="action-badge" />
+              <div class="flex justify-content-center">
+                <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" class="action-badge" />
+              </div>
             </template>
           </Column>
-          <Column header="รายละเอียด" style="width: 45%;" headerClass="text-center">
+          <Column header="รายละเอียด" style="width: 43%;" headerClass="text-center">
             <template #body="{ data }">
               <span class="text-700">{{ getSummaryText(data) }}</span>
             </template>
           </Column>
-          <Column style="width: 5%;" bodyClass="text-center">
+          <Column style="width: 7%;" bodyClass="text-center">
             <template #body="{ data }">
-              <Button v-if="data.action !== 'LOGIN' && data.action !== 'LOGOUT'" 
-                icon="pi pi-eye" class="p-button-rounded p-button-text p-button-sm" 
-                @click="showLogDetail(data)" v-tooltip.left="'ดูรายละเอียด'" />
+              <Button v-if="data.old_data || data.new_data || data.action === 'LOGIN' || data.action === 'LOGOUT'" 
+                icon="pi pi-eye" class="p-button-rounded p-button-outlined p-button-info" 
+                @click="showLogDetail(data)" v-tooltip.left="'ดูรายละเอียด'" style="width: 2.5rem; height: 2.5rem;" />
             </template>
           </Column>
         </DataTable>
@@ -727,15 +729,15 @@ const navigateTo = (section) => {
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4A90E2, #357ABD);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
 }
 
 .action-badge {
