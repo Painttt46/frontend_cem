@@ -229,64 +229,35 @@ export default {
       
       let html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-        <head><meta charset="UTF-8">
-        <style>
-          body { font-family: 'TH Sarabun New', 'Sarabun', sans-serif; margin: 20px; }
-          .report-header { display: flex; align-items: center; border-bottom: 3px solid #1e40af; padding-bottom: 15px; margin-bottom: 20px; }
-          .logo { width: 80px; height: 80px; margin-right: 20px; }
-          .company-info { flex: 1; }
-          .company-name { font-size: 24pt; font-weight: bold; color: #1e40af; margin: 0; }
-          .report-title { font-size: 18pt; color: #475569; margin: 5px 0 0 0; }
-          .meta-info { text-align: right; font-size: 12pt; color: #64748b; }
-          .meta-info div { margin: 3px 0; }
-          table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-          th { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; font-weight: bold; padding: 12px 10px; border: 1px solid #1e40af; font-size: 13pt; }
-          td { padding: 10px; border: 1px solid #cbd5e1; font-size: 13pt; }
-          tr:nth-child(even) { background-color: #f8fafc; }
-          tr:hover { background-color: #e0f2fe; }
-          .status-approved { background: #dcfce7; color: #166534; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-          .status-pending { background: #fef3c7; color: #92400e; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-          .status-rejected { background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-          .summary-box { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 20px; margin: 20px 0; }
-          .summary-title { font-size: 16pt; font-weight: bold; color: #1e40af; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-          .summary-grid { display: flex; flex-wrap: wrap; gap: 15px; }
-          .stat-card { background: white; border-radius: 8px; padding: 12px 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 120px; }
-          .stat-label { font-size: 11pt; color: #64748b; }
-          .stat-value { font-size: 18pt; font-weight: bold; color: #1e293b; }
-          .stat-approved .stat-value { color: #059669; }
-          .stat-pending .stat-value { color: #d97706; }
-          .stat-rejected .stat-value { color: #dc2626; }
-          .type-summary { margin-top: 15px; padding-top: 15px; border-top: 1px solid #93c5fd; font-size: 12pt; }
-          .footer { margin-top: 25px; padding-top: 15px; border-top: 2px solid #e2e8f0; font-size: 12pt; color: #64748b; display: flex; justify-content: space-between; }
-        </style>
-        </head><body>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: TH Sarabun New, Sarabun, Arial;">
         
-        <div class="report-header">
-          <img src="${window.location.origin}/NGENT.png" class="logo" onerror="this.style.display='none'"/>
-          <div class="company-info">
-            <div class="company-name">GENT SOLUTION CO., LTD.</div>
-            <div class="report-title">📋 รายงานสรุปการลางานของพนักงาน</div>
-          </div>
-          <div class="meta-info">
-            <div>📅 วันที่พิมพ์: ${today}</div>
-            <div>📆 ช่วงเวลา: ${dateRange}</div>
-          </div>
-        </div>
-        
-        <div class="summary-box">
-          <div class="summary-title">📊 สรุปภาพรวม</div>
-          <div class="summary-grid">
-            <div class="stat-card"><div class="stat-label">รายการทั้งหมด</div><div class="stat-value">${summary.total}</div></div>
-            <div class="stat-card"><div class="stat-label">รวมชั่วโมงลา</div><div class="stat-value">${summary.totalHours} ชม.</div></div>
-            <div class="stat-card stat-approved"><div class="stat-label">อนุมัติแล้ว</div><div class="stat-value">${summary.approved}</div></div>
-            <div class="stat-card stat-pending"><div class="stat-label">รออนุมัติ</div><div class="stat-value">${summary.pending}</div></div>
-            <div class="stat-card stat-rejected"><div class="stat-label">ไม่อนุมัติ</div><div class="stat-value">${summary.rejected}</div></div>
-          </div>
-          <div class="type-summary">📁 แยกตามประเภท: ${Object.entries(summary.byType).map(([type, data]) => `<strong>${type}</strong> ${data.count} ครั้ง (${data.hours} ชม.)`).join(' | ')}</div>
-        </div>
-
-        <table>
+        <table border="0" cellpadding="5" style="margin-bottom:10px;">
           <tr>
+            <td rowspan="3" style="width:80px;"><img src="${window.location.origin}/NGENT.png" width="70" height="70" onerror="this.style.display='none'"/></td>
+            <td style="font-size:20pt; font-weight:bold; color:#1e40af;">GENT SOLUTION CO., LTD.</td>
+            <td style="text-align:right; font-size:12pt;">วันที่พิมพ์: ${today}</td>
+          </tr>
+          <tr>
+            <td style="font-size:16pt; color:#475569;">รายงานสรุปการลางานของพนักงาน</td>
+            <td style="text-align:right; font-size:12pt;">ช่วงเวลา: ${dateRange}</td>
+          </tr>
+        </table>
+        
+        <table border="1" cellpadding="8" style="border-collapse:collapse; background:#f0f9ff; margin-bottom:15px;">
+          <tr><td colspan="5" style="font-size:14pt; font-weight:bold; color:#1e40af; background:#dbeafe;">สรุปภาพรวม (เฉพาะที่อนุมัติ)</td></tr>
+          <tr style="text-align:center;">
+            <td style="background:#fff;"><div style="font-size:10pt; color:#666;">รายการทั้งหมด</div><div style="font-size:16pt; font-weight:bold;">${summary.total}</div></td>
+            <td style="background:#fff;"><div style="font-size:10pt; color:#666;">รวมชั่วโมงลา</div><div style="font-size:16pt; font-weight:bold;">${summary.totalHours} ชม.</div></td>
+            <td style="background:#dcfce7;"><div style="font-size:10pt; color:#166534;">อนุมัติแล้ว</div><div style="font-size:16pt; font-weight:bold; color:#166534;">${summary.approved}</div></td>
+            <td style="background:#fef3c7;"><div style="font-size:10pt; color:#92400e;">รออนุมัติ</div><div style="font-size:16pt; font-weight:bold; color:#92400e;">${summary.pending}</div></td>
+            <td style="background:#fee2e2;"><div style="font-size:10pt; color:#991b1b;">ไม่อนุมัติ</div><div style="font-size:16pt; font-weight:bold; color:#991b1b;">${summary.rejected}</div></td>
+          </tr>
+          <tr><td colspan="5" style="font-size:12pt; background:#fff;">แยกตามประเภท: ${Object.entries(summary.byType).map(([type, data]) => `<b>${type}</b> ${data.count} ครั้ง (${data.hours} ชม.)`).join(' | ')}</td></tr>
+        </table>
+
+        <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">
+          <tr style="background:#1e40af; color:white; font-weight:bold; font-size:13pt;">
             <th>ลำดับ</th>
             <th>ชื่อ-นามสกุล</th>
             <th>ตำแหน่ง</th>
@@ -299,25 +270,23 @@ export default {
           </tr>`
 
       records.forEach((r, i) => {
-        const statusClass = r.status === 'approved' ? 'status-approved' : r.status === 'rejected' ? 'status-rejected' : 'status-pending'
-        html += `<tr>
+        const bgColor = i % 2 === 0 ? '#ffffff' : '#f8fafc'
+        const statusStyle = r.status === 'approved' ? 'background:#dcfce7; color:#166534;' : r.status === 'rejected' ? 'background:#fee2e2; color:#991b1b;' : 'background:#fef3c7; color:#92400e;'
+        html += `<tr style="background:${bgColor}; font-size:12pt;">
           <td style="text-align:center">${i + 1}</td>
-          <td><strong>${r.user_name || '-'}</strong></td>
+          <td><b>${r.user_name || '-'}</b></td>
           <td>${r.employee_position || '-'}</td>
           <td>${r.leave_type || '-'}</td>
           <td style="text-align:center">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH') : '-'}</td>
           <td style="text-align:center">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH') : '-'}</td>
-          <td style="text-align:center"><strong>${calcHours(r)} ชม.</strong></td>
+          <td style="text-align:center"><b>${calcHours(r)} ชม.</b></td>
           <td>${r.reason || '-'}</td>
-          <td style="text-align:center"><span class="${statusClass}">${statusMap[r.status] || r.status}</span></td>
+          <td style="text-align:center; ${statusStyle} font-weight:bold;">${statusMap[r.status] || r.status}</td>
         </tr>`
       })
 
       html += `</table>
-        <div class="footer">
-          <div>📝 จำนวนรายการทั้งหมด: <strong>${records.length}</strong> รายการ</div>
-          <div>🏢 GENT SOLUTION CO., LTD.</div>
-        </div>
+        <p style="margin-top:15px; font-size:12pt; color:#666;">จำนวนรายการทั้งหมด: <b>${records.length}</b> รายการ | GENT SOLUTION CO., LTD.</p>
         </body></html>`
 
       const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
