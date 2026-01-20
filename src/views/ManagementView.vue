@@ -206,7 +206,7 @@
               </div>
             </template>
           </Column>
-          <Column header="การกระทำ" style="width: 15%;" headerClass="text-center">
+          <Column header="action" style="width: 15%;" headerClass="text-center">
             <template #body="{ data }">
               <div class="flex justify-content-center">
                 <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" class="action-badge" />
@@ -743,6 +743,11 @@ const navigateTo = (section) => {
 .action-badge {
   font-size: 0.8rem;
   padding: 0.35rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5rem;
+  text-align: center;
 }
 
 :deep(.audit-table .p-datatable-thead > tr > th) {
@@ -751,6 +756,7 @@ const navigateTo = (section) => {
   font-weight: 600;
   color: #475569;
   padding: 1rem;
+  text-align: center;
 }
 
 :deep(.audit-table .p-datatable-tbody > tr) {
