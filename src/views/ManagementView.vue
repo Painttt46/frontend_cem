@@ -156,56 +156,70 @@
     </div>
 
     <!-- Audit Log Section -->
-    <Card class="mt-4">
+    <Card class="audit-card mt-4">
       <template #title>
-        <div class="flex align-items-center gap-2">
-          <i class="pi pi-history"></i>
-          <span>ประวัติการแก้ไขล่าสุด</span>
-          <Button icon="pi pi-refresh" text rounded size="small" @click="loadAuditLogs" :loading="loadingLogs" />
+        <div class="flex align-items-center justify-content-between">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-history text-primary" style="font-size: 1.25rem;"></i>
+            <span class="text-xl font-semibold">ประวัติการใช้งานระบบ</span>
+          </div>
+          <Button icon="pi pi-refresh" label="รีเฟรช" text size="small" @click="loadAuditLogs" :loading="loadingLogs" />
         </div>
       </template>
       <template #content>
         <!-- Filters -->
-        <div class="flex flex-wrap gap-2 mb-3">
+        <div class="filter-section flex flex-wrap gap-3 mb-4 p-3 border-round surface-100">
+          <div class="flex align-items-center gap-2">
+            <i class="pi pi-filter text-500"></i>
+            <span class="text-600 font-medium">ตัวกรอง:</span>
+          </div>
           <Dropdown v-model="logFilter.table_name" :options="tableOptions" optionLabel="label" optionValue="value" 
             placeholder="ทุกหมวด" class="w-10rem" @change="loadAuditLogs" showClear />
           <Dropdown v-model="logFilter.action" :options="actionOptions" optionLabel="label" optionValue="value" 
             placeholder="ทุกการกระทำ" class="w-10rem" @change="loadAuditLogs" showClear />
           <Calendar v-model="logFilter.dateRange" selectionMode="range" dateFormat="dd/mm/yy" 
-            placeholder="ช่วงวันที่" class="w-12rem" @date-select="loadAuditLogs" showButtonBar />
+            placeholder="ช่วงวันที่" class="w-13rem" @date-select="loadAuditLogs" showButtonBar showIcon />
         </div>
 
         <!-- Log Table -->
-        <DataTable :value="auditLogs" :loading="loadingLogs" stripedRows size="small" 
+        <DataTable :value="auditLogs" :loading="loadingLogs" 
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-          emptyMessage="ไม่พบประวัติการแก้ไข">
-          <Column field="created_at" header="เวลา" style="width: 12%">
+          currentPageReportTemplate="แสดง {first} ถึง {last} จาก {totalRecords} รายการ"
+          emptyMessage="ไม่พบประวัติการใช้งาน" responsiveLayout="scroll"
+          class="audit-table" rowHover>
+          <Column field="created_at" header="เวลา" style="width: 15%;" headerClass="text-center" bodyClass="text-center">
             <template #body="{ data }">
-              <span class="text-600 white-space-nowrap">{{ formatDate(data.created_at) }}</span>
-            </template>
-          </Column>
-          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 18%">
-            <template #body="{ data }">
-              <div class="flex align-items-center gap-2">
-                <i class="pi pi-user text-primary text-sm"></i>
-                <span class="font-medium">{{ data.user_name || 'ระบบ' }}</span>
+              <div class="flex flex-column align-items-center">
+                <span class="font-medium text-800">{{ formatDate(data.created_at).split(' ')[0] }}</span>
+                <span class="text-500 text-sm">{{ formatDate(data.created_at).split(' ')[1] }}</span>
               </div>
             </template>
           </Column>
-          <Column header="การกระทำ" style="width: 12%; text-align: center;">
+          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 20%;" headerClass="text-center" bodyClass="text-center">
             <template #body="{ data }">
-              <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" />
+              <div class="flex align-items-center justify-content-center gap-2">
+                <div class="user-avatar">
+                  <i class="pi pi-user"></i>
+                </div>
+                <span class="font-medium text-800">{{ data.user_name || 'ระบบ' }}</span>
+              </div>
             </template>
           </Column>
-          <Column header="รายละเอียด" style="width: 53%">
+          <Column header="การกระทำ" style="width: 15%;" headerClass="text-center" bodyClass="text-center">
+            <template #body="{ data }">
+              <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" class="action-badge" />
+            </template>
+          </Column>
+          <Column header="รายละเอียด" style="width: 45%;" headerClass="text-center">
             <template #body="{ data }">
               <span class="text-700">{{ getSummaryText(data) }}</span>
             </template>
           </Column>
-          <Column style="width: 5%; text-align: center;">
+          <Column style="width: 5%;" bodyClass="text-center">
             <template #body="{ data }">
-              <Button v-if="data.old_data || data.new_data" icon="pi pi-eye" text rounded size="small" 
+              <Button v-if="data.action !== 'LOGIN' && data.action !== 'LOGOUT'" 
+                icon="pi pi-eye" class="p-button-rounded p-button-text p-button-sm" 
                 @click="showLogDetail(data)" v-tooltip.left="'ดูรายละเอียด'" />
             </template>
           </Column>
@@ -214,37 +228,63 @@
     </Card>
 
     <!-- Detail Dialog -->
-    <Dialog v-model:visible="detailDialog" header="รายละเอียดการแก้ไข" :style="{ width: '600px' }" modal>
-      <div v-if="selectedLog">
-        <div class="grid">
+    <Dialog v-model:visible="detailDialog" header="รายละเอียดการเปลี่ยนแปลง" :style="{ width: '650px' }" modal :draggable="false">
+      <div v-if="selectedLog" class="detail-content">
+        <div class="grid mb-3">
           <div class="col-6">
-            <p class="text-sm text-500 mb-1">ผู้แก้ไข</p>
-            <p class="font-semibold">{{ selectedLog.user_name }}</p>
+            <div class="detail-item">
+              <i class="pi pi-user text-primary"></i>
+              <div>
+                <span class="detail-label">ผู้ดำเนินการ</span>
+                <span class="detail-value">{{ selectedLog.user_name }}</span>
+              </div>
+            </div>
           </div>
           <div class="col-6">
-            <p class="text-sm text-500 mb-1">เวลา</p>
-            <p class="font-semibold">{{ formatDate(selectedLog.created_at) }}</p>
+            <div class="detail-item">
+              <i class="pi pi-clock text-primary"></i>
+              <div>
+                <span class="detail-label">เวลา</span>
+                <span class="detail-value">{{ formatDate(selectedLog.created_at) }}</span>
+              </div>
+            </div>
           </div>
           <div class="col-6">
-            <p class="text-sm text-500 mb-1">การกระทำ</p>
-            <Badge :value="getActionLabel(selectedLog.action)" :severity="getActionSeverity(selectedLog.action)" />
+            <div class="detail-item">
+              <i class="pi pi-tag text-primary"></i>
+              <div>
+                <span class="detail-label">การกระทำ</span>
+                <Badge :value="getActionLabel(selectedLog.action)" :severity="getActionSeverity(selectedLog.action)" />
+              </div>
+            </div>
           </div>
           <div class="col-6">
-            <p class="text-sm text-500 mb-1">IP Address</p>
-            <p class="font-semibold">{{ selectedLog.ip_address || '-' }}</p>
+            <div class="detail-item">
+              <i class="pi pi-globe text-primary"></i>
+              <div>
+                <span class="detail-label">IP Address</span>
+                <span class="detail-value">{{ selectedLog.ip_address || '-' }}</span>
+              </div>
+            </div>
           </div>
         </div>
         
         <Divider />
         
-        <div v-if="selectedLog.old_data" class="mb-3">
-          <p class="text-sm text-500 mb-2"><i class="pi pi-minus-circle text-red-500"></i> ข้อมูลเดิม</p>
-          <pre class="bg-red-50 p-2 border-round text-sm overflow-auto" style="max-height: 200px">{{ formatJson(selectedLog.old_data) }}</pre>
+        <div v-if="selectedLog.old_data" class="data-section mb-3">
+          <div class="data-header data-old">
+            <i class="pi pi-minus-circle"></i>
+            <span>ข้อมูลเดิม</span>
+          </div>
+          <pre class="data-content data-old-bg">{{ formatJson(selectedLog.old_data) }}</pre>
         </div>
         
-        <div v-if="selectedLog.new_data">
-          <p class="text-sm text-500 mb-2"><i class="pi pi-plus-circle text-green-500"></i> ข้อมูลใหม่</p>
-          <pre class="bg-green-50 p-2 border-round text-sm overflow-auto" style="max-height: 200px">{{ formatJson(selectedLog.new_data) }}</pre>
+        <div v-if="selectedLog.new_data" class="data-section">
+          <div class="data-header data-new">
+            <i class="pi pi-plus-circle"></i>
+            <span>ข้อมูลใหม่</span>
+          </div>
+          <pre class="data-content data-new-bg">{{ formatJson(selectedLog.new_data) }}</pre>
         </div>
       </div>
     </Dialog>
@@ -339,8 +379,7 @@ const getSummaryText = (log) => {
   const table = log.table_name
   const name = log.record_name || ''
   
-  if (action === 'LOGIN') return log.user_name || ''
-  if (action === 'LOGOUT') return log.user_name || ''
+  if (action === 'LOGIN' || action === 'LOGOUT') return ''
   
   const tableText = {
     users: 'ผู้ใช้', tasks: 'โครงการ', task_steps: 'ขั้นตอน',
@@ -349,7 +388,6 @@ const getSummaryText = (log) => {
     role_permissions: 'สิทธิ์', files: 'ไฟล์'
   }[table] || ''
   
-  // ถ้า name มีข้อมูลแล้ว ไม่ต้องใส่ tableText ซ้ำ
   if (name) return name
   return tableText
 }
@@ -676,4 +714,141 @@ const navigateTo = (section) => {
 .management-card:nth-child(6) { animation-delay: 0.6s; }
 .management-card:nth-child(7) { animation-delay: 0.7s; }
 .management-card:nth-child(8) { animation-delay: 0.8s; }
+
+/* Audit Log Styles */
+.audit-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.filter-section {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.875rem;
+}
+
+.action-badge {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}
+
+:deep(.audit-table .p-datatable-thead > tr > th) {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+  font-weight: 600;
+  color: #475569;
+  padding: 1rem;
+}
+
+:deep(.audit-table .p-datatable-tbody > tr) {
+  transition: all 0.2s ease;
+}
+
+:deep(.audit-table .p-datatable-tbody > tr:hover) {
+  background: #f8fafc !important;
+}
+
+:deep(.audit-table .p-datatable-tbody > tr > td) {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+:deep(.audit-table .p-paginator) {
+  background: transparent;
+  border: none;
+  padding: 1rem 0 0 0;
+}
+
+/* Detail Dialog Styles */
+.detail-content {
+  padding: 0.5rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.detail-item i {
+  font-size: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.detail-item > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.data-section {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.data-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.data-header.data-old {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.data-header.data-new {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.data-content {
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.8rem;
+  max-height: 200px;
+  overflow: auto;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+
+.data-old-bg {
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-top: none;
+}
+
+.data-new-bg {
+  background: #f0fff4;
+  border: 1px solid #bbf7d0;
+  border-top: none;
+}
 </style>
