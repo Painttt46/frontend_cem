@@ -337,8 +337,8 @@ const getSummaryText = (log) => {
   const table = log.table_name
   const name = log.record_name || ''
   
-  if (action === 'LOGIN') return ''
-  if (action === 'LOGOUT') return ''
+  if (action === 'LOGIN') return log.user_name || ''
+  if (action === 'LOGOUT') return log.user_name || ''
   
   const tableText = {
     users: 'ผู้ใช้', tasks: 'โครงการ', task_steps: 'ขั้นตอน',
