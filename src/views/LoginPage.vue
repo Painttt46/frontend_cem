@@ -203,7 +203,7 @@ function handleLogin() {
   auth(username.value, password.value);
 }
 
-function auth(username, password) {
+async function auth(username, password) {
   isLoggingIn.value = true;
   loginIcon.value = "";
   loginStatus.value = "";
