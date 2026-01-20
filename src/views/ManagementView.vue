@@ -180,31 +180,33 @@
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           emptyMessage="ไม่พบประวัติการแก้ไข">
-          <Column field="created_at" header="เวลา" style="width: 130px">
+          <Column field="created_at" header="เวลา" style="width: 12%">
             <template #body="{ data }">
-              <span class="text-sm text-600">{{ formatDate(data.created_at) }}</span>
+              <span class="text-600 white-space-nowrap">{{ formatDate(data.created_at) }}</span>
             </template>
           </Column>
-          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 140px">
+          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 18%">
             <template #body="{ data }">
               <div class="flex align-items-center gap-2">
-                <i class="pi pi-user text-primary"></i>
+                <i class="pi pi-user text-primary text-sm"></i>
                 <span class="font-medium">{{ data.user_name || 'ระบบ' }}</span>
               </div>
             </template>
           </Column>
-          <Column header="รายละเอียด">
+          <Column header="การกระทำ" style="width: 12%; text-align: center;">
             <template #body="{ data }">
-              <div class="flex align-items-center gap-2">
-                <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" />
-                <span>{{ getSummaryText(data) }}</span>
-              </div>
+              <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" />
             </template>
           </Column>
-          <Column header="" style="width: 60px">
+          <Column header="รายละเอียด" style="width: 53%">
             <template #body="{ data }">
-              <Button icon="pi pi-eye" text rounded size="small" @click="showLogDetail(data)" 
-                v-tooltip="'ดูรายละเอียด'" v-if="data.old_data || data.new_data" />
+              <span class="text-700">{{ getSummaryText(data) }}</span>
+            </template>
+          </Column>
+          <Column style="width: 5%; text-align: center;">
+            <template #body="{ data }">
+              <Button v-if="data.old_data || data.new_data" icon="pi pi-eye" text rounded size="small" 
+                @click="showLogDetail(data)" v-tooltip.left="'ดูรายละเอียด'" />
             </template>
           </Column>
         </DataTable>
