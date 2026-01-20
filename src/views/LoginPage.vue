@@ -222,9 +222,21 @@ function auth(username, password) {
     password: password,
   };
 
+  // ดึง public IP ก่อน login
+  let clientIp = '';
+  try {
+    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipResponse.json();
+    clientIp = ipData.ip;
+  } catch (e) {
+    console.log('Could not get public IP');
+  }
+
   // Use proxy instead of direct localhost
   axios
-    .post('/api/auth/login', data)
+    .post('/api/auth/login', data, {
+      headers: clientIp ? { 'X-Client-IP': clientIp } : {}
+    })
     .then(function (response) {
       // Show success icon
       loginIcon.value = "pi pi-check";
