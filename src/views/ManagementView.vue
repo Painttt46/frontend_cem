@@ -180,35 +180,28 @@
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
           emptyMessage="ไม่พบประวัติการแก้ไข">
-          <Column field="created_at" header="เวลา" style="width: 140px">
+          <Column field="created_at" header="เวลา" style="width: 130px">
             <template #body="{ data }">
-              <span class="text-sm">{{ formatDate(data.created_at) }}</span>
+              <span class="text-sm text-600">{{ formatDate(data.created_at) }}</span>
             </template>
           </Column>
-          <Column field="user_name" header="ผู้ใช้" style="width: 120px">
+          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 140px">
             <template #body="{ data }">
-              <div class="flex align-items-center gap-1">
-                <i class="pi pi-user text-xs"></i>
-                <span>{{ data.user_name || 'System' }}</span>
+              <div class="flex align-items-center gap-2">
+                <i class="pi pi-user text-primary"></i>
+                <span class="font-medium">{{ data.user_name || 'ระบบ' }}</span>
               </div>
             </template>
           </Column>
-          <Column field="action" header="การกระทำ" style="width: 100px">
+          <Column header="รายละเอียด">
             <template #body="{ data }">
-              <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" />
+              <div class="flex align-items-center gap-2">
+                <Badge :value="getActionLabel(data.action)" :severity="getActionSeverity(data.action)" />
+                <span>{{ getSummaryText(data) }}</span>
+              </div>
             </template>
           </Column>
-          <Column field="table_name" header="หมวด" style="width: 120px">
-            <template #body="{ data }">
-              <span class="text-sm">{{ getTableLabel(data.table_name) }}</span>
-            </template>
-          </Column>
-          <Column field="record_name" header="รายการ">
-            <template #body="{ data }">
-              <span>{{ data.record_name || `#${data.record_id}` }}</span>
-            </template>
-          </Column>
-          <Column header="รายละเอียด" style="width: 100px">
+          <Column header="" style="width: 60px">
             <template #body="{ data }">
               <Button icon="pi pi-eye" text rounded size="small" @click="showLogDetail(data)" 
                 v-tooltip="'ดูรายละเอียด'" v-if="data.old_data || data.new_data" />
@@ -329,7 +322,7 @@ const formatDate = (date) => {
 }
 
 const getActionLabel = (action) => {
-  const labels = { CREATE: 'สร้าง', UPDATE: 'แก้ไข', DELETE: 'ลบ', LOGIN: 'เข้าสู่ระบบ', LOGOUT: 'ออกจากระบบ' }
+  const labels = { CREATE: '➕ สร้าง', UPDATE: '✏️ แก้ไข', DELETE: '🗑️ ลบ', LOGIN: '🔑 เข้าสู่ระบบ', LOGOUT: '🚪 ออกจากระบบ' }
   return labels[action] || action
 }
 
@@ -340,17 +333,52 @@ const getActionSeverity = (action) => {
 
 const getTableLabel = (table) => {
   const labels = {
-    users: 'ผู้ใช้งาน', tasks: 'โครงการ', leave_requests: 'การลา',
-    car_bookings: 'การจองรถ', daily_work_records: 'งานรายวัน',
-    role_permissions: 'สิทธิ์', settings: 'ตั้งค่า'
+    users: '👤 ผู้ใช้งาน', 
+    tasks: '📋 โครงการ', 
+    task_steps: '📝 ขั้นตอนโครงการ',
+    leave_requests: '🏖️ การลา',
+    car_bookings: '🚗 การจองรถ', 
+    daily_work_records: '📅 งานรายวัน',
+    role_permissions: '🔐 สิทธิ์การเข้าถึง', 
+    settings: '⚙️ ตั้งค่าระบบ',
+    files: '📁 ไฟล์'
   }
   return labels[table] || table
+}
+
+// สร้างข้อความสรุปที่เข้าใจง่าย
+const getSummaryText = (log) => {
+  const action = log.action
+  const table = log.table_name
+  const name = log.record_name || ''
+  
+  if (action === 'LOGIN') return `เข้าสู่ระบบ`
+  if (action === 'LOGOUT') return `ออกจากระบบ`
+  
+  const actionText = { CREATE: 'สร้าง', UPDATE: 'แก้ไข', DELETE: 'ลบ' }[action] || action
+  const tableText = {
+    users: 'ผู้ใช้', tasks: 'โครงการ', task_steps: 'ขั้นตอน',
+    leave_requests: 'คำขอลา', car_bookings: 'การจองรถ',
+    daily_work_records: 'บันทึกงาน', settings: 'การตั้งค่า',
+    role_permissions: 'สิทธิ์', files: 'ไฟล์'
+  }[table] || table
+  
+  return `${actionText}${tableText}: ${name}`
 }
 
 const formatJson = (data) => {
   try {
     const obj = typeof data === 'string' ? JSON.parse(data) : data
-    return JSON.stringify(obj, null, 2)
+    // แสดงเฉพาะ field ที่สำคัญ
+    const important = ['username', 'firstname', 'lastname', 'task_name', 'so_number', 'status', 
+                       'leave_type', 'start_datetime', 'end_datetime', 'work_date', 'location', 'role']
+    const filtered = {}
+    for (const key of Object.keys(obj)) {
+      if (important.includes(key) || !key.includes('_id')) {
+        filtered[key] = obj[key]
+      }
+    }
+    return JSON.stringify(filtered, null, 2)
   } catch {
     return data
   }
