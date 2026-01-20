@@ -232,18 +232,13 @@ export default {
         <head><meta charset="UTF-8"></head>
         <body style="font-family: TH Sarabun New, Sarabun, Arial;">
         
-        <table border="0" cellpadding="0" cellspacing="0" style="width:100%; margin-bottom:20px;">
+        <table border="0" cellpadding="10" style="margin-bottom:15px;">
           <tr>
-            <td style="width:90px; vertical-align:middle; padding:10px;">
-              <img src="${window.location.origin}/NGENT.png" width="80" height="80" onerror="this.style.display='none'"/>
-            </td>
-            <td style="vertical-align:middle; padding-left:15px; border-left:4px solid #1e40af;">
-              <div style="font-size:24pt; font-weight:bold; color:#1e40af;">GENT SOLUTION CO., LTD.</div>
-              <div style="font-size:18pt; color:#64748b; margin-top:5px;">รายงานสรุปการลางานของพนักงาน</div>
-            </td>
-            <td style="vertical-align:top; text-align:right; width:200px;">
-              <div style="font-size:11pt; color:#64748b; margin-bottom:5px;">วันที่พิมพ์: <b>${today}</b></div>
-              <div style="font-size:11pt; color:#64748b;">ช่วงเวลา: <b>${dateRange}</b></div>
+            <td style="text-align:center;">
+              <img src="${window.location.origin}/NGENT.png" width="60" height="60" onerror="this.style.display='none'"/><br/>
+              <span style="font-size:18pt; font-weight:bold; color:#1e40af;">GENT SOLUTION</span><br/>
+              <span style="font-size:14pt; color:#64748b;">รายงานสรุปการลางาน</span><br/>
+              <span style="font-size:11pt; color:#888;">วันที่: ${today} | ช่วง: ${dateRange}</span>
             </td>
           </tr>
         </table>
