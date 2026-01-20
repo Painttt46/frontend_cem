@@ -18,6 +18,9 @@
         <span class="btn-text">อนุมัติการลา</span>
         <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
       </Button>
+      <Button @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="success" raised>
+        <span class="btn-text">Export รายงาน</span>
+      </Button>
     </div>
 
     <!-- Main Content - History -->
@@ -55,6 +58,23 @@
       <template #footer>
         <Button label="ยกเลิก" severity="secondary" @click="showRejectDialog = false" />
         <Button label="ยืนยันไม่อนุมัติ" severity="danger" @click="confirmReject" :disabled="!rejectReason.trim()" />
+      </template>
+    </Dialog>
+
+    <!-- Export Dialog -->
+    <Dialog v-model:visible="showExportDialog" modal header="Export รายงานการลา" :style="{ width: '400px' }" :draggable="false">
+      <div class="export-form">
+        <label class="input-label">ช่วงวันที่</label>
+        <div class="date-range">
+          <Calendar v-model="exportStartDate" dateFormat="dd/mm/yy" placeholder="วันเริ่มต้น" showIcon class="w-full" />
+          <span class="mx-2">ถึง</span>
+          <Calendar v-model="exportEndDate" dateFormat="dd/mm/yy" placeholder="วันสิ้นสุด" showIcon class="w-full" />
+        </div>
+        <small class="text-500">*เว้นว่างเพื่อ export ทั้งหมด</small>
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" severity="secondary" @click="showExportDialog = false" />
+        <Button label="Export" icon="pi pi-file-excel" severity="success" @click="doExport" />
       </template>
     </Dialog>
   </div>
@@ -98,7 +118,11 @@ export default {
       // Reject dialog
       showRejectDialog: false,
       rejectLeaveId: null,
-      rejectReason: ''
+      rejectReason: '',
+      // Export dialog
+      showExportDialog: false,
+      exportStartDate: null,
+      exportEndDate: null
     }
   },
   computed: {
@@ -145,6 +169,150 @@ export default {
     }
   },
   methods: {
+    exportReport() {
+      this.exportStartDate = null
+      this.exportEndDate = null
+      this.showExportDialog = true
+    },
+    doExport() {
+      let records = this.filteredLeaveRecords
+
+      // Filter by date range
+      if (this.exportStartDate || this.exportEndDate) {
+        records = records.filter(r => {
+          const date = new Date(r.start_datetime)
+          if (this.exportStartDate && date < this.exportStartDate) return false
+          if (this.exportEndDate) {
+            const endDate = new Date(this.exportEndDate)
+            endDate.setHours(23, 59, 59)
+            if (date > endDate) return false
+          }
+          return true
+        })
+      }
+
+      if (records.length === 0) {
+        this.$toast.add({ severity: 'warn', summary: 'ไม่มีข้อมูล', detail: 'ไม่มีข้อมูลการลาในช่วงเวลาที่เลือก', life: 3000 })
+        return
+      }
+
+      // เรียงตามวันที่เริ่มลา
+      records = [...records].sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
+
+      // สรุปภาพรวม
+      const summary = {
+        total: records.length,
+        totalDays: records.reduce((sum, r) => sum + (parseFloat(r.total_days) || 0), 0),
+        approved: records.filter(r => r.status === 'approved').length,
+        pending: records.filter(r => r.status === 'pending').length,
+        rejected: records.filter(r => r.status === 'rejected').length,
+        byType: {}
+      }
+      records.forEach(r => {
+        const type = r.leave_type || 'อื่นๆ'
+        if (!summary.byType[type]) summary.byType[type] = { count: 0, days: 0 }
+        summary.byType[type].count++
+        summary.byType[type].days += parseFloat(r.total_days) || 0
+      })
+
+      const statusMap = { pending: 'รออนุมัติ', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ' }
+      const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
+      const dateRange = this.exportStartDate || this.exportEndDate 
+        ? `${this.exportStartDate ? this.exportStartDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'} - ${this.exportEndDate ? this.exportEndDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'}`
+        : 'ทั้งหมด'
+      
+      let html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head><meta charset="UTF-8">
+        <style>
+          body { font-family: 'TH Sarabun New', 'Sarabun', sans-serif; }
+          .header { text-align: center; font-size: 18pt; font-weight: bold; }
+          .sub-header { text-align: center; font-size: 14pt; margin-bottom: 10px; }
+          .date-info { text-align: right; font-size: 11pt; }
+          .range-info { text-align: right; font-size: 11pt; margin-bottom: 15px; }
+          table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+          th { background-color: #1e40af; color: white; font-weight: bold; padding: 10px; border: 1px solid #000; font-size: 12pt; }
+          td { padding: 8px; border: 1px solid #000; font-size: 11pt; }
+          tr:nth-child(even) { background-color: #f3f4f6; }
+          .status-approved { color: #059669; font-weight: bold; }
+          .status-pending { color: #d97706; font-weight: bold; }
+          .status-rejected { color: #dc2626; font-weight: bold; }
+          .summary-box { background: #f0f9ff; border: 1px solid #0284c7; padding: 15px; margin: 15px 0; border-radius: 5px; }
+          .summary-title { font-size: 14pt; font-weight: bold; color: #0369a1; margin-bottom: 10px; }
+          .summary-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+          .summary-item { font-size: 11pt; }
+          .summary-label { color: #64748b; }
+          .summary-value { font-weight: bold; color: #1e293b; }
+          .footer { margin-top: 30px; font-size: 10pt; }
+          .signature { margin-top: 50px; }
+          .sig-line { display: inline-block; width: 200px; border-bottom: 1px solid #000; margin: 0 30px; }
+        </style>
+        </head><body>
+        <div class="header">บริษัท เจนที โซลูชั่น จำกัด</div>
+        <div class="sub-header">รายงานสรุปการลางานของพนักงาน</div>
+        <div class="date-info">วันที่พิมพ์: ${today}</div>
+        <div class="range-info">ช่วงเวลา: ${dateRange}</div>
+        
+        <div class="summary-box">
+          <div class="summary-title">📊 สรุปภาพรวม</div>
+          <div class="summary-grid">
+            <div class="summary-item"><span class="summary-label">รายการทั้งหมด:</span> <span class="summary-value">${summary.total} รายการ</span></div>
+            <div class="summary-item"><span class="summary-label">รวมวันลา:</span> <span class="summary-value">${summary.totalDays} วัน</span></div>
+            <div class="summary-item"><span class="summary-label">อนุมัติแล้ว:</span> <span class="summary-value" style="color:#059669">${summary.approved} รายการ</span></div>
+            <div class="summary-item"><span class="summary-label">รออนุมัติ:</span> <span class="summary-value" style="color:#d97706">${summary.pending} รายการ</span></div>
+            <div class="summary-item"><span class="summary-label">ไม่อนุมัติ:</span> <span class="summary-value" style="color:#dc2626">${summary.rejected} รายการ</span></div>
+          </div>
+          <div style="margin-top:10px"><span class="summary-label">แยกตามประเภท:</span> 
+            ${Object.entries(summary.byType).map(([type, data]) => `<span class="summary-value">${type}</span> ${data.count} ครั้ง (${data.days} วัน)`).join(' | ')}
+          </div>
+        </div>
+
+        <table>
+          <tr>
+            <th>ลำดับ</th>
+            <th>ชื่อ-นามสกุล</th>
+            <th>ตำแหน่ง</th>
+            <th>ประเภทการลา</th>
+            <th>วันที่เริ่มลา</th>
+            <th>วันที่สิ้นสุด</th>
+            <th>จำนวน(วัน)</th>
+            <th>เหตุผล</th>
+            <th>สถานะ</th>
+          </tr>`
+
+      records.forEach((r, i) => {
+        const statusClass = r.status === 'approved' ? 'status-approved' : r.status === 'rejected' ? 'status-rejected' : 'status-pending'
+        html += `<tr>
+          <td style="text-align:center">${i + 1}</td>
+          <td>${r.user_name || '-'}</td>
+          <td>${r.employee_position || '-'}</td>
+          <td>${r.leave_type || '-'}</td>
+          <td style="text-align:center">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH') : '-'}</td>
+          <td style="text-align:center">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH') : '-'}</td>
+          <td style="text-align:center">${r.total_days || '-'}</td>
+          <td>${r.reason || '-'}</td>
+          <td style="text-align:center" class="${statusClass}">${statusMap[r.status] || r.status}</td>
+        </tr>`
+      })
+
+      html += `</table>
+        <div class="footer">จำนวนรายการทั้งหมด: ${records.length} รายการ</div>
+        <div class="signature">
+          <span>ผู้จัดทำ <span class="sig-line"></span></span>
+          <span>ผู้ตรวจสอบ <span class="sig-line"></span></span>
+        </div>
+        </body></html>`
+
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `รายงานการลา_${new Date().toISOString().slice(0, 10)}.xls`
+      link.click()
+      URL.revokeObjectURL(link.href)
+
+      this.showExportDialog = false
+      this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'Export รายงานเรียบร้อย', life: 3000 })
+    },
     async checkLeaveApprover() {
       try {
         const userId = localStorage.getItem('soc_user_id')
@@ -482,6 +650,13 @@ export default {
   left: 100%;
 }
 
+.export-btn {
+  min-width: 160px;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+}
+
 .btn-text {
   margin-left: 0.5rem;
   font-size: 1rem;
@@ -603,7 +778,7 @@ export default {
     flex-direction: column;
   }
 
-  .leave-btn, .approval-btn {
+  .leave-btn, .approval-btn, .export-btn {
     width: 100% !important;
     min-width: auto !important;
   }
@@ -660,5 +835,26 @@ export default {
 
 .reject-form textarea {
   width: 100%;
+}
+
+.export-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.export-form .input-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.export-form .date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-form .date-range .p-calendar {
+  flex: 1;
 }
 </style>
