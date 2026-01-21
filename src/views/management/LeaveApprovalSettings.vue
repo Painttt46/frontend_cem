@@ -119,6 +119,7 @@ useDragScroll('.p-datatable-wrapper')
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from '@/utils/axiosConfig'
+import { PackageSearch } from 'lucide'
 
 const toast = useToast()
 
@@ -134,8 +135,8 @@ const loadDepartments = async () => {
   try {
     const res = await axios.get('/api/setting/departments')
     departments.value = res.data
-  } catch {
-
+  } catch (error) {
+    console.error(error)
   }
 }
 
@@ -143,8 +144,8 @@ const loadPositions = async () => {
   try {
     const res = await axios.get('/api/setting/positions')
     positions.value = res.data
-  } catch {
-
+  } catch (error) {
+    console.error(error)
   }
 }
 
