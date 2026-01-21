@@ -1,7 +1,7 @@
 <template>
   <div class="settings-container">
     <Toast />
-    
+
     <!-- Header -->
     <Card class="header-card mb-4">
       <template #content>
@@ -26,9 +26,9 @@
         </template>
         <template #content>
           <p class="level-desc">เมื่อมีคำขอลาใหม่ ระบบจะส่ง Email แจ้งหัวหน้างานที่กำหนดไว้</p>
-          
+
           <div class="add-approver">
-            <Dropdown v-model="newApproverLevel1" :options="availableUsers" optionLabel="name" optionValue="id" 
+            <Dropdown v-model="newApproverLevel1" :options="availableUsers" optionLabel="name" optionValue="id"
               placeholder="เลือกผู้อนุมัติ" class="w-full" filter />
             <Button icon="pi pi-plus" label="เพิ่ม" @click="addApprover(1)" :disabled="!newApproverLevel1" />
           </div>
@@ -45,6 +45,19 @@
             <Column header="สิทธิ์อนุมัติ">
               <template #body="{ data }">
                 <InputSwitch v-model="data.can_approve" @change="updateApprover(1, data)" />
+              </template>
+            </Column>
+            <Column header="แผนกที่ดูแล" style="min-width: 200px">
+              <template #body="{ data }">
+                <MultiSelect v-model="data.department_ids" :options="departments" optionLabel="name" optionValue="name"
+                  placeholder="ทุกแผนก" @change="updateApprover(1, data)" display="chip" class="w-full" />
+              </template>
+            </Column>
+
+            <Column header="ตำแหน่งที่ดูแล" style="min-width: 200px">
+              <template #body="{ data }">
+                <MultiSelect v-model="data.position_ids" :options="positions" optionLabel="name" optionValue="name"
+                  placeholder="ทุกตำแหน่ง" @change="updateApprover(1, data)" display="chip" class="w-full" />
               </template>
             </Column>
             <Column header="">
@@ -66,9 +79,9 @@
         </template>
         <template #content>
           <p class="level-desc">หลังจากหัวหน้างานอนุมัติขั้นที่ 1 ระบบจะส่ง Email แจ้ง HR ที่กำหนดไว้</p>
-          
+
           <div class="add-approver">
-            <Dropdown v-model="newApproverLevel2" :options="availableUsers" optionLabel="name" optionValue="id" 
+            <Dropdown v-model="newApproverLevel2" :options="availableUsers" optionLabel="name" optionValue="id"
               placeholder="เลือกผู้อนุมัติ" class="w-full" filter />
             <Button icon="pi pi-plus" label="เพิ่ม" @click="addApprover(2)" :disabled="!newApproverLevel2" />
           </div>
@@ -114,6 +127,26 @@ const level2Approvers = ref([])
 const allUsers = ref([])
 const newApproverLevel1 = ref(null)
 const newApproverLevel2 = ref(null)
+const departments = ref([])
+const positions = ref([])
+
+const loadDepartments = async () => {
+  try {
+    const res = await axios.get('/api/setting/departments')
+    departments.value = res.data
+  } catch {
+
+  }
+}
+
+const loadPositions = async () => {
+  try {
+    const res = await axios.get('/api/setting/positions')
+    positions.value = res.data
+  } catch {
+
+  }
+}
 
 const availableUsers = computed(() => {
   return allUsers.value.map(u => ({
@@ -128,7 +161,7 @@ const loadSettings = async () => {
     level1Approvers.value = res.data.level1 || []
     level2Approvers.value = res.data.level2 || []
   } catch { // ignore
-    
+
   }
 }
 
@@ -137,7 +170,7 @@ const loadUsers = async () => {
     const res = await axios.get('/api/users')
     allUsers.value = res.data.filter(u => u.is_active)
   } catch { // ignore
-    
+
   }
 }
 
@@ -152,12 +185,12 @@ const addApprover = async (level) => {
       receive_email: true,
       can_approve: true
     })
-    
+
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'เพิ่มผู้อนุมัติแล้ว', life: 3000 })
-    
+
     if (level === 1) newApproverLevel1.value = null
     else newApproverLevel2.value = null
-    
+
     await loadSettings()
   } catch (err) {
     toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: err.response?.data?.error || 'ไม่สามารถเพิ่มได้', life: 3000 })
@@ -168,10 +201,12 @@ const updateApprover = async (level, data) => {
   try {
     await axios.put(`/api/settings/leave-approval/${level}/${data.user_id}`, {
       receive_email: data.receive_email,
-      can_approve: data.can_approve
+      can_approve: data.can_approve,
+      department_ids: data.department_ids || [],
+      position_ids: data.position_ids || []
     })
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'อัพเดทแล้ว', life: 2000 })
-  } catch { // ignore
+  } catch {
     toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถอัพเดทได้', life: 3000 })
   }
 }
@@ -189,6 +224,8 @@ const removeApprover = async (level, userId) => {
 onMounted(() => {
   loadSettings()
   loadUsers()
+  loadDepartments()
+  loadPositions()
 })
 </script>
 
@@ -288,7 +325,7 @@ onMounted(() => {
   .add-approver {
     flex-direction: column;
   }
-  
+
   .add-approver .p-button {
     width: 100%;
   }
