@@ -47,7 +47,7 @@
                 <InputSwitch v-model="data.can_approve" @change="updateApprover(1, data)" />
               </template>
             </Column>
-            <Column header="แผนกที่ดูแล" style="min-width: 200px; max-width: 300px">
+            <Column header="แผนกที่ดูแล" style="width: 180px">
               <template #body="{ data }">
                 <MultiSelect 
                   v-model="data.department_ids" 
@@ -60,12 +60,12 @@
                   :maxSelectedLabels="1"
                   selectedItemsLabel="{0} แผนก"
                   emptyMessage="ไม่พบข้อมูล"
-                  :showToggleAll="true"
+                  :showToggleAll="false"
                 />
               </template>
             </Column>
 
-            <Column header="ตำแหน่งที่ดูแล" style="min-width: 200px; max-width: 300px">
+            <Column header="ตำแหน่งที่ดูแล" style="width: 180px">
               <template #body="{ data }">
                 <MultiSelect 
                   v-model="data.position_ids" 
@@ -78,7 +78,7 @@
                   :maxSelectedLabels="1"
                   selectedItemsLabel="{0} ตำแหน่ง"
                   emptyMessage="ไม่พบข้อมูล"
-                  :showToggleAll="true"
+                  :showToggleAll="false"
                 />
               </template>
             </Column>
