@@ -47,17 +47,39 @@
                 <InputSwitch v-model="data.can_approve" @change="updateApprover(1, data)" />
               </template>
             </Column>
-            <Column header="แผนกที่ดูแล" style="min-width: 200px">
+            <Column header="แผนกที่ดูแล" style="min-width: 200px; max-width: 300px">
               <template #body="{ data }">
-                <MultiSelect v-model="data.department_ids" :options="departments" optionLabel="name" optionValue="name"
-                  placeholder="ทุกแผนก" @change="updateApprover(1, data)" display="chip" class="w-full" />
+                <MultiSelect 
+                  v-model="data.department_ids" 
+                  :options="departments" 
+                  optionLabel="name" 
+                  optionValue="name"
+                  placeholder="ทุกแผนก" 
+                  @change="updateApprover(1, data)" 
+                  class="w-full custom-multiselect"
+                  :maxSelectedLabels="1"
+                  selectedItemsLabel="{0} แผนก"
+                  emptyMessage="ไม่พบข้อมูล"
+                  :showToggleAll="true"
+                />
               </template>
             </Column>
 
-            <Column header="ตำแหน่งที่ดูแล" style="min-width: 200px">
+            <Column header="ตำแหน่งที่ดูแล" style="min-width: 200px; max-width: 300px">
               <template #body="{ data }">
-                <MultiSelect v-model="data.position_ids" :options="positions" optionLabel="name" optionValue="name"
-                  placeholder="ทุกตำแหน่ง" @change="updateApprover(1, data)" display="chip" class="w-full" />
+                <MultiSelect 
+                  v-model="data.position_ids" 
+                  :options="positions" 
+                  optionLabel="name" 
+                  optionValue="name"
+                  placeholder="ทุกตำแหน่ง" 
+                  @change="updateApprover(1, data)" 
+                  class="w-full custom-multiselect"
+                  :maxSelectedLabels="1"
+                  selectedItemsLabel="{0} ตำแหน่ง"
+                  emptyMessage="ไม่พบข้อมูล"
+                  :showToggleAll="true"
+                />
               </template>
             </Column>
             <Column header="">
@@ -329,5 +351,63 @@ onMounted(() => {
   .add-approver .p-button {
     width: 100%;
   }
+}
+
+/* Custom MultiSelect Styling */
+.custom-multiselect {
+  border-radius: 8px;
+}
+
+:deep(.custom-multiselect .p-multiselect-label) {
+  padding: 0.5rem 0.75rem;
+}
+
+:deep(.custom-multiselect .p-multiselect-token) {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  margin: 2px;
+}
+
+:deep(.custom-multiselect .p-multiselect-token-icon) {
+  color: white;
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+  background: #f8fafc;
+  color: #374151;
+  font-weight: 600;
+  padding: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:hover) {
+  background: #f1f5f9 !important;
+}
+
+:deep(.p-inputswitch.p-inputswitch-checked .p-inputswitch-slider) {
+  background: #10b981;
+}
+
+:deep(.p-multiselect-panel .p-multiselect-header) {
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+:deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item) {
+  padding: 0.75rem 1rem;
+}
+
+:deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item.p-highlight) {
+  background: #eff6ff;
+  color: #1d4ed8;
 }
 </style>
