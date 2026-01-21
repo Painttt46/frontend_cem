@@ -119,7 +119,6 @@ useDragScroll('.p-datatable-wrapper')
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from '@/utils/axiosConfig'
-import { PackageSearch } from 'lucide'
 
 const toast = useToast()
 
