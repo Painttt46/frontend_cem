@@ -117,6 +117,8 @@ export default {
       showApprovalDialog: false,
       isLeaveApprover: false,
       approverLevel: 0,  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
+      approverDepartments: [],  // แผนกที่ดูแล
+      approverPositions: [],    // ตำแหน่งที่ดูแล
       // Reject dialog
       showRejectDialog: false,
       rejectLeaveId: null,
@@ -154,20 +156,30 @@ export default {
       return filtered
     },
     pendingLeaveRecords() {
-      return this.filteredLeaveRecords.filter(record => 
+      const pending = this.filteredLeaveRecords.filter(record => 
         record.status === 'pending' || record.status === 'pending_level2'
       )
+      
+      // Filter ตาม approver level และ department/position
+      if (this.approverLevel === 0) return []
+      
+      return pending.filter(record => {
+        // เช็ค level
+        if (this.approverLevel === 1 && record.status !== 'pending') return false
+        if (this.approverLevel === 2 && record.status !== 'pending_level2') return false
+        // level 3 ดูได้ทั้งหมด
+        
+        // เช็ค department/position filter
+        const deptMatch = this.approverDepartments.length === 0 || 
+          this.approverDepartments.includes(record.department)
+        const posMatch = this.approverPositions.length === 0 || 
+          this.approverPositions.includes(record.position)
+        
+        return deptMatch && posMatch
+      })
     },
     pendingLeaveCount() {
-      // นับเฉพาะ records ที่ user สามารถ approve ได้
-      if (this.approverLevel === 0) return 0
-      if (this.approverLevel === 3) return this.pendingLeaveRecords.length
-      
-      return this.pendingLeaveRecords.filter(record => {
-        if (this.approverLevel === 1 && record.status === 'pending') return true
-        if (this.approverLevel === 2 && record.status === 'pending_level2') return true
-        return false
-      }).length
+      return this.pendingLeaveRecords.length
     }
   },
   methods: {
@@ -305,6 +317,8 @@ export default {
         if (this.hasAccess('/leave_work/approve')) {
           this.isLeaveApprover = true
           this.approverLevel = 3
+          this.approverDepartments = []
+          this.approverPositions = []
           return
         }
         
@@ -314,16 +328,32 @@ export default {
         const level1 = response.data.level1 || []
         const level2 = response.data.level2 || []
         
-        const isLevel1 = level1.some(a => a.user_id == userId && a.can_approve)
-        const isLevel2 = level2.some(a => a.user_id == userId && a.can_approve)
+        const myLevel1 = level1.find(a => a.user_id == userId && a.can_approve)
+        const myLevel2 = level2.find(a => a.user_id == userId && a.can_approve)
         
-        this.isLeaveApprover = isLevel1 || isLevel2
+        this.isLeaveApprover = myLevel1 || myLevel2
         
-        if (isLevel1 && isLevel2) {
+        // รวม department/position filters จากทุก level ที่มีสิทธิ์
+        let depts = []
+        let positions = []
+        
+        if (myLevel1) {
+          depts = depts.concat(myLevel1.department_ids || [])
+          positions = positions.concat(myLevel1.position_ids || [])
+        }
+        if (myLevel2) {
+          depts = depts.concat(myLevel2.department_ids || [])
+          positions = positions.concat(myLevel2.position_ids || [])
+        }
+        
+        this.approverDepartments = [...new Set(depts)]
+        this.approverPositions = [...new Set(positions)]
+        
+        if (myLevel1 && myLevel2) {
           this.approverLevel = 3
-        } else if (isLevel1) {
+        } else if (myLevel1) {
           this.approverLevel = 1
-        } else if (isLevel2) {
+        } else if (myLevel2) {
           this.approverLevel = 2
         } else {
           this.approverLevel = 0
