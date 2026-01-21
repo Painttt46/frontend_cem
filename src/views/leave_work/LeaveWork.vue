@@ -172,11 +172,20 @@ export default {
         if (this.approverLevel === 2 && record.status !== 'pending_level2') return false
         // level 3 ดูได้ทั้งหมด
         
-        // เช็ค department/position filter
+        // เช็ค department filter (ว่าง = ทุกแผนก) - case insensitive
+        const recordDept = (record.department || '').toLowerCase()
         const deptMatch = this.approverDepartments.length === 0 || 
-          this.approverDepartments.includes(record.department)
+          this.approverDepartments.some(d => d.toLowerCase() === recordDept)
+        
+        // เช็ค position filter (ว่าง = ทุกตำแหน่ง) - case insensitive
+        const recordPos = (record.position || '').toLowerCase()
         const posMatch = this.approverPositions.length === 0 || 
-          this.approverPositions.includes(record.position)
+          this.approverPositions.some(p => p.toLowerCase() === recordPos)
+        
+        // ถ้าตั้งทั้ง dept และ pos → match อย่างใดอย่างหนึ่ง
+        if (this.approverDepartments.length > 0 && this.approverPositions.length > 0) {
+          return deptMatch || posMatch
+        }
         
         return deptMatch && posMatch
       })
