@@ -160,6 +160,9 @@ export default {
         record.status === 'pending' || record.status === 'pending_level2'
       )
       
+      // Admin เห็นทุกรายการ
+      if (this.currentUserRole === 'admin') return pending
+      
       // Filter ตาม approver level และ department/position
       if (this.approverLevel === 0) return []
       
