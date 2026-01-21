@@ -123,7 +123,7 @@ export default {
           });
           const pending = bookings?.filter(b => b.status === 'pending') || [];
           if (pending.length > 0) {
-            notifs.push({ icon: '🚗', text: `มี ${pending.length} การจองรถรออนุมัติ`, action: 'ดูการจองรถรออนุมัติ' });
+            notifs.push({ icon: '🚗', text: `มี ${pending.length} การจองรถถูกจองอยู่`, action: 'ดูการจองรถรออนุมัติ' });
           }
         }
 

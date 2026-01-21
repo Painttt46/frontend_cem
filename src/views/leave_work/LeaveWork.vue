@@ -140,8 +140,8 @@ export default {
       return this.hasAccess('/leave_work/approve')
     },
     canApproveLeave() {
-      // ตรวจสอบ permission หรือ อยู่ใน leave approval settings
-      return this.hasAccess('/leave_work/approve') || this.isLeaveApprover
+      // เห็นปุ่มเฉพาะคนที่มี permission เท่านั้น
+      return this.hasAccess('/leave_work/approve')
     },
     filteredLeaveRecords() {
       
@@ -312,17 +312,20 @@ export default {
     async checkLeaveApprover() {
       try {
         const userId = localStorage.getItem('soc_user_id')
+        const hasPermission = this.hasAccess('/leave_work/approve')
         
-        // เช็คจาก permission แทน hardcode role
-        if (this.hasAccess('/leave_work/approve')) {
+        // ถ้ามี permission แสดงปุ่มได้
+        if (hasPermission) {
           this.isLeaveApprover = true
-          this.approverLevel = 3
+        }
+        
+        if (!userId) {
+          // มี permission แต่ไม่มี userId → เห็นปุ่มแต่ไม่มีรายการ
+          this.approverLevel = 0
           this.approverDepartments = []
           this.approverPositions = []
           return
         }
-        
-        if (!userId) return
         
         const response = await this.$http.get('/api/settings/leave-approval')
         const level1 = response.data.level1 || []
@@ -331,7 +334,10 @@ export default {
         const myLevel1 = level1.find(a => a.user_id == userId && a.can_approve)
         const myLevel2 = level2.find(a => a.user_id == userId && a.can_approve)
         
-        this.isLeaveApprover = myLevel1 || myLevel2
+        // ถ้าอยู่ใน leave-approval settings ก็เป็น approver ได้
+        if (myLevel1 || myLevel2) {
+          this.isLeaveApprover = true
+        }
         
         // รวม department/position filters จากทุก level ที่มีสิทธิ์
         let depts = []
