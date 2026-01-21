@@ -242,6 +242,10 @@ export default {
     disabled: {
       type: Boolean,
       default: false
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false
     }
   },
   inject: ['$toast'],
@@ -413,13 +417,16 @@ export default {
       return types[type] || type
     },
     canApproveRecord(record) {
-      // approverLevel: 0 = ไม่มีสิทธิ์, 1 = level 1 only, 2 = level 2 only, 3 = ทั้งสอง
-      if (this.approverLevel === 0) return false
-      
       // ต้องเป็น status ที่รออนุมัติเท่านั้น
       if (record.status !== 'pending' && record.status !== 'pending_level2') return false
       
-      // admin หรือมีสิทธิ์ทั้งสอง
+      // Admin approve/reject ได้ทุกรายการ
+      if (this.isAdmin) return true
+      
+      // approverLevel: 0 = ไม่มีสิทธิ์, 1 = level 1 only, 2 = level 2 only, 3 = ทั้งสอง
+      if (this.approverLevel === 0) return false
+      
+      // มีสิทธิ์ทั้งสอง level
       if (this.approverLevel === 3) return true
       
       // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'

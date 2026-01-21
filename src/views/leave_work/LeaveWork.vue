@@ -45,6 +45,7 @@
         :records="pendingLeaveRecords" 
         :approver-level="approverLevel"
         :disabled="approving"
+        :is-admin="currentUserRole === 'admin'"
         @approve-leave="approveLeave" 
         @reject-leave="openRejectDialog" 
         @close-form="showApprovalDialog = false"
@@ -160,13 +161,15 @@ export default {
         record.status === 'pending' || record.status === 'pending_level2'
       )
       
+      console.log('Pending records:', pending.length, 'Approver depts:', this.approverDepartments, 'Approver pos:', this.approverPositions)
+      
       // Admin เห็นทุกรายการ
       if (this.currentUserRole === 'admin') return pending
       
       // Filter ตาม approver level และ department/position
       if (this.approverLevel === 0) return []
       
-      return pending.filter(record => {
+      const filtered = pending.filter(record => {
         // เช็ค level
         if (this.approverLevel === 1 && record.status !== 'pending') return false
         if (this.approverLevel === 2 && record.status !== 'pending_level2') return false
@@ -175,12 +178,14 @@ export default {
         // เช็ค department filter (ว่าง = ทุกแผนก) - case insensitive
         const recordDept = (record.department || '').toLowerCase()
         const deptMatch = this.approverDepartments.length === 0 || 
-          this.approverDepartments.some(d => d.toLowerCase() === recordDept)
+          this.approverDepartments.some(d => (d || '').toLowerCase() === recordDept)
         
         // เช็ค position filter (ว่าง = ทุกตำแหน่ง) - case insensitive
         const recordPos = (record.position || '').toLowerCase()
         const posMatch = this.approverPositions.length === 0 || 
-          this.approverPositions.some(p => p.toLowerCase() === recordPos)
+          this.approverPositions.some(p => (p || '').toLowerCase() === recordPos)
+        
+        console.log('Record:', record.user_name, 'dept:', recordDept, 'pos:', recordPos, 'deptMatch:', deptMatch, 'posMatch:', posMatch)
         
         // ถ้าตั้งทั้ง dept และ pos → match อย่างใดอย่างหนึ่ง
         if (this.approverDepartments.length > 0 && this.approverPositions.length > 0) {
@@ -189,6 +194,9 @@ export default {
         
         return deptMatch && posMatch
       })
+      
+      console.log('Filtered result:', filtered.length)
+      return filtered
     },
     pendingLeaveCount() {
       return this.pendingLeaveRecords.length
@@ -366,6 +374,14 @@ export default {
         
         this.approverDepartments = [...new Set(depts)]
         this.approverPositions = [...new Set(positions)]
+        
+        console.log('Approver settings:', { 
+          userId, 
+          myLevel1, 
+          myLevel2, 
+          depts: this.approverDepartments, 
+          positions: this.approverPositions 
+        })
         
         if (myLevel1 && myLevel2) {
           this.approverLevel = 3
