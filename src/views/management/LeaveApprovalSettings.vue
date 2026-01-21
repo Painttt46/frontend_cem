@@ -132,7 +132,7 @@ const positions = ref([])
 
 const loadDepartments = async () => {
   try {
-    const res = await axios.get('/api/setting/departments')
+    const res = await axios.get('/api/settings/departments')
     departments.value = res.data
   } catch (error) {
     console.error(error)
@@ -141,7 +141,7 @@ const loadDepartments = async () => {
 
 const loadPositions = async () => {
   try {
-    const res = await axios.get('/api/setting/positions')
+    const res = await axios.get('/api/settings/positions')
     positions.value = res.data
   } catch (error) {
     console.error(error)
