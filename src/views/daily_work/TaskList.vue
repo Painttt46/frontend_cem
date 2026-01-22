@@ -522,12 +522,19 @@ export default {
   computed: {
     workStatusFilterOptions() {
       const options = [{ label: 'ทั้งหมด', value: null }]
-      this.workStatuses.forEach(s => {
-        options.push({
-          label: s.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim(),
-          value: s.value
-        })
+      
+      // เอาเฉพาะ statuses ที่มีใน taskWorks
+      const existingValues = []
+      this.taskWorks.forEach(w => {
+        if (w.work_status && !existingValues.includes(w.work_status)) {
+          options.push({
+            label: this.getStatusLabel(w.work_status),
+            value: w.work_status
+          })
+          existingValues.push(w.work_status)
+        }
       })
+      
       return options
     },
     enrichedTasks() {
