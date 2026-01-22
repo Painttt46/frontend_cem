@@ -656,7 +656,7 @@ export default {
             formData.append('files', file)
           })
           
-          const uploadResponse = await axios.post('/api/files/upload', formData, {
+          const uploadResponse = await axios.post('/api/files/upload?type=leave', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
             }

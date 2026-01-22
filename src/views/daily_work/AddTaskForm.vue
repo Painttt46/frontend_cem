@@ -169,7 +169,7 @@ export default {
       })
 
       try {
-        const response = await this.$http.post('/api/files/upload', formData, {
+        const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
         console.log('Upload response:', response.data)
