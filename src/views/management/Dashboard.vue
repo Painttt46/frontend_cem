@@ -489,11 +489,6 @@ const parseCategoryArray = (category) => {
   return category.split(',').map(c => c.trim()).filter(c => c)
 }
 
-const getStatusSeverity = (status) => {
-  const map = { 'completed': 'success', 'in_progress': 'info', 'pending': 'warning' }
-  return map[status] || 'secondary'
-}
-
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
