@@ -95,13 +95,15 @@
             <Column field="category" header="หมวดหมู่" style="min-width: 120px">
               <template #body="{ data }">
                 <div class="category-badges-small">
-                  <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge">{{ cat }}</span>
+                  <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge" 
+                        :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
                 </div>
               </template>
             </Column>
             <Column field="work_status" header="สถานะ" style="min-width: 100px">
               <template #body="{ data }">
-                <Badge :value="data.work_status || '-'" :severity="getStatusSeverity(data.work_status)" />
+                <Badge :value="data.work_status || '-'" 
+                       :style="{ backgroundColor: getStatusColor(data.work_status), color: '#fff' }" />
               </template>
             </Column>
             <Column field="location" header="สถานที่" style="min-width: 120px" />
@@ -555,9 +557,13 @@ const leaveChart = ref(null)
 const taskChart = ref(null)
 let leaveChartInstance = null
 let taskChartInstance = null
+const workStatusColors = ref({})
+const categoryColors = ref({})
 
 onMounted(() => {
   loadLeaveTypeColors()
+  loadWorkStatusColors()
+  loadCategoryColors()
   loadData()
 })
 
@@ -601,9 +607,49 @@ const loadLeaveTypeColors = async () => {
   } catch (error) {
     handleError(error, {
       customMessage: 'ไม่สามารถโหลดสีประเภทการลาได้',
-      showToast: false // ไม่แสดง toast เพราะไม่สำคัญมาก
+      showToast: false
     })
   }
+}
+
+const loadWorkStatusColors = async () => {
+  try {
+    const response = await axios.get('/api/settings/statuses')
+    const colorMap = { 'ไม่ระบุ': '#9e9e9e' }
+    response.data.forEach(status => {
+      colorMap[status.value] = status.color
+    })
+    workStatusColors.value = colorMap
+  } catch (error) {
+    workStatusColors.value = {
+      'pending': '#f59e0b',
+      'in_progress': '#4A90E2',
+      'completed': '#10b981',
+      'cancelled': '#ef4444',
+      'ไม่ระบุ': '#9e9e9e'
+    }
+  }
+}
+
+const loadCategoryColors = async () => {
+  try {
+    const response = await axios.get('/api/settings/categories')
+    const colorMap = {}
+    response.data.forEach(cat => {
+      colorMap[cat.value] = cat.color
+    })
+    categoryColors.value = colorMap
+  } catch (error) {
+    categoryColors.value = {}
+  }
+}
+
+const getCategoryColor = (cat) => {
+  return categoryColors.value[cat] || '#6c757d'
+}
+
+const getStatusColor = (status) => {
+  return workStatusColors.value[status] || '#6c757d'
 }
 
 const loadData = async () => {
@@ -843,17 +889,11 @@ const renderCharts = (leaves, tasks) => {
   allTasks.value = tasks
   const taskStatus = {}
   tasks.forEach(t => {
-    const status = t.status || 'pending'
+    const status = t.status || 'ไม่ระบุ'
     taskStatus[status] = (taskStatus[status] || 0) + 1
   })
 
   const statusLabels = Object.keys(taskStatus)
-  const statusColors = {
-    'pending': '#f59e0b',
-    'in_progress': '#4A90E2', 
-    'completed': '#10b981',
-    'cancelled': '#ef4444'
-  }
 
   taskChartInstance = new Chart(taskChart.value, {
     type: 'doughnut',
@@ -861,7 +901,7 @@ const renderCharts = (leaves, tasks) => {
       labels: statusLabels,
       datasets: [{
         data: Object.values(taskStatus),
-        backgroundColor: statusLabels.map(s => statusColors[s] || '#6c757d')
+        backgroundColor: statusLabels.map(s => workStatusColors.value[s] || '#6c757d')
       }]
     },
     options: {
