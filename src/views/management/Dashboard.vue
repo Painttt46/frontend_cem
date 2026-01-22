@@ -334,7 +334,8 @@
       <Column field="category" header="หมวดหมู่" style="min-width: 150px">
         <template #body="{ data }">
           <div class="category-badges-small">
-            <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge">{{ cat }}</span>
+            <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge"
+                  :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
           </div>
         </template>
       </Column>
@@ -373,7 +374,7 @@ const selectedTaskStatus = ref(null)
 
 const filteredTasksByStatus = computed(() => {
   if (!selectedTaskStatus.value) return []
-  return allTasks.value.filter(t => (t.status || 'pending') === selectedTaskStatus.value)
+  return allTasks.value.filter(t => (t.status || 'ไม่ระบุ') === selectedTaskStatus.value)
 })
 
 // User filter
