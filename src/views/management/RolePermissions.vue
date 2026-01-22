@@ -147,23 +147,13 @@ onMounted(async () => {
 
 const loadRoles = async () => {
   try {
-    
-    const response = await axios.get('/api/users/roles', {
-    })
-    
+    const response = await axios.get('/api/users/roles')
     roles.value = response.data.roles.map(role => ({
-      label: role.charAt(0).toUpperCase() + role.slice(1),
+      label: role.toLowerCase(),
       value: role
     }))
   } catch (error) {
-    
-    // Fallback to default roles
-    roles.value = [
-      { label: 'Superadmin', value: 'superadmin' },
-      { label: 'Admin', value: 'admin' },
-      { label: 'Manager', value: 'manager' },
-      { label: 'User', value: 'user' }
-    ]
+    roles.value = []
   }
 }
 

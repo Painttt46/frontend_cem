@@ -327,7 +327,7 @@
   <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false" :userId="selectedUserId" />
   
   <!-- Task Status Dialog -->
-  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus" :style="{ width: '90vw', maxWidth: '900px' }">
+  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
     <DataTable :value="filteredTasksByStatus" paginator :rows="10" sortField="task_name" :sortOrder="1">
       <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
       <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
