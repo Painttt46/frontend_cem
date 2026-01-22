@@ -100,30 +100,53 @@ export default {
         const token = localStorage.getItem('soc_token');
         if (!token) return;
         
+        const userId = localStorage.getItem('soc_user_id');
         const role = localStorage.getItem('soc_role');
         const notifs = [];
 
-        // เช็คลางานรออนุมัติ (สำหรับ admin/hr)
-        if (role === 'admin' || role === 'hr') {
-          const { data: leaves } = await chatAxios.get('/api/leave', {
-            headers: { Authorization: `Bearer ${token}` },
-            silent: true
+        // เช็คสิทธิ์จาก role_permissions
+        const { data: permData } = await chatAxios.get(`/api/role-permissions/${role}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const permissions = permData.permissions || [];
+        
+        // เช็คลางานรออนุมัติ - ถ้ามีสิทธิ์เข้าหน้า /leave_work/approve
+        const canApproveLeave = permissions.some(p => p.page_path === '/leave_work/approve' && p.has_access);
+        if (canApproveLeave) {
+          // เช็ค level จาก leave_approval_settings
+          const { data: approvalSettings } = await chatAxios.get('/api/settings/leave-approval', {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          const pending = leaves?.filter(l => l.status === 'pending') || [];
+          const isLevel1 = approvalSettings.level1?.some(a => a.user_id == userId && a.can_approve);
+          const isLevel2 = approvalSettings.level2?.some(a => a.user_id == userId && a.can_approve);
+          
+          const { data: leaves } = await chatAxios.get('/api/leave', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          let pending = [];
+          if (role === 'admin') {
+            pending = leaves?.filter(l => l.status === 'pending' || l.status === 'pending_level2') || [];
+          } else {
+            if (isLevel1) pending = leaves?.filter(l => l.status === 'pending') || [];
+            if (isLevel2) pending = [...pending, ...(leaves?.filter(l => l.status === 'pending_level2') || [])];
+            pending = [...new Map(pending.map(p => [p.id, p])).values()];
+          }
+          
           if (pending.length > 0) {
             notifs.push({ icon: '📋', text: `มี ${pending.length} รายการลารออนุมัติ`, action: 'ดูรายการลารออนุมัติ' });
           }
         }
 
         // เช็คการจองรถรออนุมัติ
-        if (role === 'admin') {
+        const canViewCarBooking = permissions.some(p => p.page_path === '/car_booking' && p.has_access) || role === 'admin';
+        if (canViewCarBooking) {
           const { data: bookings } = await chatAxios.get('/api/car-booking', {
-            headers: { Authorization: `Bearer ${token}` },
-            silent: true
+            headers: { Authorization: `Bearer ${token}` }
           });
           const pending = bookings?.filter(b => b.status === 'pending') || [];
           if (pending.length > 0) {
-            notifs.push({ icon: '🚗', text: `มี ${pending.length} การจองรถถูกจองอยู่`, action: 'ดูการจองรถรออนุมัติ' });
+            notifs.push({ icon: '🚗', text: `มี ${pending.length} การจองรถรออนุมัติ`, action: 'ดูการจองรถรออนุมัติ' });
           }
         }
 
