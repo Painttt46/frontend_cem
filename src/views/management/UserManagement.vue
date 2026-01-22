@@ -50,7 +50,7 @@
                    currentPageReportTemplate="{first} ถึง {last} จาก {totalRecords} รายการ"
                    class="responsive-table">
           
-          <Column field="employee_id" header="รหัสพนักงาน" class="employee-id-col">
+          <Column field="employee_id" header="รหัสพนักงาน" sortable :sortFunction="sortByEmployeeId" class="employee-id-col">
             <template #body="slotProps">
               <Badge :value="slotProps.data.employee_id" severity="info" />
             </template>
@@ -275,6 +275,14 @@ const getRoleSeverity = (role) => {
     case 'hr': return 'warning'
     default: return 'info'
   }
+}
+
+const sortByEmployeeId = (event) => {
+  return event.data.sort((a, b) => {
+    const numA = parseInt(a.employee_id) || 0
+    const numB = parseInt(b.employee_id) || 0
+    return event.order * (numA - numB)
+  })
 }
 
 const loadUsers = async () => {
