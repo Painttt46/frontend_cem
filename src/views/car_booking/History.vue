@@ -646,11 +646,13 @@ export default {
 .task-info {
   display: flex;
   flex-direction: column;
+  text-align: left;
 }
 
 .task-name {
   font-weight: 500;
   color: #333;
+  text-align: left;
 }
 
 .so-badge {

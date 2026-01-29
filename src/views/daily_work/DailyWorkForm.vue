@@ -370,7 +370,17 @@ export default {
           end.setDate(end.getDate() + 1)
         }
 
-        const diff = (end - start) / (1000 * 60 * 60)
+        let diff = (end - start) / (1000 * 60 * 60)
+        
+        // หักเวลาพัก 12:00-13:00 (1 ชั่วโมง) ถ้าช่วงเวลาครอบคลุม
+        const startHour = start.getHours() + start.getMinutes() / 60
+        const endHour = end.getHours() + end.getMinutes() / 60
+        if (startHour < 13 && endHour > 12) {
+          const breakStart = Math.max(startHour, 12)
+          const breakEnd = Math.min(endHour, 13)
+          diff -= (breakEnd - breakStart)
+        }
+        
         return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
       }
       return '0 ชั่วโมง'
@@ -733,7 +743,18 @@ export default {
           end.setDate(end.getDate() + 1)
         }
 
-        return Math.max(0, (end - start) / (1000 * 60 * 60))
+        let diff = (end - start) / (1000 * 60 * 60)
+        
+        // หักเวลาพัก 12:00-13:00 (1 ชั่วโมง) ถ้าช่วงเวลาครอบคลุม
+        const startHour = start.getHours() + start.getMinutes() / 60
+        const endHour = end.getHours() + end.getMinutes() / 60
+        if (startHour < 13 && endHour > 12) {
+          const breakStart = Math.max(startHour, 12)
+          const breakEnd = Math.min(endHour, 13)
+          diff -= (breakEnd - breakStart)
+        }
+        
+        return Math.max(0, diff)
       }
       return 0
     },

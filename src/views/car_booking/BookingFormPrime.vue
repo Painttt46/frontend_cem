@@ -532,6 +532,17 @@ export default {
       this.$emit('close-form')
     },
     confirmSubmit(type) {
+      // Validate fuel level for return form
+      if (type === 'return' && (this.fuelLevelReturn === null || this.fuelLevelReturn === undefined)) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'กรุณาเลือกระดับน้ำมัน',
+          detail: 'กรุณาเลือกระดับน้ำมันก่อนบันทึกการคืนรถ',
+          life: 3000
+        })
+        return
+      }
+
       const messages = {
         borrow: 'ยืนยันการแจ้งใช้รถ?',
         return: 'ยืนยันการแจ้งคืนรถ?',
