@@ -22,11 +22,14 @@
                 <i class="pi pi-bars"></i>
               </div>
               <div class="step-number">{{ index + 1 }}</div>
-              <div class="step-status-badge">
+              <div class="step-status-badge" :class="getStepClass(step)">
                 <i :class="getStatusIcon(step)"></i>
                 {{ getStepStatusLabel(step) }}
               </div>
               <div class="step-actions">
+                <Button v-if="step.status !== 'completed'" icon="pi pi-check" 
+                        v-tooltip="'เสร็จสิ้น'" @click="completeStep(index)" 
+                        text severity="success" size="small" />
                 <Button icon="pi pi-pencil" @click="editStep(index)" text size="small" />
                 <Button icon="pi pi-trash" @click="deleteStep(index)" text severity="danger" size="small" />
               </div>
@@ -37,6 +40,12 @@
               <p v-if="step.description" class="step-description">{{ step.description }}</p>
               
               <div class="step-info">
+                <div class="info-item" v-if="projectStatus">
+                  <span class="project-badge" :class="'status-' + projectStatus">
+                    <i class="pi pi-folder"></i> {{ getProjectStatusLabel(projectStatus) }}
+                  </span>
+                </div>
+
                 <div class="info-item" v-if="step.start_date || step.end_date">
                   <i class="pi pi-calendar"></i>
                   <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
@@ -105,11 +114,6 @@
             </template>
           </MultiSelect>
         </div>
-
-        <div class="field">
-          <label>สถานะ</label>
-          <Dropdown v-model="currentStep.status" :options="stepStatusOptions" optionLabel="label" optionValue="value" placeholder="เลือกสถานะ" class="w-full" />
-        </div>
       </div>
 
       <template #footer>
@@ -139,6 +143,10 @@ export default {
     modelValue: {
       type: Array,
       default: () => []
+    },
+    projectStatus: {
+      type: String,
+      default: null
     }
   },
   emits: ['update:modelValue'],
@@ -146,6 +154,7 @@ export default {
     return {
       steps: [],
       users: [],
+      projectStatusOptions: [],
       showStepDialog: false,
       editingIndex: null,
       dragIndex: null,
@@ -156,10 +165,8 @@ export default {
         start_date: null,
         end_date: null,
         assigned_users: [],
-        status: null,
         step_order: 0
-      },
-      stepStatusOptions: []
+      }
     }
   },
   watch: {
@@ -186,7 +193,7 @@ export default {
     async loadStatusOptions() {
       try {
         const response = await axios.get('/api/settings/statuses')
-        this.stepStatusOptions = response.data
+        this.projectStatusOptions = response.data
       } catch {
         // ignore
       }
@@ -198,7 +205,6 @@ export default {
         start_date: null,
         end_date: null,
         assigned_users: [],
-        status: null,
         step_order: this.steps.length
       }
     },
@@ -300,6 +306,21 @@ export default {
         }
       })
     },
+    async completeStep(index) {
+      const step = this.steps[index]
+      if (step.id && this.taskId) {
+        try {
+          await axios.put(`/api/task-steps/${step.id}`, { status: 'completed' })
+          this.steps[index].status = 'completed'
+          this.$emit('update:modelValue', this.steps)
+        } catch (error) {
+          console.error('Error completing step:', error)
+        }
+      } else {
+        this.steps[index].status = 'completed'
+        this.$emit('update:modelValue', this.steps)
+      }
+    },
     formatDate(date) {
       if (!date) return null
       const d = new Date(date)
@@ -322,22 +343,22 @@ export default {
     },
     getStatusIcon(step) {
       if (step.status === 'completed') return 'pi pi-check-circle'
-      if (step.has_work_logged) return 'pi pi-spin pi-spinner'
+      if (step.status === 'in_progress') return 'pi pi-spin pi-spinner'
       return 'pi pi-circle'
-    },
-    getStatusLabel(status) {
-      if (!status) return 'ไม่ระบุ'
-      return status
     },
     getStepStatusLabel(step) {
       if (step.status === 'completed') return 'เสร็จสิ้น'
-      if (step.has_work_logged) return 'กำลังดำเนินการ'
+      if (step.status === 'in_progress') return 'กำลังดำเนินการ'
       return 'รอดำเนินการ'
     },
     getStepClass(step) {
       if (step.status === 'completed') return 'status-completed'
-      if (step.has_work_logged) return 'status-in_progress'
+      if (step.status === 'in_progress') return 'status-in_progress'
       return 'status-pending'
+    },
+    getProjectStatusLabel(status) {
+      const found = this.projectStatusOptions.find(opt => opt.value === status)
+      return found ? found.label : status
     }
   }
 }
@@ -533,10 +554,25 @@ export default {
   align-items: center;
   gap: 0.25rem;
   font-size: 0.75rem;
-  color: #64748b;
   padding: 0.125rem 0.5rem;
-  background: #f1f5f9;
   border-radius: 12px;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.step-status-badge.status-completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.step-status-badge.status-in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.step-status-badge.status-pending {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .step-actions {
@@ -594,6 +630,36 @@ export default {
   border-radius: 10px;
   font-size: 0.7rem;
   font-weight: 500;
+}
+
+.project-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.project-badge.status-pending {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.project-badge.status-in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.project-badge.status-completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.project-badge.status-on_hold {
+  background: #fef3c7;
+  color: #b45309;
 }
 
 .empty-workflow {
