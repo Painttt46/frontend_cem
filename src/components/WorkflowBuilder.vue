@@ -661,22 +661,26 @@ export default {
   font-weight: 500;
 }
 
-.project-badge.status-pending {
+.project-badge.status-pending,
+:deep(.project-badge.status-pending) {
   background: #e5e7eb;
   color: #374151;
 }
 
-.project-badge.status-in_progress {
+.project-badge.status-in_progress,
+:deep(.project-badge.status-in_progress) {
   background: #dbeafe;
   color: #1d4ed8;
 }
 
-.project-badge.status-completed {
+.project-badge.status-completed,
+:deep(.project-badge.status-completed) {
   background: #d1fae5;
   color: #047857;
 }
 
-.project-badge.status-on_hold {
+.project-badge.status-on_hold,
+:deep(.project-badge.status-on_hold) {
   background: #fef3c7;
   color: #b45309;
 }
