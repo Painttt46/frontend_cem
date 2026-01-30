@@ -69,31 +69,42 @@
             <div class="workflow-expansion">
               <h4><i class="pi pi-sitemap"></i> ขั้นตอนการดำเนินงาน</h4>
               
-              <div v-if="slotProps.data.steps && slotProps.data.steps.length > 0" class="steps-timeline">
-                <div v-for="(step, index) in slotProps.data.steps" :key="step.id" 
-                     class="step-item" :class="getStepClass(step)">
-                  <div class="step-number">{{ index + 1 }}</div>
-                  <div class="step-content">
+              <div v-if="slotProps.data.steps && slotProps.data.steps.length > 0" class="workflow-timeline">
+                <div v-for="(step, index) in slotProps.data.steps" :key="step.id" class="workflow-step">
+                  <div class="step-card" :class="getStepClass(step)">
                     <div class="step-header">
-                      <span class="step-name">{{ step.step_name }}</span>
-                      <Badge :value="getStepStatusLabel(step)" 
-                             :style="{ backgroundColor: getStepStatusColor(step), color: '#fff' }" />
+                      <div class="step-number">{{ index + 1 }}</div>
+                      <div class="step-status-badge" :class="getStepClass(step)">
+                        <i :class="getStepIcon(step)"></i>
+                        {{ getStepStatusLabel(step) }}
+                      </div>
                     </div>
-                    <div v-if="step.description" class="step-description">{{ step.description }}</div>
-                    <div class="step-meta">
-                      <div v-if="step.project_status" class="meta-item">
-                        <span class="project-badge" 
-                              :style="{ background: getProjectStatusColor(step.project_status) + '20', color: getProjectStatusColor(step.project_status) }">
-                          <i class="pi pi-folder"></i> {{ getProjectStatusLabel(step.project_status) }}
-                        </span>
-                      </div>
-                      <div v-if="step.start_date || step.end_date" class="meta-item">
-                        <i class="pi pi-calendar"></i>
-                        {{ formatDateRange(step.start_date, step.end_date) }}
-                      </div>
-                      <div class="meta-item">
-                        <i class="pi pi-users"></i>
-                        {{ step.assigned_users && step.assigned_users.length > 0 ? formatAssignedUsers(step.assigned_users) : 'ยังไม่มีผู้รับผิดชอบ' }}
+
+                    <div class="step-content">
+                      <h4>{{ step.step_name }}</h4>
+                      <p v-if="step.description" class="step-description">{{ step.description }}</p>
+                      
+                      <div class="step-info">
+                        <div class="info-item" v-if="step.project_status">
+                          <span class="project-badge" 
+                                :style="{ background: getProjectStatusColor(step.project_status) + '20', color: getProjectStatusColor(step.project_status) }">
+                            <i class="pi pi-folder"></i> {{ getProjectStatusLabel(step.project_status) }}
+                          </span>
+                        </div>
+
+                        <div class="info-item" v-if="step.start_date || step.end_date">
+                          <i class="pi pi-calendar"></i>
+                          <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
+                        </div>
+                        
+                        <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
+                          <i class="pi pi-users"></i>
+                          <div class="assigned-users">
+                            <span v-for="(user, idx) in step.assigned_users" :key="idx" class="user-badge">
+                              {{ typeof user === 'object' ? user.name : user }}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -359,27 +370,14 @@ export default {
       return '#9ca3af'
     },
     getStepClass(step) {
-      if (step.status === 'completed') return 'completed'
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      // เกินวันสิ้นสุด
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return 'overdue'
-      }
-      
-      // ถึงเวลาเริ่มแล้วยังไม่มีคนลงงาน
-      if (step.start_date && (!step.assigned_users || step.assigned_users.length === 0)) {
-        const startDate = new Date(step.start_date)
-        startDate.setHours(0, 0, 0, 0)
-        if (today >= startDate) return 'warning'
-      }
-      
-      if (step.has_work_logged) return 'in-progress'
-      return 'pending'
+      if (step.status === 'completed') return 'status-completed'
+      if (step.status === 'in_progress') return 'status-in_progress'
+      return 'status-pending'
+    },
+    getStepIcon(step) {
+      if (step.status === 'completed') return 'pi pi-check-circle'
+      if (step.status === 'in_progress') return 'pi pi-spin pi-spinner'
+      return 'pi pi-circle'
     },
     formatDateRange(start, end) {
       const formatDate = (date) => {
@@ -796,5 +794,163 @@ export default {
   border-radius: 10px;
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+/* Workflow Block Style */
+.workflow-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+.workflow-step {
+  position: relative;
+  flex: 0 0 auto;
+  margin-left: 25px;
+}
+
+.workflow-step:first-child {
+  margin-left: 0;
+}
+
+.workflow-step:not(:first-child)::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid #3b82f6;
+}
+
+.workflow-step:not(:first-child)::after {
+  content: '';
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 3px;
+  background: #3b82f6;
+}
+
+.step-card {
+  background: white;
+  border-radius: 10px;
+  padding: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-left: 3px solid #9ca3af;
+  min-width: 180px;
+}
+
+.step-card.status-completed {
+  border-left-color: #10b981;
+  background: linear-gradient(to right, #f0fdf4 0%, white 10%);
+}
+
+.step-card.status-in_progress {
+  border-left-color: #3b82f6;
+  background: linear-gradient(to right, #eff6ff 0%, white 10%);
+}
+
+.step-card.status-pending {
+  border-left-color: #9ca3af;
+  background: linear-gradient(to right, #f9fafb 0%, white 10%);
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.75rem;
+}
+
+.status-completed .step-number {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.status-in_progress .step-number {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.step-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.step-status-badge.status-completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.step-status-badge.status-in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.step-content h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+.step-description {
+  color: #64748b;
+  font-size: 0.7rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.step-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+.info-item i {
+  color: #94a3b8;
+  font-size: 0.65rem;
+}
+
+.assigned-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.user-badge {
+  background: #3b82f6;
+  color: #fff;
+  padding: 0.1rem 0.4rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
 }
 </style>
