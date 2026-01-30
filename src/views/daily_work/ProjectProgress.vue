@@ -802,12 +802,15 @@ export default {
   flex-wrap: wrap;
   gap: 0.5rem;
   padding-left: 0.5rem;
+  align-items: center;
 }
 
 .workflow-step {
   position: relative;
   flex: 0 0 auto;
   margin-left: 25px;
+  display: flex;
+  align-items: center;
 }
 
 .workflow-step:first-child {
