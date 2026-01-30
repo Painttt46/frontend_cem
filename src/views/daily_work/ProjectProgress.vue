@@ -81,6 +81,12 @@
                     </div>
                     <div v-if="step.description" class="step-description">{{ step.description }}</div>
                     <div class="step-meta">
+                      <div v-if="step.project_status" class="meta-item">
+                        <span class="project-badge" 
+                              :style="{ background: getProjectStatusColor(step.project_status) + '20', color: getProjectStatusColor(step.project_status) }">
+                          <i class="pi pi-folder"></i> {{ getProjectStatusLabel(step.project_status) }}
+                        </span>
+                      </div>
                       <div v-if="step.start_date || step.end_date" class="meta-item">
                         <i class="pi pi-calendar"></i>
                         {{ formatDateRange(step.start_date, step.end_date) }}
@@ -388,6 +394,14 @@ export default {
     formatAssignedUsers(users) {
       if (!users || users.length === 0) return ''
       return users.map(u => u.name || u).join(', ')
+    },
+    getProjectStatusLabel(status) {
+      const found = this.statuses.find(s => s.value === status)
+      return found ? found.label : status
+    },
+    getProjectStatusColor(status) {
+      const found = this.statuses.find(s => s.value === status)
+      return found?.color || '#6b7280'
     }
   }
 }
@@ -772,5 +786,15 @@ export default {
 
 .clickable-rows :deep(.p-datatable-tbody > tr) {
   cursor: pointer;
+}
+
+.project-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 </style>
