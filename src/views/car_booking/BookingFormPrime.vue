@@ -320,9 +320,11 @@ export default {
   },
   async created() {
     this.$http = axios
-    await this.loadUsers();
-    await this.loadProjects();
-    await this.loadLatestFuelLevel();
+    await Promise.all([
+      this.loadUsers(),
+      this.loadProjects(),
+      this.loadLatestFuelLevel()
+    ]);
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
   },
   computed: {
@@ -772,32 +774,35 @@ export default {
 }
 
 .image-preview-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 0.5rem;
   margin-top: 0.75rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .image-preview-item {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  aspect-ratio: 1;
+  max-width: 80px;
 }
 
 .preview-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 8px;
   border: 1px solid #dee2e6;
 }
 
 .image-preview-list .remove-btn {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 22px;
-  height: 22px;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
   background: #ef4444;
   border-radius: 50%;
   display: flex;
@@ -805,7 +810,7 @@ export default {
   justify-content: center;
   cursor: pointer;
   color: white;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .image-preview-list .remove-btn:hover {
