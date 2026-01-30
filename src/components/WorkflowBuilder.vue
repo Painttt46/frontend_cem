@@ -40,9 +40,10 @@
               <p v-if="step.description" class="step-description">{{ step.description }}</p>
               
               <div class="step-info">
-                <div class="info-item" v-if="projectStatus">
-                  <span class="project-badge" :class="'status-' + projectStatus">
-                    <i class="pi pi-folder"></i> {{ getProjectStatusLabel(projectStatus) }}
+                <div class="info-item" v-if="step.project_status">
+                  <span class="project-badge" 
+                        :style="{ background: getStatusColor(step.project_status) + '20', color: getStatusColor(step.project_status) }">
+                    <i class="pi pi-folder"></i> {{ getProjectStatusLabel(step.project_status) }}
                   </span>
                 </div>
 
@@ -121,13 +122,15 @@
                     optionLabel="label" optionValue="value" 
                     placeholder="เลือกสถานะโครงการ" class="w-full">
             <template #value="slotProps">
-              <span v-if="slotProps.value" class="project-badge" :class="'status-' + slotProps.value">
+              <span v-if="slotProps.value" class="project-badge" 
+                    :style="{ background: getStatusColor(slotProps.value) + '20', color: getStatusColor(slotProps.value) }">
                 {{ getProjectStatusLabel(slotProps.value) }}
               </span>
               <span v-else>เลือกสถานะโครงการ</span>
             </template>
             <template #option="slotProps">
-              <span class="project-badge" :class="'status-' + slotProps.option.value">
+              <span class="project-badge" 
+                    :style="{ background: slotProps.option.color + '20', color: slotProps.option.color }">
                 {{ slotProps.option.label }}
               </span>
             </template>
@@ -378,6 +381,10 @@ export default {
     getProjectStatusLabel(status) {
       const found = this.projectStatusOptions.find(opt => opt.value === status)
       return found ? found.label : status
+    },
+    getStatusColor(status) {
+      const found = this.projectStatusOptions.find(opt => opt.value === status)
+      return found?.color || '#6b7280'
     }
   }
 }
@@ -659,30 +666,6 @@ export default {
   border-radius: 10px;
   font-size: 0.7rem;
   font-weight: 500;
-}
-
-.project-badge.status-pending,
-:deep(.project-badge.status-pending) {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.project-badge.status-in_progress,
-:deep(.project-badge.status-in_progress) {
-  background: #dbeafe;
-  color: #1d4ed8;
-}
-
-.project-badge.status-completed,
-:deep(.project-badge.status-completed) {
-  background: #d1fae5;
-  color: #047857;
-}
-
-.project-badge.status-on_hold,
-:deep(.project-badge.status-on_hold) {
-  background: #fef3c7;
-  color: #b45309;
 }
 
 .empty-workflow {
