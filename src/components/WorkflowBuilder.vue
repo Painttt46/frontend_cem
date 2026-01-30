@@ -231,6 +231,7 @@ export default {
         start_date: null,
         end_date: null,
         assigned_users: [],
+        project_status: null,
         step_order: this.steps.length
       }
     },
