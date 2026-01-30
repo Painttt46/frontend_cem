@@ -61,29 +61,34 @@
 
         <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.step_name" class="step-info" 
+            <div v-if="slotProps.data.step_name" class="step-card-mini" 
               :style="{ borderLeftColor: getStepColor(slotProps.data) }">
-              <div class="step-name">
-                <span class="step-badge-small" :style="{ background: getStepColor(slotProps.data) }">
-                  <i class="pi pi-sitemap"></i>
+              <div class="step-header-mini">
+                <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data) }">
+                  {{ slotProps.data.step_order + 1 }}
                 </span>
-                {{ slotProps.data.step_name }}
-                <span class="step-status-tag" :style="{ background: getStepColor(slotProps.data) }">
+                <span class="step-name-mini">{{ slotProps.data.step_name }}</span>
+                <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data) + '20', color: getStepColor(slotProps.data) }">
                   {{ getStepLabel(slotProps.data) }}
                 </span>
               </div>
-              <div v-if="slotProps.data.step_description" class="step-detail">
+              <div v-if="slotProps.data.step_description" class="step-desc-mini">
                 {{ slotProps.data.step_description }}
               </div>
-              <div v-if="slotProps.data.step_start_date || slotProps.data.step_end_date" class="step-detail">
-                <i class="pi pi-calendar"></i> {{ formatStepDateRange(slotProps.data.step_start_date, slotProps.data.step_end_date) }}
-              </div>
-              <div v-if="slotProps.data.step_assigned_users && slotProps.data.step_assigned_users.length > 0" class="step-detail step-users">
-                <i class="pi pi-users"></i>
-                <template v-for="(user, idx) in slotProps.data.step_assigned_users" :key="idx">
-                  <span class="clickable-name" @click="showUserInfo(user.id)">{{ user.name }}</span>
-                  <span v-if="idx < slotProps.data.step_assigned_users.length - 1">, </span>
-                </template>
+              <div class="step-meta-mini">
+                <span v-if="slotProps.data.step_project_status" class="project-badge" 
+                      :style="{ background: getProjectStatusColor(slotProps.data.step_project_status) + '20', color: getProjectStatusColor(slotProps.data.step_project_status) }">
+                  <i class="pi pi-folder"></i> {{ getProjectStatusLabel(slotProps.data.step_project_status) }}
+                </span>
+                <span v-if="slotProps.data.step_start_date || slotProps.data.step_end_date" class="meta-item-mini">
+                  <i class="pi pi-calendar"></i> {{ formatStepDateRange(slotProps.data.step_start_date, slotProps.data.step_end_date) }}
+                </span>
+                <span v-if="slotProps.data.step_assigned_users && slotProps.data.step_assigned_users.length > 0" class="meta-item-mini">
+                  <i class="pi pi-users"></i>
+                  <template v-for="(user, idx) in slotProps.data.step_assigned_users" :key="idx">
+                    <span class="user-badge-mini">{{ user.name }}</span>
+                  </template>
+                </span>
               </div>
             </div>
             <span v-else class="text-muted">-</span>
@@ -582,11 +587,23 @@ export default {
       }
       return value
     },
-    getStepColor() {
-      return '#3b82f6'
+    getStepColor(data) {
+      if (data?.step_status === 'completed') return '#10b981'
+      if (data?.step_status === 'in_progress') return '#3b82f6'
+      return '#9ca3af'
     },
-    getStepLabel() {
-      return 'กำลังดำเนินการ'
+    getStepLabel(data) {
+      if (data?.step_status === 'completed') return 'เสร็จสิ้น'
+      if (data?.step_status === 'in_progress') return 'กำลังดำเนินการ'
+      return 'รอดำเนินการ'
+    },
+    getProjectStatusLabel(status) {
+      const found = this.statusOptions.find(s => s.value === status)
+      return found ? found.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim() : status
+    },
+    getProjectStatusColor(status) {
+      const found = this.statusOptions.find(s => s.value === status)
+      return found?.color || '#6b7280'
     },
     getStatusLabelFromOptions(value) {
       const status = this.statusOptions.find(s => s.value === value)
@@ -1573,5 +1590,91 @@ export default {
   display: block;
   width: fit-content;
   margin-top: 0.25rem;
+}
+
+/* Step Card Mini */
+.step-card-mini {
+  background: white;
+  border-radius: 8px;
+  padding: 0.5rem;
+  border-left: 3px solid #9ca3af;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.step-header-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.step-number-mini {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.7rem;
+}
+
+.step-name-mini {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #1e293b;
+}
+
+.step-status-badge-mini {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.step-desc-mini {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin: 0.3rem 0;
+  white-space: pre-wrap;
+}
+
+.step-meta-mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+}
+
+.meta-item-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.meta-item-mini i {
+  font-size: 0.6rem;
+}
+
+.user-badge-mini {
+  background: #3b82f6;
+  color: white;
+  padding: 0.1rem 0.3rem;
+  border-radius: 6px;
+  font-size: 0.6rem;
+  margin-right: 0.2rem;
+}
+
+.project-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 500;
 }
 </style>
