@@ -114,6 +114,25 @@
             </template>
           </MultiSelect>
         </div>
+
+        <div class="field">
+          <label>สถานะโครงการ</label>
+          <Dropdown v-model="currentStep.project_status" :options="projectStatusOptions" 
+                    optionLabel="label" optionValue="value" 
+                    placeholder="เลือกสถานะโครงการ" class="w-full">
+            <template #value="slotProps">
+              <span v-if="slotProps.value" class="project-badge" :class="'status-' + slotProps.value">
+                {{ getProjectStatusLabel(slotProps.value) }}
+              </span>
+              <span v-else>เลือกสถานะโครงการ</span>
+            </template>
+            <template #option="slotProps">
+              <span class="project-badge" :class="'status-' + slotProps.option.value">
+                {{ slotProps.option.label }}
+              </span>
+            </template>
+          </Dropdown>
+        </div>
       </div>
 
       <template #footer>
