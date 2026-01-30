@@ -15,48 +15,12 @@
     <meta name="theme-color" content="#4A90E2">
     
     <title>Gent-CEM</title>
-    <style>
-      #network-loader{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:99999;font-family:sans-serif}
-      #network-loader.hidden{display:none}
-      .loader-spinner{width:40px;height:40px;border:4px solid #f3f3f3;border-top:4px solid #4A90E2;border-radius:50%;animation:spin 1s linear infinite}
-      @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-    </style>
   </head>
   <body>
-    <div id="network-loader">
-      <div class="loader-spinner"></div>
-      <p style="margin-top:16px;color:#666">กำลังเชื่อมต่อ...</p>
-    </div>
     <noscript>
       <strong>We're sorry but Gent-CEM doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
     </noscript>
     <div id="app"></div>
-    <script>
-      (function(){
-        var internal='http://172.30.101.52:3000';
-        var external='http://61.91.51.126:3000';
-        var current=location.origin;
-        
-        // ถ้าอยู่ใน IP ที่ถูกต้องแล้ว ซ่อน loader
-        if(current===internal||current===external){
-          document.getElementById('network-loader').classList.add('hidden');
-          return;
-        }
-        
-        // ลอง internal ก่อน (timeout 1.5 วินาที)
-        var ctrl=new AbortController();
-        var timeout=setTimeout(function(){ctrl.abort()},1500);
-        
-        fetch(internal+'/api/health',{signal:ctrl.signal,mode:'no-cors'})
-          .then(function(){
-            clearTimeout(timeout);
-            location.replace(internal+location.pathname+location.search);
-          })
-          .catch(function(){
-            location.replace(external+location.pathname+location.search);
-          });
-      })();
-    </script>
     <!-- built files will be auto injected -->
   </body>
 </html>
