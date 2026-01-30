@@ -65,7 +65,7 @@
               :style="{ borderLeftColor: getStepColor(slotProps.data) }">
               <div class="step-header-mini">
                 <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data) }">
-                  {{ slotProps.data.step_order + 1 }}
+                  {{ (slotProps.data.step_order || 0) + 1 }}
                 </span>
                 <span class="step-name-mini">{{ slotProps.data.step_name }}</span>
                 <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data) + '20', color: getStepColor(slotProps.data) }">
