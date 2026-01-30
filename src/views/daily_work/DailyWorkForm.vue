@@ -68,6 +68,12 @@
                     </div>
                     <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
                     <div class="step-meta">
+                      <span v-if="slotProps.option.project_status" class="meta-item">
+                        <span class="project-badge" 
+                              :style="{ background: getProjectStatusColor(slotProps.option.project_status) + '20', color: getProjectStatusColor(slotProps.option.project_status) }">
+                          <i class="pi pi-folder"></i> {{ getProjectStatusLabel(slotProps.option.project_status) }}
+                        </span>
+                      </span>
                       <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">
                         <i class="pi pi-calendar"></i>
                         {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
@@ -483,6 +489,14 @@ export default {
       }
       if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
       return formatDate(start || end)
+    },
+    getProjectStatusLabel(status) {
+      const found = this.statusOptions.find(s => s.value === status)
+      return found ? found.label : status
+    },
+    getProjectStatusColor(status) {
+      const found = this.statusOptions.find(s => s.value === status)
+      return found?.color || '#6b7280'
     },
     getTaskSO(taskId) {
       const task = this.tasks.find(t => t.id === taskId)
@@ -955,6 +969,8 @@ export default {
   font-size: 0.85rem;
   margin: 0.25rem 0 0.25rem 2rem;
   line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .step-meta {
@@ -1072,6 +1088,8 @@ export default {
   font-size: 0.8rem;
   color: #64748b;
   line-height: 1.3;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .chip-meta {
@@ -2039,5 +2057,15 @@ export default {
   .chip-details {
     margin-left: 0;
   }
+}
+
+.project-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 </style>
