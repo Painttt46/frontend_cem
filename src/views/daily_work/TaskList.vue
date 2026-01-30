@@ -359,11 +359,17 @@
                     optionLabel="label" optionValue="value" placeholder="ไม่ระบุสถานะ" 
                     class="corporate-input" showClear>
             <template #value="slotProps">
-              <span v-if="slotProps.value">{{ getStatusLabel(slotProps.value) }}</span>
+              <span v-if="slotProps.value" class="status-badge" 
+                    :style="{ background: getStatusColor(slotProps.value) + '20', color: getStatusColor(slotProps.value) }">
+                {{ getStatusLabel(slotProps.value) }}
+              </span>
               <span v-else class="text-muted">ไม่ระบุสถานะ</span>
             </template>
             <template #option="slotProps">
-              <span>{{ slotProps.option.label }}</span>
+              <span class="status-badge" 
+                    :style="{ background: slotProps.option.color + '20', color: slotProps.option.color }">
+                {{ slotProps.option.label }}
+              </span>
             </template>
           </Dropdown>
         </div>
