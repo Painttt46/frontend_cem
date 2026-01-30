@@ -922,6 +922,8 @@ export default {
   color: #64748b;
   font-size: 0.7rem;
   margin: 0 0 0.5rem 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .step-info {
