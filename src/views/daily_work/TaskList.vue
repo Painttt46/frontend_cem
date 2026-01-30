@@ -383,7 +383,7 @@
           <label class="input-label">
             <i class="pi pi-sitemap"></i> Workflow Steps
           </label>
-          <WorkflowBuilder v-model="editFormData.steps" :taskId="editFormData.id" />
+          <WorkflowBuilder v-model="editFormData.steps" :taskId="editFormData.id" :showCompleteButton="false" />
         </div>
 
         <div class="input-group full-width">

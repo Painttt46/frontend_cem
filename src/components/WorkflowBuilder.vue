@@ -27,7 +27,7 @@
                 {{ getStepStatusLabel(step) }}
               </div>
               <div class="step-actions">
-                <Button v-if="step.status !== 'completed'" icon="pi pi-check" 
+                <Button v-if="showCompleteButton && step.status !== 'completed'" icon="pi pi-check" 
                         v-tooltip="'เสร็จสิ้น'" @click="completeStep(index)" 
                         text severity="success" size="small" />
                 <Button icon="pi pi-pencil" @click="editStep(index)" text size="small" />
@@ -169,6 +169,10 @@ export default {
     projectStatus: {
       type: String,
       default: null
+    },
+    showCompleteButton: {
+      type: Boolean,
+      default: true
     }
   },
   emits: ['update:modelValue'],
@@ -346,7 +350,10 @@ export default {
     formatDate(date) {
       if (!date) return null
       const d = new Date(date)
-      return d.toISOString().split('T')[0]
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
     },
     formatDateRange(start, end) {
       if (!start && !end) return 'ไม่ระบุวันที่'
