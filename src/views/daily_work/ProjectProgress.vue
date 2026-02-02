@@ -49,10 +49,8 @@
 
           <Column field="status" header="สถานะโครงการ" :sortable="true" style="min-width: 180px;">
             <template #body="slotProps">
-              <div v-if="getLatestWorkingStep(slotProps.data).length > 0" class="status-badges">
-                <Badge v-for="ps in getLatestWorkingStep(slotProps.data)" :key="ps" :value="getProjectStatusLabel(ps)"
-                  :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff' }" />
-              </div>
+              <Badge v-if="slotProps.data.status" :value="getStatusLabel(slotProps.data.status)"
+                :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff' }" />
               <span v-else class="text-muted">-</span>
             </template>
           </Column>

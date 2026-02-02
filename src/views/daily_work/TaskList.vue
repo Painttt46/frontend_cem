@@ -94,7 +94,12 @@
         <Column header="สถานะ" style="text-align: center; min-width: 180px;">
           <template #body="slotProps">
             <div class="badge-container">
-              <Badge :value="getStatusLabel(slotProps.data.status) || '-'" 
+              <template v-if="getLatestProjectStatuses(slotProps.data).length > 0">
+                <Badge v-for="ps in getLatestProjectStatuses(slotProps.data)" :key="ps"
+                  :value="getProjectStatusLabel(ps)" 
+                  :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold', marginRight: '0.25rem' }" />
+              </template>
+              <Badge v-else :value="getStatusLabel(slotProps.data.status) || '-'" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
             </div>
           </template>
@@ -693,6 +698,39 @@ export default {
         status = this.workStatuses.find(s => s.label && s.label.includes(statusValue))
       }
       return status?.color || '#9e9e9e'
+    },
+    getLatestProjectStatuses(task) {
+      if (!task.steps || task.steps.length === 0) return []
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // หา step ที่มีการลงงานจริง และวันที่ลงงานไม่เกินวันนี้
+      const workingSteps = task.steps.filter(s => {
+        if (!s.has_work_logged || !s.project_statuses || s.project_statuses.length === 0) return false
+        if (s.latest_work_date) {
+          const workDate = new Date(s.latest_work_date)
+          workDate.setHours(0, 0, 0, 0)
+          return workDate <= today
+        }
+        return true
+      })
+      
+      if (workingSteps.length === 0) return []
+      const latestStep = workingSteps.sort((a, b) => 
+        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
+      )[0]
+      return latestStep.project_statuses || []
+    },
+    getProjectStatusLabel(status) {
+      const found = this.workStatuses.find(s => s.value === status)
+      if (found && found.label) {
+        return found.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      }
+      return status || '-'
+    },
+    getProjectStatusColor(status) {
+      const found = this.workStatuses.find(s => s.value === status)
+      return found?.color || '#6b7280'
     },
     getLatestWorkingStep(task) {
       if (!task.steps || task.steps.length === 0) return '-'
