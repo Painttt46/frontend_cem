@@ -68,10 +68,10 @@
                     </div>
                     <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
                     <div class="step-meta">
-                      <span v-if="slotProps.option.project_status" class="meta-item">
-                        <span class="project-badge" 
-                              :style="{ background: getProjectStatusColor(slotProps.option.project_status) + '20', color: getProjectStatusColor(slotProps.option.project_status) }">
-                          <i class="pi pi-folder"></i> {{ getProjectStatusLabel(slotProps.option.project_status) }}
+                      <span v-if="slotProps.option.project_statuses && slotProps.option.project_statuses.length > 0" class="meta-item">
+                        <span v-for="ps in slotProps.option.project_statuses" :key="ps" class="project-badge" 
+                              :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
+                          <i class="pi pi-folder"></i> {{ getProjectStatusLabel(ps) }}
                         </span>
                       </span>
                       <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">

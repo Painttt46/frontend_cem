@@ -49,8 +49,11 @@
 
           <Column field="status" header="สถานะโครงการ" :sortable="true" style="min-width: 180px;">
             <template #body="slotProps">
-              <Badge :value="getLatestWorkingStep(slotProps.data)"
-                :style="{ backgroundColor: getLatestStepColor(slotProps.data), color: '#fff' }" />
+              <div v-if="getLatestWorkingStep(slotProps.data).length > 0" class="status-badges">
+                <Badge v-for="ps in getLatestWorkingStep(slotProps.data)" :key="ps" :value="getProjectStatusLabel(ps)"
+                  :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff' }" />
+              </div>
+              <span v-else class="text-muted">-</span>
             </template>
           </Column>
 
@@ -85,10 +88,10 @@
                       <p v-if="step.description" class="step-description">{{ step.description }}</p>
                       
                       <div class="step-info">
-                        <div class="info-item" v-if="step.project_status">
-                          <span class="project-badge" 
-                                :style="{ background: getProjectStatusColor(step.project_status) + '20', color: getProjectStatusColor(step.project_status) }">
-                            <i class="pi pi-folder"></i> {{ getProjectStatusLabel(step.project_status) }}
+                        <div class="info-item" v-if="step.project_statuses && step.project_statuses.length > 0">
+                          <span v-for="ps in step.project_statuses" :key="ps" class="project-badge" 
+                                :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
+                            <i class="pi pi-folder"></i> {{ getProjectStatusLabel(ps) }}
                           </span>
                         </div>
 
@@ -303,24 +306,15 @@ export default {
       return st?.color || '#6c757d'
     },
     getLatestWorkingStep(project) {
-      if (!project.steps || project.steps.length === 0) return '-'
+      if (!project.steps || project.steps.length === 0) return []
       // หา step ที่เสร็จสิ้นล่าสุด (ตาม completed_at หรือ updated_at)
-      const completedSteps = project.steps.filter(s => s.status === 'completed' && s.project_status)
-      if (completedSteps.length === 0) return '-'
+      const completedSteps = project.steps.filter(s => s.status === 'completed' && s.project_statuses && s.project_statuses.length > 0)
+      if (completedSteps.length === 0) return []
       // เรียงตามเวลาที่เสร็จล่าสุด
       const latestStep = completedSteps.sort((a, b) => 
         new Date(b.completed_at || b.updated_at || 0) - new Date(a.completed_at || a.updated_at || 0)
       )[0]
-      return this.getProjectStatusLabel(latestStep.project_status)
-    },
-    getLatestStepColor(project) {
-      if (!project.steps || project.steps.length === 0) return '#9ca3af'
-      const completedSteps = project.steps.filter(s => s.status === 'completed' && s.project_status)
-      if (completedSteps.length === 0) return '#9ca3af'
-      const latestStep = completedSteps.sort((a, b) => 
-        new Date(b.completed_at || b.updated_at || 0) - new Date(a.completed_at || a.updated_at || 0)
-      )[0]
-      return this.getProjectStatusColor(latestStep.project_status)
+      return latestStep.project_statuses || []
     },
     getStepStatusLabel(step) {
       // เสร็จสิ้น
@@ -540,6 +534,12 @@ export default {
 
 .text-muted {
   color: #9ca3af;
+}
+
+.status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 /* Workflow Expansion */

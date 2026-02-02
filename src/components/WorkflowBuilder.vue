@@ -40,10 +40,10 @@
               <p v-if="step.description" class="step-description">{{ step.description }}</p>
               
               <div class="step-info">
-                <div class="info-item" v-if="step.project_status">
-                  <span class="project-badge" 
-                        :style="{ background: getStatusColor(step.project_status) + '20', color: getStatusColor(step.project_status) }">
-                    <i class="pi pi-folder"></i> {{ getProjectStatusLabel(step.project_status) }}
+                <div class="info-item" v-if="step.project_statuses && step.project_statuses.length > 0">
+                  <span v-for="ps in step.project_statuses" :key="ps" class="project-badge" 
+                        :style="{ background: getStatusColor(ps) + '20', color: getStatusColor(ps) }">
+                    <i class="pi pi-folder"></i> {{ getProjectStatusLabel(ps) }}
                   </span>
                 </div>
 
@@ -118,23 +118,16 @@
 
         <div class="field">
           <label>สถานะโครงการ</label>
-          <Dropdown v-model="currentStep.project_status" :options="projectStatusOptions" 
+          <MultiSelect v-model="currentStep.project_statuses" :options="projectStatusOptions" 
                     optionLabel="label" optionValue="value" 
-                    placeholder="เลือกสถานะโครงการ" class="w-full">
-            <template #value="slotProps">
-              <span v-if="slotProps.value" class="project-badge" 
-                    :style="{ background: getStatusColor(slotProps.value) + '20', color: getStatusColor(slotProps.value) }">
-                {{ getProjectStatusLabel(slotProps.value) }}
-              </span>
-              <span v-else>เลือกสถานะโครงการ</span>
-            </template>
+                    placeholder="เลือกสถานะโครงการ" class="w-full" display="chip">
             <template #option="slotProps">
               <span class="project-badge" 
                     :style="{ background: slotProps.option.color + '20', color: slotProps.option.color }">
                 {{ slotProps.option.label }}
               </span>
             </template>
-          </Dropdown>
+          </MultiSelect>
         </div>
       </div>
 
@@ -231,7 +224,7 @@ export default {
         start_date: null,
         end_date: null,
         assigned_users: [],
-        project_status: null,
+        project_statuses: [],
         step_order: this.steps.length
       }
     },
@@ -276,7 +269,9 @@ export default {
       this.showStepDialog = true
     },
     saveStep() {
+      const existingStep = this.editingIndex !== null ? this.steps[this.editingIndex] : {}
       const stepData = {
+        ...existingStep,
         ...this.currentStep,
         step_order: this.editingIndex !== null ? this.editingIndex : this.steps.length,
         start_date: this.currentStep.start_date ? this.formatDate(this.currentStep.start_date) : null,
