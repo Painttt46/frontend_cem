@@ -466,12 +466,28 @@ export default {
       if (!step) return 'รอดำเนินการ'
       if (step.status === 'completed') return 'เสร็จสิ้น'
       if (step.has_work_logged) return 'กำลังดำเนินการ'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'เกินกำหนด'
+      }
       return 'รอดำเนินการ'
     },
     getStepStatusColor(step) {
       if (!step) return '#9ca3af'
       if (step.status === 'completed') return '#10b981'
-      if (step.has_work_logged) return '#3b82f6'
+      if (step.has_work_logged) return '#f59e0b'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return '#ef4444'
+      }
       return '#9ca3af'
     },
     removeStep(stepId) {

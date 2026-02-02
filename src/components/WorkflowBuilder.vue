@@ -379,36 +379,36 @@ export default {
     getStepStatusLabel(step) {
       if (step.status === 'completed') return 'เสร็จสิ้น'
       
+      // กำลังดำเนินการ (ตรวจสอบก่อนเกินกำหนด)
+      if (step.has_work_logged) return 'กำลังดำเนินการ'
+      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // เกินกำหนด
+      // เกินกำหนด (เฉพาะกรณีที่ยังไม่มีการลงงาน)
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
         if (today > endDate) return 'เกินกำหนด'
       }
       
-      // กำลังดำเนินการ
-      if (step.has_work_logged) return 'กำลังดำเนินการ'
-      
       return 'รอดำเนินการ'
     },
     getStepClass(step) {
       if (step.status === 'completed') return 'status-completed'
       
+      // กำลังดำเนินการ = เขียว (ตรวจสอบก่อนเกินกำหนด)
+      if (step.has_work_logged) return 'status-working'
+      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // เกินกำหนด = แดง
+      // เกินกำหนด = แดง (เฉพาะกรณีที่ยังไม่มีการลงงาน)
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
         if (today > endDate) return 'status-overdue'
       }
-      
-      // กำลังดำเนินการ = เขียว
-      if (step.has_work_logged) return 'status-working'
       
       return 'status-pending'
     },
@@ -542,8 +542,8 @@ export default {
 }
 
 .step-card.status-working {
-  border-left-color: #10b981;
-  background: linear-gradient(to right, #f0fdf4 0%, white 10%);
+  border-left-color: #f59e0b;
+  background: linear-gradient(to right, #fefce8 0%, white 10%);
 }
 
 .step-card.status-overdue {
@@ -608,7 +608,7 @@ export default {
 }
 
 .status-working .step-number {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
 .status-overdue .step-number {
@@ -644,8 +644,8 @@ export default {
 }
 
 .step-status-badge.status-working {
-  background: #d1fae5;
-  color: #047857;
+  background: #fef3c7;
+  color: #b45309;
 }
 
 .step-status-badge.status-overdue {
