@@ -371,7 +371,20 @@ export default {
     },
     getStepClass(step) {
       if (step.status === 'completed') return 'status-completed'
-      if (step.status === 'in_progress') return 'status-in_progress'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // เกินกำหนด = แดง
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'status-overdue'
+      }
+      
+      // กำลังดำเนินการ = เขียว
+      if (step.has_work_logged) return 'status-working'
+      
       return 'status-pending'
     },
     getStepIcon(step) {
@@ -853,6 +866,16 @@ export default {
   background: linear-gradient(to right, #f0fdf4 0%, white 10%);
 }
 
+.step-card.status-working {
+  border-left-color: #10b981;
+  background: linear-gradient(to right, #f0fdf4 0%, white 10%);
+}
+
+.step-card.status-overdue {
+  border-left-color: #ef4444;
+  background: linear-gradient(to right, #fef2f2 0%, white 10%);
+}
+
 .step-card.status-in_progress {
   border-left-color: #3b82f6;
   background: linear-gradient(to right, #eff6ff 0%, white 10%);
@@ -887,6 +910,14 @@ export default {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 
+.status-working .step-number {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.status-overdue .step-number {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
 .status-in_progress .step-number {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
@@ -905,6 +936,16 @@ export default {
 .step-status-badge.status-completed {
   background: #d1fae5;
   color: #047857;
+}
+
+.step-status-badge.status-working {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.step-status-badge.status-overdue {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .step-status-badge.status-in_progress {
