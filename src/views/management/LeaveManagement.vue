@@ -699,6 +699,11 @@ const saveLeaveType = async () => {
   gap: 0.5rem;
 }
 
+.leave-type-header :deep(.p-badge) {
+  white-space: nowrap;
+  overflow: visible;
+}
+
 .leave-type-actions {
   display: flex;
   gap: 0;

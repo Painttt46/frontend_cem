@@ -427,11 +427,12 @@ export default {
 <style scoped>
 .project-progress {
   padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .header-card {
+  width: 100%;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: none;
@@ -509,6 +510,7 @@ export default {
 }
 
 .content-card {
+  width: 100%;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
