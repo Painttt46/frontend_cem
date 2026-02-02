@@ -706,7 +706,10 @@ export default {
       
       // หา step ที่มีการลงงานจริง และวันที่ลงงานไม่เกินวันนี้
       const workingSteps = task.steps.filter(s => {
-        if (!s.has_work_logged || !s.project_statuses || s.project_statuses.length === 0) return false
+        if (!s.has_work_logged) return false
+        // รองรับทั้ง project_statuses (array) และ project_status (single)
+        const hasStatus = (s.project_statuses && s.project_statuses.length > 0) || s.project_status
+        if (!hasStatus) return false
         if (s.latest_work_date) {
           const workDate = new Date(s.latest_work_date)
           workDate.setHours(0, 0, 0, 0)
@@ -719,7 +722,11 @@ export default {
       const latestStep = workingSteps.sort((a, b) => 
         new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
       )[0]
-      return latestStep.project_statuses || []
+      // รองรับทั้ง array และ single
+      if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
+        return latestStep.project_statuses
+      }
+      return latestStep.project_status ? [latestStep.project_status] : []
     },
     getProjectStatusLabel(status) {
       const found = this.workStatuses.find(s => s.value === status)

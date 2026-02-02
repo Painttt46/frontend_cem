@@ -374,13 +374,21 @@ export default {
     getStepStatusLabel(step) {
       if (step.status === 'completed') return 'เสร็จสิ้น'
       
-      // กำลังดำเนินการ (ตรวจสอบก่อนเกินกำหนด)
-      if (step.has_work_logged) return 'กำลังดำเนินการ'
-      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // เกินกำหนด (เฉพาะกรณีที่ยังไม่มีการลงงาน)
+      // กำลังดำเนินการ - เช็คว่า work_date ถึงวันนี้แล้วหรือยัง
+      if (step.has_work_logged) {
+        if (step.latest_work_date) {
+          const workDate = new Date(step.latest_work_date)
+          workDate.setHours(0, 0, 0, 0)
+          if (workDate <= today) return 'กำลังดำเนินการ'
+        } else {
+          return 'กำลังดำเนินการ'
+        }
+      }
+      
+      // เกินกำหนด (เฉพาะกรณีที่ยังไม่มีการลงงานถึงวันนี้)
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
@@ -392,13 +400,21 @@ export default {
     getStepClass(step) {
       if (step.status === 'completed') return 'status-completed'
       
-      // กำลังดำเนินการ = เขียว (ตรวจสอบก่อนเกินกำหนด)
-      if (step.has_work_logged) return 'status-working'
-      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // เกินกำหนด = แดง (เฉพาะกรณีที่ยังไม่มีการลงงาน)
+      // กำลังดำเนินการ - เช็คว่า work_date ถึงวันนี้แล้วหรือยัง
+      if (step.has_work_logged) {
+        if (step.latest_work_date) {
+          const workDate = new Date(step.latest_work_date)
+          workDate.setHours(0, 0, 0, 0)
+          if (workDate <= today) return 'status-working'
+        } else {
+          return 'status-working'
+        }
+      }
+      
+      // เกินกำหนด = แดง
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
