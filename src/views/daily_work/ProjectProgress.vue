@@ -307,12 +307,26 @@ export default {
     },
     getLatestWorkingStep(project) {
       if (!project.steps || project.steps.length === 0) return []
-      // หา step ที่เสร็จสิ้นล่าสุด (ตาม completed_at หรือ updated_at)
-      const completedSteps = project.steps.filter(s => s.status === 'completed' && s.project_statuses && s.project_statuses.length > 0)
-      if (completedSteps.length === 0) return []
-      // เรียงตามเวลาที่เสร็จล่าสุด
-      const latestStep = completedSteps.sort((a, b) => 
-        new Date(b.completed_at || b.updated_at || 0) - new Date(a.completed_at || a.updated_at || 0)
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      // หา step ที่มีการลงงานจริง และวันที่ลงงานไม่เกินวันนี้
+      const workingSteps = project.steps.filter(s => {
+        if (!s.has_work_logged || !s.project_statuses || s.project_statuses.length === 0) return false
+        // เช็คว่า latest_work_date ไม่เกินวันนี้
+        if (s.latest_work_date) {
+          const workDate = new Date(s.latest_work_date)
+          workDate.setHours(0, 0, 0, 0)
+          return workDate <= today
+        }
+        return true
+      })
+      
+      if (workingSteps.length === 0) return []
+      // เรียงตามเวลาที่อัปเดตล่าสุด
+      const latestStep = workingSteps.sort((a, b) => 
+        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
       )[0]
       return latestStep.project_statuses || []
     },
