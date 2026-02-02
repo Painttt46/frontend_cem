@@ -46,11 +46,20 @@
                       </div>
                       <div v-if="getStepById(stepId)?.description" class="chip-desc">{{ getStepById(stepId).description }}</div>
                       <div class="chip-details">
+                        <span v-if="getStepById(stepId)?.project_statuses?.length > 0" class="chip-meta">
+                          <span v-for="ps in getStepById(stepId).project_statuses" :key="ps" class="project-badge-mini"
+                            :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
+                            {{ getProjectStatusLabel(ps) }}
+                          </span>
+                        </span>
                         <span v-if="getStepById(stepId)?.start_date || getStepById(stepId)?.end_date" class="chip-meta">
                           <i class="pi pi-calendar"></i> {{ formatDateRange(getStepById(stepId)?.start_date, getStepById(stepId)?.end_date) }}
                         </span>
                         <span v-if="getStepById(stepId)?.assigned_users?.length > 0" class="chip-meta">
-                          <i class="pi pi-users"></i> {{ formatAssignedUsers(getStepById(stepId).assigned_users) }}
+                          <i class="pi pi-users"></i>
+                          <span v-for="user in getStepById(stepId).assigned_users" :key="user.id || user" class="user-badge-mini">
+                            {{ typeof user === 'object' ? user.name : user }}
+                          </span>
                         </span>
                       </div>
                     </div>
@@ -80,7 +89,9 @@
                       </span>
                       <span v-if="slotProps.option.assigned_users && slotProps.option.assigned_users.length > 0" class="meta-item">
                         <i class="pi pi-users"></i>
-                        {{ formatAssignedUsers(slotProps.option.assigned_users) }}
+                        <span v-for="user in slotProps.option.assigned_users" :key="user.id || user" class="user-badge">
+                          {{ typeof user === 'object' ? user.name : user }}
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -1114,10 +1125,32 @@ export default {
   align-items: center;
   gap: 0.25rem;
   color: #64748b;
+  flex-wrap: wrap;
 }
 
 .chip-meta i {
   font-size: 0.65rem;
+}
+
+.user-badge, .user-badge-mini {
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.user-badge-mini {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.3rem;
+}
+
+.project-badge-mini {
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 500;
 }
 
 .step-status-inline {
