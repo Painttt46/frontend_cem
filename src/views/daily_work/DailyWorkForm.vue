@@ -700,31 +700,29 @@ export default {
         const uploadedFiles = await this.uploadFiles()
         const stepIds = this.formData.stepIds && this.formData.stepIds.length > 0 
           ? this.formData.stepIds 
-          : [null]
+          : []
 
-        for (const stepId of stepIds) {
-          const workData = {
-            task_id: this.formData.taskId,
-            step_id: stepId,
-            work_date: this.formatDate(this.formData.workDate),
-            start_time: this.formatTime(this.formData.startTime),
-            end_time: this.formatTime(this.formData.endTime),
-            total_hours: this.calculateTotalHours(),
-            location: this.formData.location,
-            work_description: this.formData.workDescription,
-            files: uploadedFiles,
-            user_id: localStorage.getItem('soc_user_id'),
-            submitted_at: new Date().toISOString(),
-            create_calendar_event: this.formData.createCalendarEvent,
-            event_title: this.formData.eventTitle,
-            meeting_start_time: this.formatTime(this.formData.meetingStartTime),
-            meeting_end_time: this.formatTime(this.formData.meetingEndTime),
-            attendees: this.formData.attendees,
-            create_teams_meeting: this.formData.createTeamsMeeting,
-            event_details: this.formData.eventDetails
-          }
-          await this.$http.post('/api/daily-work', workData)
+        const workData = {
+          task_id: this.formData.taskId,
+          step_ids: stepIds,
+          work_date: this.formatDate(this.formData.workDate),
+          start_time: this.formatTime(this.formData.startTime),
+          end_time: this.formatTime(this.formData.endTime),
+          total_hours: this.calculateTotalHours(),
+          location: this.formData.location,
+          work_description: this.formData.workDescription,
+          files: uploadedFiles,
+          user_id: localStorage.getItem('soc_user_id'),
+          submitted_at: new Date().toISOString(),
+          create_calendar_event: this.formData.createCalendarEvent,
+          event_title: this.formData.eventTitle,
+          meeting_start_time: this.formatTime(this.formData.meetingStartTime),
+          meeting_end_time: this.formatTime(this.formData.meetingEndTime),
+          attendees: this.formData.attendees,
+          create_teams_meeting: this.formData.createTeamsMeeting,
+          event_details: this.formData.eventDetails
         }
+        await this.$http.post('/api/daily-work', workData)
 
         this.$toast.add({
           severity: 'success',

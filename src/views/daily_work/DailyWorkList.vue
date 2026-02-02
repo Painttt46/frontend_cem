@@ -61,7 +61,23 @@
 
         <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.step_name" class="step-card-mini" 
+            <!-- Multiple steps -->
+            <div v-if="slotProps.data.steps_data && slotProps.data.steps_data.length > 0" class="steps-container">
+              <div v-for="step in slotProps.data.steps_data" :key="step.id" class="step-card-mini"
+                :style="{ borderLeftColor: getStepColorFromData(step) }">
+                <div class="step-header-mini">
+                  <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">
+                    {{ (step.step_order || 0) + 1 }}
+                  </span>
+                  <span class="step-name-mini">{{ step.step_name }}</span>
+                  <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">
+                    {{ getStepLabelFromData(step) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <!-- Single step (backward compatible) -->
+            <div v-else-if="slotProps.data.step_name" class="step-card-mini" 
               :style="{ borderLeftColor: getStepColor(slotProps.data) }">
               <div class="step-header-mini">
                 <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data) }">
@@ -70,24 +86,6 @@
                 <span class="step-name-mini">{{ slotProps.data.step_name }}</span>
                 <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data) + '20', color: getStepColor(slotProps.data) }">
                   {{ getStepLabel(slotProps.data) }}
-                </span>
-              </div>
-              <div v-if="slotProps.data.step_description" class="step-desc-mini">
-                {{ slotProps.data.step_description }}
-              </div>
-              <div class="step-meta-mini">
-                <span v-if="slotProps.data.step_project_status" class="project-badge" 
-                      :style="{ background: getProjectStatusColor(slotProps.data.step_project_status) + '20', color: getProjectStatusColor(slotProps.data.step_project_status) }">
-                  <i class="pi pi-folder"></i> {{ getProjectStatusLabel(slotProps.data.step_project_status) }}
-                </span>
-                <span v-if="slotProps.data.step_start_date || slotProps.data.step_end_date" class="meta-item-mini">
-                  <i class="pi pi-calendar"></i> {{ formatStepDateRange(slotProps.data.step_start_date, slotProps.data.step_end_date) }}
-                </span>
-                <span v-if="slotProps.data.step_assigned_users && slotProps.data.step_assigned_users.length > 0" class="meta-item-mini">
-                  <i class="pi pi-users"></i>
-                  <template v-for="(user, idx) in slotProps.data.step_assigned_users" :key="idx">
-                    <span class="user-badge-mini">{{ user.name }}</span>
-                  </template>
                 </span>
               </div>
             </div>
@@ -589,12 +587,52 @@ export default {
     },
     getStepColor(data) {
       if (data?.step_status === 'completed') return '#10b981'
-      if (data?.step_status === 'in_progress') return '#3b82f6'
+      if (data?.step_has_work_logged) return '#f59e0b'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (data?.step_end_date) {
+        const endDate = new Date(data.step_end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return '#ef4444'
+      }
       return '#9ca3af'
     },
     getStepLabel(data) {
       if (data?.step_status === 'completed') return 'เสร็จสิ้น'
-      if (data?.step_status === 'in_progress') return 'กำลังดำเนินการ'
+      if (data?.step_has_work_logged) return 'กำลังดำเนินการ'
+      
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (data?.step_end_date) {
+        const endDate = new Date(data.step_end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'เกินกำหนด'
+      }
+      return 'รอดำเนินการ'
+    },
+    getStepColorFromData(step) {
+      if (step?.status === 'completed') return '#10b981'
+      if (step?.has_work_logged) return '#f59e0b'
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (step?.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return '#ef4444'
+      }
+      return '#9ca3af'
+    },
+    getStepLabelFromData(step) {
+      if (step?.status === 'completed') return 'เสร็จสิ้น'
+      if (step?.has_work_logged) return 'กำลังดำเนินการ'
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (step?.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'เกินกำหนด'
+      }
       return 'รอดำเนินการ'
     },
     getProjectStatusLabel(status) {
@@ -1590,6 +1628,13 @@ export default {
   display: block;
   width: fit-content;
   margin-top: 0.25rem;
+}
+
+/* Steps Container for multiple steps */
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 /* Step Card Mini */
