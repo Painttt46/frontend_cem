@@ -304,18 +304,23 @@ export default {
     },
     getLatestWorkingStep(project) {
       if (!project.steps || project.steps.length === 0) return '-'
-      // หา step ล่าสุดที่มีการลงงานจริง
-      const workingSteps = project.steps.filter(s => s.has_work_logged)
-      if (workingSteps.length === 0) return '-'
-      const latestStep = workingSteps[workingSteps.length - 1]
-      return latestStep.step_name
+      // หา step ที่เสร็จสิ้นล่าสุด (ตาม completed_at หรือ updated_at)
+      const completedSteps = project.steps.filter(s => s.status === 'completed' && s.project_status)
+      if (completedSteps.length === 0) return '-'
+      // เรียงตามเวลาที่เสร็จล่าสุด
+      const latestStep = completedSteps.sort((a, b) => 
+        new Date(b.completed_at || b.updated_at || 0) - new Date(a.completed_at || a.updated_at || 0)
+      )[0]
+      return this.getProjectStatusLabel(latestStep.project_status)
     },
     getLatestStepColor(project) {
       if (!project.steps || project.steps.length === 0) return '#9ca3af'
-      const workingSteps = project.steps.filter(s => s.has_work_logged)
-      if (workingSteps.length === 0) return '#9ca3af'
-      const latestStep = workingSteps[workingSteps.length - 1]
-      return this.getStepStatusColor(latestStep)
+      const completedSteps = project.steps.filter(s => s.status === 'completed' && s.project_status)
+      if (completedSteps.length === 0) return '#9ca3af'
+      const latestStep = completedSteps.sort((a, b) => 
+        new Date(b.completed_at || b.updated_at || 0) - new Date(a.completed_at || a.updated_at || 0)
+      )[0]
+      return this.getProjectStatusColor(latestStep.project_status)
     },
     getStepStatusLabel(step) {
       // เสร็จสิ้น

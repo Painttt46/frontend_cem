@@ -32,7 +32,7 @@
                 <i class="pi pi-sitemap"></i> เลือก Workflow Step (เลือกได้หลายรายการ)
               </label>
               <MultiSelect id="stepId" v-model="formData.stepIds" :options="workflowSteps" optionLabel="step_name"
-                optionValue="id" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
+                optionValue="id" :optionDisabled="isStepCompleted" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
                 filter filterPlaceholder="ค้นหาชื่อ step...">
                 <template #value="slotProps">
                   <div v-if="slotProps.value && slotProps.value.length > 0" class="selected-chips">
@@ -457,6 +457,9 @@ export default {
     },
     getStepById(stepId) {
       return this.workflowSteps.find(s => s.id === stepId)
+    },
+    isStepCompleted(step) {
+      return step?.status === 'completed'
     },
     getStepName(stepId) {
       const step = this.workflowSteps.find(s => s.id === stepId)
