@@ -64,14 +64,14 @@
             <!-- Multiple steps -->
             <div v-if="slotProps.data.steps_data && slotProps.data.steps_data.length > 0" class="steps-container">
               <div v-for="step in slotProps.data.steps_data" :key="step.id" class="step-card-mini"
-                :style="{ borderLeftColor: getStepColorFromData(step) }">
+                :style="{ borderLeftColor: getStepColorFromData(step, slotProps.data.work_date) }">
                 <div class="step-header-mini">
-                  <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">
+                  <span class="step-number-mini" :style="{ background: getStepColorFromData(step, slotProps.data.work_date) }">
                     {{ (step.step_order || 0) + 1 }}
                   </span>
                   <span class="step-name-mini">{{ step.step_name }}</span>
-                  <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">
-                    {{ getStepLabelFromData(step) }}
+                  <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step, slotProps.data.work_date) + '20', color: getStepColorFromData(step, slotProps.data.work_date) }">
+                    {{ getStepLabelFromData(step, slotProps.data.work_date) }}
                   </span>
                 </div>
               </div>
@@ -611,11 +611,19 @@ export default {
       }
       return 'รอดำเนินการ'
     },
-    getStepColorFromData(step) {
+    getStepColorFromData(step, workDate) {
       if (step?.status === 'completed') return '#10b981'
-      if (step?.has_work_logged) return '#f59e0b'
+      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      
+      // เช็คว่า work_date ถึงวันนี้หรือยัง
+      if (step?.has_work_logged && workDate) {
+        const wDate = new Date(workDate)
+        wDate.setHours(0, 0, 0, 0)
+        if (wDate <= today) return '#f59e0b'
+      }
+      
       if (step?.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
@@ -623,11 +631,19 @@ export default {
       }
       return '#9ca3af'
     },
-    getStepLabelFromData(step) {
+    getStepLabelFromData(step, workDate) {
       if (step?.status === 'completed') return 'เสร็จสิ้น'
-      if (step?.has_work_logged) return 'กำลังดำเนินการ'
+      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      
+      // เช็คว่า work_date ถึงวันนี้หรือยัง
+      if (step?.has_work_logged && workDate) {
+        const wDate = new Date(workDate)
+        wDate.setHours(0, 0, 0, 0)
+        if (wDate <= today) return 'กำลังดำเนินการ'
+      }
+      
       if (step?.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)

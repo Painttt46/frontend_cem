@@ -93,11 +93,11 @@
 
         <Column header="สถานะ" style="text-align: center; min-width: 180px;">
           <template #body="slotProps">
-            <div class="badge-container">
+            <div class="status-badges-column">
               <template v-if="getLatestProjectStatuses(slotProps.data).length > 0">
                 <Badge v-for="ps in getLatestProjectStatuses(slotProps.data)" :key="ps"
                   :value="getProjectStatusLabel(ps)" 
-                  :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold', marginRight: '0.25rem' }" />
+                  :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
               </template>
               <Badge v-else :value="getStatusLabel(slotProps.data.status) || '-'" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
@@ -1656,6 +1656,13 @@ export default {
   align-items: center;
   height: 100%;
   min-height: 40px;
+}
+
+.status-badges-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .badge-container :deep(.p-badge) {
