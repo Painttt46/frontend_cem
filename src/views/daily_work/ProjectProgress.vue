@@ -329,68 +329,45 @@ export default {
       return latestStep.project_statuses || []
     },
     getStepStatusLabel(step) {
-      // เสร็จสิ้น
       if (step.status === 'completed') return 'เสร็จสิ้น'
-      
-      // มีการลงงานจริง = กำลังดำเนินการ (ตรวจสอบก่อนเกินกำหนด)
-      if (step.has_work_logged) return 'กำลังดำเนินการ'
       
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // เกินวันสิ้นสุดแล้วยังไม่มีการลงงาน
+      if (step.has_work_logged) {
+        if (step.latest_work_date) {
+          const wDate = new Date(step.latest_work_date)
+          wDate.setHours(0, 0, 0, 0)
+          if (wDate <= today) return 'กำลังดำเนินการ'
+        } else {
+          return 'กำลังดำเนินการ'
+        }
+      }
+      
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
         if (today > endDate) return 'เกินกำหนด'
       }
       
-      // ถึงเวลาเริ่มแล้วยังไม่มีคนลงงาน
-      if (step.start_date && (!step.assigned_users || step.assigned_users.length === 0)) {
-        const startDate = new Date(step.start_date)
-        startDate.setHours(0, 0, 0, 0)
-        if (today >= startDate) return 'รอผู้รับผิดชอบ'
-      }
-      
-      // ยังไม่มีการลงงาน
       return 'รอดำเนินการ'
-    },
-    getStepStatusColor(step) {
-      // เสร็จสิ้น = เขียว
-      if (step.status === 'completed') return '#10b981'
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      // เกินวันสิ้นสุดแล้วยังไม่ complete = แดง
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return '#ef4444'
-      }
-      
-      // ถึงเวลาเริ่มแล้วยังไม่มีคนลงงาน = เหลือง
-      if (step.start_date && (!step.assigned_users || step.assigned_users.length === 0)) {
-        const startDate = new Date(step.start_date)
-        startDate.setHours(0, 0, 0, 0)
-        if (today >= startDate) return '#f59e0b'
-      }
-      
-      // มีการลงงานจริง = ฟ้า
-      if (step.has_work_logged) return '#3b82f6'
-      // ยังไม่มีการลงงาน = เทา
-      return '#9ca3af'
     },
     getStepClass(step) {
       if (step.status === 'completed') return 'status-completed'
       
-      // กำลังดำเนินการ = เขียว (ตรวจสอบก่อนเกินกำหนด)
-      if (step.has_work_logged) return 'status-working'
-      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // เกินกำหนด = แดง (เฉพาะกรณีที่ยังไม่มีการลงงาน)
+      if (step.has_work_logged) {
+        if (step.latest_work_date) {
+          const wDate = new Date(step.latest_work_date)
+          wDate.setHours(0, 0, 0, 0)
+          if (wDate <= today) return 'status-working'
+        } else {
+          return 'status-working'
+        }
+      }
+      
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)

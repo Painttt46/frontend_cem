@@ -479,10 +479,20 @@ export default {
     getStepStatusLabel(step) {
       if (!step) return 'รอดำเนินการ'
       if (step.status === 'completed') return 'เสร็จสิ้น'
-      if (step.has_work_logged) return 'กำลังดำเนินการ'
       
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      
+      if (step.has_work_logged) {
+        if (step.latest_work_date) {
+          const wDate = new Date(step.latest_work_date)
+          wDate.setHours(0, 0, 0, 0)
+          if (wDate <= today) return 'กำลังดำเนินการ'
+        } else {
+          return 'กำลังดำเนินการ'
+        }
+      }
+      
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
@@ -493,10 +503,20 @@ export default {
     getStepStatusColor(step) {
       if (!step) return '#9ca3af'
       if (step.status === 'completed') return '#10b981'
-      if (step.has_work_logged) return '#f59e0b'
       
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      
+      if (step.has_work_logged) {
+        if (step.latest_work_date) {
+          const wDate = new Date(step.latest_work_date)
+          wDate.setHours(0, 0, 0, 0)
+          if (wDate <= today) return '#f59e0b'
+        } else {
+          return '#f59e0b'
+        }
+      }
+      
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
