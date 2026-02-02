@@ -898,20 +898,34 @@ export default {
         
         await this.$http.put(`/api/tasks/${this.editFormData.id}`, updateData)
         
-        // Save workflow steps - ลบ steps เก่าก่อนเสมอ
+        // Save workflow steps - update existing, create new, delete removed
         const existingSteps = await this.$http.get(`/api/task-steps/task/${this.editFormData.id}`)
+        const existingIds = existingSteps.data.map(s => s.id)
+        const newStepIds = this.editFormData.steps.filter(s => s.id).map(s => s.id)
+        
+        // Delete removed steps
         for (const step of existingSteps.data) {
-          await this.$http.delete(`/api/task-steps/${step.id}`)
+          if (!newStepIds.includes(step.id)) {
+            await this.$http.delete(`/api/task-steps/${step.id}`)
+          }
         }
-        // Create new steps
+        
+        // Update or create steps
         if (this.editFormData.steps && this.editFormData.steps.length > 0) {
           for (const step of this.editFormData.steps) {
-            await this.$http.post('/api/task-steps', {
+            const stepData = {
               ...step,
               task_id: this.editFormData.id,
               start_date: formatDate(step.start_date),
               end_date: formatDate(step.end_date)
-            })
+            }
+            if (step.id && existingIds.includes(step.id)) {
+              // Update existing
+              await this.$http.put(`/api/task-steps/${step.id}`, stepData)
+            } else {
+              // Create new
+              await this.$http.post('/api/task-steps', stepData)
+            }
           }
         }
         
