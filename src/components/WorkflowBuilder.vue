@@ -2,7 +2,11 @@
   <div class="workflow-builder">
     <div class="workflow-header">
       <h3><i class="pi pi-sitemap"></i> Workflow Steps</h3>
-      <Button icon="pi pi-plus" label="เพิ่ม Step" @click="addStep" size="small" />
+      <div class="header-actions">
+        <Button icon="pi pi-download" label="โหลด Template" @click="showLoadTemplate" size="small" severity="secondary" outlined />
+        <Button v-if="steps.length > 0" icon="pi pi-save" label="บันทึก Template" @click="showSaveTemplate" size="small" severity="info" outlined />
+        <Button icon="pi pi-plus" label="เพิ่ม Step" @click="addStep" size="small" />
+      </div>
     </div>
 
     <div class="workflow-timeline" v-if="steps.length > 0">
@@ -136,6 +140,40 @@
         <Button label="บันทึก" @click="saveStep" :disabled="!currentStep.step_name" />
       </template>
     </Dialog>
+
+    <!-- Save Template Dialog -->
+    <Dialog v-model:visible="saveTemplateDialog" header="บันทึก Workflow Template" :style="{width: '400px'}" modal>
+      <div class="field">
+        <label>ชื่อ Template *</label>
+        <InputText v-model="templateName" placeholder="เช่น โครงการพัฒนาระบบ" class="w-full" />
+      </div>
+      <div class="field">
+        <label>คำอธิบาย</label>
+        <Textarea v-model="templateDesc" rows="2" class="w-full" />
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" @click="saveTemplateDialog = false" text />
+        <Button label="บันทึก" @click="saveTemplate" :disabled="!templateName" />
+      </template>
+    </Dialog>
+
+    <!-- Load Template Dialog -->
+    <Dialog v-model:visible="loadTemplateDialog" header="เลือก Workflow Template" :style="{width: '500px'}" modal>
+      <div v-if="templates.length === 0" class="empty-templates">
+        <i class="pi pi-inbox"></i>
+        <p>ยังไม่มี template</p>
+      </div>
+      <div v-else class="template-list">
+        <div v-for="t in templates" :key="t.id" class="template-item" @click="loadTemplate(t)">
+          <div class="template-info">
+            <strong>{{ t.name }}</strong>
+            <small v-if="t.description">{{ t.description }}</small>
+            <small class="meta">{{ t.steps?.length || 0 }} steps | {{ t.created_by_name }}</small>
+          </div>
+          <Button icon="pi pi-trash" severity="danger" text size="small" @click.stop="deleteTemplate(t.id)" />
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -185,7 +223,13 @@ export default {
         end_date: null,
         assigned_users: [],
         step_order: 0
-      }
+      },
+      // Template
+      templates: [],
+      saveTemplateDialog: false,
+      loadTemplateDialog: false,
+      templateName: '',
+      templateDesc: ''
     }
   },
   watch: {
@@ -430,6 +474,55 @@ export default {
     getStatusColor(status) {
       const found = this.projectStatusOptions.find(opt => opt.value === status)
       return found?.color || '#6b7280'
+    },
+    // Template methods
+    async loadTemplates() {
+      try {
+        const res = await axios.get('/api/settings/workflow-templates')
+        this.templates = res.data
+      } catch (e) { console.error(e) }
+    },
+    showSaveTemplate() {
+      this.templateName = ''
+      this.templateDesc = ''
+      this.saveTemplateDialog = true
+    },
+    async showLoadTemplate() {
+      await this.loadTemplates()
+      this.loadTemplateDialog = true
+    },
+    async saveTemplate() {
+      const cleanSteps = this.steps.map(s => ({
+        step_name: s.step_name,
+        description: s.description,
+        project_statuses: s.project_statuses
+      }))
+      try {
+        await axios.post('/api/settings/workflow-templates', {
+          name: this.templateName,
+          description: this.templateDesc,
+          steps: cleanSteps
+        })
+        this.saveTemplateDialog = false
+      } catch (e) { console.error(e) }
+    },
+    loadTemplate(t) {
+      const newSteps = (t.steps || []).map((s, i) => ({
+        ...s,
+        step_order: i,
+        assigned_users: [],
+        start_date: null,
+        end_date: null
+      }))
+      this.steps = newSteps
+      this.$emit('update:modelValue', this.steps)
+      this.loadTemplateDialog = false
+    },
+    async deleteTemplate(id) {
+      try {
+        await axios.delete(`/api/settings/workflow-templates/${id}`)
+        this.templates = this.templates.filter(t => t.id !== id)
+      } catch (e) { console.error(e) }
     }
   }
 }
@@ -809,6 +902,58 @@ export default {
 .user-option .user-info {
   font-size: 0.75rem;
   color: #6b7280;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.template-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.template-item:hover {
+  background: #e5e7eb;
+}
+
+.template-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.template-info small {
+  color: #6b7280;
+}
+
+.template-info .meta {
+  font-size: 0.7rem;
+}
+
+.empty-templates {
+  text-align: center;
+  padding: 2rem;
+  color: #9ca3af;
+}
+
+.empty-templates i {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 @media (max-width: 768px) {
