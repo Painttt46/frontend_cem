@@ -403,11 +403,14 @@ const filteredTasksByStatus = computed(() => {
         if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
           return latestStep.project_statuses.includes(selectedTaskStatus.value)
         }
-        return selectedTaskStatus.value === '-'
+        return selectedTaskStatus.value === 'ไม่ระบุ'
       }
-      return selectedTaskStatus.value === '-'
+      return selectedTaskStatus.value === 'ไม่ระบุ'
     }
-    return (t.status || 'ไม่ระบุ') === selectedTaskStatus.value
+    // ไม่มี workflow - ถ้า status เป็น null/undefined หรือ '-' ให้เป็น 'ไม่ระบุ'
+    let status = t.status
+    if (!status || status === '-') status = 'ไม่ระบุ'
+    return status === selectedTaskStatus.value
   })
 })
 
@@ -967,14 +970,16 @@ const renderCharts = (leaves, tasks) => {
             taskStatus[ps] = (taskStatus[ps] || 0) + 1
           })
         } else {
-          taskStatus['-'] = (taskStatus['-'] || 0) + 1
+          taskStatus['ไม่ระบุ'] = (taskStatus['ไม่ระบุ'] || 0) + 1
         }
       } else {
-        taskStatus['-'] = (taskStatus['-'] || 0) + 1
+        // มี workflow แต่ยังไม่มีการลงงาน
+        taskStatus['ไม่ระบุ'] = (taskStatus['ไม่ระบุ'] || 0) + 1
       }
     } else {
-      // ไม่มี workflow ใช้ task status
-      const status = t.status || 'ไม่ระบุ'
+      // ไม่มี workflow - ถ้า status เป็น null/undefined หรือ '-' ให้เป็น 'ไม่ระบุ'
+      let status = t.status
+      if (!status || status === '-') status = 'ไม่ระบุ'
       taskStatus[status] = (taskStatus[status] || 0) + 1
     }
   })
@@ -987,7 +992,7 @@ const renderCharts = (leaves, tasks) => {
       labels: statusLabels,
       datasets: [{
         data: Object.values(taskStatus),
-        backgroundColor: statusLabels.map(s => s === '-' ? '#9e9e9e' : (workStatusColors.value[s] || '#6c757d'))
+        backgroundColor: statusLabels.map(s => workStatusColors.value[s] || '#9e9e9e')
       }]
     },
     options: {

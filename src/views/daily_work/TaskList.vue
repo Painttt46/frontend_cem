@@ -103,8 +103,9 @@
                   :value="getProjectStatusLabel(ps)" 
                   :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
               </template>
-              <!-- ถ้ามี workflow แต่ไม่มี project_statuses ให้แสดง - -->
-              <span v-else-if="hasWorkflowWithWork(slotProps.data)" class="text-muted">-</span>
+              <!-- ถ้ามี workflow แต่ไม่มี project_statuses ให้แสดง Badge - -->
+              <Badge v-else-if="hasWorkflowWithWork(slotProps.data)" value="-" 
+                     :style="{ backgroundColor: '#9e9e9e', color: '#fff', fontWeight: 'bold' }" />
               <!-- fallback แสดง task status -->
               <Badge v-else :value="getStatusLabel(slotProps.data.status) || '-'" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
