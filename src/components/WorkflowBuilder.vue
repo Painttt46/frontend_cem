@@ -519,10 +519,17 @@ export default {
       this.loadTemplateDialog = false
     },
     async deleteTemplate(id) {
-      try {
-        await axios.delete(`/api/settings/workflow-templates/${id}`)
-        this.templates = this.templates.filter(t => t.id !== id)
-      } catch (e) { console.error(e) }
+      this.$confirm.require({
+        message: 'คุณต้องการลบ template นี้หรือไม่?',
+        header: 'ยืนยันการลบ',
+        icon: 'pi pi-exclamation-triangle',
+        accept: async () => {
+          try {
+            await axios.delete(`/api/settings/workflow-templates/${id}`)
+            this.templates = this.templates.filter(t => t.id !== id)
+          } catch (e) { console.error(e) }
+        }
+      })
     }
   }
 }
