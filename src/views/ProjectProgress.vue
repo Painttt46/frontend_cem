@@ -1,6 +1,7 @@
 <template>
   <div class="project-progress">
     <Toast />
+    <ConfirmDialog />
     
     <Card class="header-card">
       <template #header>
@@ -47,14 +48,6 @@
             </template>
           </Column>
 
-          <Column field="status" header="สถานะโครงการ" :sortable="true" style="min-width: 180px;">
-            <template #body="slotProps">
-              <Badge v-if="slotProps.data.status" :value="getStatusLabel(slotProps.data.status)"
-                :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff' }" />
-              <span v-else class="text-muted">-</span>
-            </template>
-          </Column>
-
           <Column header="ความคืบหน้า" style="min-width: 180px;">
             <template #body="slotProps">
               <div class="progress-info">
@@ -80,7 +73,7 @@
                         {{ getStepStatusLabel(step) }}
                       </div>
                       <button v-if="canCompleteStep(step)" class="complete-btn"
-                        @click="completeStep(step)" :disabled="completingStepId === step.id">
+                        @click="confirmCompleteStep(step)" :disabled="completingStepId === step.id">
                         <i :class="completingStepId === step.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
                         {{ completingStepId === step.id ? 'กำลังบันทึก...' : 'เสร็จสิ้น' }}
                       </button>
@@ -137,8 +130,13 @@
 </template>
 
 <script>
+import { useConfirm } from 'primevue/useconfirm'
+
 export default {
   name: 'ProjectProgress',
+  setup() {
+    return { $confirm: useConfirm() }
+  },
   data() {
     return {
       projects: [],
@@ -387,6 +385,16 @@ export default {
       if (step.status === 'completed') return false
       if (!step.assigned_users || step.assigned_users.length === 0) return false
       return step.assigned_users.some(u => u.id === this.currentUserId)
+    },
+    confirmCompleteStep(step) {
+      this.$confirm.require({
+        message: `ยืนยันว่าขั้นตอน "${step.step_name}" เสร็จสิ้นแล้ว?`,
+        header: 'ยืนยันการดำเนินการ',
+        icon: 'pi pi-check-circle',
+        acceptLabel: 'ยืนยัน',
+        rejectLabel: 'ยกเลิก',
+        accept: () => this.completeStep(step)
+      })
     },
     async completeStep(step) {
       this.completingStepId = step.id

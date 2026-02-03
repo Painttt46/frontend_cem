@@ -358,27 +358,6 @@
           </MultiSelect>
         </div>
 
-        <div class="input-group">
-          <label class="input-label">สถานะงาน</label>
-          <Dropdown v-model="editFormData.status" :options="workStatuses" 
-                    optionLabel="label" optionValue="value" placeholder="ไม่ระบุสถานะ" 
-                    class="corporate-input" showClear>
-            <template #value="slotProps">
-              <span v-if="slotProps.value" class="status-badge" 
-                    :style="{ background: getStatusColor(slotProps.value) + '20', color: getStatusColor(slotProps.value) }">
-                {{ getStatusLabel(slotProps.value) }}
-              </span>
-              <span v-else class="text-muted">ไม่ระบุสถานะ</span>
-            </template>
-            <template #option="slotProps">
-              <span class="status-badge" 
-                    :style="{ background: slotProps.option.color + '20', color: slotProps.option.color }">
-                {{ slotProps.option.label }}
-              </span>
-            </template>
-          </Dropdown>
-        </div>
-        
         <div class="input-group full-width">
           <label class="input-label">รายละเอียด</label>
           <Textarea v-model="editFormData.description" rows="4" class="corporate-input" />
