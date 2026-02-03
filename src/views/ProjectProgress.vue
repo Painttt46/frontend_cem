@@ -79,6 +79,9 @@
                         <i :class="getStepIcon(step)"></i>
                         {{ getStepStatusLabel(step) }}
                       </div>
+                      <Button v-if="canCompleteStep(step)" 
+                        icon="pi pi-check" label="เสร็จสิ้น" size="small" severity="success"
+                        @click="completeStep(step)" :loading="completingStepId === step.id" />
                     </div>
 
                     <div class="step-content">
@@ -140,7 +143,9 @@ export default {
       expandedRows: {},
       categories: [],
       statuses: [],
-      searchQuery: ''
+      searchQuery: '',
+      completingStepId: null,
+      currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null
     }
   },
   computed: {
@@ -375,6 +380,24 @@ export default {
       }
       
       return 'status-pending'
+    },
+    canCompleteStep(step) {
+      // ถ้าเสร็จแล้วไม่ต้องแสดงปุ่ม
+      if (step.status === 'completed') return false
+      // เช็คว่า user ปัจจุบันอยู่ใน assigned_users หรือไม่
+      if (!step.assigned_users || step.assigned_users.length === 0) return false
+      return step.assigned_users.some(u => u.id === this.currentUserId)
+    },
+    async completeStep(step) {
+      this.completingStepId = step.id
+      try {
+        await this.$http.put(`/api/task-steps/${step.id}`, { status: 'completed' })
+        step.status = 'completed'
+        this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'อัปเดตสถานะเสร็จสิ้นแล้ว', life: 3000 })
+      } catch (error) {
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถอัปเดตสถานะได้', life: 3000 })
+      }
+      this.completingStepId = null
     },
     getStepIcon(step) {
       if (step.status === 'completed') return 'pi pi-check-circle'
