@@ -394,17 +394,20 @@ const selectedTaskStatus = ref(null)
 const filteredTasksByStatus = computed(() => {
   if (!selectedTaskStatus.value) return []
   return allTasks.value.filter(t => {
-    let status
     if (t.steps && t.steps.length > 0) {
-      const allCompleted = t.steps.every(s => s.status === 'completed')
-      const hasWorking = t.steps.some(s => s.has_work_logged && s.status !== 'completed')
-      if (allCompleted) status = 'completed'
-      else if (hasWorking) status = 'in_progress'
-      else status = 'pending'
-    } else {
-      status = t.status || 'ไม่ระบุ'
+      const workingSteps = t.steps.filter(s => s.has_work_logged)
+      if (workingSteps.length > 0) {
+        const latestStep = workingSteps.sort((a, b) => 
+          new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
+        )[0]
+        if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
+          return latestStep.project_statuses.includes(selectedTaskStatus.value)
+        }
+        return selectedTaskStatus.value === '-'
+      }
+      return selectedTaskStatus.value === '-'
     }
-    return status === selectedTaskStatus.value
+    return (t.status || 'ไม่ระบุ') === selectedTaskStatus.value
   })
 })
 
@@ -949,23 +952,31 @@ const renderCharts = (leaves, tasks) => {
   allTasks.value = tasks
   const taskStatus = {}
   
-  // นับสถานะจาก workflow steps
+  // นับสถานะจาก project_statuses ของ workflow steps (รองรับหลายสถานะ)
   tasks.forEach(t => {
-    let status
     if (t.steps && t.steps.length > 0) {
-      const allCompleted = t.steps.every(s => s.status === 'completed')
-      const hasWorking = t.steps.some(s => s.has_work_logged && s.status !== 'completed')
-      if (allCompleted) {
-        status = 'completed'
-      } else if (hasWorking) {
-        status = 'in_progress'
+      // หา step ล่าสุดที่มีการลงงาน
+      const workingSteps = t.steps.filter(s => s.has_work_logged)
+      if (workingSteps.length > 0) {
+        const latestStep = workingSteps.sort((a, b) => 
+          new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
+        )[0]
+        // ใช้ project_statuses (array)
+        if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
+          latestStep.project_statuses.forEach(ps => {
+            taskStatus[ps] = (taskStatus[ps] || 0) + 1
+          })
+        } else {
+          taskStatus['-'] = (taskStatus['-'] || 0) + 1
+        }
       } else {
-        status = 'pending'
+        taskStatus['-'] = (taskStatus['-'] || 0) + 1
       }
     } else {
-      status = t.status || 'ไม่ระบุ'
+      // ไม่มี workflow ใช้ task status
+      const status = t.status || 'ไม่ระบุ'
+      taskStatus[status] = (taskStatus[status] || 0) + 1
     }
-    taskStatus[status] = (taskStatus[status] || 0) + 1
   })
 
   const statusLabels = Object.keys(taskStatus)
@@ -976,7 +987,7 @@ const renderCharts = (leaves, tasks) => {
       labels: statusLabels,
       datasets: [{
         data: Object.values(taskStatus),
-        backgroundColor: statusLabels.map(s => workStatusColors.value[s] || '#6c757d')
+        backgroundColor: statusLabels.map(s => s === '-' ? '#9e9e9e' : (workStatusColors.value[s] || '#6c757d'))
       }]
     },
     options: {

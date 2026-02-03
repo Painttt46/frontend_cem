@@ -293,13 +293,13 @@
                         :value="getStatusLabel(ps)" 
                         :style="{ backgroundColor: getStatusColor(ps), color: '#fff', fontWeight: 'bold', fontSize: '0.75rem' }" />
                     </template>
-                    <span v-else class="text-muted">-</span>
+                    <Badge v-else value="-" :style="{ backgroundColor: '#9e9e9e', color: '#fff', fontWeight: 'bold', fontSize: '0.75rem' }" />
                   </div>
                 </template>
                 <!-- ถ้าไม่มี workflow ให้แสดง work_status -->
                 <Badge v-else-if="work.work_status" :value="getStatusLabel(work.work_status)" 
                        :style="{ backgroundColor: getStatusColor(work.work_status), color: '#fff', fontWeight: 'bold' }" />
-                <span v-else class="text-muted">-</span>
+                <Badge v-else value="-" :style="{ backgroundColor: '#9e9e9e', color: '#fff', fontWeight: 'bold' }" />
               </td>
               <td>{{ work.location || '-' }}</td>
               <td class="text-center">
