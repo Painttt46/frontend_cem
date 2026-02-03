@@ -230,11 +230,13 @@ export default {
     await this.loadUsers();
     await this.loadQuotaData();
     await this.loadHolidays();
+    await this.checkLevel2Approver();
     // Initialize with limited users
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
   },
   data() {
     return {
+      isLevel2Approver: false,
       formData: {
         leaveType: '',
         startDate: null,
@@ -300,6 +302,14 @@ export default {
       return type?.advance_days || 0
     },
     minStartDate() {
+      // ถ้าเป็นผู้อนุมัติขั้นที่ 2 สามารถเลือกวันย้อนหลังได้
+      if (this.isLevel2Approver) {
+        const pastDate = new Date()
+        pastDate.setFullYear(pastDate.getFullYear() - 1) // ย้อนหลังได้ 1 ปี
+        pastDate.setHours(0, 0, 0, 0)
+        return pastDate
+      }
+      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const advanceDays = this.selectedLeaveTypeAdvanceDays
@@ -497,6 +507,15 @@ export default {
       try {
         const response = await axios.get('/api/leave/holidays');
         this.holidays = response.data;
+      } catch { /* ignore */ }
+    },
+
+    async checkLevel2Approver() {
+      try {
+        const userId = localStorage.getItem('soc_user_id');
+        if (!userId) return;
+        const response = await axios.get(`/api/leave/is-level2-approver/${userId}`);
+        this.isLevel2Approver = response.data.isLevel2Approver || false;
       } catch { /* ignore */ }
     },
 
