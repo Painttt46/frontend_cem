@@ -633,8 +633,6 @@ export default {
         for (const step of record.steps_data) {
           if (step.project_statuses && step.project_statuses.length > 0) {
             statuses.push(...step.project_statuses)
-          } else if (step.project_status) {
-            statuses.push(step.project_status)
           }
         }
         return [...new Set(statuses)] // unique

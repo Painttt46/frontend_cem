@@ -732,11 +732,10 @@ export default {
       const latestStep = workingSteps.sort((a, b) => 
         new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
       )[0]
-      // รองรับทั้ง array และ single
       if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
         return latestStep.project_statuses
       }
-      return latestStep.project_status ? [latestStep.project_status] : []
+      return []
     },
     getProjectStatusLabel(status) {
       const found = this.workStatuses.find(s => s.value === status)
