@@ -803,18 +803,28 @@ export default {
     },
     async loadTasks() {
       try {
-        const response = await this.$http.get('/api/tasks')
-        // รองรับทั้ง format array ตรงๆ และ format ที่มี wrapper
-        this.tasks = response.data.data || response.data || []
-        // โหลด steps สำหรับแต่ละ task
-        for (const task of this.tasks) {
-          try {
-            const stepsResponse = await this.$http.get(`/api/task-steps/task/${task.id}`, { silent: true })
-            task.steps = stepsResponse.data || []
-          } catch {
-            task.steps = []
-          }
-        }
+        // โหลด tasks และ steps พร้อมกัน
+        const [tasksRes, stepsRes] = await Promise.all([
+          this.$http.get('/api/tasks'),
+          this.$http.get('/api/task-steps/all', { silent: true }).catch(() => ({ data: [] }))
+        ])
+        
+        const tasks = tasksRes.data.data || tasksRes.data || []
+        const allSteps = stepsRes.data || []
+        
+        // จัดกลุ่ม steps ตาม task_id
+        const stepsByTask = {}
+        allSteps.forEach(step => {
+          if (!stepsByTask[step.task_id]) stepsByTask[step.task_id] = []
+          stepsByTask[step.task_id].push(step)
+        })
+        
+        // assign steps ให้แต่ละ task
+        tasks.forEach(task => {
+          task.steps = stepsByTask[task.id] || []
+        })
+        
+        this.tasks = tasks
       } catch (error) {
         this.tasks = []
         this.$toast.add({
