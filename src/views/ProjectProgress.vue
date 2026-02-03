@@ -409,6 +409,7 @@ export default {
           status: 'completed'
         })
         step.status = 'completed'
+        window.dispatchEvent(new CustomEvent('taskUpdated'))
         this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'อัปเดตสถานะเสร็จสิ้นแล้ว', life: 3000 })
       } catch (error) {
         console.error(error)

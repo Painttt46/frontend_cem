@@ -94,11 +94,16 @@
         <Column header="สถานะ" style="text-align: center; min-width: 180px;">
           <template #body="slotProps">
             <div class="status-badges-column">
-              <template v-if="getLatestProjectStatuses(slotProps.data).length > 0">
+              <!-- ถ้า task เสร็จสิ้นแล้ว แสดง completed -->
+              <Badge v-if="slotProps.data.status === 'completed'" value="เสร็จสิ้น" 
+                     :style="{ backgroundColor: '#10b981', color: '#fff', fontWeight: 'bold' }" />
+              <!-- ถ้ามี project_statuses จาก workflow -->
+              <template v-else-if="getLatestProjectStatuses(slotProps.data).length > 0">
                 <Badge v-for="ps in getLatestProjectStatuses(slotProps.data)" :key="ps"
                   :value="getProjectStatusLabel(ps)" 
                   :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
               </template>
+              <!-- fallback แสดง task status -->
               <Badge v-else :value="getStatusLabel(slotProps.data.status) || '-'" 
                      :style="{ backgroundColor: getStatusColor(slotProps.data.status), color: '#fff', fontWeight: 'bold' }" />
             </div>
