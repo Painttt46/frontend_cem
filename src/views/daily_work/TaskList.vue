@@ -267,16 +267,39 @@
                 </span>
               </td>
               <td>
-                <span v-if="work.step_name" class="step-badge-small">
+                <!-- Multiple steps -->
+                <div v-if="work.steps_data && work.steps_data.length > 0" class="steps-container-mini">
+                  <div v-for="step in work.steps_data" :key="step.id" class="step-badge-inline"
+                    :style="{ borderLeftColor: getStepColorFromWork(step) }">
+                    <span class="step-num" :style="{ background: getStepColorFromWork(step) }">{{ (step.step_order || 0) + 1 }}</span>
+                    <span>{{ step.step_name }}</span>
+                    <span class="step-status-mini" :style="{ color: getStepColorFromWork(step) }">{{ getStepLabelFromWork(step) }}</span>
+                  </div>
+                </div>
+                <!-- Single step -->
+                <div v-else-if="work.step_name" class="step-badge-inline" :style="{ borderLeftColor: '#3b82f6' }">
                   <i class="pi pi-sitemap"></i> {{ work.step_name }}
-                </span>
+                </div>
                 <span v-else class="text-muted">-</span>
               </td>
               <td>{{ work.start_time }} - {{ work.end_time }}</td>
               <td class="text-center">{{ formatHoursMinutes(work.total_hours) }}</td>
               <td class="text-center">
-                <Badge :value="getStatusLabel(work.work_status)" 
+                <!-- ถ้ามี workflow step ให้แสดง project_statuses แยกตาม step -->
+                <template v-if="work.steps_data && work.steps_data.length > 0">
+                  <div v-for="step in work.steps_data" :key="'status-'+step.id" class="step-statuses-row">
+                    <template v-if="step.project_statuses && step.project_statuses.length > 0">
+                      <Badge v-for="ps in step.project_statuses" :key="ps"
+                        :value="getStatusLabel(ps)" 
+                        :style="{ backgroundColor: getStatusColor(ps), color: '#fff', fontWeight: 'bold', fontSize: '0.75rem' }" />
+                    </template>
+                    <span v-else class="text-muted">-</span>
+                  </div>
+                </template>
+                <!-- ถ้าไม่มี workflow ให้แสดง work_status -->
+                <Badge v-else-if="work.work_status" :value="getStatusLabel(work.work_status)" 
                        :style="{ backgroundColor: getStatusColor(work.work_status), color: '#fff', fontWeight: 'bold' }" />
+                <span v-else class="text-muted">-</span>
               </td>
               <td>{{ work.location || '-' }}</td>
               <td class="text-center">
@@ -728,6 +751,40 @@ export default {
     hasWorkflowWithWork(task) {
       if (!task.steps || task.steps.length === 0) return false
       return task.steps.some(s => s.has_work_logged)
+    },
+    getStepColorFromWork(step) {
+      if (step.status === 'completed') return '#10b981'
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (step.latest_work_date) {
+        const workDate = new Date(step.latest_work_date)
+        workDate.setHours(0, 0, 0, 0)
+        if (workDate <= today) return '#f59e0b'
+      }
+      return '#3b82f6'
+    },
+    getStepLabelFromWork(step) {
+      if (step.status === 'completed') return '(เสร็จสิ้น)'
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (step.latest_work_date) {
+        const workDate = new Date(step.latest_work_date)
+        workDate.setHours(0, 0, 0, 0)
+        if (workDate <= today) return '(กำลังดำเนินการ)'
+      }
+      return '(รอดำเนินการ)'
+    },
+    getWorkStatusesFromWork(work) {
+      if (!work.steps_data || work.steps_data.length === 0) return []
+      const allStatuses = []
+      work.steps_data.forEach(s => {
+        if (s.project_statuses && s.project_statuses.length > 0) {
+          s.project_statuses.forEach(ps => {
+            if (!allStatuses.includes(ps)) allStatuses.push(ps)
+          })
+        }
+      })
+      return allStatuses
     },
     getLatestWorkingStep(task) {
       if (!task.steps || task.steps.length === 0) return '-'
@@ -1550,6 +1607,51 @@ export default {
 
 .step-badge-small i {
   font-size: 0.75rem;
+}
+
+.steps-container-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border-left: 3px solid;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.step-badge-inline .step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.step-status-mini {
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.step-statuses-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.step-statuses-row:last-child {
+  margin-bottom: 0;
 }
 
 .files-list {

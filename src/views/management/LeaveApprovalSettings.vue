@@ -55,7 +55,7 @@
                   optionLabel="name" 
                   optionValue="name"
                   placeholder="ทุกแผนก" 
-                  @change="updateApprover(1, data)" 
+                  @change="onDepartmentChange(1, data)" 
                   class="w-full custom-multiselect"
                   :maxSelectedLabels="1"
                   selectedItemsLabel="{0} แผนก"
@@ -69,7 +69,7 @@
               <template #body="{ data }">
                 <MultiSelect 
                   v-model="data.position_ids" 
-                  :options="positions" 
+                  :options="getFilteredPositions(data.department_ids)" 
                   optionLabel="name" 
                   optionValue="name"
                   placeholder="ทุกตำแหน่ง" 
@@ -231,6 +231,25 @@ const updateApprover = async (level, data) => {
   } catch {
     toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถอัพเดทได้', life: 3000 })
   }
+}
+
+const getFilteredPositions = (selectedDepartments) => {
+  if (!selectedDepartments || selectedDepartments.length === 0) {
+    return positions.value
+  }
+  // กรองตำแหน่งตามแผนกที่เลือก
+  const usersInDepts = allUsers.value.filter(u => selectedDepartments.includes(u.department))
+  const positionNames = [...new Set(usersInDepts.map(u => u.position).filter(p => p))]
+  return positions.value.filter(p => positionNames.includes(p.name))
+}
+
+const onDepartmentChange = async (level, data) => {
+  // เคลียร์ตำแหน่งที่ไม่อยู่ในแผนกที่เลือก
+  if (data.position_ids && data.position_ids.length > 0) {
+    const validPositions = getFilteredPositions(data.department_ids).map(p => p.name)
+    data.position_ids = data.position_ids.filter(p => validPositions.includes(p))
+  }
+  await updateApprover(level, data)
 }
 
 const removeApprover = async (level, userId) => {
