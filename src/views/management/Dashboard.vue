@@ -92,6 +92,17 @@
               </template>
             </Column>
             <Column field="task_name" header="งาน/โครงการ" sortable style="min-width: 200px" />
+            <Column header="ขั้นตอน" style="min-width: 150px">
+              <template #body="{ data }">
+                <div v-if="data.steps_data && data.steps_data.length > 0" class="steps-mini">
+                  <span v-for="step in data.steps_data" :key="step.id" class="step-tag"
+                    :style="{ borderLeftColor: step.status === 'completed' ? '#10b981' : '#3b82f6' }">
+                    {{ step.step_name }}
+                  </span>
+                </div>
+                <span v-else class="text-muted">-</span>
+              </template>
+            </Column>
             <Column field="category" header="หมวดหมู่" style="min-width: 120px">
               <template #body="{ data }">
                 <div class="category-badges-small">
@@ -100,10 +111,18 @@
                 </div>
               </template>
             </Column>
-            <Column field="work_status" header="สถานะ" style="min-width: 100px">
+            <Column header="สถานะ" style="min-width: 100px">
               <template #body="{ data }">
-                <Badge :value="data.work_status || '-'" 
+                <template v-if="data.steps_data && data.steps_data.length > 0">
+                  <div v-for="step in data.steps_data" :key="'st-'+step.id">
+                    <Badge v-for="ps in (step.project_statuses || [])" :key="ps" :value="ps"
+                      :style="{ backgroundColor: getStatusColor(ps), color: '#fff', fontSize: '0.75rem' }" />
+                    <span v-if="!step.project_statuses || step.project_statuses.length === 0" class="text-muted">-</span>
+                  </div>
+                </template>
+                <Badge v-else-if="data.work_status" :value="data.work_status"
                        :style="{ backgroundColor: getStatusColor(data.work_status), color: '#fff' }" />
+                <span v-else class="text-muted">-</span>
               </template>
             </Column>
             <Column field="location" header="สถานที่" style="min-width: 120px" />
@@ -374,7 +393,19 @@ const selectedTaskStatus = ref(null)
 
 const filteredTasksByStatus = computed(() => {
   if (!selectedTaskStatus.value) return []
-  return allTasks.value.filter(t => (t.status || 'ไม่ระบุ') === selectedTaskStatus.value)
+  return allTasks.value.filter(t => {
+    let status
+    if (t.steps && t.steps.length > 0) {
+      const allCompleted = t.steps.every(s => s.status === 'completed')
+      const hasWorking = t.steps.some(s => s.has_work_logged && s.status !== 'completed')
+      if (allCompleted) status = 'completed'
+      else if (hasWorking) status = 'in_progress'
+      else status = 'pending'
+    } else {
+      status = t.status || 'ไม่ระบุ'
+    }
+    return status === selectedTaskStatus.value
+  })
 })
 
 // User filter
@@ -660,6 +691,16 @@ const loadData = async () => {
       axios.get('/api/tasks').then(r => r.data),
       dailyWorkService.getDailyWork()  // มี cache 2 นาที
     ])
+    
+    // โหลด workflow steps สำหรับแต่ละ task
+    for (const task of tasks) {
+      try {
+        const stepsRes = await axios.get(`/api/task-steps/task/${task.id}`, { silent: true })
+        task.steps = stepsRes.data || []
+      } catch {
+        task.steps = []
+      }
+    }
 
     // Store for user filter
     allLeaves.value = leaves
@@ -713,21 +754,44 @@ const loadData = async () => {
     stats.value.workingToday = uniqueWorkUserIds.length
     
     stats.value.activeCars = cars.filter(c => c.status === 'active').length
-    stats.value.activeTasks = tasks.filter(t => isActive(t.status)).length
-    stats.value.completedTasks = tasks.filter(t => isCompleted(t.status)).length
+    
+    // นับสถานะโครงการจาก workflow steps
+    stats.value.activeTasks = tasks.filter(t => {
+      // ถ้ามี workflow steps ให้ดูจาก step status
+      if (t.steps && t.steps.length > 0) {
+        const allCompleted = t.steps.every(s => s.status === 'completed')
+        return !allCompleted // ยังไม่เสร็จทุก step = กำลังดำเนินการ
+      }
+      return isActive(t.status)
+    }).length
+    
+    stats.value.completedTasks = tasks.filter(t => {
+      if (t.steps && t.steps.length > 0) {
+        return t.steps.every(s => s.status === 'completed')
+      }
+      return isCompleted(t.status)
+    }).length
+    
+    // Helper: ตรวจสอบว่างานยังไม่เสร็จ (รวม workflow)
+    const isTaskActive = (t) => {
+      if (t.steps && t.steps.length > 0) {
+        return !t.steps.every(s => s.status === 'completed')
+      }
+      return isActive(t.status)
+    }
     
     // งานที่ครบกำหนดสัปดาห์นี้
     stats.value.dueSoon = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
-      return endDate >= todayDate && endDate <= weekFromNow && isActive(t.status)
+      return endDate >= todayDate && endDate <= weekFromNow && isTaskActive(t)
     }).length
     
     // งานที่เลยกำหนด
     stats.value.overdue = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
-      return endDate < todayDate && isActive(t.status)
+      return endDate < todayDate && isTaskActive(t)
     }).length
 
     // Work Statistics - คำนวณเวลาทำงานของแต่ละคน (รายปี)
@@ -884,8 +948,23 @@ const renderCharts = (leaves, tasks) => {
   
   allTasks.value = tasks
   const taskStatus = {}
+  
+  // นับสถานะจาก workflow steps
   tasks.forEach(t => {
-    const status = t.status || 'ไม่ระบุ'
+    let status
+    if (t.steps && t.steps.length > 0) {
+      const allCompleted = t.steps.every(s => s.status === 'completed')
+      const hasWorking = t.steps.some(s => s.has_work_logged && s.status !== 'completed')
+      if (allCompleted) {
+        status = 'completed'
+      } else if (hasWorking) {
+        status = 'in_progress'
+      } else {
+        status = 'pending'
+      }
+    } else {
+      status = t.status || 'ไม่ระบุ'
+    }
     taskStatus[status] = (taskStatus[status] || 0) + 1
   })
 
@@ -1067,6 +1146,21 @@ const renderCharts = (leaves, tasks) => {
   color: #374151;
   padding: 2px 8px;
   border-radius: 12px;
+  font-size: 0.75rem;
+}
+
+.steps-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.step-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-left: 3px solid;
+  border-radius: 4px;
   font-size: 0.75rem;
 }
 
