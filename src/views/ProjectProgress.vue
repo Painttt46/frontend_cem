@@ -1,7 +1,6 @@
 <template>
   <div class="project-progress">
     <Toast />
-    <ConfirmDialog />
     
     <Card class="header-card">
       <template #header>
