@@ -79,9 +79,11 @@
                         <i :class="getStepIcon(step)"></i>
                         {{ getStepStatusLabel(step) }}
                       </div>
-                      <Button v-if="canCompleteStep(step)" 
-                        icon="pi pi-check" label="เสร็จสิ้น" size="small" severity="success"
-                        @click="completeStep(step)" :loading="completingStepId === step.id" />
+                      <button v-if="canCompleteStep(step)" class="complete-btn"
+                        @click="completeStep(step)" :disabled="completingStepId === step.id">
+                        <i :class="completingStepId === step.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
+                        {{ completingStepId === step.id ? 'กำลังบันทึก...' : 'เสร็จสิ้น' }}
+                      </button>
                     </div>
 
                     <div class="step-content">
@@ -382,20 +384,28 @@ export default {
       return 'status-pending'
     },
     canCompleteStep(step) {
-      // ถ้าเสร็จแล้วไม่ต้องแสดงปุ่ม
       if (step.status === 'completed') return false
-      // เช็คว่า user ปัจจุบันอยู่ใน assigned_users หรือไม่
       if (!step.assigned_users || step.assigned_users.length === 0) return false
       return step.assigned_users.some(u => u.id === this.currentUserId)
     },
     async completeStep(step) {
       this.completingStepId = step.id
       try {
-        await this.$http.put(`/api/task-steps/${step.id}`, { status: 'completed' })
+        await this.$http.put(`/api/task-steps/${step.id}`, {
+          step_name: step.step_name,
+          step_order: step.step_order,
+          start_date: step.start_date,
+          end_date: step.end_date,
+          assigned_users: step.assigned_users,
+          description: step.description,
+          project_statuses: step.project_statuses,
+          status: 'completed'
+        })
         step.status = 'completed'
         this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'อัปเดตสถานะเสร็จสิ้นแล้ว', life: 3000 })
       } catch (error) {
-        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถอัปเดตสถานะได้', life: 3000 })
+        console.error(error)
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: error.response?.data?.error || 'ไม่สามารถอัปเดตสถานะได้', life: 3000 })
       }
       this.completingStepId = null
     },
@@ -1018,5 +1028,36 @@ export default {
   padding: 0.1rem 0.4rem;
   border-radius: 8px;
   font-size: 0.65rem;
+}
+
+.complete-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.complete-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.complete-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.complete-btn i {
+  font-size: 0.9rem;
 }
 </style>
