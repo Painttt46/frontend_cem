@@ -757,6 +757,12 @@ export default {
       if (step.status === 'completed') return '#10b981'
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      // เกินกำหนด - เช็คก่อนเสมอ
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return '#ef4444'
+      }
       if (step.latest_work_date) {
         const workDate = new Date(step.latest_work_date)
         workDate.setHours(0, 0, 0, 0)
@@ -768,6 +774,12 @@ export default {
       if (step.status === 'completed') return '(เสร็จสิ้น)'
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      // เกินกำหนด - เช็คก่อนเสมอ
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return '(เกินกำหนด)'
+      }
       if (step.latest_work_date) {
         const workDate = new Date(step.latest_work_date)
         workDate.setHours(0, 0, 0, 0)

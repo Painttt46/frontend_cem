@@ -363,6 +363,13 @@ export default {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
+      // เกินกำหนด - เช็คก่อนเสมอ
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'เกินกำหนด'
+      }
+      
       if (step.has_work_logged) {
         if (step.latest_work_date) {
           const wDate = new Date(step.latest_work_date)
@@ -373,12 +380,6 @@ export default {
         }
       }
       
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return 'เกินกำหนด'
-      }
-      
       return 'รอดำเนินการ'
     },
     getStepClass(step) {
@@ -386,6 +387,13 @@ export default {
       
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      
+      // เกินกำหนด - เช็คก่อนเสมอ
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'status-overdue'
+      }
       
       if (step.has_work_logged) {
         if (step.latest_work_date) {
@@ -395,12 +403,6 @@ export default {
         } else {
           return 'status-working'
         }
-      }
-      
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return 'status-overdue'
       }
       
       return 'status-pending'

@@ -377,7 +377,14 @@ export default {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // กำลังดำเนินการ - เช็คว่า work_date ถึงวันนี้แล้วหรือยัง
+      // เกินกำหนด - เช็คก่อนเสมอ (priority สูงสุด)
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'เกินกำหนด'
+      }
+      
+      // กำลังดำเนินการ - เช็คว่ามีการลงงานแล้ว
       if (step.has_work_logged) {
         if (step.latest_work_date) {
           const workDate = new Date(step.latest_work_date)
@@ -388,13 +395,6 @@ export default {
         }
       }
       
-      // เกินกำหนด (เฉพาะกรณีที่ยังไม่มีการลงงานถึงวันนี้)
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return 'เกินกำหนด'
-      }
-      
       return 'รอดำเนินการ'
     },
     getStepClass(step) {
@@ -403,7 +403,14 @@ export default {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       
-      // กำลังดำเนินการ - เช็คว่า work_date ถึงวันนี้แล้วหรือยัง
+      // เกินกำหนด - เช็คก่อนเสมอ (priority สูงสุด)
+      if (step.end_date) {
+        const endDate = new Date(step.end_date)
+        endDate.setHours(0, 0, 0, 0)
+        if (today > endDate) return 'status-overdue'
+      }
+      
+      // กำลังดำเนินการ - เช็คว่ามีการลงงานแล้ว
       if (step.has_work_logged) {
         if (step.latest_work_date) {
           const workDate = new Date(step.latest_work_date)
@@ -412,13 +419,6 @@ export default {
         } else {
           return 'status-working'
         }
-      }
-      
-      // เกินกำหนด = แดง
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return 'status-overdue'
       }
       
       return 'status-pending'
