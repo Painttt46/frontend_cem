@@ -95,8 +95,15 @@
 
         <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
-            <div class="badge-container">
-              <Badge v-if="slotProps.data.work_status" :value="getStatusLabel(slotProps.data.work_status)"
+            <div class="status-badges-column">
+              <!-- ถ้ามี workflow step ให้แสดง project_statuses จาก step -->
+              <template v-if="getWorkflowStatuses(slotProps.data).length > 0">
+                <Badge v-for="ps in getWorkflowStatuses(slotProps.data)" :key="ps"
+                  :value="getStatusLabel(ps)"
+                  :style="{ backgroundColor: getStatusColor(ps), color: '#fff' }" />
+              </template>
+              <!-- ถ้าไม่มี workflow ให้แสดง work_status ปกติ -->
+              <Badge v-else-if="slotProps.data.work_status" :value="getStatusLabel(slotProps.data.work_status)"
                 :style="{ backgroundColor: getStatusColor(slotProps.data.work_status), color: '#fff' }" />
               <span v-else class="text-muted">-</span>
             </div>
@@ -610,6 +617,21 @@ export default {
         if (today > endDate) return 'เกินกำหนด'
       }
       return 'รอดำเนินการ'
+    },
+    getWorkflowStatuses(record) {
+      // ถ้ามี steps_data ให้รวม project_statuses จากทุก step
+      if (record.steps_data && record.steps_data.length > 0) {
+        const statuses = []
+        for (const step of record.steps_data) {
+          if (step.project_statuses && step.project_statuses.length > 0) {
+            statuses.push(...step.project_statuses)
+          } else if (step.project_status) {
+            statuses.push(step.project_status)
+          }
+        }
+        return [...new Set(statuses)] // unique
+      }
+      return []
     },
     getStepColorFromData(step) {
       if (step?.status === 'completed') return '#10b981'
@@ -1626,6 +1648,13 @@ export default {
   .step-status-tag {
     display: none;
   }
+}
+
+.status-badges-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .so-badge {
