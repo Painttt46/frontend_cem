@@ -103,6 +103,8 @@
                   :value="getStatusLabel(ps)"
                   :style="{ backgroundColor: getStatusColor(ps), color: '#fff' }" />
               </template>
+              <!-- ถ้ามี workflow แต่ไม่มี project_statuses ให้แสดง - -->
+              <span v-else-if="hasWorkflowStep(slotProps.data)" class="text-muted">-</span>
               <!-- ถ้าไม่มี workflow ให้แสดง work_status ปกติ -->
               <Badge v-else-if="slotProps.data.work_status" :value="getStatusLabel(slotProps.data.work_status)"
                 :style="{ backgroundColor: getStatusColor(slotProps.data.work_status), color: '#fff' }" />
@@ -636,6 +638,9 @@ export default {
         return [...new Set(statuses)] // unique
       }
       return []
+    },
+    hasWorkflowStep(record) {
+      return (record.steps_data && record.steps_data.length > 0) || record.step_id
     },
     getStepColorFromData(step) {
       if (step?.status === 'completed') return '#10b981'
