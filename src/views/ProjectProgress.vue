@@ -23,10 +23,10 @@
 
     <Card class="content-card">
       <template #content>
-        <DataTable :value="filteredProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
-          dataKey="id" responsiveLayout="scroll" stripedRows
+        <DataTable :value="sortedProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
+          dataKey="id" responsiveLayout="scroll"
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
-          @row-click="onRowClick" class="clickable-rows">
+          @row-click="onRowClick" class="clickable-rows" :rowClass="getRowClass">
           
           <Column :expander="true" style="width: 3rem" />
           
@@ -157,6 +157,16 @@ export default {
         p.category?.toLowerCase().includes(query) ||
         p.sale_owner?.toLowerCase().includes(query)
       )
+    },
+    sortedProjects() {
+      // เรียงโครงการที่มีชื่อตัวเองใน workflow step ไว้บนสุด
+      return [...this.filteredProjects].sort((a, b) => {
+        const aHasMe = this.hasMyAssignment(a)
+        const bHasMe = this.hasMyAssignment(b)
+        if (aHasMe && !bHasMe) return -1
+        if (!aHasMe && bHasMe) return 1
+        return 0
+      })
     }
   },
   mounted() {
@@ -165,7 +175,22 @@ export default {
     this.loadCategories()
     this.loadStatuses()
   },
+  watch: {
+    projects() {
+      // เมื่อโหลด projects เสร็จ ให้เช็ค query params
+      this.handleQueryParams()
+    }
+  },
   methods: {
+    handleQueryParams() {
+      const taskId = parseInt(this.$route.query.taskId)
+      if (taskId && this.projects.length > 0) {
+        const project = this.projects.find(p => p.id === taskId)
+        if (project) {
+          this.expandedRows = { [taskId]: true }
+        }
+      }
+    },
     setupDragScroll() {
       let isDragging = false
       let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0
@@ -379,6 +404,15 @@ export default {
       }
       
       return 'status-pending'
+    },
+    hasMyAssignment(project) {
+      if (!project.steps || project.steps.length === 0) return false
+      return project.steps.some(step => 
+        step.assigned_users && step.assigned_users.some(u => u.id === this.currentUserId)
+      )
+    },
+    getRowClass(data) {
+      return this.hasMyAssignment(data) ? 'my-project-row' : ''
     },
     canCompleteStep(step) {
       if (step.status === 'completed') return false
@@ -1067,5 +1101,14 @@ export default {
 
 .complete-btn i {
   font-size: 0.9rem;
+}
+
+:deep(.my-project-row) {
+  background: linear-gradient(90deg, #fef3c7 0%, #fefce8 100%) !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+:deep(.my-project-row:hover) {
+  background: linear-gradient(90deg, #fde68a 0%, #fef9c3 100%) !important;
 }
 </style>

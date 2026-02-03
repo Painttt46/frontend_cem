@@ -63,8 +63,9 @@
           <template #body="slotProps">
             <!-- Multiple steps -->
             <div v-if="slotProps.data.steps_data && slotProps.data.steps_data.length > 0" class="steps-container">
-              <div v-for="step in slotProps.data.steps_data" :key="step.id" class="step-card-mini"
-                :style="{ borderLeftColor: getStepColorFromData(step) }">
+              <div v-for="step in slotProps.data.steps_data" :key="step.id" class="step-card-mini clickable-step"
+                :style="{ borderLeftColor: getStepColorFromData(step) }"
+                @click="goToProjectProgress(slotProps.data.task_id, step.id)">
                 <div class="step-header-mini">
                   <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">
                     {{ (step.step_order || 0) + 1 }}
@@ -77,7 +78,7 @@
               </div>
             </div>
             <!-- Single step (backward compatible) -->
-            <div v-else-if="slotProps.data.step_name" class="step-card-mini" 
+            <div v-else-if="slotProps.data.step_name" class="step-card-mini clickable-step" 
               :style="{ borderLeftColor: getStepColor(slotProps.data) }">
               <div class="step-header-mini">
                 <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data) }">
@@ -617,6 +618,9 @@ export default {
         if (today > endDate) return 'เกินกำหนด'
       }
       return 'รอดำเนินการ'
+    },
+    goToProjectProgress(taskId, stepId) {
+      this.$router.push({ path: '/project-progress', query: { taskId, stepId } })
     },
     getWorkflowStatuses(record) {
       // ถ้ามี steps_data ให้รวม project_statuses จากทุก step
@@ -1695,6 +1699,17 @@ export default {
   padding: 0.5rem;
   border-left: 3px solid #9ca3af;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.step-card-mini.clickable-step {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.step-card-mini.clickable-step:hover {
+  background: #f0f9ff;
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
 .step-header-mini {
