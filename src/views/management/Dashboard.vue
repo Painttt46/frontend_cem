@@ -937,14 +937,15 @@ const loadData = async () => {
       }
     }).sort((a, b) => b.totalHours - a.totalHours)
 
+    // ปิด loading ก่อน renderCharts เพื่อให้ canvas แสดง
+    loading.value = false
     await nextTick()
     renderCharts(leaves, tasks)
   } catch (error) {
+    loading.value = false
     handleError(error, {
       customMessage: 'ไม่สามารถโหลดข้อมูล Dashboard ได้ กรุณาลองใหม่อีกครั้ง'
     })
-  } finally {
-    loading.value = false
   }
 }
 
