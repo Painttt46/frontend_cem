@@ -60,21 +60,30 @@
               <i class="pi pi-clock" style="color: #4A90E2"></i>
               <div>
                 <h4>{{ formatHoursMinutes(userTimesheetSummary.totalHours) }}</h4>
-                <p>ชั่วโมงทำงานรวม</p>
+                <p>ชั่วโมงทำงานจริง</p>
               </div>
             </div>
             <div class="summary-item">
-              <i class="pi pi-briefcase" style="color: #10b981"></i>
+              <i class="pi pi-calendar" style="color: #f59e0b"></i>
+              <div>
+                <h4>{{ formatHoursMinutes(userTimesheetSummary.expectedHours) }}</h4>
+                <p>ชั่วโมงที่ควรทำ</p>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-percentage" :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }"></i>
+              <div>
+                <h4 :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }">
+                  {{ userTimesheetSummary.expectedHours > 0 ? Math.round(userTimesheetSummary.totalHours / userTimesheetSummary.expectedHours * 100) : 0 }}%
+                </h4>
+                <p>เปอร์เซ็นต์</p>
+              </div>
+            </div>
+            <div class="summary-item">
+              <i class="pi pi-briefcase" style="color: #8b5cf6"></i>
               <div>
                 <h4>{{ userTimesheetSummary.totalTasks }}</h4>
-                <p>จำนวนงานทั้งหมด</p>
-              </div>
-            </div>
-            <div class="summary-item">
-              <i class="pi pi-folder" style="color: #8b5cf6"></i>
-              <div>
-                <h4>{{ userTimesheetSummary.totalProjects }}</h4>
-                <p>โครงการที่ทำ</p>
+                <p>จำนวนงาน</p>
               </div>
             </div>
           </div>
@@ -258,7 +267,7 @@
     </div>
 
     <!-- Charts with Swipe Support -->
-    <div class="charts-container mb-4">
+    <div class="charts-container mb-4" v-if="!loading">
       <div class="charts-wrapper" 
            ref="chartsWrapper"
            @touchstart="handleTouchStart"
@@ -301,18 +310,23 @@
               </span>
             </template>
           </Column>
-          <Column field="department" header="แผนก" sortable style="min-width: 120px" />
-          <Column field="taskCount" header="จำนวนงาน" sortable style="min-width: 100px" />
-          <Column field="totalHours" header="รวมชั่วโมง" sortable style="min-width: 120px">
+          <Column field="department" header="แผนก" sortable style="min-width: 100px" />
+          <Column field="taskCount" header="งาน" sortable style="min-width: 60px" />
+          <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
             <template #body="{ data }">
               <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.totalHours) }}</span>
             </template>
           </Column>
-          <!-- <Column field="avgHoursPerTask" header="เฉลี่ย/งาน" sortable style="min-width: 100px">
+          <Column field="expectedHours" header="ควรทำ" sortable style="min-width: 100px">
             <template #body="{ data }">
-              {{ data.avgHoursPerTask.toFixed(1) }} ชม.
+              <span style="font-weight: 600; color: #f59e0b">{{ formatHoursMinutes(data.expectedHours) }}</span>
             </template>
-          </Column> -->
+          </Column>
+          <Column field="percentage" header="%" sortable style="min-width: 80px">
+            <template #body="{ data }">
+              <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#10b981' : '#ef4444' }">{{ data.percentage }}%</span>
+            </template>
+          </Column>
           
           <template #expansion="{ data }">
             <div class="task-breakdown">
@@ -419,9 +433,31 @@ const selectedUser = ref(null)
 const userOptions = ref([])
 const allLeaves = ref([])
 const allDailyWork = ref([])
+const allRoleHoursMap = ref({})
+const allLunchBreakMap = ref({}) // เก็บเวลาพักกลางวันตาม user
 const currentYear = new Date().getFullYear()
 const userLeaveChart = ref(null)
 let userLeaveChartInstance = null
+
+// Helper: parse time string to hours
+const parseTime = (timeStr) => {
+  if (!timeStr) return 0
+  const [h, m] = timeStr.split(':').map(Number)
+  return h + (m || 0) / 60
+}
+
+// Helper: คำนวณชั่วโมงทำงานหักพักกลางวัน
+const calcWorkHours = (startTime, endTime, lunchBreak = 1) => {
+  if (!startTime || !endTime) return 0
+  const start = parseTime(startTime)
+  const end = parseTime(endTime)
+  let hours = end - start
+  // หักพักกลางวันถ้าทำงานข้ามช่วงเที่ยง (12:00-13:00)
+  if (start < 13 && end > 12) {
+    hours -= lunchBreak
+  }
+  return Math.max(0, hours)
+}
 
 const selectedUserName = computed(() => {
   const user = userOptions.value.find(u => u.value === selectedUser.value)
@@ -476,32 +512,37 @@ const userLeaveData = computed(() => {
 })
 
 const userTimesheetSummary = computed(() => {
-  if (!selectedUser.value) return { totalHours: 0, totalTasks: 0, totalProjects: 0 }
+  if (!selectedUser.value) return { totalHours: 0, expectedHours: 0, totalTasks: 0, totalProjects: 0 }
   const { startDate, endDate } = getDateRange()
   let totalHours = 0
   let taskCount = 0
   const projects = new Set()
+  const workDays = new Set()
+  const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
   
   allDailyWork.value.forEach(w => {
     if (w.user_id !== selectedUser.value) return
     const workDate = new Date(w.work_date)
     if (workDate < startDate || workDate > endDate) return
     
-    if (w.start_time && w.end_time) {
-      const [startH, startM] = w.start_time.split(':').map(Number)
-      const [endH, endM] = w.end_time.split(':').map(Number)
-      totalHours += (endH + endM/60) - (startH + startM/60)
-    }
+    totalHours += calcWorkHours(w.start_time, w.end_time, lunchBreak)
     taskCount++
     if (w.task_name) projects.add(w.task_name)
+    workDays.add(w.work_date?.split('T')[0])
   })
   
-  return { totalHours, totalTasks: taskCount, totalProjects: projects.size }
+  // คำนวณชั่วโมงที่ควรทำตาม role
+  const hoursPerDay = allRoleHoursMap.value[selectedUser.value] || 8
+  const expectedHours = workDays.size * hoursPerDay
+  
+  return { totalHours, expectedHours, totalTasks: taskCount, totalProjects: projects.size }
 })
 
 const userTimesheetDaily = computed(() => {
   if (!selectedUser.value) return []
   const { startDate, endDate } = getDateRange()
+  
+  const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
   
   return allDailyWork.value
     .filter(w => {
@@ -510,12 +551,7 @@ const userTimesheetDaily = computed(() => {
       return workDate >= startDate && workDate <= endDate
     })
     .map(w => {
-      let hours = 0
-      if (w.start_time && w.end_time) {
-        const [startH, startM] = w.start_time.split(':').map(Number)
-        const [endH, endM] = w.end_time.split(':').map(Number)
-        hours = (endH + endM/60) - (startH + startM/60)
-      }
+      const hours = calcWorkHours(w.start_time, w.end_time, lunchBreak)
       return { ...w, hours }
     })
     .sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
@@ -689,28 +725,56 @@ const loadData = async () => {
   loading.value = true
   
   try {
-    // ใช้ service layer พร้อม cache
-    const [activeUsers, leaves, cars, tasks, dailyWork] = await Promise.all([
-      userService.getActiveUsers(),  // มี cache 5 นาที + filter is_active
+    // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
+    const [activeUsers, leaves, cars, tasks, dailyWork, allSteps, roleWorkHours] = await Promise.all([
+      userService.getActiveUsers(),
       axios.get('/api/leave').then(r => r.data),
       axios.get('/api/car-booking').then(r => r.data),
       axios.get('/api/tasks').then(r => r.data),
-      dailyWorkService.getDailyWork()  // มี cache 2 นาที
+      dailyWorkService.getDailyWork(),
+      axios.get('/api/task-steps/all').then(r => r.data),
+      axios.get('/api/settings/role-work-hours').then(r => r.data).catch(() => [])
     ])
     
-    // โหลด workflow steps สำหรับแต่ละ task
-    for (const task of tasks) {
-      try {
-        const stepsRes = await axios.get(`/api/task-steps/task/${task.id}`, { silent: true })
-        task.steps = stepsRes.data || []
-      } catch {
-        task.steps = []
-      }
-    }
+    // สร้าง map ชั่วโมงทำงานต่อวันตาม role และ lunch break
+    const roleHoursMap = {}
+    const roleLunchMap = {}
+    roleWorkHours.forEach(r => {
+      const start = parseTime(r.start_time)
+      const end = parseTime(r.end_time)
+      const lunchStart = parseTime(r.lunch_start)
+      const lunchEnd = parseTime(r.lunch_end)
+      const lunchBreak = (lunchStart && lunchEnd) ? (lunchEnd - lunchStart) : 1
+      let hours = end - start - lunchBreak
+      roleHoursMap[r.role] = hours
+      roleLunchMap[r.role] = lunchBreak
+    })
+    
+    // จัดกลุ่ม steps ตาม task_id
+    const stepsByTask = {}
+    allSteps.forEach(step => {
+      if (!stepsByTask[step.task_id]) stepsByTask[step.task_id] = []
+      stepsByTask[step.task_id].push(step)
+    })
+    
+    // assign steps ให้แต่ละ task
+    tasks.forEach(task => {
+      task.steps = stepsByTask[task.id] || []
+    })
+    
+    // สร้าง map user -> role hours per day และ lunch break
+    const userRoleHours = {}
+    const userLunchBreak = {}
+    activeUsers.forEach(u => {
+      userRoleHours[u.id] = roleHoursMap[u.role] || 7 // default 7 ชม. (8-1 พัก)
+      userLunchBreak[u.id] = roleLunchMap[u.role] || 1 // default พัก 1 ชม.
+    })
 
     // Store for user filter
     allLeaves.value = leaves
     allDailyWork.value = dailyWork
+    allRoleHoursMap.value = userRoleHours
+    allLunchBreakMap.value = userLunchBreak
     userOptions.value = activeUsers.map(u => ({
       label: `${u.firstname} ${u.lastname}`,
       value: u.id
@@ -819,28 +883,30 @@ const loadData = async () => {
           userId: userId,
           userName: `${user.firstname} ${user.lastname}`,
           department: user.department || 'N/A',
+          hoursPerDay: userRoleHours[userId] || 7,
+          lunchBreak: userLunchBreak[userId] || 1,
           totalHours: 0,
           taskCount: 0,
+          workDays: new Set(),
           taskHours: {} // เก็บชั่วโมงของแต่ละงาน
         }
       }
       
-      // คำนวณชั่วโมงจาก start_time และ end_time
-      if (w.start_time && w.end_time) {
-        const [startH, startM] = w.start_time.split(':').map(Number)
-        const [endH, endM] = w.end_time.split(':').map(Number)
-        const hours = (endH + endM/60) - (startH + startM/60)
+      // นับวันทำงาน
+      userWorkData[userId].workDays.add(w.work_date?.split('T')[0])
+      
+      // คำนวณชั่วโมงหักพักกลางวัน
+      const hours = calcWorkHours(w.start_time, w.end_time, userWorkData[userId].lunchBreak)
+      
+      if (hours > 0) {
+        userWorkData[userId].totalHours += hours
         
-        if (hours > 0) {
-          userWorkData[userId].totalHours += hours
-          
-          // เก็บชั่วโมงของแต่ละงาน
-          const taskName = w.task_name || w.project_name || 'ไม่ระบุ'
-          if (!userWorkData[userId].taskHours[taskName]) {
-            userWorkData[userId].taskHours[taskName] = 0
-          }
-          userWorkData[userId].taskHours[taskName] += hours
+        // เก็บชั่วโมงของแต่ละงาน
+        const taskName = w.task_name || w.project_name || 'ไม่ระบุ'
+        if (!userWorkData[userId].taskHours[taskName]) {
+          userWorkData[userId].taskHours[taskName] = 0
         }
+        userWorkData[userId].taskHours[taskName] += hours
       }
       
       userWorkData[userId].taskCount += 1
@@ -856,11 +922,15 @@ const loadData = async () => {
         }))
         .sort((a, b) => b.hours - a.hours)
       
+      const expectedHours = data.workDays.size * data.hoursPerDay
+      
       return {
         userId: data.userId,
         userName: data.userName,
         department: data.department,
         totalHours: data.totalHours,
+        expectedHours: expectedHours,
+        percentage: expectedHours > 0 ? Math.round(data.totalHours / expectedHours * 100) : 0,
         taskCount: data.taskCount,
         avgHoursPerTask: data.taskCount > 0 ? data.totalHours / data.taskCount : 0,
         taskDetails: taskDetails
