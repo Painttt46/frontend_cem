@@ -158,7 +158,7 @@
     </Dialog>
 
     <!-- Load Template Dialog -->
-    <Dialog v-model:visible="loadTemplateDialog" header="เลือก Workflow Template" :style="{width: '500px'}" modal>
+    <Dialog v-model:visible="loadTemplateDialog" header="เลือก Workflow Template" :style="{width: '500px'}" modal :draggable="false">
       <div v-if="templates.length === 0" class="empty-templates">
         <i class="pi pi-inbox"></i>
         <p>ยังไม่มี template</p>
