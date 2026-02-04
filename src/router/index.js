@@ -20,6 +20,7 @@ const RolePermissions = () => import('../views/management/RolePermissions.vue')
 const LeaveApprovalSettings = () => import('../views/management/LeaveApprovalSettings.vue')
 const LeaveManagement = () => import('../views/management/LeaveManagement.vue')
 const Dashboard = () => import('../views/management/Dashboard.vue')
+const AnalyticsDashboard = () => import('../views/management/AnalyticsDashboard.vue')
 const RoleWorkHours = () => import('../views/management/RoleWorkHours.vue')
 
 const routes = [
@@ -141,6 +142,12 @@ const routes = [
     name: 'dashboard',
     component: Dashboard,
     meta: { requiresAuth: true, requiresPermission: '/management/dashboard', title: 'Dashboard - Gent-CEM' },
+  },
+  {
+    path: '/management/analytics',
+    name: 'analytics',
+    component: AnalyticsDashboard,
+    meta: { requiresAuth: true, requiresPermission: '/management/dashboard', title: 'Analytics - Gent-CEM' },
   },
   {
     path: '/:pathMatch(.*)*',
