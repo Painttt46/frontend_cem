@@ -451,63 +451,152 @@ const renderLeaveTypeChart = () => {
 }
 
 // Watchers
-watch([selectedYear, selectedDepartment], () => { nextTick(renderCharts) })
-watch(workloadMonth, () => { nextTick(renderWorkloadChart) })
-watch(activeTab, () => { nextTick(renderCharts) })
+watch([selectedYear, selectedDepartment], () => { 
+  nextTick(renderCharts) 
+})
+watch(workloadMonth, () => { 
+  nextTick(renderWorkloadChart) 
+})
+watch(activeTab, (newTab) => { 
+  nextTick(() => {
+    if (newTab === 0) {
+      renderWorkloadChart()
+      renderTeamWorkloadChart()
+    } else if (newTab === 1) {
+      renderMonthlyLeaveChart()
+      renderLeaveTypeChart()
+    }
+  })
+})
+watch(ganttFilter, () => {
+  // ganttTasks is computed, will auto update
+})
 
 onMounted(loadData)
 </script>
 
 <style scoped>
 .analytics-container { padding: 1rem; max-width: 1400px; margin: 0 auto; }
-.header-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+
+/* Header - เหมือนหน้าอื่น */
+.header-card { 
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+.header-card :deep(.p-card-content) { padding: 1rem 1.5rem; }
 .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
 .header-left { display: flex; align-items: center; gap: 1rem; }
-.header-title { display: flex; align-items: center; gap: 0.5rem; }
-.header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; }
-.header-icon { font-size: 1.5rem; color: #fff; }
+.header-title { display: flex; align-items: center; gap: 0.75rem; }
+.header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
+.header-icon { font-size: 1.75rem; color: #fff; }
 .back-btn { color: #fff !important; }
-.header-right { display: flex; gap: 0.5rem; }
-.year-filter, .dept-filter, .month-filter { min-width: 120px; }
+.back-btn:hover { background: rgba(255,255,255,0.1) !important; }
+.header-right { display: flex; gap: 0.75rem; align-items: center; }
 
-.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
-.stat-card .stat-content { display: flex; align-items: center; gap: 1rem; }
-.stat-content i { font-size: 2rem; }
-.stat-content h3 { margin: 0; font-size: 1.5rem; }
-.stat-content p { margin: 0; color: #6c757d; font-size: 0.875rem; }
+/* Filters */
+.year-filter, .dept-filter, .month-filter { 
+  min-width: 130px; 
+  background: rgba(255,255,255,0.95);
+  border-radius: 8px;
+}
 
+/* Tab styling */
+:deep(.p-tabview-nav) { 
+  background: #f8f9fa; 
+  border-radius: 8px 8px 0 0;
+  padding: 0.5rem 0.5rem 0;
+}
+:deep(.p-tabview-nav-link) { 
+  border-radius: 8px 8px 0 0 !important;
+  font-weight: 500;
+}
+:deep(.p-tabview-panels) { 
+  background: #fff; 
+  border-radius: 0 0 8px 8px;
+  padding: 1.5rem;
+}
+
+/* Stats Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.stat-card { 
+  border-radius: 12px; 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.stat-card .stat-content { display: flex; align-items: center; gap: 1rem; padding: 0.5rem; }
+.stat-content i { font-size: 2.5rem; opacity: 0.9; }
+.stat-content h3 { margin: 0; font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
+.stat-content p { margin: 0.25rem 0 0; color: #6c757d; font-size: 0.875rem; }
+
+/* Charts */
+.chart-section h3 { color: #1a1a2e; font-weight: 600; margin-bottom: 1rem; }
 .chart-container { position: relative; }
-.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.chart-header h3 { margin: 0; }
-.chart-row { display: flex; gap: 2rem; align-items: center; }
+.chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+.chart-header h3 { margin: 0; color: #1a1a2e; }
+.chart-row { display: flex; gap: 2rem; align-items: flex-start; }
 
-.leave-type-legend { min-width: 200px; }
-.legend-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; border-bottom: 1px solid #eee; }
-.legend-color { width: 16px; height: 16px; border-radius: 4px; }
-.legend-label { flex: 1; }
-.legend-value { color: #6c757d; font-size: 0.875rem; }
+/* Legend */
+.leave-type-legend { min-width: 220px; background: #f8f9fa; border-radius: 8px; padding: 1rem; }
+.legend-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #e9ecef; }
+.legend-item:last-child { border-bottom: none; }
+.legend-color { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
+.legend-label { flex: 1; font-weight: 500; color: #333; }
+.legend-value { color: #6c757d; font-size: 0.8rem; }
 
 /* Gantt */
-.gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.gantt-header h3 { margin: 0; }
-.gantt-container { overflow-x: auto; border: 1px solid #e9ecef; border-radius: 8px; }
-.gantt-timeline { position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
+.gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+.gantt-header h3 { margin: 0; color: #1a1a2e; }
+.gantt-container { overflow-x: auto; border: 1px solid #e9ecef; border-radius: 8px; background: #fff; }
+.gantt-timeline { position: sticky; top: 0; background: linear-gradient(135deg, #f8f9fa, #e9ecef); z-index: 1; }
 .gantt-months { display: flex; border-bottom: 2px solid #dee2e6; }
-.gantt-month { padding: 0.5rem; text-align: center; font-weight: 600; font-size: 0.75rem; border-right: 1px solid #dee2e6; }
-.gantt-grid { display: flex; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+.gantt-month { padding: 0.75rem 0.5rem; text-align: center; font-weight: 600; font-size: 0.75rem; border-right: 1px solid #dee2e6; color: #495057; }
+.gantt-grid { display: flex; position: absolute; top: 0; left: 200px; right: 0; bottom: 0; pointer-events: none; }
 .gantt-grid-col { border-right: 1px dashed #e9ecef; }
 .gantt-tasks { min-height: 200px; }
-.gantt-row { display: flex; align-items: center; border-bottom: 1px solid #e9ecef; height: 40px; }
-.gantt-task-name { width: 200px; min-width: 200px; padding: 0 0.5rem; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #fff; border-right: 1px solid #dee2e6; }
+.gantt-row { display: flex; align-items: center; border-bottom: 1px solid #f0f0f0; height: 44px; }
+.gantt-row:hover { background: #f8f9fa; }
+.gantt-task-name { 
+  width: 200px; min-width: 200px; padding: 0 1rem; 
+  font-size: 0.875rem; font-weight: 500; color: #333;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+  background: #fff; border-right: 1px solid #dee2e6; 
+}
 .gantt-task-bar-container { flex: 1; position: relative; height: 100%; min-width: 960px; }
-.gantt-task-bar { position: absolute; top: 8px; height: 24px; border-radius: 4px; display: flex; align-items: center; overflow: hidden; }
+.gantt-task-bar { 
+  position: absolute; top: 10px; height: 24px; border-radius: 6px; 
+  display: flex; align-items: center; overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
 .gantt-progress { height: 100%; background: rgba(255,255,255,0.3); }
-.no-data { padding: 2rem; text-align: center; color: #6c757d; }
+.no-data { padding: 3rem; text-align: center; color: #6c757d; font-size: 1rem; }
 
-@media (max-width: 768px) {
-  .header-content { flex-direction: column; align-items: flex-start; }
+/* Cards */
+:deep(.p-card) { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+
+/* Responsive */
+@media (max-width: 992px) {
   .chart-row { flex-direction: column; }
   .leave-type-legend { width: 100%; }
-  .gantt-task-name { width: 120px; min-width: 120px; }
+}
+
+@media (max-width: 768px) {
+  .analytics-container { padding: 0.5rem; }
+  .header-content { flex-direction: column; align-items: stretch; }
+  .header-left { justify-content: flex-start; }
+  .header-right { flex-wrap: wrap; }
+  .header-title h1 { font-size: 1.25rem; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stat-content h3 { font-size: 1.25rem; }
+  .stat-content i { font-size: 1.75rem; }
+  .gantt-task-name { width: 120px; min-width: 120px; font-size: 0.75rem; padding: 0 0.5rem; }
+  .gantt-task-bar-container { min-width: 720px; }
+  .year-filter, .dept-filter, .month-filter { min-width: 100px; }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .header-title h1 { font-size: 1.1rem; }
 }
 </style>
