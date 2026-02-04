@@ -1088,8 +1088,8 @@ const renderCharts = (leaves, tasks) => {
   border: none !important;
   color: #fff !important;
   font-weight: 600;
-  padding: 0.3rem 0.6rem;
-  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
   transition: all 0.2s ease;
@@ -1135,7 +1135,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.4rem 1rem;
+  padding: 0.3rem 1rem;
 }
 
 .header-right {
@@ -1305,10 +1305,14 @@ const renderCharts = (leaves, tasks) => {
 
 .back-btn {
   color: white !important;
-  padding: 0.2rem !important;
+  padding: 0 !important;
   width: 1.75rem !important;
   height: 1.75rem !important;
   background: rgba(255, 255, 255, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
 }
 
 .back-btn:hover {

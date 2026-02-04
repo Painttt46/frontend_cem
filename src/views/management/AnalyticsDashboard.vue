@@ -487,17 +487,21 @@ onMounted(loadData)
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.4rem 1rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.3rem 1rem; }
 .header-left { display: flex; align-items: center; gap: 1rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
 .header-icon { font-size: 1.5rem; color: #fff; }
 .back-btn { 
   color: #fff !important; 
-  padding: 0.2rem !important;
+  padding: 0 !important;
   width: 1.75rem !important;
   height: 1.75rem !important;
   background: rgba(255, 255, 255, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
 }
 .back-btn:hover { 
   background: rgba(255,255,255,0.3) !important; 
