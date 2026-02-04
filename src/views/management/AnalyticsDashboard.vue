@@ -492,8 +492,18 @@ onMounted(loadData)
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
 .header-icon { font-size: 1.5rem; color: #fff; }
-.back-btn { color: #fff !important; }
-.back-btn:hover { background: rgba(255,255,255,0.1) !important; }
+.back-btn { 
+  color: #fff !important; 
+  background: transparent !important;
+  border: none !important;
+  padding: 0.25rem !important;
+  width: 2rem;
+  height: 2rem;
+}
+.back-btn:hover { 
+  background: rgba(255,255,255,0.2) !important; 
+  border-radius: 50%;
+}
 .header-right { display: flex; gap: 0.75rem; align-items: center; }
 
 /* Filters */
