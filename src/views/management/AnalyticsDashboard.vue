@@ -487,7 +487,7 @@ onMounted(loadData)
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.3rem 1rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.2rem 1rem; }
 .header-left { display: flex; align-items: center; gap: 1rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
@@ -502,6 +502,9 @@ onMounted(loadData)
   align-items: center !important;
   justify-content: center !important;
   border-radius: 50% !important;
+}
+.back-btn :deep(.pi) {
+  margin-top: -2px;
 }
 .back-btn:hover { 
   background: rgba(255,255,255,0.3) !important; 
