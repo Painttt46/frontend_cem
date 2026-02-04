@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="header-right">
-            <Button label="Analytics" icon="pi pi-chart-line" severity="info" @click="$router.push('/management/analytics')" />
+            <Button label="Analytics" icon="pi pi-chart-line" class="analytics-btn" @click="$router.push('/management/analytics')" />
             <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
                       placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" 
                       filter filterPlaceholder="ค้นหาชื่อพนักงาน" />
@@ -1083,6 +1083,21 @@ const renderCharts = (leaves, tasks) => {
 </script>
 
 <style scoped>
+.analytics-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+  transition: all 0.2s ease;
+}
+.analytics-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
 .clickable-name {
   cursor: pointer;
   color: #667eea;
