@@ -8,7 +8,7 @@
       <template #content>
         <div class="header-content">
           <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
+            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text rounded size="small" class="back-btn" />
             <div class="header-title">
               <i class="pi pi-chart-bar header-icon"></i>
               <h1>Dashboard</h1>
