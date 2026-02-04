@@ -7,7 +7,7 @@
       <template #content>
         <div class="header-content">
           <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
+            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text rounded class="back-btn" v-tooltip.bottom="'ย้อนกลับ'" />
             <div class="header-title">
               <i class="pi pi-chart-line header-icon"></i>
               <h1>Analytics & Reports</h1>
@@ -487,23 +487,26 @@ onMounted(loadData)
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; padding: 0.6rem 1rem; }
 .header-left { display: flex; align-items: center; gap: 1rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
 .header-icon { font-size: 1.5rem; color: #fff; }
 .back-btn { 
   color: #fff !important; 
-  padding: 0.25rem !important;
+  padding: 0.2rem !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 .back-btn:hover { 
-  background: rgba(255,255,255,0.2) !important; 
+  background: rgba(255,255,255,0.3) !important; 
 }
 .header-right { display: flex; gap: 0.75rem; align-items: center; }
 
 /* Filters */
 .year-filter, .dept-filter, .month-filter { 
-  min-width: 110px; 
+  min-width: 100px; 
   background: rgba(255,255,255,0.95);
   border-radius: 6px;
 }
@@ -511,14 +514,14 @@ onMounted(loadData)
 .year-filter :deep(.p-dropdown),
 .dept-filter :deep(.p-dropdown),
 .month-filter :deep(.p-dropdown) {
-  height: 2rem;
-  font-size: 0.875rem;
+  height: 1.8rem;
+  font-size: 0.8rem;
 }
 
 .year-filter :deep(.p-dropdown-label),
 .dept-filter :deep(.p-dropdown-label),
 .month-filter :deep(.p-dropdown-label) {
-  padding: 0.3rem 0.5rem;
+  padding: 0.2rem 0.5rem;
 }
 
 /* Tab styling */

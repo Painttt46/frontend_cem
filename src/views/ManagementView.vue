@@ -482,7 +482,7 @@ const navigateTo = (section) => {
 
 <style scoped>
 .management-container {
-  padding: 1rem;
+  padding: 0.6rem 1rem;
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
@@ -505,7 +505,7 @@ const navigateTo = (section) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0.6rem 1rem;
 }
 
 .header-left {
@@ -680,7 +680,7 @@ const navigateTo = (section) => {
   }
 
   .card-content {
-    padding: 1rem;
+    padding: 0.6rem 1rem;
   }
 
   .card-icon {
@@ -755,7 +755,7 @@ const navigateTo = (section) => {
   border-bottom: 2px solid #e2e8f0;
   font-weight: 600;
   color: #475569;
-  padding: 1rem;
+  padding: 0.6rem 1rem;
   text-align: center;
 }
 
@@ -841,7 +841,7 @@ const navigateTo = (section) => {
 
 .data-content {
   margin: 0;
-  padding: 1rem;
+  padding: 0.6rem 1rem;
   font-size: 0.8rem;
   max-height: 200px;
   overflow: auto;

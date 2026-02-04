@@ -8,7 +8,7 @@
       <template #content>
         <div class="header-content">
           <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
+            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text rounded class="back-btn" v-tooltip.bottom="'ย้อนกลับ'" />
             <div class="header-title">
               <i class="pi pi-chart-bar header-icon"></i>
               <h1>Dashboard</h1>
@@ -1088,8 +1088,8 @@ const renderCharts = (leaves, tasks) => {
   border: none !important;
   color: #fff !important;
   font-weight: 600;
-  padding: 0.4rem 0.8rem;
-  font-size: 0.875rem;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
   transition: all 0.2s ease;
@@ -1135,7 +1135,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0.6rem 1rem;
 }
 
 .header-right {
@@ -1145,18 +1145,18 @@ const renderCharts = (leaves, tasks) => {
 }
 
 .user-filter {
-  min-width: 180px;
+  min-width: 160px;
   background: rgba(255,255,255,0.9);
   border-radius: 6px;
 }
 
 .user-filter :deep(.p-dropdown) {
-  height: 2rem;
-  font-size: 0.875rem;
+  height: 1.8rem;
+  font-size: 0.8rem;
 }
 
 .user-filter :deep(.p-dropdown-label) {
-  padding: 0.3rem 0.5rem;
+  padding: 0.2rem 0.5rem;
 }
 
 .user-dashboard-header {
@@ -1305,11 +1305,14 @@ const renderCharts = (leaves, tasks) => {
 
 .back-btn {
   color: white !important;
-  padding: 0.25rem !important;
+  padding: 0.2rem !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 .back-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .summary-grid {
