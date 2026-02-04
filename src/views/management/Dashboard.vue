@@ -1087,12 +1087,11 @@ const renderCharts = (leaves, tasks) => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   border: none !important;
   color: #fff !important;
-  font-weight: 600;
-  padding: 0.4rem 0.9rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
   font-size: 0.875rem;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
-  transition: all 0.2s ease;
 }
 .analytics-btn:hover {
   box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
@@ -1136,7 +1135,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 1rem;
+  padding: 0.4rem 1rem;
 }
 
 .header-left {
