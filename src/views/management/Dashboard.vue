@@ -1088,8 +1088,8 @@ const renderCharts = (leaves, tasks) => {
   border: none !important;
   color: #fff !important;
   font-weight: 500;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
@@ -1110,7 +1110,7 @@ const renderCharts = (leaves, tasks) => {
 }
 
 .dashboard-container {
-  padding: 1rem;
+  padding: 0.6rem 1rem;
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
@@ -1135,7 +1135,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.4rem 1rem;
+  padding: 0.6rem 1rem;
 }
 
 .header-left {
