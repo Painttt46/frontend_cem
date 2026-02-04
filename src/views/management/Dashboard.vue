@@ -1127,6 +1127,10 @@ const renderCharts = (leaves, tasks) => {
   border: none;
 }
 
+.header-card :deep(.p-card-content) {
+  padding: 0;
+}
+
 .header-content {
   display: flex;
   justify-content: space-between;
