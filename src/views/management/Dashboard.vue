@@ -15,7 +15,7 @@
             </div>
           </div>
           <div class="header-right">
-            <Button label="Analytics" icon="pi pi-chart-line" class="analytics-btn" @click="$router.push('/management/analytics')" />
+            <Button label="Analytics" icon="pi pi-chart-line" class="analytics-btn mr-3" @click="$router.push('/management/analytics')" />
             <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
                       placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" 
                       filter filterPlaceholder="ค้นหาชื่อพนักงาน" />

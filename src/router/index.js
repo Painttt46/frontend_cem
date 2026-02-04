@@ -147,7 +147,7 @@ const routes = [
     path: '/management/analytics',
     name: 'analytics',
     component: AnalyticsDashboard,
-    meta: { requiresAuth: true, requiresPermission: '/management/dashboard', title: 'Analytics - Gent-CEM' },
+    meta: { requiresAuth: true, title: 'Analytics - Gent-CEM' },
   },
   {
     path: '/:pathMatch(.*)*',
