@@ -478,57 +478,33 @@ onMounted(loadData)
 <style scoped>
 .analytics-container { padding: 1rem; }
 
-/* Header - เหมือน Dashboard */
+/* Header - เหมือน ManagementView */
 .header-card { 
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.2rem 1rem; }
-.header-left { display: flex; align-items: center; gap: 1rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; }
+.header-left { display: flex; align-items: center; gap: 0.75rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
 .header-icon { font-size: 1.5rem; color: #fff; }
 .back-btn { 
   color: #fff !important; 
-  padding: 0 !important;
-  width: 1.75rem !important;
-  height: 1.75rem !important;
+  width: 2rem !important;
+  height: 2rem !important;
   background: rgba(255, 255, 255, 0.15) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
 }
-.back-btn :deep(.pi) {
-  margin-top: -2px;
-}
-.back-btn:hover { 
-  background: rgba(255,255,255,0.3) !important; 
-}
+.back-btn:hover { background: rgba(255,255,255,0.3) !important; }
 .header-right { display: flex; gap: 0.75rem; align-items: center; }
 
 /* Filters */
 .year-filter, .dept-filter, .month-filter { 
-  min-width: 100px; 
-  background: rgba(255,255,255,0.95);
+  min-width: 120px; 
+  background: rgba(255,255,255,0.9);
   border-radius: 6px;
-}
-
-.year-filter :deep(.p-dropdown),
-.dept-filter :deep(.p-dropdown),
-.month-filter :deep(.p-dropdown) {
-  height: 1.8rem;
-  font-size: 0.8rem;
-}
-
-.year-filter :deep(.p-dropdown-label),
-.dept-filter :deep(.p-dropdown-label),
-.month-filter :deep(.p-dropdown-label) {
-  padding: 0.2rem 0.5rem;
 }
 
 /* Tab styling */

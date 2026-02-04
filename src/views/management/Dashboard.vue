@@ -1125,6 +1125,7 @@ const renderCharts = (leaves, tasks) => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .header-card :deep(.p-card-content) {
@@ -1135,28 +1136,52 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.2rem 1rem;
+  padding: 0.6rem 1rem;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-icon {
+  font-size: 1.5rem;
+}
+
+.header-title h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.back-btn {
+  color: white !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .user-filter {
-  min-width: 160px;
+  min-width: 180px;
   background: rgba(255,255,255,0.9);
   border-radius: 6px;
-}
-
-.user-filter :deep(.p-dropdown) {
-  height: 1.8rem;
-  font-size: 0.8rem;
-}
-
-.user-filter :deep(.p-dropdown-label) {
-  padding: 0.2rem 0.5rem;
 }
 
 .user-dashboard-header {
@@ -1279,48 +1304,6 @@ const renderCharts = (leaves, tasks) => {
   border-left: 3px solid;
   border-radius: 4px;
   font-size: 0.75rem;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.header-icon {
-  font-size: 1.5rem;
-}
-
-.header-title h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.back-btn {
-  color: white !important;
-  padding: 0 !important;
-  width: 1.75rem !important;
-  height: 1.75rem !important;
-  background: rgba(255, 255, 255, 0.15) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 50% !important;
-}
-
-.back-btn :deep(.pi) {
-  margin-top: -2px;
-}
-
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .summary-grid {
