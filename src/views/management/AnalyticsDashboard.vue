@@ -487,7 +487,7 @@ onMounted(loadData)
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; padding: 0.6rem 1rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.4rem 1rem; }
 .header-left { display: flex; align-items: center; gap: 1rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
 .header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }

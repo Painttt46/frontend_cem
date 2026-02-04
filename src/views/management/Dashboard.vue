@@ -1135,7 +1135,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.6rem 1rem;
+  padding: 0.4rem 1rem;
 }
 
 .header-right {
