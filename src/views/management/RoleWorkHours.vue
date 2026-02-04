@@ -171,7 +171,7 @@ const loadWorkHours = async () => {
   loading.value = true
   try {
     const response = await axios.get('/api/settings/role-work-hours')
-    console.log('API Response:', response.data)
+    
     workHoursList.value = response.data
   } catch {
     workHoursList.value = []

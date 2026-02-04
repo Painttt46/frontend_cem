@@ -428,7 +428,7 @@ export default {
     },
     onMeetingTimeChange() {
       // Force reactivity when meeting time changes via Calendar picker
-      console.log('Meeting time updated:', this.formData.meetingStartTime, this.formData.meetingEndTime)
+      
     },
 
     parseStartTime() {
