@@ -476,13 +476,15 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.analytics-container { padding: 1rem; max-width: 1400px; margin: 0 auto; }
+.analytics-container { padding: 1rem; }
 
-/* Header - เหมือนหน้าอื่น */
+/* Header - เหมือน Dashboard */
 .header-card { 
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+  background: linear-gradient(135deg, #4A90E2, #D73527);
+  color: white;
+  border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 .header-card :deep(.p-card-content) { padding: 1rem 1.5rem; }
 .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
@@ -502,10 +504,12 @@ onMounted(loadData)
 }
 
 /* Tab styling */
+:deep(.p-tabview) { background: transparent; }
 :deep(.p-tabview-nav) { 
   background: #f8f9fa; 
   border-radius: 8px 8px 0 0;
   padding: 0.5rem 0.5rem 0;
+  border: none;
 }
 :deep(.p-tabview-nav-link) { 
   border-radius: 8px 8px 0 0 !important;
@@ -515,6 +519,8 @@ onMounted(loadData)
   background: #fff; 
   border-radius: 0 0 8px 8px;
   padding: 1.5rem;
+  border: 1px solid #e9ecef;
+  border-top: none;
 }
 
 /* Stats Cards */
