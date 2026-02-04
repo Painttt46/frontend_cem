@@ -1137,6 +1137,7 @@ const renderCharts = (leaves, tasks) => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 1rem;
 }
 
 .user-filter {

@@ -147,7 +147,7 @@ const routes = [
     path: '/management/analytics',
     name: 'analytics',
     component: AnalyticsDashboard,
-    meta: { requiresAuth: true, title: 'Analytics - Gent-CEM' },
+    meta: { requiresAuth: true, requiresPermission: '/management/dashboard', title: 'Analytics - Gent-CEM' },
   },
   {
     path: '/:pathMatch(.*)*',
@@ -222,7 +222,7 @@ router.beforeEach(async (to, from, next) => {
 
     // Skip permission check for basic pages (fix race condition after login)
     const skipPermissionCheck = ['/profile', '/login', '/two-authentication'];
-    if (role && !skipPermissionCheck.includes(to.path)) {
+    if (role && !skipPermissionCheck.includes(to.path) && to.meta.requiresPermission) {
       const { loadPermissions, canAccessRoute, permissionsLoaded } = usePermissions();
 
       if (!permissionsLoaded.value) {
