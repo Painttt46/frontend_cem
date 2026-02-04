@@ -7,7 +7,7 @@
       <template #content>
         <div class="header-content">
           <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text rounded size="small" class="back-btn" />
+            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text class="back-btn" />
             <div class="header-title">
               <i class="pi pi-chart-line header-icon"></i>
               <h1>Analytics & Reports</h1>
@@ -494,23 +494,31 @@ onMounted(loadData)
 .header-icon { font-size: 1.5rem; color: #fff; }
 .back-btn { 
   color: #fff !important; 
-  background: transparent !important;
-  border: none !important;
   padding: 0.25rem !important;
-  width: 2rem;
-  height: 2rem;
 }
 .back-btn:hover { 
   background: rgba(255,255,255,0.2) !important; 
-  border-radius: 50%;
 }
 .header-right { display: flex; gap: 0.75rem; align-items: center; }
 
 /* Filters */
 .year-filter, .dept-filter, .month-filter { 
-  min-width: 130px; 
+  min-width: 110px; 
   background: rgba(255,255,255,0.95);
-  border-radius: 8px;
+  border-radius: 6px;
+}
+
+.year-filter :deep(.p-dropdown),
+.dept-filter :deep(.p-dropdown),
+.month-filter :deep(.p-dropdown) {
+  height: 2rem;
+  font-size: 0.875rem;
+}
+
+.year-filter :deep(.p-dropdown-label),
+.dept-filter :deep(.p-dropdown-label),
+.month-filter :deep(.p-dropdown-label) {
+  padding: 0.3rem 0.5rem;
 }
 
 /* Tab styling */
