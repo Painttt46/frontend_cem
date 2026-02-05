@@ -29,7 +29,7 @@
 
 <style scoped>
 .projects-view {
-  padding: 1.5rem;
+  padding: 0.6rem 1rem;
 }
 
 .header-card {
@@ -40,7 +40,7 @@
 }
 
 .header-card :deep(.p-card-body) {
-  padding: 1.25rem;
+  padding: 1.4rem;
 }
 
 .header-card :deep(.p-card-content) {

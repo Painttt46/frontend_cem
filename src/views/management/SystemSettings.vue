@@ -157,7 +157,7 @@ const showComingSoon = () => {
 
 <style scoped>
 .settings-container {
-  padding: 1rem;
+  padding: 0.6rem 1rem;
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
@@ -174,7 +174,7 @@ const showComingSoon = () => {
 }
 
 .header-card :deep(.p-card-body) {
-  padding: 1.25rem;
+  padding: 1.4rem;
 }
 
 .header-card :deep(.p-card-content) {

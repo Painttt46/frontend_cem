@@ -267,7 +267,7 @@ const deleteWorkHours = async (role) => {
 
 <style scoped>
 .work-hours-container {
-  padding: 1rem;
+  padding: 0.6rem 1rem;
   max-width: 100%;
   background: #e5e7eb;
   min-height: 100%;
@@ -281,7 +281,7 @@ const deleteWorkHours = async (role) => {
 }
 
 .header-card :deep(.p-card-body) {
-  padding: 1.25rem;
+  padding: 1.4rem;
 }
 
 .header-card :deep(.p-card-content) {
