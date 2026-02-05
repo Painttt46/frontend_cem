@@ -149,9 +149,12 @@ export default {
   },
   computed: {
     filteredProjects() {
-      if (!this.searchQuery) return this.projects
+      // แสดงเฉพาะโครงการที่มี workflow steps
+      let projects = this.projects.filter(p => p.steps && p.steps.length > 0)
+      
+      if (!this.searchQuery) return projects
       const query = this.searchQuery.toLowerCase()
-      return this.projects.filter(p => 
+      return projects.filter(p => 
         p.task_name?.toLowerCase().includes(query) ||
         p.so_number?.toLowerCase().includes(query) ||
         p.category?.toLowerCase().includes(query) ||
