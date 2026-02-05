@@ -102,7 +102,7 @@
       <TabPanel header="📅 สถิติการลา">
         <div class="chart-section">
           <div class="stats-grid mb-4">
-            <Card v-for="(stat, key) in leaveStats" :key="key" class="stat-card" @click="showLeaveDetail(key)" style="cursor: pointer;">
+            <Card v-for="(stat, key) in leaveStats" :key="key" class="stat-card" @click="showLeaveDetail()" style="cursor: pointer;">
               <template #content>
                 <div class="stat-content">
                   <i :class="stat.icon" :style="{ color: stat.color }"></i>
@@ -525,7 +525,7 @@ const showTaskTooltip = (event, task) => {
   tooltipPos.value = { x: event.clientX + 10, y: event.clientY - 10 }
 }
 
-const showLeaveDetail = (key) => {
+const showLeaveDetail = () => {
   leaveFilterType.value = null
   showLeaveTable.value = true
 }
