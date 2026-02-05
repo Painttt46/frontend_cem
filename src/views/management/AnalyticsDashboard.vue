@@ -102,7 +102,7 @@
       <TabPanel header="📅 สถิติการลา">
         <div class="chart-section">
           <div class="stats-grid mb-4">
-            <Card v-for="(stat, key) in leaveStats" :key="key" class="stat-card">
+            <Card v-for="(stat, key) in leaveStats" :key="key" class="stat-card" @click="showLeaveDetail(key)" style="cursor: pointer;">
               <template #content>
                 <div class="stat-content">
                   <i :class="stat.icon" :style="{ color: stat.color }"></i>
@@ -114,6 +114,37 @@
               </template>
             </Card>
           </div>
+
+          <!-- Leave Detail Table -->
+          <Card v-if="showLeaveTable" class="mb-4">
+            <template #content>
+              <div class="leave-detail-header">
+                <h3><i class="pi pi-list"></i> รายละเอียดการลา</h3>
+                <Button icon="pi pi-times" text rounded @click="showLeaveTable = false" />
+              </div>
+              <DataTable :value="leaveDetailList" :paginator="true" :rows="10" class="leave-detail-table">
+                <Column field="employee_name" header="พนักงาน" sortable />
+                <Column field="leave_type" header="ประเภท" sortable>
+                  <template #body="{ data }">
+                    <span class="leave-badge" :style="{ background: (leaveTypeColors[data.leave_type] || '#6c757d') + '20', color: leaveTypeColors[data.leave_type] || '#6c757d' }">
+                      {{ data.leave_type }}
+                    </span>
+                  </template>
+                </Column>
+                <Column header="วันที่" sortable>
+                  <template #body="{ data }">
+                    {{ formatLeaveDate(data.start_datetime) }} - {{ formatLeaveDate(data.end_datetime) }}
+                  </template>
+                </Column>
+                <Column field="total_days" header="จำนวนวัน" sortable />
+                <Column field="reason" header="เหตุผล">
+                  <template #body="{ data }">
+                    <span :title="data.reason">{{ (data.reason || '-').substring(0, 30) }}{{ data.reason?.length > 30 ? '...' : '' }}</span>
+                  </template>
+                </Column>
+              </DataTable>
+            </template>
+          </Card>
 
           <Card class="mb-4">
             <template #content>
@@ -132,7 +163,7 @@
                   <canvas ref="leaveTypeChart"></canvas>
                 </div>
                 <div class="leave-type-legend">
-                  <div v-for="(data, type) in leaveByType" :key="type" class="legend-item">
+                  <div v-for="(data, type) in leaveByType" :key="type" class="legend-item" @click="filterLeaveByType(type)" style="cursor: pointer;">
                     <span class="legend-color" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }"></span>
                     <span class="legend-label">{{ type }}</span>
                     <span class="legend-value">{{ data.days }} วัน ({{ data.count }} ครั้ง)</span>
@@ -151,6 +182,10 @@
             <div class="gantt-header">
               <h3><i class="pi pi-calendar"></i> Project Timeline</h3>
               <div class="gantt-controls">
+                <span class="p-input-icon-left">
+                  <i class="pi pi-search" />
+                  <InputText v-model="ganttSearch" placeholder="ค้นหาชื่อ/SO..." class="gantt-search" />
+                </span>
                 <span class="gantt-count">{{ ganttTasks.length }} โครงการ</span>
                 <Dropdown v-model="ganttFilter" :options="ganttFilterOptions" optionLabel="label" optionValue="value" class="gantt-filter" />
               </div>
@@ -173,7 +208,7 @@
                   <div v-for="task in ganttTasks" :key="task.id" class="gantt-row" :class="{ 'completed': task.progress === 100 }">
                     <div class="gantt-task-col">
                       <div class="task-info">
-                        <span class="task-name" v-tooltip.right="task.name">{{ task.name }}</span>
+                        <span class="task-name" @click="showTaskTooltip($event, task)">{{ task.name }}</span>
                         <span class="task-dates">{{ task.startDate }} - {{ task.endDate }}</span>
                       </div>
                     </div>
@@ -197,6 +232,12 @@
         </Card>
       </TabPanel>
     </TabView>
+    
+    <!-- Task Name Tooltip -->
+    <div v-if="activeTooltip" class="task-tooltip" :style="{ top: tooltipPos.y + 'px', left: tooltipPos.x + 'px' }">
+      <button class="tooltip-close" @click="activeTooltip = null"><i class="pi pi-times"></i></button>
+      <div class="tooltip-content">{{ activeTooltip.name }}</div>
+    </div>
   </div>
 </template>
 
@@ -232,6 +273,14 @@ const leaves = ref([])
 const tasks = ref([])
 const leaveTypeColors = ref({})
 
+// Tooltip
+const activeTooltip = ref(null)
+const tooltipPos = ref({ x: 0, y: 0 })
+
+// Leave Detail
+const showLeaveTable = ref(false)
+const leaveFilterType = ref(null)
+
 // Charts
 const workloadChart = ref(null)
 const teamWorkloadChart = ref(null)
@@ -241,6 +290,7 @@ let charts = {}
 
 // Gantt
 const ganttFilter = ref('all')
+const ganttSearch = ref('')
 const ganttFilterOptions = [
   { label: 'ทั้งหมด', value: 'all' },
   { label: 'กำลังดำเนินการ', value: 'active' },
@@ -339,6 +389,17 @@ const teamWorkloadData = computed(() => {
 // Has leave data
 const hasLeaveData = computed(() => filteredLeaves.value.length > 0)
 
+const leaveDetailList = computed(() => {
+  let list = filteredLeaves.value.map(l => ({
+    ...l,
+    employee_name: users.value.find(u => u.id === l.user_id)?.firstname + ' ' + users.value.find(u => u.id === l.user_id)?.lastname || 'ไม่ระบุ'
+  }))
+  if (leaveFilterType.value) {
+    list = list.filter(l => l.leave_type === leaveFilterType.value)
+  }
+  return list.sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
+})
+
 const leaveStats = computed(() => {
   const total = filteredLeaves.value.reduce((sum, l) => sum + (parseFloat(l.total_days) || 0), 0)
   const count = filteredLeaves.value.length
@@ -385,6 +446,7 @@ const ganttTasks = computed(() => {
   const yearEnd = new Date(selectedYear.value, 11, 31)
   const totalDays = (yearEnd - yearStart) / (1000 * 60 * 60 * 24)
   const containerWidth = 80 * 12 // 12 months
+  const search = ganttSearch.value.toLowerCase()
 
   return tasks.value
     .filter(t => {
@@ -392,6 +454,10 @@ const ganttTasks = computed(() => {
       if (ganttFilter.value === 'active') return t.status !== 'completed' && t.status !== 'cancelled'
       if (ganttFilter.value === 'completed') return t.status === 'completed'
       return true
+    })
+    .filter(t => {
+      if (!search) return true
+      return (t.task_name?.toLowerCase().includes(search) || t.so_number?.toLowerCase().includes(search))
     })
     .map(t => {
       const start = t.project_start_date ? new Date(t.project_start_date) : new Date(t.created_at)
@@ -452,6 +518,26 @@ const loadData = async () => {
   } catch (error) {
     handleError(error, { customMessage: 'ไม่สามารถโหลดข้อมูลได้' })
   }
+}
+
+const showTaskTooltip = (event, task) => {
+  activeTooltip.value = task
+  tooltipPos.value = { x: event.clientX + 10, y: event.clientY - 10 }
+}
+
+const showLeaveDetail = (key) => {
+  leaveFilterType.value = null
+  showLeaveTable.value = true
+}
+
+const filterLeaveByType = (type) => {
+  leaveFilterType.value = type
+  showLeaveTable.value = true
+}
+
+const formatLeaveDate = (dateStr) => {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleDateString('th-TH', { day: '2-digit', month: 'short' })
 }
 
 const renderCharts = () => {
@@ -657,16 +743,24 @@ onMounted(loadData)
 
 /* Legend */
 .leave-type-legend { min-width: 220px; background: #f8f9fa; border-radius: 8px; padding: 1rem; }
-.legend-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #e9ecef; }
+.legend-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #e9ecef; transition: background 0.2s; }
+.legend-item:hover { background: #e9ecef; margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; border-radius: 4px; }
 .legend-item:last-child { border-bottom: none; }
 .legend-color { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
 .legend-label { flex: 1; font-weight: 500; color: #333; }
 .legend-value { color: #6c757d; font-size: 0.8rem; }
 
+/* Leave Detail */
+.leave-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.leave-detail-header h3 { margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+.leave-badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
+.leave-detail-table { font-size: 0.875rem; }
+
 /* Gantt */
 .gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
 .gantt-header h3 { margin: 0; color: #1a1a2e; display: flex; align-items: center; gap: 0.5rem; }
-.gantt-controls { display: flex; align-items: center; gap: 1rem; }
+.gantt-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.gantt-search { width: 180px; }
 .gantt-count { font-size: 0.875rem; color: #6c757d; background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px; }
 .gantt-filter { min-width: 150px; }
 .gantt-wrapper { border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; }
@@ -684,7 +778,8 @@ onMounted(loadData)
 
 .gantt-task-col { width: 220px; min-width: 220px; padding: 0.5rem 1rem; border-right: 1px solid #e9ecef; display: flex; align-items: center; }
 .task-info { display: flex; flex-direction: column; gap: 0.125rem; overflow: hidden; }
-.task-name { font-size: 0.875rem; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.task-name { font-size: 0.875rem; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.task-name:hover { color: #4A90E2; text-decoration: underline; }
 .task-dates { font-size: 0.7rem; color: #6c757d; }
 
 .gantt-bar-col { flex: 1; position: relative; min-width: 960px; display: flex; align-items: center; }
@@ -699,6 +794,32 @@ onMounted(loadData)
 .gantt-bar.status-completed { background: linear-gradient(135deg, #10b981, #059669); }
 .gantt-bar.status-cancelled { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .bar-progress { height: 100%; background: rgba(255,255,255,0.25); }
+
+/* Task Tooltip */
+.task-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 0.75rem 1rem;
+  max-width: 350px;
+  min-width: 200px;
+}
+.tooltip-close {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+.tooltip-close:hover { background: #f0f0f0; color: #333; }
+.tooltip-content { font-size: 0.9rem; color: #333; padding-right: 1.5rem; word-wrap: break-word; }
 
 .no-data { padding: 3rem; text-align: center; color: #6c757d; }
 .no-data i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
