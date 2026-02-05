@@ -486,7 +486,7 @@ onMounted(loadData)
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-card :deep(.p-card-body) { padding: 1.2rem; }
+.header-card :deep(.p-card-body) { padding: 1.1rem; }
 .header-content { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; }
 .header-left { display: flex; align-items: center; gap: 0.75rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
