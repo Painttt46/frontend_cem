@@ -292,7 +292,6 @@ const deleteWorkHours = async (role) => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
 }
 
 .back-btn {
