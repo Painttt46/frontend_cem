@@ -173,7 +173,7 @@
                   <div v-for="task in ganttTasks" :key="task.id" class="gantt-row" :class="{ 'completed': task.progress === 100 }">
                     <div class="gantt-task-col">
                       <div class="task-info">
-                        <span class="task-name" :title="task.name">{{ task.name }}</span>
+                        <span class="task-name" v-tooltip.right="task.name">{{ task.name }}</span>
                         <span class="task-dates">{{ task.startDate }} - {{ task.endDate }}</span>
                       </div>
                     </div>
@@ -182,7 +182,6 @@
                            :style="{ left: task.left + 'px', width: task.width + 'px' }"
                            :class="'status-' + task.statusClass">
                         <div class="bar-progress" :style="{ width: task.progress + '%' }"></div>
-                        <span class="bar-label">{{ task.progress }}%</span>
                       </div>
                     </div>
                   </div>
@@ -429,7 +428,7 @@ const loadData = async () => {
       axios.get('/api/leave/leave-types')
     ])
 
-    users.value = usersRes.data.filter(u => u.status === 'active')
+    users.value = usersRes.data // ไม่ filter status เพราะอาจไม่มี field นี้
     dailyWork.value = workRes.data
     leaves.value = leavesRes.data
     tasks.value = tasksRes.data
@@ -700,7 +699,6 @@ onMounted(loadData)
 .gantt-bar.status-completed { background: linear-gradient(135deg, #10b981, #059669); }
 .gantt-bar.status-cancelled { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .bar-progress { height: 100%; background: rgba(255,255,255,0.25); }
-.bar-label { position: absolute; right: 8px; font-size: 0.7rem; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 
 .no-data { padding: 3rem; text-align: center; color: #6c757d; }
 .no-data i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
