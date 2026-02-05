@@ -359,7 +359,7 @@ const savePermissions = async () => {
 }
 
 .header-card :deep(.p-card-body) {
-  padding: 1.4rem;
+  padding: 1.5rem;
 }
 
 .header-card :deep(.p-card-content) {
