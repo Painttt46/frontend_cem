@@ -178,7 +178,7 @@
 
         <!-- Actual Data -->
         <template v-else>
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showUsersDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
@@ -190,7 +190,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showWorkingDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
@@ -202,7 +202,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showLeavesDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-calendar-times summary-icon" style="color: #f59e0b"></i>
@@ -214,7 +214,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showCarsDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
@@ -226,7 +226,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showDueSoonDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
@@ -250,7 +250,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showActiveTasksDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
@@ -262,7 +262,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable">
+          <Card class="summary-card clickable" @click="showCompletedDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
@@ -407,6 +407,84 @@
       </Column>
     </DataTable>
   </Dialog>
+
+  <!-- Users Dialog -->
+  <Dialog v-model:visible="showUsersDialog" modal header="ผู้ใช้งานทั้งหมด"
+    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
+    <DataTable :value="allUsers" paginator :rows="10" sortField="firstname" :sortOrder="1">
+      <Column field="firstname" header="ชื่อ" sortable />
+      <Column field="lastname" header="นามสกุล" sortable />
+      <Column field="department" header="แผนก" sortable />
+      <Column field="status" header="สถานะ" sortable />
+    </DataTable>
+  </Dialog>
+
+  <!-- Working Today Dialog -->
+  <Dialog v-model:visible="showWorkingDialog" modal header="พนักงานทำงานวันนี้"
+    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
+    <DataTable :value="workingTodayUsers" paginator :rows="10" sortField="firstname" :sortOrder="1">
+      <Column field="firstname" header="ชื่อ" sortable />
+      <Column field="lastname" header="นามสกุล" sortable />
+      <Column field="department" header="แผนก" sortable />
+    </DataTable>
+  </Dialog>
+
+  <!-- Leaves Today Dialog -->
+  <Dialog v-model:visible="showLeavesDialog" modal header="ลางานวันนี้"
+    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
+    <DataTable :value="leavesTodayList" paginator :rows="10">
+      <Column header="ชื่อ-นามสกุล">
+        <template #body="{ data }">{{ data.firstname }} {{ data.lastname }}</template>
+      </Column>
+      <Column field="leave_type" header="ประเภทการลา" />
+    </DataTable>
+  </Dialog>
+
+  <!-- Cars Dialog -->
+  <Dialog v-model:visible="showCarsDialog" modal header="รถกำลังใช้งาน"
+    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
+    <DataTable :value="activeCarsData" paginator :rows="10">
+      <Column field="license_plate" header="ทะเบียนรถ" sortable />
+      <Column field="brand" header="ยี่ห้อ" sortable />
+      <Column field="model" header="รุ่น" sortable />
+    </DataTable>
+  </Dialog>
+
+  <!-- Due Soon Dialog -->
+  <Dialog v-model:visible="showDueSoonDialog" modal header="โครงการครบกำหนดสัปดาห์นี้"
+    :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
+    <DataTable :value="dueSoonProjects" paginator :rows="10" sortField="project_end_date" :sortOrder="1">
+      <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+      <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
+      <Column field="project_end_date" header="กำหนดส่ง" sortable style="min-width: 120px">
+        <template #body="{ data }">{{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}</template>
+      </Column>
+    </DataTable>
+  </Dialog>
+
+  <!-- Active Tasks Dialog -->
+  <Dialog v-model:visible="showActiveTasksDialog" modal header="โครงการที่กำลังดำเนินการ"
+    :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
+    <DataTable :value="activeTasksList" paginator :rows="10" sortField="task_name" :sortOrder="1">
+      <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+      <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
+      <Column field="project_end_date" header="กำหนดส่ง" sortable style="min-width: 120px">
+        <template #body="{ data }">{{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}</template>
+      </Column>
+    </DataTable>
+  </Dialog>
+
+  <!-- Completed Tasks Dialog -->
+  <Dialog v-model:visible="showCompletedDialog" modal header="โครงการเสร็จสิ้น"
+    :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
+    <DataTable :value="completedTasksList" paginator :rows="10" sortField="task_name" :sortOrder="1">
+      <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+      <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
+      <Column field="project_end_date" header="กำหนดส่ง" sortable style="min-width: 120px">
+        <template #body="{ data }">{{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}</template>
+      </Column>
+    </DataTable>
+  </Dialog>
 </template>
 
 <script setup>
@@ -430,8 +508,19 @@ const selectedUserId = ref(null)
 
 // Task status dialog
 const allTasks = ref([])
+const allUsers = ref([])
+const workingTodayUsers = ref([])
+const leavesTodayList = ref([])
+const activeCarsData = ref([])
 const showTaskStatusDialog = ref(false)
 const showOverdueDialog = ref(false)
+const showUsersDialog = ref(false)
+const showWorkingDialog = ref(false)
+const showLeavesDialog = ref(false)
+const showCarsDialog = ref(false)
+const showDueSoonDialog = ref(false)
+const showActiveTasksDialog = ref(false)
+const showCompletedDialog = ref(false)
 const selectedTaskStatus = ref(null)
 
 const filteredTasksByStatus = computed(() => {
@@ -470,6 +559,34 @@ const overdueProjects = computed(() => {
   })
 })
 // User filter
+
+const dueSoonProjects = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const weekFromNow = new Date(today)
+  weekFromNow.setDate(weekFromNow.getDate() + 7)
+  return allTasks.value.filter(t => {
+    if (!t.project_end_date) return false
+    const datePart = t.project_end_date.split('T')[0]
+    const endDate = new Date(datePart + 'T00:00:00')
+    const active = t.steps && t.steps.length > 0 ? !t.steps.every(s => s.status === 'completed') : isActive(t.status)
+    return endDate >= today && endDate <= weekFromNow && active
+  })
+})
+
+const activeTasksList = computed(() => {
+  return allTasks.value.filter(t => {
+    if (t.steps && t.steps.length > 0) return !t.steps.every(s => s.status === 'completed')
+    return isActive(t.status)
+  })
+})
+
+const completedTasksList = computed(() => {
+  return allTasks.value.filter(t => {
+    if (t.steps && t.steps.length > 0) return t.steps.every(s => s.status === 'completed')
+    return isCompleted(t.status)
+  })
+})
 const selectedUser = ref(null)
 const userOptions = ref([])
 const allLeaves = ref([])
@@ -874,6 +991,15 @@ const loadData = async () => {
     stats.value.workingToday = uniqueWorkUserIds.length
 
     stats.value.activeCars = cars.filter(c => c.status === 'active').length
+
+    // Populate data for dialogs
+    allUsers.value = activeUsers
+    workingTodayUsers.value = activeUsers.filter(u => uniqueWorkUserIds.includes(u.id))
+    leavesTodayList.value = todayLeavesUsers.map(l => {
+      const user = activeUsers.find(u => u.id === l.user_id) || {}
+      return { ...l, firstname: user.firstname, lastname: user.lastname }
+    })
+    activeCarsData.value = cars.filter(c => c.status === 'active')
 
     // นับสถานะโครงการจาก workflow steps
     stats.value.activeTasks = tasks.filter(t => {
