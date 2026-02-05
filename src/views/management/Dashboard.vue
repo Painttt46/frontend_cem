@@ -178,7 +178,7 @@
 
         <!-- Actual Data -->
         <template v-else>
-          <Card class="summary-card clickable" @click="showUsersDialog = true">
+          <Card class="summary-card clickable" >
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
@@ -214,7 +214,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card clickable" @click="showCarsDialog = true">
+          <Card class="summary-card clickable" >
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
@@ -408,16 +408,6 @@
     </DataTable>
   </Dialog>
 
-  <!-- Users Dialog -->
-  <Dialog v-model:visible="showUsersDialog" modal header="ผู้ใช้งานทั้งหมด"
-    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
-    <DataTable :value="allUsers" paginator :rows="10" sortField="firstname" :sortOrder="1">
-      <Column field="firstname" header="ชื่อ" sortable />
-      <Column field="lastname" header="นามสกุล" sortable />
-      <Column field="department" header="แผนก" sortable />
-      <Column field="status" header="สถานะ" sortable />
-    </DataTable>
-  </Dialog>
 
   <!-- Working Today Dialog -->
   <Dialog v-model:visible="showWorkingDialog" modal header="พนักงานทำงานวันนี้"
@@ -437,16 +427,6 @@
         <template #body="{ data }">{{ data.firstname }} {{ data.lastname }}</template>
       </Column>
       <Column field="leave_type" header="ประเภทการลา" />
-    </DataTable>
-  </Dialog>
-
-  <!-- Cars Dialog -->
-  <Dialog v-model:visible="showCarsDialog" modal header="รถกำลังใช้งาน"
-    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
-    <DataTable :value="activeCarsData" paginator :rows="10">
-      <Column field="license_plate" header="ทะเบียนรถ" sortable />
-      <Column field="brand" header="ยี่ห้อ" sortable />
-      <Column field="model" header="รุ่น" sortable />
     </DataTable>
   </Dialog>
 
@@ -508,16 +488,12 @@ const selectedUserId = ref(null)
 
 // Task status dialog
 const allTasks = ref([])
-const allUsers = ref([])
 const workingTodayUsers = ref([])
 const leavesTodayList = ref([])
-const activeCarsData = ref([])
 const showTaskStatusDialog = ref(false)
 const showOverdueDialog = ref(false)
-const showUsersDialog = ref(false)
 const showWorkingDialog = ref(false)
 const showLeavesDialog = ref(false)
-const showCarsDialog = ref(false)
 const showDueSoonDialog = ref(false)
 const showActiveTasksDialog = ref(false)
 const showCompletedDialog = ref(false)
@@ -993,13 +969,11 @@ const loadData = async () => {
     stats.value.activeCars = cars.filter(c => c.status === 'active').length
 
     // Populate data for dialogs
-    allUsers.value = activeUsers
     workingTodayUsers.value = activeUsers.filter(u => uniqueWorkUserIds.includes(u.id))
     leavesTodayList.value = todayLeavesUsers.map(l => {
       const user = activeUsers.find(u => u.id === l.user_id) || {}
       return { ...l, firstname: user.firstname, lastname: user.lastname }
     })
-    activeCarsData.value = cars.filter(c => c.status === 'active')
 
     // นับสถานะโครงการจาก workflow steps
     stats.value.activeTasks = tasks.filter(t => {
