@@ -497,6 +497,7 @@ export default {
     async cancelRecord(record) {
       try {
         await this.$http.put(`/api/daily-work/${record.id}`, {
+          task_id: record.task_id,
           step_id: record.step_id,
           work_date: record.work_date,
           start_time: record.start_time,
@@ -804,7 +805,8 @@ export default {
       this.editFormData = {
         id: record.id,
         task_id: record.task_id,
-        step_id: record.step_id,
+        task_id: record.task_id,
+          step_id: record.step_id,
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
         end_time: this.parseTime(record.end_time),
