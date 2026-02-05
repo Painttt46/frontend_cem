@@ -457,16 +457,18 @@ const filteredTasksByStatus = computed(() => {
   })
 })
 
+
 const overdueProjects = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return allTasks.value.filter(t => {
     if (!t.project_end_date) return false
-    const endDate = parseLocalDate(t.project_end_date)
-    return endDate < today && isTaskActive(t)
+    const datePart = t.project_end_date.split('T')[0]
+    const endDate = new Date(datePart + 'T00:00:00')
+    const active = t.steps && t.steps.length > 0 ? !t.steps.every(s => s.status === 'completed') : isActive(t.status)
+    return endDate < today && active
   })
 })
-
 // User filter
 const selectedUser = ref(null)
 const userOptions = ref([])
@@ -610,7 +612,8 @@ const formatDate = (dateStr) => {
 
 const calcOverdueDays = (dateStr) => {
   if (!dateStr) return 0
-  const endDate = parseLocalDate(dateStr)
+  const datePart = dateStr.split('T')[0]
+  const endDate = new Date(datePart + 'T00:00:00')
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return Math.floor((today - endDate) / (1000 * 60 * 60 * 24))
