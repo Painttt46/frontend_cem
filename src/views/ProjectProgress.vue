@@ -278,7 +278,12 @@ export default {
         for (const project of this.projects) {
           try {
             const stepsResponse = await this.$http.get(`/api/task-steps/task/${project.id}`, { silent: true })
-            project.steps = stepsResponse.data || []
+            project.steps = (stepsResponse.data || []).map(step => ({
+              ...step,
+              assigned_users: typeof step.assigned_users === 'string' 
+                ? JSON.parse(step.assigned_users) 
+                : (step.assigned_users || [])
+            }))
           } catch {
             project.steps = []
           }
