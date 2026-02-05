@@ -1141,7 +1141,7 @@ const renderCharts = (leaves, tasks) => {
 }
 
 .header-card :deep(.p-card-body) {
-  padding: 1;
+  padding: 0;
 }
 
 .header-content {
