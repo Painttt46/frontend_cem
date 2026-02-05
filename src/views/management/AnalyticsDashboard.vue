@@ -178,13 +178,27 @@ const leaveTypeChart = ref(null)
 let charts = {}
 
 // Gantt
-const ganttFilter = ref('active')
+const ganttFilter = ref('all')
 const ganttFilterOptions = [
-  { label: 'กำลังดำเนินการ', value: 'active' },
   { label: 'ทั้งหมด', value: 'all' },
+  { label: 'กำลังดำเนินการ', value: 'active' },
   { label: 'เสร็จสิ้น', value: 'completed' }
 ]
 const ganttContainer = ref(null)
+
+// Helper functions
+const parseTime = (timeStr) => {
+  if (!timeStr) return 0
+  const [h, m] = timeStr.split(':').map(Number)
+  return h + (m || 0) / 60
+}
+
+const calcHours = (start, end) => {
+  const s = parseTime(start), e = parseTime(end)
+  let h = e - s
+  if (s < 13 && e > 12) h -= 1 // lunch break
+  return Math.max(0, h)
+}
 
 // Computed
 const filteredUsers = computed(() => {
@@ -208,6 +222,56 @@ const filteredLeaves = computed(() => {
     return leaveYear === selectedYear.value && userIds.has(l.user_id)
   })
 })
+
+// Workload Stats
+const workloadStats = computed(() => {
+  let totalHours = 0
+  const userSet = new Set()
+  const daySet = new Set()
+  
+  filteredDailyWork.value.forEach(w => {
+    totalHours += calcHours(w.start_time, w.end_time)
+    userSet.add(w.user_id)
+    daySet.add(w.work_date)
+  })
+  
+  const avgHours = userSet.size > 0 ? (totalHours / userSet.size / 12).toFixed(1) : '0'
+  
+  return {
+    totalHours: totalHours.toFixed(0) + ' ชม.',
+    activeUsers: userSet.size + ' คน',
+    avgHours: avgHours + ' ชม.',
+    workDays: daySet.size + ' วัน'
+  }
+})
+
+// Workload chart data
+const workloadChartData = computed(() => {
+  const monthData = {}
+  filteredDailyWork.value.forEach(w => {
+    const d = new Date(w.work_date)
+    if (d.getMonth() !== workloadMonth.value) return
+    const user = users.value.find(u => u.id === w.user_id)
+    if (!user) return
+    const name = `${user.firstname} ${user.lastname}`
+    monthData[name] = (monthData[name] || 0) + calcHours(w.start_time, w.end_time)
+  })
+  return Object.entries(monthData).sort((a, b) => b[1] - a[1]).slice(0, 15)
+})
+
+// Team workload data
+const teamWorkloadData = computed(() => {
+  const deptData = {}
+  filteredDailyWork.value.forEach(w => {
+    const user = users.value.find(u => u.id === w.user_id)
+    if (!user?.department) return
+    deptData[user.department] = (deptData[user.department] || 0) + calcHours(w.start_time, w.end_time)
+  })
+  return Object.entries(deptData)
+})
+
+// Has leave data
+const hasLeaveData = computed(() => filteredLeaves.value.length > 0)
 
 const leaveStats = computed(() => {
   const total = filteredLeaves.value.reduce((sum, l) => sum + (parseFloat(l.total_days) || 0), 0)
@@ -317,19 +381,6 @@ const loadData = async () => {
   }
 }
 
-const parseTime = (timeStr) => {
-  if (!timeStr) return 0
-  const [h, m] = timeStr.split(':').map(Number)
-  return h + (m || 0) / 60
-}
-
-const calcHours = (start, end) => {
-  const s = parseTime(start), e = parseTime(end)
-  let h = e - s
-  if (s < 13 && e > 12) h -= 1 // lunch break
-  return Math.max(0, h)
-}
-
 const renderCharts = () => {
   renderWorkloadChart()
   renderTeamWorkloadChart()
@@ -339,28 +390,17 @@ const renderCharts = () => {
 
 const renderWorkloadChart = () => {
   if (charts.workload) charts.workload.destroy()
-  if (!workloadChart.value) return
-
-  const monthData = {}
-  filteredDailyWork.value.forEach(w => {
-    const d = new Date(w.work_date)
-    if (d.getMonth() !== workloadMonth.value) return
-    const user = users.value.find(u => u.id === w.user_id)
-    if (!user) return
-    const name = `${user.firstname} ${user.lastname}`
-    monthData[name] = (monthData[name] || 0) + calcHours(w.start_time, w.end_time)
-  })
-
-  const sorted = Object.entries(monthData).sort((a, b) => b[1] - a[1]).slice(0, 15)
+  if (!workloadChart.value || workloadChartData.value.length === 0) return
 
   charts.workload = new Chart(workloadChart.value, {
     type: 'bar',
     data: {
-      labels: sorted.map(([n]) => n),
+      labels: workloadChartData.value.map(([n]) => n),
       datasets: [{
         label: 'ชั่วโมงทำงาน',
-        data: sorted.map(([, h]) => h.toFixed(1)),
-        backgroundColor: '#4A90E2'
+        data: workloadChartData.value.map(([, h]) => h.toFixed(1)),
+        backgroundColor: '#4A90E2',
+        borderRadius: 4
       }]
     },
     options: {
@@ -374,23 +414,17 @@ const renderWorkloadChart = () => {
 
 const renderTeamWorkloadChart = () => {
   if (charts.teamWorkload) charts.teamWorkload.destroy()
-  if (!teamWorkloadChart.value) return
+  if (!teamWorkloadChart.value || teamWorkloadData.value.length === 0) return
 
-  const deptData = {}
-  filteredDailyWork.value.forEach(w => {
-    const user = users.value.find(u => u.id === w.user_id)
-    if (!user?.department) return
-    deptData[user.department] = (deptData[user.department] || 0) + calcHours(w.start_time, w.end_time)
-  })
-
-  const labels = Object.keys(deptData)
+  const labels = teamWorkloadData.value.map(([d]) => d)
+  const data = teamWorkloadData.value.map(([, h]) => h.toFixed(1))
   const colors = ['#4A90E2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
 
   charts.teamWorkload = new Chart(teamWorkloadChart.value, {
     type: 'doughnut',
     data: {
       labels,
-      datasets: [{ data: Object.values(deptData).map(h => h.toFixed(1)), backgroundColor: colors }]
+      datasets: [{ data, backgroundColor: colors }]
     },
     options: {
       responsive: true,
@@ -402,7 +436,7 @@ const renderTeamWorkloadChart = () => {
 
 const renderMonthlyLeaveChart = () => {
   if (charts.monthlyLeave) charts.monthlyLeave.destroy()
-  if (!monthlyLeaveChart.value) return
+  if (!monthlyLeaveChart.value || !hasLeaveData.value) return
 
   const monthlyData = Array(12).fill(0)
   filteredLeaves.value.forEach(l => {
