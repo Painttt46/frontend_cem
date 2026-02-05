@@ -27,6 +27,54 @@
       <!-- Tab 1: Workload -->
       <TabPanel header="📊 Workload">
         <div class="chart-section">
+          <!-- Workload Stats -->
+          <div class="stats-grid mb-4">
+            <Card class="stat-card">
+              <template #content>
+                <div class="stat-content">
+                  <i class="pi pi-clock" style="color: #4A90E2"></i>
+                  <div>
+                    <h3>{{ workloadStats.totalHours }}</h3>
+                    <p>ชั่วโมงทำงานรวม</p>
+                  </div>
+                </div>
+              </template>
+            </Card>
+            <Card class="stat-card">
+              <template #content>
+                <div class="stat-content">
+                  <i class="pi pi-users" style="color: #10b981"></i>
+                  <div>
+                    <h3>{{ workloadStats.activeUsers }}</h3>
+                    <p>พนักงานที่บันทึกงาน</p>
+                  </div>
+                </div>
+              </template>
+            </Card>
+            <Card class="stat-card">
+              <template #content>
+                <div class="stat-content">
+                  <i class="pi pi-chart-bar" style="color: #f59e0b"></i>
+                  <div>
+                    <h3>{{ workloadStats.avgHours }}</h3>
+                    <p>เฉลี่ยต่อคน/เดือน</p>
+                  </div>
+                </div>
+              </template>
+            </Card>
+            <Card class="stat-card">
+              <template #content>
+                <div class="stat-content">
+                  <i class="pi pi-calendar" style="color: #8b5cf6"></i>
+                  <div>
+                    <h3>{{ workloadStats.workDays }}</h3>
+                    <p>วันทำงานรวม</p>
+                  </div>
+                </div>
+              </template>
+            </Card>
+          </div>
+
           <Card class="mb-4">
             <template #content>
               <div class="chart-header">
