@@ -178,7 +178,7 @@
 
         <!-- Actual Data -->
         <template v-else>
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
@@ -190,7 +190,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
@@ -202,7 +202,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-calendar-times summary-icon" style="color: #f59e0b"></i>
@@ -214,7 +214,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
@@ -226,7 +226,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
@@ -250,7 +250,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
@@ -262,7 +262,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
@@ -1422,6 +1422,15 @@ canvas {
 }
 
 /* Desktop: Show grid */
+.summary-card.clickable {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.summary-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
 @media (min-width: 769px) {
   .charts-wrapper {
     display: grid;
