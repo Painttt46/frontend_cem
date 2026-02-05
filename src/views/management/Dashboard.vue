@@ -238,7 +238,7 @@
             </template>
           </Card>
 
-          <Card class="summary-card">
+          <Card class="summary-card clickable" @click="showOverdueDialog = true">
             <template #content>
               <div class="summary-content">
                 <i class="pi pi-exclamation-triangle summary-icon" style="color: #ef4444"></i>
@@ -388,6 +388,25 @@
       </Column>
     </DataTable>
   </Dialog>
+
+  <!-- Overdue Projects Dialog -->
+  <Dialog v-model:visible="showOverdueDialog" modal header="โครงการที่พ้นกําหนดระยะเวลาตามสัญญา"
+    :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
+    <DataTable :value="overdueProjects" paginator :rows="10" sortField="project_end_date" :sortOrder="1">
+      <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
+      <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
+      <Column field="project_end_date" header="กำหนดส่ง" sortable style="min-width: 120px">
+        <template #body="{ data }">
+          {{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}
+        </template>
+      </Column>
+      <Column header="เกินกำหนด (วัน)" sortable style="min-width: 100px">
+        <template #body="{ data }">
+          <span class="text-red-500 font-bold">{{ calcOverdueDays(data.project_end_date) }}</span>
+        </template>
+      </Column>
+    </DataTable>
+  </Dialog>
 </template>
 
 <script setup>
@@ -412,6 +431,7 @@ const selectedUserId = ref(null)
 // Task status dialog
 const allTasks = ref([])
 const showTaskStatusDialog = ref(false)
+const showOverdueDialog = ref(false)
 const selectedTaskStatus = ref(null)
 
 const filteredTasksByStatus = computed(() => {
@@ -434,6 +454,16 @@ const filteredTasksByStatus = computed(() => {
     let status = t.status
     if (!status || status === '-') status = 'ไม่ระบุ'
     return status === selectedTaskStatus.value
+  })
+})
+
+const overdueProjects = computed(() => {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return allTasks.value.filter(t => {
+    if (!t.project_end_date) return false
+    const endDate = parseLocalDate(t.project_end_date)
+    return endDate < today && isTaskActive(t)
   })
 })
 
@@ -576,6 +606,14 @@ const formatDate = (dateStr) => {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
   return date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const calcOverdueDays = (dateStr) => {
+  if (!dateStr) return 0
+  const endDate = parseLocalDate(dateStr)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.floor((today - endDate) / (1000 * 60 * 60 * 24))
 }
 
 const onUserChange = async () => {

@@ -182,7 +182,7 @@
             <div class="gantt-header">
               <h3><i class="pi pi-calendar"></i> Project Timeline</h3>
               <div class="gantt-controls">
-                <span class="p-input-icon-left">
+                <span class="p-input-icon-left gantt-search-wrapper">
                   <i class="pi pi-search" />
                   <InputText v-model="ganttSearch" placeholder="ค้นหาชื่อ/SO..." class="gantt-search" />
                 </span>
@@ -760,7 +760,10 @@ onMounted(loadData)
 .gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
 .gantt-header h3 { margin: 0; color: #1a1a2e; display: flex; align-items: center; gap: 0.5rem; }
 .gantt-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.gantt-search { width: 180px; }
+.gantt-search-wrapper { position: relative; }
+.gantt-search-wrapper i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6c757d; z-index: 1; }
+.gantt-search { width: 200px; padding-left: 2.5rem !important; border-radius: 20px !important; border: 1px solid #dee2e6; transition: all 0.2s; }
+.gantt-search:focus { border-color: #4A90E2; box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2); }
 .gantt-count { font-size: 0.875rem; color: #6c757d; background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px; }
 .gantt-filter { min-width: 150px; }
 .gantt-wrapper { border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; }
