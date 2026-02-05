@@ -486,11 +486,11 @@ onMounted(loadData)
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 .header-card :deep(.p-card-content) { padding: 0; }
-.header-content { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 1rem; }
+.header-content { display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 1rem; }
 .header-left { display: flex; align-items: center; gap: 0.75rem; }
 .header-title { display: flex; align-items: center; gap: 0.75rem; }
-.header-title h1 { margin: 0; color: #fff; font-size: 1.5rem; font-weight: 600; }
-.header-icon { font-size: 1.5rem; color: #fff; }
+.header-title h1 { margin: 0; color: #fff; font-size: 1.25rem; font-weight: 600; }
+.header-icon { font-size: 1.25rem; color: #fff; }
 .back-btn { 
   color: #fff !important; 
   width: 2rem !important;
