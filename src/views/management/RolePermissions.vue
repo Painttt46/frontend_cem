@@ -358,6 +358,14 @@ const savePermissions = async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.header-card :deep(.p-card-body) {
+  padding: 1.05rem;
+}
+
+.header-card :deep(.p-card-content) {
+  padding: 0;
+}
+
 .header-content {
   display: flex;
   align-items: center;

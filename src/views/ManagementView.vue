@@ -501,6 +501,14 @@ const navigateTo = (section) => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+.header-card :deep(.p-card-body) {
+  padding: 1.05rem;
+}
+
+.header-card :deep(.p-card-content) {
+  padding: 0;
+}
+
 .header-content {
   display: flex;
   justify-content: space-between;

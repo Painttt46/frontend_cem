@@ -287,6 +287,14 @@ onMounted(() => {
   border: none;
 }
 
+.header-card :deep(.p-card-body) {
+  padding: 1.05rem;
+}
+
+.header-card :deep(.p-card-content) {
+  padding: 0;
+}
+
 .header-content {
   display: flex;
   align-items: center;
