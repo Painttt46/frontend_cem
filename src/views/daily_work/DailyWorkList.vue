@@ -805,7 +805,6 @@ export default {
       this.editFormData = {
         id: record.id,
         task_id: record.task_id,
-        task_id: record.task_id,
           step_id: record.step_id,
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
