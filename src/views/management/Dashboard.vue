@@ -2,23 +2,25 @@
 <template>
   <div class="dashboard-container">
     <Toast />
-    
+
     <!-- Header -->
     <Card class="header-card mb-4">
       <template #content>
         <div class="header-content">
           <div class="header-left">
-            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text rounded class="back-btn" v-tooltip.bottom="'ย้อนกลับ'" />
+            <Button icon="pi pi-arrow-left" @click="$router.go(-1)" text rounded class="back-btn"
+              v-tooltip.bottom="'ย้อนกลับ'" />
             <div class="header-title">
               <i class="pi pi-chart-bar header-icon"></i>
               <h1>Dashboard</h1>
             </div>
           </div>
           <div class="header-right">
-            <Button label="Analytics" icon="pi pi-chart-line" class="analytics-btn mr-3" @click="$router.push('/management/analytics')" />
+            <Button label="Analytics" icon="pi pi-chart-line" class="analytics-btn mr-3"
+              @click="$router.push('/management/analytics')" />
             <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
-                      placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" 
-                      filter filterPlaceholder="ค้นหาชื่อพนักงาน" />
+              placeholder="เลือกพนักงาน" class="user-filter" :showClear="true" @change="onUserChange" filter
+              filterPlaceholder="ค้นหาชื่อพนักงาน" />
           </div>
         </div>
       </template>
@@ -30,7 +32,8 @@
         <template #content>
           <div class="user-dashboard-header">
             <h2><i class="pi pi-user"></i> {{ selectedUserName }}</h2>
-            <Button label="ดูภาพรวมทั้งหมด" icon="pi pi-times" severity="secondary" size="small" @click="clearUserFilter" />
+            <Button label="ดูภาพรวมทั้งหมด" icon="pi pi-times" severity="secondary" size="small"
+              @click="clearUserFilter" />
           </div>
         </template>
       </Card>
@@ -41,7 +44,8 @@
           <h3>สรุปการลาประจำปี {{ currentYear }}</h3>
           <div class="user-leave-summary">
             <div v-for="(days, type) in userLeaveData" :key="type" class="leave-item">
-              <span class="leave-type" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }">{{ type }}</span>
+              <span class="leave-type" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }">{{ type
+                }}</span>
               <span class="leave-days">{{ days }} วัน</span>
             </div>
             <div v-if="Object.keys(userLeaveData).length === 0" class="no-data">ไม่มีข้อมูลการลา</div>
@@ -72,10 +76,13 @@
               </div>
             </div>
             <div class="summary-item">
-              <i class="pi pi-percentage" :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }"></i>
+              <i class="pi pi-percentage"
+                :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }"></i>
               <div>
-                <h4 :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }">
-                  {{ userTimesheetSummary.expectedHours > 0 ? Math.round(userTimesheetSummary.totalHours / userTimesheetSummary.expectedHours * 100) : 0 }}%
+                <h4
+                  :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }">
+                  {{ userTimesheetSummary.expectedHours > 0 ? Math.round(userTimesheetSummary.totalHours /
+                    userTimesheetSummary.expectedHours * 100) : 0 }}%
                 </h4>
                 <p>เปอร์เซ็นต์</p>
               </div>
@@ -88,10 +95,11 @@
               </div>
             </div>
           </div>
-          
+
           <div class="timesheet-filter mt-4">
             <label>ช่วงเวลา:</label>
-            <Dropdown v-model="timesheetPeriod" :options="periodOptions" optionLabel="label" optionValue="value" class="period-dropdown" />
+            <Dropdown v-model="timesheetPeriod" :options="periodOptions" optionLabel="label" optionValue="value"
+              class="period-dropdown" />
           </div>
 
           <h4 class="mt-3">Timesheet รายวัน</h4>
@@ -116,22 +124,23 @@
             <Column field="category" header="หมวดหมู่" style="min-width: 120px">
               <template #body="{ data }">
                 <div class="category-badges-small">
-                  <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge" 
-                        :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
+                  <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge"
+                    :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
                 </div>
               </template>
             </Column>
             <Column header="สถานะ" style="min-width: 100px">
               <template #body="{ data }">
                 <template v-if="data.steps_data && data.steps_data.length > 0">
-                  <div v-for="step in data.steps_data" :key="'st-'+step.id">
+                  <div v-for="step in data.steps_data" :key="'st-' + step.id">
                     <Badge v-for="ps in (step.project_statuses || [])" :key="ps" :value="ps"
                       :style="{ backgroundColor: getStatusColor(ps), color: '#fff', fontSize: '0.75rem' }" />
-                    <span v-if="!step.project_statuses || step.project_statuses.length === 0" class="text-muted">-</span>
+                    <span v-if="!step.project_statuses || step.project_statuses.length === 0"
+                      class="text-muted">-</span>
                   </div>
                 </template>
                 <Badge v-else-if="data.work_status" :value="data.work_status"
-                       :style="{ backgroundColor: getStatusColor(data.work_status), color: '#fff' }" />
+                  :style="{ backgroundColor: getStatusColor(data.work_status), color: '#fff' }" />
                 <span v-else class="text-muted">-</span>
               </template>
             </Column>
@@ -150,218 +159,217 @@
 
     <!-- Overall Dashboard (when no user selected) -->
     <template v-else>
-    <!-- Summary Cards -->
-    <div class="summary-grid mb-4">
-      <!-- Loading Skeleton -->
-      <template v-if="loading">
-        <Card v-for="i in 8" :key="i" class="summary-card">
-          <template #content>
-            <div class="summary-content">
-              <div class="skeleton skeleton-icon"></div>
-              <div class="summary-info">
-                <div class="skeleton skeleton-text" style="width: 60px; height: 32px;"></div>
-                <div class="skeleton skeleton-text" style="width: 120px; height: 16px; margin-top: 8px;"></div>
+      <!-- Summary Cards -->
+      <div class="summary-grid mb-4">
+        <!-- Loading Skeleton -->
+        <template v-if="loading">
+          <Card v-for="i in 8" :key="i" class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <div class="skeleton skeleton-icon"></div>
+                <div class="summary-info">
+                  <div class="skeleton skeleton-text" style="width: 60px; height: 32px;"></div>
+                  <div class="skeleton skeleton-text" style="width: 120px; height: 16px; margin-top: 8px;"></div>
+                </div>
               </div>
-            </div>
-          </template>
-        </Card>
-      </template>
-      
-      <!-- Actual Data -->
-      <template v-else>
-        <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
-            <div class="summary-info">
-              <h3>{{ stats.totalUsers }}</h3>
-              <p>ผู้ใช้งานทั้งหมด</p>
-            </div>
-          </div>
+            </template>
+          </Card>
         </template>
-      </Card>
 
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
-            <div class="summary-info">
-              <h3>{{ stats.workingToday }}</h3>
-              <p>พนักงานทำงานวันนี้</p>
-            </div>
-          </div>
+        <!-- Actual Data -->
+        <template v-else>
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.totalUsers }}</h3>
+                  <p>ผู้ใช้งานทั้งหมด</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.workingToday }}</h3>
+                  <p>พนักงานทำงานวันนี้</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-calendar-times summary-icon" style="color: #f59e0b"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.todayLeaves }}</h3>
+                  <p>ลางานวันนี้</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.activeCars }}</h3>
+                  <p>รถกำลังใช้งาน</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.dueSoon }}</h3>
+                  <p>โครงการครบกำหนดสัปดาห์นี้</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-exclamation-triangle summary-icon" style="color: #ef4444"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.overdue }}</h3>
+                  <p>โครงการที่พ้นกําหนดระยะเวลาตามสัญญา</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.activeTasks }}</h3>
+                  <p>โครงการที่กำลังดำเนินการ</p>
+                </div>
+              </div>
+            </template>
+          </Card>
+
+          <Card class="summary-card">
+            <template #content>
+              <div class="summary-content">
+                <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
+                <div class="summary-info">
+                  <h3>{{ stats.completedTasks }}</h3>
+                  <p>โครงการเสร็จสิ้น</p>
+                </div>
+              </div>
+            </template>
+          </Card>
         </template>
-      </Card>
-
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-calendar-times summary-icon" style="color: #f59e0b"></i>
-            <div class="summary-info">
-              <h3>{{ stats.todayLeaves }}</h3>
-              <p>ลางานวันนี้</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
-            <div class="summary-info">
-              <h3>{{ stats.activeCars }}</h3>
-              <p>รถกำลังใช้งาน</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
-            <div class="summary-info">
-              <h3>{{ stats.dueSoon }}</h3>
-              <p>โครงการครบกำหนดสัปดาห์นี้</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-exclamation-triangle summary-icon" style="color: #ef4444"></i>
-            <div class="summary-info">
-              <h3>{{ stats.overdue }}</h3>
-              <p>โครงการที่พ้นกําหนดระยะเวลาตามสัญญา</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
-            <div class="summary-info">
-              <h3>{{ stats.activeTasks }}</h3>
-              <p>โครงการที่กำลังดำเนินการ</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-
-      <Card class="summary-card">
-        <template #content>
-          <div class="summary-content">
-            <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
-            <div class="summary-info">
-              <h3>{{ stats.completedTasks }}</h3>
-              <p>โครงการเสร็จสิ้น</p>
-            </div>
-          </div>
-        </template>
-      </Card>
-      </template>
-    </div>
-
-    <!-- Charts with Swipe Support -->
-    <div class="charts-container mb-4" v-if="!loading">
-      <div class="charts-wrapper" 
-           ref="chartsWrapper"
-           @touchstart="handleTouchStart"
-           @touchmove="handleTouchMove"
-           @touchend="handleTouchEnd">
-        <Card class="chart-card" :class="{ active: currentChart === 0 }">
-          <template #content>
-            <h3>จำนวนวันลาของพนักงาน (รายปี)</h3>
-            <canvas ref="leaveChart"></canvas>
-          </template>
-        </Card>
-
-        <Card class="chart-card" :class="{ active: currentChart === 1 }">
-          <template #content>
-            <h3>สถานะงาน</h3>
-            <canvas ref="taskChart"></canvas>
-          </template>
-        </Card>
       </div>
-      
-      <!-- Chart Navigation Dots (Mobile) -->
-      <div class="chart-dots">
-        <span v-for="i in 2" :key="i" 
-              :class="{ active: currentChart === i - 1 }"
-              @click="currentChart = i - 1"></span>
-      </div>
-    </div>
 
-    <!-- Work Statistics -->
-    <Card>
-      <template #content>
-        <h3 class="mb-3">สถิติเวลาทำงานของพนักงาน (รายปี)</h3>
-        <DataTable :value="workStatistics" :loading="loading" paginator :rows="10" sortField="totalHours" :sortOrder="-1"
-                   :expandedRows="expandedRows">
-          <Column :expander="true" style="width: 3rem" />
-          <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
-            <template #body="{ data }">
-              <span class="clickable-name" @click="selectedUserId = data.userId; showUserDialog = true">
-                {{ data.userName }}
-              </span>
+      <!-- Charts with Swipe Support -->
+      <div class="charts-container mb-4" v-if="!loading">
+        <div class="charts-wrapper" ref="chartsWrapper" @touchstart="handleTouchStart" @touchmove="handleTouchMove"
+          @touchend="handleTouchEnd">
+          <Card class="chart-card" :class="{ active: currentChart === 0 }">
+            <template #content>
+              <h3>จำนวนวันลาของพนักงาน (รายปี)</h3>
+              <canvas ref="leaveChart"></canvas>
             </template>
-          </Column>
-          <Column field="department" header="แผนก" sortable style="min-width: 100px" />
-          <Column field="taskCount" header="งาน" sortable style="min-width: 60px" />
-          <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
-            <template #body="{ data }">
-              <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.totalHours) }}</span>
+          </Card>
+
+          <Card class="chart-card" :class="{ active: currentChart === 1 }">
+            <template #content>
+              <h3>สถานะงาน</h3>
+              <canvas ref="taskChart"></canvas>
             </template>
-          </Column>
-          <Column field="expectedHours" header="ควรทำ" sortable style="min-width: 100px">
-            <template #body="{ data }">
-              <span style="font-weight: 600; color: #f59e0b">{{ formatHoursMinutes(data.expectedHours) }}</span>
-            </template>
-          </Column>
-          <Column field="percentage" header="%" sortable style="min-width: 80px">
-            <template #body="{ data }">
-              <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#10b981' : '#ef4444' }">{{ data.percentage }}%</span>
-            </template>
-          </Column>
-          
-          <template #expansion="{ data }">
-            <div class="task-breakdown">
-              <h4>รายละเอียดงานทั้งหมด</h4>
-              <DataTable :value="data.taskDetails" class="p-datatable-sm">
-                <Column field="taskName" header="ชื่องาน" style="min-width: 200px" />
-                <Column field="hours" header="ชั่วโมง" sortable>
-                  <template #body="{ data: task }">
-                    <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(task.hours) }}</span>
-                  </template>
-                </Column>
-                <Column field="percentage" header="สัดส่วน" sortable>
-                  <template #body="{ data: task }">
-                    <div style="display: flex; align-items: center; gap: 0.5rem">
-                      <div style="flex: 1; background: #e9ecef; border-radius: 4px; height: 20px; overflow: hidden">
-                        <div :style="{ width: task.percentage + '%', background: '#4A90E2', height: '100%' }"></div>
+          </Card>
+        </div>
+
+        <!-- Chart Navigation Dots (Mobile) -->
+        <div class="chart-dots">
+          <span v-for="i in 2" :key="i" :class="{ active: currentChart === i - 1 }"
+            @click="currentChart = i - 1"></span>
+        </div>
+      </div>
+
+      <!-- Work Statistics -->
+      <Card>
+        <template #content>
+          <h3 class="mb-3">สถิติเวลาทำงานของพนักงาน (รายปี)</h3>
+          <DataTable :value="workStatistics" :loading="loading" paginator :rows="10" sortField="totalHours"
+            :sortOrder="-1" :expandedRows="expandedRows">
+            <Column :expander="true" style="width: 3rem" />
+            <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
+              <template #body="{ data }">
+                <span class="clickable-name" @click="selectedUserId = data.userId; showUserDialog = true">
+                  {{ data.userName }}
+                </span>
+              </template>
+            </Column>
+            <Column field="department" header="แผนก" sortable style="min-width: 100px" />
+            <Column field="taskCount" header="งาน" sortable style="min-width: 60px" />
+            <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
+              <template #body="{ data }">
+                <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.totalHours) }}</span>
+              </template>
+            </Column>
+            <Column field="expectedHours" header="ควรทำ" sortable style="min-width: 100px">
+              <template #body="{ data }">
+                <span style="font-weight: 600; color: #f59e0b">{{ formatHoursMinutes(data.expectedHours) }}</span>
+              </template>
+            </Column>
+            <Column field="percentage" header="%" sortable style="min-width: 80px">
+              <template #body="{ data }">
+                <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#10b981' : '#ef4444' }">{{
+                  data.percentage }}%</span>
+              </template>
+            </Column>
+
+            <template #expansion="{ data }">
+              <div class="task-breakdown">
+                <h4>รายละเอียดงานทั้งหมด</h4>
+                <DataTable :value="data.taskDetails" class="p-datatable-sm">
+                  <Column field="taskName" header="ชื่องาน" style="min-width: 200px" />
+                  <Column field="hours" header="ชั่วโมง" sortable>
+                    <template #body="{ data: task }">
+                      <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(task.hours) }}</span>
+                    </template>
+                  </Column>
+                  <Column field="percentage" header="สัดส่วน" sortable>
+                    <template #body="{ data: task }">
+                      <div style="display: flex; align-items: center; gap: 0.5rem">
+                        <div style="flex: 1; background: #e9ecef; border-radius: 4px; height: 20px; overflow: hidden">
+                          <div :style="{ width: task.percentage + '%', background: '#4A90E2', height: '100%' }"></div>
+                        </div>
+                        <span style="min-width: 50px; text-align: right">{{ task.percentage.toFixed(1) }}%</span>
                       </div>
-                      <span style="min-width: 50px; text-align: right">{{ task.percentage.toFixed(1) }}%</span>
-                    </div>
-                  </template>
-                </Column>
-              </DataTable>
-            </div>
-          </template>
-        </DataTable>
-      </template>
-    </Card>
+                    </template>
+                  </Column>
+                </DataTable>
+              </div>
+            </template>
+          </DataTable>
+        </template>
+      </Card>
     </template>
   </div>
 
-  <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false" :userId="selectedUserId" />
-  
+  <UserInfoDialog v-if="showUserDialog" :visible="true" @update:visible="showUserDialog = false"
+    :userId="selectedUserId" />
+
   <!-- Task Status Dialog -->
-  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
+  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus"
+    :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
     <DataTable :value="filteredTasksByStatus" paginator :rows="10" sortField="task_name" :sortOrder="1">
       <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
       <Column field="so_number" header="SO Number" sortable style="min-width: 120px" />
@@ -369,7 +377,7 @@
         <template #body="{ data }">
           <div class="category-badges-small">
             <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge"
-                  :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
+              :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
           </div>
         </template>
       </Column>
@@ -412,7 +420,7 @@ const filteredTasksByStatus = computed(() => {
     if (t.steps && t.steps.length > 0) {
       const workingSteps = t.steps.filter(s => s.has_work_logged)
       if (workingSteps.length > 0) {
-        const latestStep = workingSteps.sort((a, b) => 
+        const latestStep = workingSteps.sort((a, b) =>
           new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
         )[0]
         if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
@@ -478,7 +486,7 @@ const getDateRange = () => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   let startDate = today
-  
+
   switch (timesheetPeriod.value) {
     case 'today':
       startDate = today
@@ -520,31 +528,31 @@ const userTimesheetSummary = computed(() => {
   const projects = new Set()
   const workDays = new Set()
   const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
-  
+
   allDailyWork.value.forEach(w => {
     if (w.user_id !== selectedUser.value) return
     const workDate = new Date(w.work_date)
     if (workDate < startDate || workDate > endDate) return
-    
+
     totalHours += calcWorkHours(w.start_time, w.end_time, lunchBreak)
     taskCount++
     if (w.task_name) projects.add(w.task_name)
     workDays.add(w.work_date?.split('T')[0])
   })
-  
+
   // คำนวณชั่วโมงที่ควรทำตาม role
   const hoursPerDay = allRoleHoursMap.value[selectedUser.value] || 8
   const expectedHours = workDays.size * hoursPerDay
-  
+
   return { totalHours, expectedHours, totalTasks: taskCount, totalProjects: projects.size }
 })
 
 const userTimesheetDaily = computed(() => {
   if (!selectedUser.value) return []
   const { startDate, endDate } = getDateRange()
-  
+
   const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
-  
+
   return allDailyWork.value
     .filter(w => {
       if (w.user_id !== selectedUser.value) return false
@@ -585,11 +593,11 @@ const clearUserFilter = () => {
 const renderUserLeaveChart = () => {
   if (userLeaveChartInstance) userLeaveChartInstance.destroy()
   if (!userLeaveChart.value || Object.keys(userLeaveData.value).length === 0) return
-  
+
   const labels = Object.keys(userLeaveData.value)
   const data = Object.values(userLeaveData.value)
   const colors = labels.map(type => leaveTypeColors.value[type] || '#6c757d')
-  
+
   userLeaveChartInstance = new Chart(userLeaveChart.value, {
     type: 'doughnut',
     data: {
@@ -649,7 +657,7 @@ const handleTouchMove = (e) => {
 const handleTouchEnd = () => {
   const diff = touchStartX - touchEndX
   const threshold = 50
-  
+
   if (Math.abs(diff) > threshold) {
     if (diff > 0 && currentChart.value < 1) {
       currentChart.value++
@@ -724,7 +732,7 @@ const getStatusColor = (status) => {
 
 const loadData = async () => {
   loading.value = true
-  
+
   try {
     // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
     const [activeUsers, leaves, cars, tasks, dailyWork, allSteps, roleWorkHours] = await Promise.all([
@@ -736,7 +744,7 @@ const loadData = async () => {
       axios.get('/api/task-steps/all').then(r => r.data),
       axios.get('/api/settings/role-work-hours').then(r => r.data).catch(() => [])
     ])
-    
+
     // สร้าง map ชั่วโมงทำงานต่อวันตาม role และ lunch break
     const roleHoursMap = {}
     const roleLunchMap = {}
@@ -750,19 +758,19 @@ const loadData = async () => {
       roleHoursMap[r.role] = hours
       roleLunchMap[r.role] = lunchBreak
     })
-    
+
     // จัดกลุ่ม steps ตาม task_id
     const stepsByTask = {}
     allSteps.forEach(step => {
       if (!stepsByTask[step.task_id]) stepsByTask[step.task_id] = []
       stepsByTask[step.task_id].push(step)
     })
-    
+
     // assign steps ให้แต่ละ task
     tasks.forEach(task => {
       task.steps = stepsByTask[task.id] || []
     })
-    
+
     // สร้าง map user -> role hours per day และ lunch break
     const userRoleHours = {}
     const userLunchBreak = {}
@@ -783,39 +791,39 @@ const loadData = async () => {
 
     // Calculate stats
     stats.value.totalUsers = activeUsers.length
-    
+
     const today = new Date().toISOString().split('T')[0]
     const todayDate = new Date(today + 'T00:00:00') // Local midnight
     const weekFromNow = new Date(todayDate)
     weekFromNow.setDate(weekFromNow.getDate() + 7)
-    
+
     // Helper function to parse date as local
     const parseLocalDate = (dateStr) => {
       if (!dateStr) return null
       const datePart = dateStr.split('T')[0]
       return new Date(datePart + 'T00:00:00')
     }
-    
+
     // Get unique user IDs who have approved leave today
     const todayLeavesUsers = leaves.filter(l => {
       if (l.status !== 'approved') return false
       if (!l.start_datetime || !l.end_datetime) return false
-      
+
       // แปลง UTC เป็น local date
       const startDate = new Date(l.start_datetime)
       const endDate = new Date(l.end_datetime)
-      
+
       // เปรียบเทียบแบบ local date (ไม่สนเวลา)
       const startLocalDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
       const endLocalDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
-      
+
       return startLocalDate <= todayDate && endLocalDate >= todayDate
     })
-    
+
     // Count unique users (DISTINCT user_id)
     const uniqueUserIds = [...new Set(todayLeavesUsers.map(l => l.user_id))]
     stats.value.todayLeaves = uniqueUserIds.length
-    
+
     // พนักงานที่ทำงานวันนี้ = คนที่ลงงานรายวันวันนี้
     const todayWorkUsers = dailyWork.filter(w => {
       const workDate = w.work_date?.split('T')[0]
@@ -823,9 +831,9 @@ const loadData = async () => {
     })
     const uniqueWorkUserIds = [...new Set(todayWorkUsers.map(w => w.user_id))]
     stats.value.workingToday = uniqueWorkUserIds.length
-    
+
     stats.value.activeCars = cars.filter(c => c.status === 'active').length
-    
+
     // นับสถานะโครงการจาก workflow steps
     stats.value.activeTasks = tasks.filter(t => {
       // ถ้ามี workflow steps ให้ดูจาก step status
@@ -835,14 +843,14 @@ const loadData = async () => {
       }
       return isActive(t.status)
     }).length
-    
+
     stats.value.completedTasks = tasks.filter(t => {
       if (t.steps && t.steps.length > 0) {
         return t.steps.every(s => s.status === 'completed')
       }
       return isCompleted(t.status)
     }).length
-    
+
     // Helper: ตรวจสอบว่างานยังไม่เสร็จ (รวม workflow)
     const isTaskActive = (t) => {
       if (t.steps && t.steps.length > 0) {
@@ -850,14 +858,14 @@ const loadData = async () => {
       }
       return isActive(t.status)
     }
-    
+
     // งานที่ครบกำหนดสัปดาห์นี้
     stats.value.dueSoon = tasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
       return endDate >= todayDate && endDate <= weekFromNow && isTaskActive(t)
     }).length
-    
+
     // งานที่เลยกำหนด
     stats.value.overdue = tasks.filter(t => {
       if (!t.project_end_date) return false
@@ -868,18 +876,18 @@ const loadData = async () => {
     // Work Statistics - คำนวณเวลาทำงานของแต่ละคน (รายปี)
     const currentYear = new Date().getFullYear()
     const userWorkData = {}
-    
+
     dailyWork.forEach(w => {
       const workYear = new Date(w.work_date).getFullYear()
       if (workYear !== currentYear) return
-      
+
       const userId = w.user_id
       if (!userId) return // ข้ามถ้าไม่มี userId
-      
+
       if (!userWorkData[userId]) {
         const user = activeUsers.find(u => u.id === userId)
         if (!user) return // ข้ามถ้าไม่เจอ user ใน activeUsers
-        
+
         userWorkData[userId] = {
           userId: userId,
           userName: `${user.firstname} ${user.lastname}`,
@@ -892,16 +900,16 @@ const loadData = async () => {
           taskHours: {} // เก็บชั่วโมงของแต่ละงาน
         }
       }
-      
+
       // นับวันทำงาน
       userWorkData[userId].workDays.add(w.work_date?.split('T')[0])
-      
+
       // คำนวณชั่วโมงหักพักกลางวัน
       const hours = calcWorkHours(w.start_time, w.end_time, userWorkData[userId].lunchBreak)
-      
+
       if (hours > 0) {
         userWorkData[userId].totalHours += hours
-        
+
         // เก็บชั่วโมงของแต่ละงาน
         const taskName = w.task_name || w.project_name || 'ไม่ระบุ'
         if (!userWorkData[userId].taskHours[taskName]) {
@@ -909,10 +917,10 @@ const loadData = async () => {
         }
         userWorkData[userId].taskHours[taskName] += hours
       }
-      
+
       userWorkData[userId].taskCount += 1
     })
-    
+
     workStatistics.value = Object.values(userWorkData).map(data => {
       // สร้างรายละเอียดงานทั้งหมด
       const taskDetails = Object.entries(data.taskHours)
@@ -922,9 +930,9 @@ const loadData = async () => {
           percentage: (hours / data.totalHours) * 100
         }))
         .sort((a, b) => b.hours - a.hours)
-      
+
       const expectedHours = data.workDays.size * data.hoursPerDay
-      
+
       return {
         userId: data.userId,
         userName: data.userName,
@@ -960,21 +968,21 @@ const formatHoursMinutes = (hours) => {
 const renderCharts = (leaves, tasks) => {
   // Leave Chart - แสดงจำนวนวันลาของแต่ละคนแยกตามประเภท (รายปี)
   if (leaveChartInstance) leaveChartInstance.destroy()
-  
+
   const currentYear = new Date().getFullYear()
   const users = {}
   const leaveTypes = new Set()
-  
+
   // รวบรวมข้อมูล
   leaves.forEach(l => {
     if (l.status !== 'approved') return
     const leaveYear = new Date(l.start_datetime).getFullYear()
     if (leaveYear !== currentYear) return
-    
+
     const userName = l.user_name || 'ไม่ระบุ'
     const leaveType = l.leave_type || 'อื่นๆ'
     const days = parseFloat(l.total_days) || 0
-    
+
     if (!users[userName]) {
       users[userName] = { total: 0 }
     }
@@ -996,7 +1004,7 @@ const renderCharts = (leaves, tasks) => {
   const datasets = Array.from(leaveTypes).map(type => ({
     label: type,
     data: sortedUsers.map(userName => users[userName][type] || 0),
-    backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random()*16777215).toString(16)
+    backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random() * 16777215).toString(16)
   }))
 
   leaveChartInstance = new Chart(leaveChart.value, {
@@ -1023,17 +1031,17 @@ const renderCharts = (leaves, tasks) => {
 
   // Task Chart - store tasks for click event
   if (taskChartInstance) taskChartInstance.destroy()
-  
+
   allTasks.value = tasks
   const taskStatus = {}
-  
+
   // นับสถานะจาก project_statuses ของ workflow steps (รองรับหลายสถานะ)
   tasks.forEach(t => {
     if (t.steps && t.steps.length > 0) {
       // หา step ล่าสุดที่มีการลงงาน
       const workingSteps = t.steps.filter(s => s.has_work_logged)
       if (workingSteps.length > 0) {
-        const latestStep = workingSteps.sort((a, b) => 
+        const latestStep = workingSteps.sort((a, b) =>
           new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
         )[0]
         // ใช้ project_statuses (array)
@@ -1093,6 +1101,7 @@ const renderCharts = (leaves, tasks) => {
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
 }
+
 .analytics-btn:hover {
   box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
 }
@@ -1114,7 +1123,7 @@ const renderCharts = (leaves, tasks) => {
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
-  
+
   background: #e5e7eb;
   height: 100%;
   overflow: auto;
@@ -1139,7 +1148,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.25rem 1rem;
+  padding: 0.6rem 1rem;
 }
 
 .header-left {
@@ -1183,7 +1192,7 @@ const renderCharts = (leaves, tasks) => {
 
 .user-filter {
   min-width: 180px;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 6px;
 }
 
@@ -1378,7 +1387,7 @@ canvas {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
   }
-  
+
   .chart-card {
     flex: none;
     min-width: auto;
@@ -1391,51 +1400,51 @@ canvas {
   .dashboard-container {
     padding: 0.5rem;
   }
-  
+
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-  
+
   .summary-card {
     padding: 0.5rem;
   }
-  
+
   .summary-content {
     flex-direction: column;
     text-align: center;
     gap: 0.5rem;
   }
-  
+
   .summary-icon {
     font-size: 1.8rem;
   }
-  
+
   .summary-info h3 {
     font-size: 1.5rem;
   }
-  
+
   .summary-info p {
     font-size: 0.75rem;
   }
-  
+
   .chart-dots {
     display: flex;
   }
-  
+
   .header-title h1 {
     font-size: 1.2rem;
   }
-  
+
   .header-icon {
     font-size: 1.2rem;
   }
-  
+
   /* Hide table columns on mobile */
   :deep(.p-datatable-wrapper) {
     overflow-x: auto;
   }
-  
+
   :deep(.p-datatable) {
     font-size: 0.85rem;
   }
@@ -1445,11 +1454,11 @@ canvas {
   .summary-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .header-content {
     padding: 0.5rem;
   }
-  
+
   .back-btn {
     padding: 0.4rem !important;
   }
@@ -1488,6 +1497,7 @@ canvas {
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -1497,54 +1507,54 @@ canvas {
   .dashboard-container {
     padding: 0.75rem;
   }
-  
+
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
   }
-  
+
   .summary-card:hover {
     transform: none;
   }
-  
+
   .summary-content {
     flex-direction: column;
     text-align: center;
     gap: 0.5rem;
   }
-  
+
   .summary-icon {
     font-size: 2rem;
   }
-  
+
   .summary-info h3 {
     font-size: 1.5rem;
   }
-  
+
   .summary-info p {
     font-size: 0.8rem;
   }
-  
+
   .chart-dots {
     display: flex;
   }
-  
+
   .header-title h1 {
     font-size: 1.25rem;
   }
-  
+
   .header-icon {
     font-size: 1.25rem;
   }
-  
+
   :deep(.p-datatable-wrapper) {
     overflow-x: auto;
   }
-  
+
   :deep(.p-datatable) {
     font-size: 0.9rem;
   }
-  
+
   :deep(.p-datatable .p-column-title) {
     font-size: 0.85rem;
   }
@@ -1554,64 +1564,64 @@ canvas {
   .dashboard-container {
     padding: 0.5rem;
   }
-  
+
   .summary-grid {
     grid-template-columns: 1fr;
     gap: 0.5rem;
   }
-  
+
   .header-content {
     padding: 0.5rem;
   }
-  
+
   .header-left {
     gap: 0.5rem;
   }
-  
+
   .header-title {
     gap: 0.5rem;
   }
-  
+
   .header-title h1 {
     font-size: 1.1rem;
   }
-  
+
   .header-icon {
     font-size: 1.1rem;
   }
-  
+
   .back-btn {
     padding: 0.4rem !important;
   }
-  
+
   .summary-icon {
     font-size: 1.8rem;
   }
-  
+
   .summary-info h3 {
     font-size: 1.3rem;
   }
-  
+
   .summary-info p {
     font-size: 0.75rem;
   }
-  
+
   .chart-card {
     min-height: 300px;
   }
-  
+
   canvas {
     max-height: 250px;
   }
-  
+
   :deep(.p-datatable) {
     font-size: 0.8rem;
   }
-  
+
   :deep(.p-datatable .p-column-title) {
     font-size: 0.75rem;
   }
-  
+
   :deep(.p-paginator) {
     font-size: 0.8rem;
   }
@@ -1621,11 +1631,11 @@ canvas {
   .summary-info h3 {
     font-size: 1.2rem;
   }
-  
+
   .summary-info p {
     font-size: 0.7rem;
   }
-  
+
   .header-title h1 {
     font-size: 1rem;
   }
