@@ -553,11 +553,31 @@ export default {
   },
   computed: {
     workStatusFilterOptions() {
-      const options = [{ label: 'ทั้งหมด', value: null }]
+      const options = [
+        { label: 'ทั้งหมด', value: null },
+        { label: 'ไม่มีสถานะ (-)', value: 'no_status' }
+      ]
       
       // เอาเฉพาะ statuses ที่มีใน taskWorks
       const existingValues = []
       this.taskWorks.forEach(w => {
+        // เช็ค project_statuses จาก steps_data
+        if (w.steps_data) {
+          w.steps_data.forEach(step => {
+            if (step.project_statuses) {
+              step.project_statuses.forEach(ps => {
+                if (!existingValues.includes(ps)) {
+                  options.push({
+                    label: this.getProjectStatusLabel(ps),
+                    value: ps
+                  })
+                  existingValues.push(ps)
+                }
+              })
+            }
+          })
+        }
+        // fallback work_status
         if (w.work_status && !existingValues.includes(w.work_status)) {
           options.push({
             label: this.getStatusLabel(w.work_status),
@@ -582,7 +602,25 @@ export default {
       
       // Filter by status
       if (this.workStatusFilter) {
-        works = works.filter(work => work.work_status === this.workStatusFilter)
+        if (this.workStatusFilter === 'no_status') {
+          // กรองเฉพาะที่ไม่มี project_statuses
+          works = works.filter(work => {
+            if (!work.steps_data) return !work.work_status
+            const hasProjectStatus = work.steps_data.some(s => s.project_statuses && s.project_statuses.length > 0)
+            return !hasProjectStatus && !work.work_status
+          })
+        } else {
+          // กรองตาม project_statuses หรือ work_status
+          works = works.filter(work => {
+            if (work.steps_data) {
+              const hasStatus = work.steps_data.some(s => 
+                s.project_statuses && s.project_statuses.includes(this.workStatusFilter)
+              )
+              if (hasStatus) return true
+            }
+            return work.work_status === this.workStatusFilter
+          })
+        }
       }
       
       // Sort
