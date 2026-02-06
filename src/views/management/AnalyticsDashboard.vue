@@ -178,6 +178,7 @@
     </TabView>
     
     <!-- Task Name Tooltip -->
+  </div>
 </template>
 
 <script setup>
