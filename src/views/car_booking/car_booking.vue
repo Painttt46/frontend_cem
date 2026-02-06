@@ -62,7 +62,7 @@
     </div>
 
     <!-- Form Modal -->
-    <BookingForm ref="bookingForm" v-if="showForm" :show-form="showForm" :selected-date="selectedDate"
+    <BookingForm ref="bookingForm" v-show="showForm" :show-form="showForm" :selected-date="selectedDate"
       :active-form="activeForm" :borrow-form="borrowForm" :return-form="returnForm" :cancel-form="cancelForm"
       :available-borrows="availableBorrows" :pending-borrows="pendingBorrows" :current-return-time="currentReturnTime"
       :selected-borrow-project="selectedBorrowProject" :selected-borrow-description="selectedBorrowDescription" @close-form="closeForm" @submit-borrow="submitBorrow"
@@ -272,16 +272,17 @@ export default {
     }
   },
   mounted() {
+    this.loadRecords()
     this.syncServerTime()
     
     this.timeInterval = setInterval(() => {
       this.currentTime = new Date(Date.now() + this.serverTimeOffset)
     }, 1000)
     
-    // Auto refresh ทุก 30 วินาที
+    // Auto refresh ทุก 60 วินาที
     this.refreshInterval = setInterval(() => {
       this.loadRecords(true)
-    }, 30000)
+    }, 60000)
     
     this.syncInterval = setInterval(() => {
       this.syncServerTime()
@@ -295,7 +296,7 @@ export default {
   },
   created() {
     this.$http = axios
-    this.loadRecords()
+    
   },
   methods: {
     async syncServerTime() {

@@ -772,10 +772,8 @@ let taskChartInstance = null
 const workStatusColors = ref({})
 const categoryColors = ref({})
 
-onMounted(() => {
-  loadLeaveTypeColors()
-  loadWorkStatusColors()
-  loadCategoryColors()
+onMounted(async () => {
+  await Promise.all([loadLeaveTypeColors(), loadWorkStatusColors(), loadCategoryColors()])
   loadData()
 })
 
