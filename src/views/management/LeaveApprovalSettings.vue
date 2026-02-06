@@ -173,7 +173,7 @@ const loadPositions = async () => {
 const availableUsers = computed(() => {
   return allUsers.value.map(u => ({
     id: u.id,
-    name: `${u.firstname} ${u.lastname} (${u.position || 'ไม่ระบุตำแหน่ง'})`
+    name: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''} - ${u.position || 'ไม่ระบุตำแหน่ง'}`
   }))
 })
 

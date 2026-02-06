@@ -448,7 +448,7 @@ export default {
             })
             .map(user => ({
               ...user,
-              displayName: `${user.firstname} ${user.lastname}`.trim()
+              displayName: `${user.firstname} ${user.lastname}${user.nickname ? ` (${user.nickname})` : ''}`.trim()
             }))
           this.filteredUsers = this.users.slice(0, this.maxDisplayUsers)
         }

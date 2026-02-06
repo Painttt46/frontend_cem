@@ -424,7 +424,7 @@
     :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
     <DataTable :value="leavesTodayList" paginator :rows="10">
       <Column header="ชื่อ-นามสกุล">
-        <template #body="{ data }">{{ data.firstname }} {{ data.lastname }}</template>
+        <template #body="{ data }">{{ data.firstname }} {{ data.lastname }}{{ data.nickname ? ` (${data.nickname})` : '' }}</template>
       </Column>
       <Column field="leave_type" header="ประเภทการลา" />
     </DataTable>
@@ -916,7 +916,7 @@ const loadData = async () => {
     allRoleHoursMap.value = userRoleHours
     allLunchBreakMap.value = userLunchBreak
     userOptions.value = activeUsers.map(u => ({
-      label: `${u.firstname} ${u.lastname}`,
+      label: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`,
       value: u.id
     })).sort((a, b) => a.label.localeCompare(b.label, 'th'))
 

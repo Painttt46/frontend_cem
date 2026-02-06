@@ -283,7 +283,7 @@ export default {
         const response = await axios.get('/api/users')
         this.users = response.data.map(u => ({
           id: u.id,
-          name: `${u.firstname} ${u.lastname}`,
+          name: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`,
           position: u.position || '',
           department: u.department || ''
         }))

@@ -45,7 +45,7 @@
             scrollable scrollHeight="600px" scrollDirection="both">
             <Column field="firstname" header="ชื่อ" :sortable="true" frozen style="min-width: 150px">
               <template #body="{ data }">
-                {{ data.firstname }} {{ data.lastname }}
+                {{ data.firstname }} {{ data.lastname }}{{ data.nickname ? ` (${data.nickname})` : '' }}
               </template>
             </Column>
             <Column field="department" header="แผนก" :sortable="true" frozen style="min-width: 120px" />
@@ -142,7 +142,7 @@
         <div class="user-info">
           <i class="pi pi-user"></i>
           <div>
-            <h4>{{ editingUser.firstname }} {{ editingUser.lastname }}</h4>
+            <h4>{{ editingUser.firstname }} {{ editingUser.lastname }}{{ editingUser.nickname ? ` (${editingUser.nickname})` : '' }}</h4>
             <small>{{ editingUser.department }} - {{ editingUser.position }}</small>
           </div>
         </div>

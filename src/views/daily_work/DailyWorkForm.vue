@@ -565,7 +565,7 @@ export default {
         const response = await this.$http.get('/api/users')
         this.users = response.data.map(user => ({
           ...user,
-          name: `${user.firstname} ${user.lastname}`.trim(),
+          name: `${user.firstname} ${user.lastname}${user.nickname ? ` (${user.nickname})` : ''}`.trim(),
           email: user.email
         }))
         // เพิ่ม hardcoded group email

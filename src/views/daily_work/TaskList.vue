@@ -1192,7 +1192,7 @@ export default {
         this.saleUsers = response.data
           .filter(u => u.is_active && u.role && u.role.toLowerCase().includes('sale'))
           .map(u => ({ 
-            label: `${u.firstname} ${u.lastname}`, 
+            label: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`, 
             value: `${u.firstname} ${u.lastname}`,
             position: u.position || '',
             department: u.department || '',
