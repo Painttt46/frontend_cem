@@ -22,7 +22,7 @@
             </span>
           </template>
         </Column>
-        <Column field="employee_position" header="ตำแหน่ง" :sortable="true" />
+        <Column field="position" header="ตำแหน่ง" :sortable="true" />
 
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
           <template #body="slotProps">
