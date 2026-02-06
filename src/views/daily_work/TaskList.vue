@@ -49,7 +49,9 @@
           <template #body="slotProps">
             <div v-if="slotProps.data.sale_owner" class="sale-info">
               <i class="pi pi-user"></i>
-              {{ slotProps.data.sale_owner }}
+              <span class="clickable-name" @click="showSaleUserInfo(slotProps.data.sale_owner)">
+                {{ slotProps.data.sale_owner }}
+              </span>
             </div>
             <span v-else class="text-muted">-</span>
           </template>
@@ -362,7 +364,10 @@
         
         <div class="input-group">
           <label class="input-label">Sale เจ้าของงาน</label>
-          <InputText v-model="editFormData.sale_owner" class="corporate-input" />
+          <Dropdown v-model="editFormData.sale_owner" :options="saleUsers" 
+            optionLabel="label" optionValue="value" placeholder="เลือก Sale" 
+            :filter="true" filterPlaceholder="ค้นหา..." :showClear="true"
+            class="corporate-input w-full" />
         </div>
 
         <div class="input-group">
@@ -479,6 +484,7 @@ export default {
     await this.loadCategoriesFromStorage()
     await this.loadStatusesFromStorage()
     this.loadTasks()
+    this.loadSaleUsers()
   },
   beforeUnmount() {
     window.removeEventListener('taskUpdated', this.handleTaskUpdate)
@@ -537,7 +543,9 @@ export default {
         { label: 'งานลูกค้า', value: 'งานลูกค้า' }
       ],
       categories: [],
-      workStatuses: []
+      workStatuses: [],
+      saleUsers: [],
+      allUsers: []
     }
   },
   computed: {
@@ -1161,6 +1169,23 @@ export default {
       const hrs = Math.floor(h)
       const mins = Math.round((h - hrs) * 60)
       return `${hrs} ชม. ${mins} นาที`
+    },
+    showSaleUserInfo(saleName) {
+      const user = this.allUsers.find(u => `${u.firstname} ${u.lastname}` === saleName)
+      if (user) {
+        this.selectedUserName = saleName
+        this.selectedUserId = user.id
+        this.showUserInfoDialog = true
+      }
+    },
+    async loadSaleUsers() {
+      try {
+        const response = await this.$http.get('/api/users')
+        this.allUsers = response.data
+        this.saleUsers = response.data
+          .filter(u => u.is_active && u.role && u.role.toLowerCase().includes('sale'))
+          .map(u => ({ label: `${u.firstname} ${u.lastname}`, value: `${u.firstname} ${u.lastname}` }))
+      } catch { /* ignore */ }
     },
     showUserInfo(name, userId) {
       this.selectedUserName = name

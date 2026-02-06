@@ -21,7 +21,10 @@
 
           <div class="input-group">
             <label for="saleOwner" class="input-label">Sale เจ้าของงาน</label>
-            <InputText id="saleOwner" v-model="formData.saleOwner" class="corporate-input" />
+            <Dropdown id="saleOwner" v-model="formData.saleOwner" :options="saleUsers" 
+              optionLabel="label" optionValue="value" placeholder="เลือก Sale" 
+              :filter="true" filterPlaceholder="ค้นหา..." :showClear="true"
+              class="corporate-input w-full" />
           </div>
 
           <div class="input-group">
@@ -117,13 +120,23 @@ export default {
         files: [],
         steps: []
       },
-      categoryOptions: []
+      categoryOptions: [],
+      saleUsers: []
     }
   },
   mounted() {
     this.loadCategories()
+    this.loadSaleUsers()
   },
   methods: {
+    async loadSaleUsers() {
+      try {
+        const response = await this.$http.get('/api/users')
+        this.saleUsers = response.data
+          .filter(u => u.is_active && u.role && u.role.toLowerCase().includes('sale'))
+          .map(u => ({ label: `${u.firstname} ${u.lastname}`, value: `${u.firstname} ${u.lastname}` }))
+      } catch { /* ignore */ }
+    },
     loadCategories() {
       this.$http.get('/api/settings/categories')
         .then(response => {

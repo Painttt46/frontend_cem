@@ -56,7 +56,14 @@
             </template>
           </Column>
 
-          <Column field="sale_owner" header="เจ้าของโครงการ" :sortable="true" style="min-width: 120px;" />
+          <Column field="sale_owner" header="เจ้าของโครงการ" :sortable="true" style="min-width: 120px;">
+            <template #body="slotProps">
+              <span v-if="slotProps.data.sale_owner" class="clickable-name" @click="showSaleUserInfo(slotProps.data.sale_owner)">
+                {{ slotProps.data.sale_owner }}
+              </span>
+              <span v-else>-</span>
+            </template>
+          </Column>
 
           <template #expansion="slotProps">
             <div class="workflow-expansion">
@@ -125,14 +132,22 @@
         </DataTable>
       </template>
     </Card>
+  <UserInfoDialog 
+    v-model:visible="showUserInfoDialog" 
+    :userId="selectedUserId"
+    :userName="selectedUserName"
+  />
   </div>
 </template>
 
 <script>
 import { useConfirm } from 'primevue/useconfirm'
+import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'ProjectProgress',
+  components: { UserInfoDialog },
   setup() {
     return { $confirm: useConfirm() }
   },
@@ -144,7 +159,11 @@ export default {
       statuses: [],
       searchQuery: '',
       completingStepId: null,
-      currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null
+      currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null,
+      showUserInfoDialog: false,
+      selectedUserId: null,
+      selectedUserName: '',
+      allUsers: []
     }
   },
   computed: {
@@ -177,6 +196,7 @@ export default {
     this.loadProjects()
     this.loadCategories()
     this.loadStatuses()
+    this.loadUsers()
   },
   watch: {
     projects() {
@@ -185,6 +205,20 @@ export default {
     }
   },
   methods: {
+    async loadUsers() {
+      try {
+        const response = await axios.get('/api/users')
+        this.allUsers = response.data
+      } catch { /* ignore */ }
+    },
+    showSaleUserInfo(saleName) {
+      const user = this.allUsers.find(u => `${u.firstname} ${u.lastname}` === saleName)
+      if (user) {
+        this.selectedUserName = saleName
+        this.selectedUserId = user.id
+        this.showUserInfoDialog = true
+      }
+    },
     handleQueryParams() {
       const taskId = parseInt(this.$route.query.taskId)
       if (taskId && this.projects.length > 0) {
