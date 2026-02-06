@@ -229,7 +229,7 @@
           <label>กรองตามสถานะ:</label>
           <Dropdown v-model="workStatusFilter" :options="workStatusFilterOptions" 
                     optionLabel="label" optionValue="value" placeholder="ทั้งหมด" 
-                    class="filter-dropdown" />
+                    showClear class="filter-dropdown" />
         </div>
         <div class="filter-group">
           <label>เรียงตาม:</label>
@@ -555,7 +555,7 @@ export default {
     workStatusFilterOptions() {
       const options = [
         { label: 'ทั้งหมด', value: null },
-        { label: 'ไม่มีสถานะ (-)', value: 'no_status' }
+        { label: '-', value: 'null' }
       ]
       
       // เอาเฉพาะ statuses ที่มีใน taskWorks
