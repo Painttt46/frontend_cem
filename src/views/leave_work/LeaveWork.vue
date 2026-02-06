@@ -193,13 +193,12 @@ export default {
     doExport() {
       let records = this.filteredLeaveRecords
 
-      // Filter by date range (ใช้วันที่ลา start_datetime)
+      // Filter by date range (ใช้วันที่ส่งคำขอ created_at)
       if (this.exportStartDate || this.exportEndDate) {
         records = records.filter(r => {
-          if (!r.start_datetime) return false
+          if (!r.created_at) return false
           
-          // แปลง start_datetime เป็น Date แล้วเอาเฉพาะวันที่
-          const recordDate = new Date(r.start_datetime)
+          const recordDate = new Date(r.created_at)
           const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
           
           if (this.exportStartDate) {
