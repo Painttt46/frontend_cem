@@ -295,7 +295,7 @@ export default {
         html += `<tr style="background:${bgColor}; font-size:12pt;">
           <td style="text-align:center">${i + 1}</td>
           <td><b>${r.user_name || '-'}</b></td>
-          <td>${r.employee_position || '-'}</td>
+          <td>${r.position || '-'}</td>
           <td>${r.leave_type || '-'}</td>
           <td style="text-align:center">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH') : '-'}</td>
           <td style="text-align:center">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH') : '-'}</td>
