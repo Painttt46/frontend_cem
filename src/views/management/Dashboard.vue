@@ -867,12 +867,12 @@ const loadData = async () => {
 
   try {
     // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
-    const [activeUsers, leaves, cars, tasks, dailyWork, allSteps, roleWorkHours] = await Promise.all([
+    const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours] = await Promise.all([
       userService.getActiveUsers(),
       axios.get('/api/leave').then(r => r.data),
-      axios.get('/api/car-booking').then(r => r.data),
+      axios.get('/api/settings/dashboard-summary').then(r => r.data),
       axios.get('/api/tasks').then(r => r.data),
-      dailyWorkService.getDailyWork(),
+      axios.get('/api/daily-work/summary').then(r => r.data),
       axios.get('/api/task-steps/all').then(r => r.data),
       axios.get('/api/settings/role-work-hours').then(r => r.data).catch(() => [])
     ])
@@ -964,7 +964,7 @@ const loadData = async () => {
     const uniqueWorkUserIds = [...new Set(todayWorkUsers.map(w => w.user_id))]
     stats.value.workingToday = uniqueWorkUserIds.length
 
-    stats.value.activeCars = cars.filter(c => c.status === 'active').length
+    stats.value.activeCars = parseInt(dashSummary.active_cars) || 0
 
     // Populate data for dialogs
     workingTodayUsers.value = activeUsers.filter(u => uniqueWorkUserIds.includes(u.id))
