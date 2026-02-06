@@ -105,7 +105,7 @@
                         <div class="info-item" v-if="step.created_by_name || step.completed_by_name">
                           <span v-if="step.created_by_name"><i class="pi pi-user-plus"></i> สร้างโดย: {{ step.created_by_name }}</span>
                           <span v-if="step.created_by_name && step.status === 'completed' && step.completed_by_name"> | </span>
-                          <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}</span>
+                          <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}{{ step.completed_at ? ` (${formatCompletedDate(step.completed_at)})` : '' }}</span>
                         </div>
                         
                         <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
@@ -515,6 +515,10 @@ export default {
       if (start) return `เริ่ม ${formatDate(start)}`
       if (end) return `ถึง ${formatDate(end)}`
       return ''
+    },
+    formatCompletedDate(date) {
+      if (!date) return ''
+      return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
     },
     formatAssignedUsers(users) {
       if (!users || users.length === 0) return ''

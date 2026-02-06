@@ -70,7 +70,7 @@
                 ผู้ใช้งาน
               </div>
               <div class="detail-value">
-                {{ selectedCarRecord.user_name || selectedCarRecord.username || selectedCarRecord.name || 'ไม่ระบุ' }}
+                {{ selectedCarRecord.user_name || selectedCarRecord.username || selectedCarRecord.name || 'ไม่ระบุ' }}{{ selectedCarRecord.nickname ? ` (${selectedCarRecord.nickname})` : '' }}
               </div>
             </div>
 
@@ -107,7 +107,7 @@
             <div v-if="selectedCarRecord.colleagues?.length > 0" class="detail-row">
               <div class="detail-label">
                 <i class="pi pi-users"></i>
-                ผู้ร่วมงาน
+                ผู้ร่วมเดินทาง
               </div>
               <div class="detail-value">
                 {{ formatColleagues(selectedCarRecord.colleagues) }}
@@ -145,7 +145,7 @@
                 ผู้จอง
               </div>
               <div class="detail-value">
-                {{ selectedCarRecord.user_name || selectedCarRecord.username || selectedCarRecord.name || 'ไม่ระบุ' }}
+                {{ selectedCarRecord.user_name || selectedCarRecord.username || selectedCarRecord.name || 'ไม่ระบุ' }}{{ selectedCarRecord.nickname ? ` (${selectedCarRecord.nickname})` : '' }}
               </div>
             </div>
 
@@ -176,6 +176,16 @@
               </div>
               <div class="detail-value">
                 {{ selectedCarRecord.project || 'ไม่ระบุ' }}
+              </div>
+            </div>
+
+            <div v-if="selectedCarRecord.colleagues?.length > 0" class="detail-row">
+              <div class="detail-label">
+                <i class="pi pi-users"></i>
+                ผู้ร่วมเดินทาง
+              </div>
+              <div class="detail-value">
+                {{ formatColleagues(selectedCarRecord.colleagues) }}
               </div>
             </div>
           </div>

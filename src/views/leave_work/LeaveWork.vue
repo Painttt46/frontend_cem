@@ -197,10 +197,16 @@ export default {
       if (this.exportStartDate || this.exportEndDate) {
         records = records.filter(r => {
           const date = new Date(r.start_datetime)
-          if (this.exportStartDate && date < this.exportStartDate) return false
+          date.setHours(0, 0, 0, 0)
+          
+          if (this.exportStartDate) {
+            const startDate = new Date(this.exportStartDate)
+            startDate.setHours(0, 0, 0, 0)
+            if (date < startDate) return false
+          }
           if (this.exportEndDate) {
             const endDate = new Date(this.exportEndDate)
-            endDate.setHours(23, 59, 59)
+            endDate.setHours(23, 59, 59, 999)
             if (date > endDate) return false
           }
           return true
