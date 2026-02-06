@@ -11,7 +11,7 @@
           <i class="pi pi-user"></i>
         </div>
         <div class="user-title">
-          <h3>{{ user.firstname }} {{ user.lastname }}</h3>
+          <h3>{{ user.firstname }} {{ user.lastname }}{{ user.nickname ? ` (${user.nickname})` : '' }}</h3>
           <Badge :value="getRoleLabel(user.role)" :severity="getRoleSeverity(user.role)" />
         </div>
       </div>

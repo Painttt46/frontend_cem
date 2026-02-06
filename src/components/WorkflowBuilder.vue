@@ -54,6 +54,12 @@
                 <div class="info-item" v-if="step.start_date || step.end_date">
                   <i class="pi pi-calendar"></i>
                   <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
+                  <span v-if="step.created_by_name" class="created-by">| สร้างโดย: {{ step.created_by_name }}</span>
+                </div>
+                
+                <div class="info-item completed-info" v-if="step.status === 'completed' && step.completed_by_name">
+                  <i class="pi pi-check-circle"></i>
+                  <span>เสร็จสิ้นโดย: {{ step.completed_by_name }}</span>
                 </div>
                 
                 <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
@@ -961,6 +967,21 @@ export default {
 .empty-templates i {
   font-size: 2rem;
   margin-bottom: 0.5rem;
+}
+
+.created-by {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
+.completed-info {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.completed-info i {
+  color: #16a34a;
 }
 
 @media (max-width: 768px) {

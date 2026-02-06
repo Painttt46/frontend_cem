@@ -1155,4 +1155,6 @@ export default {
 :deep(.my-project-row:hover) {
   background: linear-gradient(90deg, #fde68a 0%, #fef9c3 100%) !important;
 }
+.clickable-name { color: #4A90E2; cursor: pointer; font-weight: 500; }
+.clickable-name:hover { text-decoration: underline; color: #2563eb; }
 </style>

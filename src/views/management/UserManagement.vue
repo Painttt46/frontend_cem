@@ -143,6 +143,10 @@
               <Button :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" 
                       @click="showPassword = !showPassword" text size="small" class="password-toggle" />
             </div>
+            <div class="field">
+            <label>ชื่อเล่น *</label>
+            <InputText v-model="userForm.nickname" required placeholder="ชื่อเล่น" />
+          </div>
           </div>
         </div>
         <div class="form-row">

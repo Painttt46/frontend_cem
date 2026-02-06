@@ -20,6 +20,10 @@
               <InputText id="username" v-model="username" />
             </div>
             <div class="form-field">
+              <label for="nickname">ชื่อเล่น</label>
+              <InputText id="nickname" v-model="nickname" />
+            </div>
+            <div class="form-field">
               <label for="firstName">ชื่อ <span class="required">*</span></label>
               <InputText id="firstName" v-model="firstName" required />
             </div>
