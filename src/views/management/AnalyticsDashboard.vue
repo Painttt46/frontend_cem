@@ -175,6 +175,7 @@
         </div>
       </TabPanel>
 
+    </TabView>
     
     <!-- Task Name Tooltip -->
 </template>
