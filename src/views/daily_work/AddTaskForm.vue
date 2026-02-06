@@ -299,7 +299,7 @@ export default {
 </script>
 
 <style scoped>
-:deep(.p-dropdown-clear-icon) { margin-right: 0.5rem; }
+:deep(.p-dropdown-clear-icon) { margin-right: 1.2rem; }
 .category-item {
   display: flex;
   align-items: center;

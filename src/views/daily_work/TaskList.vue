@@ -1211,7 +1211,7 @@ export default {
 </script>
 
 <style scoped>
-:deep(.p-dropdown-clear-icon) { margin-right: 0.5rem; }
+:deep(.p-dropdown-clear-icon) { margin-right: 1.2rem; }
 .history-card {
   width: 100%;
   margin: 0;
