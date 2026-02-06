@@ -555,7 +555,7 @@ export default {
     workStatusFilterOptions() {
       const options = [
         { label: 'ทั้งหมด', value: null },
-        { label: '-', value: 'null' }
+        { label: '-', value: null }
       ]
       
       // เอาเฉพาะ statuses ที่มีใน taskWorks
