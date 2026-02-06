@@ -99,7 +99,7 @@
 
         <Column header="รูปภาพ">
           <template #body="slotProps">
-            <i v-if="(slotProps.data.borrowRecord.images?.length > 0) || (slotProps.data.returned && slotProps.data.returnRecord.images?.length > 0)" 
+            <i v-if="hasImages(slotProps.data)" 
                class="pi pi-eye view-icon" 
                @click="viewImages(slotProps.data)"></i>
             <span v-else>-</span>
@@ -192,21 +192,19 @@ export default {
       const borrowRecords = this.records.filter(r => r && r.status !== undefined)
       const groups = borrowRecords.map(borrow => {
         const returned = borrow.status === 'returned'
-        const imgs = borrow.images || {}
-        const borrowImages = Array.isArray(imgs) ? imgs : (imgs.borrow || [])
-        const returnImages = imgs.return || []
         return {
           id: borrow.id,
           license: borrow.license,
           borrowDate: borrow.selected_date,
-          borrowRecord: { ...borrow, images: borrowImages },
+          borrowRecord: { ...borrow },
           returnRecord: returned ? {
+            id: borrow.id,
             name: borrow.return_name,
             location: borrow.return_location,
             time: borrow.return_time,
             date: borrow.return_date,
             created_at: borrow.updated_at,
-            images: returnImages
+            has_images: borrow.has_images
           } : null,
           returned: returned
         }
@@ -350,14 +348,13 @@ export default {
     async viewImages(data) {
       const images = []
       if (data.borrowRecord.has_images) {
-        const borrowImgs = await axios.get(`/api/car-booking/${data.borrowRecord.id}/images`).then(r => r.data)
-        if (Array.isArray(borrowImgs)) {
+        const raw = await axios.get(`/api/car-booking/${data.borrowRecord.id}/images`).then(r => r.data)
+        if (Array.isArray(raw)) {
+          images.push(...raw.map(img => ({ src: img, type: 'ใช้รถ' })))
+        } else if (raw && typeof raw === 'object') {
+          const borrowImgs = raw.borrow || []
+          const returnImgs = raw.return || []
           images.push(...borrowImgs.map(img => ({ src: img, type: 'ใช้รถ' })))
-        }
-      }
-      if (data.returned && data.returnRecord.has_images) {
-        const returnImgs = await axios.get(`/api/car-booking/${data.returnRecord.id}/images`).then(r => r.data)
-        if (Array.isArray(returnImgs)) {
           images.push(...returnImgs.map(img => ({ src: img, type: 'คืนรถ' })))
         }
       }
