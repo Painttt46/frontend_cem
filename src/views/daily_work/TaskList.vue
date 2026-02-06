@@ -603,11 +603,16 @@ export default {
       // Filter by status
       if (this.workStatusFilter) {
         if (this.workStatusFilter === 'no_status') {
-          // กรองเฉพาะที่ไม่มี project_statuses (ไม่สนใจ work_status)
+          // กรองเฉพาะที่ไม่มี project_statuses (แสดง - ใน column สถานะ)
           works = works.filter(work => {
-            if (!work.steps_data || work.steps_data.length === 0) return true
-            const hasProjectStatus = work.steps_data.some(s => s.project_statuses && s.project_statuses.length > 0)
-            return !hasProjectStatus
+            // ถ้าไม่มี steps_data = ดูจาก work_status
+            if (!work.steps_data || work.steps_data.length === 0) {
+              return !work.work_status
+            }
+            // เช็คว่าทุก step ไม่มี project_statuses (null, undefined, หรือ array ว่าง)
+            return work.steps_data.every(s => 
+              !s.project_statuses || !Array.isArray(s.project_statuses) || s.project_statuses.length === 0
+            )
           })
         } else {
           // กรองตาม project_statuses หรือ work_status
