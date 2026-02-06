@@ -315,6 +315,15 @@ export default {
       if (this.currentStep.end_date) {
         this.currentStep.end_date = new Date(this.currentStep.end_date)
       }
+      // Map assigned_users to match dropdown options by id
+      if (this.currentStep.assigned_users && this.currentStep.assigned_users.length > 0) {
+        this.currentStep.assigned_users = this.currentStep.assigned_users
+          .map(u => {
+            const userId = typeof u === 'object' ? u.id : u
+            return this.users.find(user => user.id === userId)
+          })
+          .filter(Boolean)
+      }
       this.editingIndex = index
       this.showStepDialog = true
     },
