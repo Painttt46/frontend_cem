@@ -476,7 +476,6 @@ import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
 import userService from '@/services/userService'
-import dailyWorkService from '@/services/dailyWorkService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import { isCompleted, isActive } from '@/utils/statusHelper'
 
