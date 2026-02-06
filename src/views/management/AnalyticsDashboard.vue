@@ -175,70 +175,8 @@
         </div>
       </TabPanel>
 
-      <!-- Tab 3: Gantt Chart -->
-      <TabPanel header="📈 Project Timeline">
-        <Card>
-          <template #content>
-            <div class="gantt-header">
-              <h3><i class="pi pi-calendar"></i> Project Timeline</h3>
-              <div class="gantt-controls">
-                <span class="p-input-icon-left gantt-search-wrapper">
-                  <i class="pi pi-search" />
-                  <InputText v-model="ganttSearch" placeholder="ค้นหาชื่อ/SO..." class="gantt-search" />
-                </span>
-                <span class="gantt-count">{{ ganttTasks.length }} โครงการ</span>
-                <Dropdown v-model="ganttFilter" :options="ganttFilterOptions" optionLabel="label" optionValue="value" class="gantt-filter" />
-              </div>
-            </div>
-            
-            <div v-if="ganttTasks.length > 0" class="gantt-wrapper">
-              <div class="gantt-container" ref="ganttContainer">
-                <!-- Header -->
-                <div class="gantt-header-row">
-                  <div class="gantt-task-col-header">โครงการ</div>
-                  <div class="gantt-timeline-header">
-                    <div v-for="month in visibleMonths" :key="month.key" class="gantt-month" :style="{ width: month.width + 'px' }">
-                      {{ month.label }}
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Tasks -->
-                <div class="gantt-body">
-                  <div v-for="task in ganttTasks" :key="task.id" class="gantt-row" :class="{ 'completed': task.progress === 100 }">
-                    <div class="gantt-task-col">
-                      <div class="task-info">
-                        <span class="task-name" @click="showTaskTooltip($event, task)">{{ task.name }}</span>
-                        <span class="task-dates">{{ task.startDate }} - {{ task.endDate }}</span>
-                      </div>
-                    </div>
-                    <div class="gantt-bar-col">
-                      <div class="gantt-bar" 
-                           :style="{ left: task.left + 'px', width: task.width + 'px' }"
-                           :class="'status-' + task.statusClass">
-                        <div class="bar-progress" :style="{ width: task.progress + '%' }"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div v-else class="no-data">
-              <i class="pi pi-folder-open"></i>
-              <p>ไม่มีโครงการที่มีกำหนดเวลา</p>
-            </div>
-          </template>
-        </Card>
-      </TabPanel>
-    </TabView>
     
     <!-- Task Name Tooltip -->
-    <div v-if="activeTooltip" class="task-tooltip" :style="{ top: tooltipPos.y + 'px', left: tooltipPos.x + 'px' }">
-      <button class="tooltip-close" @click="activeTooltip = null"><i class="pi pi-times"></i></button>
-      <div class="tooltip-content">{{ activeTooltip.name }}</div>
-    </div>
-  </div>
 </template>
 
 <script setup>
@@ -274,8 +212,6 @@ const tasks = ref([])
 const leaveTypeColors = ref({})
 
 // Tooltip
-const activeTooltip = ref(null)
-const tooltipPos = ref({ x: 0, y: 0 })
 
 // Leave Detail
 const showLeaveTable = ref(false)
@@ -289,14 +225,6 @@ const leaveTypeChart = ref(null)
 let charts = {}
 
 // Gantt
-const ganttFilter = ref('all')
-const ganttSearch = ref('')
-const ganttFilterOptions = [
-  { label: 'ทั้งหมด', value: 'all' },
-  { label: 'กำลังดำเนินการ', value: 'active' },
-  { label: 'เสร็จสิ้น', value: 'completed' }
-]
-const ganttContainer = ref(null)
 
 // Helper functions
 const parseTime = (timeStr) => {
@@ -424,65 +352,6 @@ const leaveByType = computed(() => {
   Object.keys(data).forEach(k => { data[k].days = parseFloat(data[k].days.toFixed(1)) })
   return data
 })
-
-// Gantt computed
-const visibleMonths = computed(() => {
-  const months = []
-  const width = 80 // px per month
-  for (let i = 0; i < 12; i++) {
-    months.push({
-      key: i,
-      label: monthOptions[i].label.substring(0, 3),
-      width,
-      start: new Date(selectedYear.value, i, 1),
-      end: new Date(selectedYear.value, i + 1, 0)
-    })
-  }
-  return months
-})
-
-const ganttTasks = computed(() => {
-  const yearStart = new Date(selectedYear.value, 0, 1)
-  const yearEnd = new Date(selectedYear.value, 11, 31)
-  const totalDays = (yearEnd - yearStart) / (1000 * 60 * 60 * 24)
-  const containerWidth = 80 * 12 // 12 months
-  const search = ganttSearch.value.toLowerCase()
-
-  return tasks.value
-    .filter(t => {
-      if (!t.project_start_date && !t.project_end_date) return false
-      if (ganttFilter.value === 'active') return t.status !== 'completed' && t.status !== 'cancelled'
-      if (ganttFilter.value === 'completed') return t.status === 'completed'
-      return true
-    })
-    .filter(t => {
-      if (!search) return true
-      return (t.task_name?.toLowerCase().includes(search) || t.so_number?.toLowerCase().includes(search))
-    })
-    .map(t => {
-      const start = t.project_start_date ? new Date(t.project_start_date) : new Date(t.created_at)
-      const end = t.project_end_date ? new Date(t.project_end_date) : new Date()
-      
-      const startDay = Math.max(0, (start - yearStart) / (1000 * 60 * 60 * 24))
-      const endDay = Math.min(totalDays, (end - yearStart) / (1000 * 60 * 60 * 24))
-      
-      const left = (startDay / totalDays) * containerWidth
-      const width = Math.max(30, ((endDay - startDay) / totalDays) * containerWidth)
-      
-      const progress = t.status === 'completed' ? 100 : (t.progress || 0)
-      const statusClass = t.status === 'completed' ? 'completed' : t.status === 'cancelled' ? 'cancelled' : 'active'
-
-      return {
-        id: t.id,
-        name: t.task_name || t.so_number || 'ไม่ระบุ',
-        left, width, progress, statusClass,
-        startDate: start.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }),
-        endDate: end.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' })
-      }
-    })
-    .slice(0, 30)
-})
-
 // Methods
 const loadData = async () => {
   try {
@@ -518,11 +387,6 @@ const loadData = async () => {
   } catch (error) {
     handleError(error, { customMessage: 'ไม่สามารถโหลดข้อมูลได้' })
   }
-}
-
-const showTaskTooltip = (event, task) => {
-  activeTooltip.value = task
-  tooltipPos.value = { x: event.clientX + 10, y: event.clientY - 10 }
 }
 
 const showLeaveDetail = () => {
@@ -661,10 +525,6 @@ watch(activeTab, (newTab) => {
     }
   })
 })
-watch(ganttFilter, () => {
-  // ganttTasks is computed, will auto update
-})
-
 onMounted(loadData)
 </script>
 
@@ -757,49 +617,22 @@ onMounted(loadData)
 .leave-detail-table { font-size: 0.875rem; }
 
 /* Gantt */
-.gantt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
-.gantt-header h3 { margin: 0; color: #1a1a2e; display: flex; align-items: center; gap: 0.5rem; }
-.gantt-controls { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.gantt-search-wrapper { position: relative; }
-.gantt-search-wrapper i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6c757d; z-index: 1; }
-.gantt-search { width: 200px; padding-left: 2.5rem !important; border-radius: 20px !important; border: 1px solid #dee2e6; transition: all 0.2s; }
-.gantt-search:focus { border-color: #4A90E2; box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2); }
-.gantt-count { font-size: 0.875rem; color: #6c757d; background: #f0f0f0; padding: 0.25rem 0.75rem; border-radius: 20px; }
-.gantt-filter { min-width: 150px; }
-.gantt-wrapper { border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; }
-.gantt-container { overflow-x: auto; background: #fff; }
 
-.gantt-header-row { display: flex; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-bottom: 2px solid #dee2e6; position: sticky; top: 0; z-index: 2; }
-.gantt-task-col-header { width: 220px; min-width: 220px; padding: 0.75rem 1rem; font-weight: 600; color: #495057; border-right: 1px solid #dee2e6; }
-.gantt-timeline-header { display: flex; }
-.gantt-month { width: 80px; padding: 0.75rem 0.25rem; text-align: center; font-weight: 600; font-size: 0.75rem; border-right: 1px solid #e9ecef; color: #495057; }
 
-.gantt-body { min-height: 200px; }
-.gantt-row { display: flex; border-bottom: 1px solid #f0f0f0; min-height: 50px; transition: background 0.2s; }
-.gantt-row:hover { background: #f8f9fa; }
-.gantt-row.completed { background: #f0fdf4; }
 
-.gantt-task-col { width: 220px; min-width: 220px; padding: 0.5rem 1rem; border-right: 1px solid #e9ecef; display: flex; align-items: center; }
 .task-info { display: flex; flex-direction: column; gap: 0.125rem; overflow: hidden; }
 .task-name { font-size: 0.875rem; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .task-name:hover { color: #4A90E2; text-decoration: underline; }
 .task-dates { font-size: 0.7rem; color: #6c757d; }
 
-.gantt-bar-col { flex: 1; position: relative; min-width: 960px; display: flex; align-items: center; }
-.gantt-bar { 
   position: absolute; height: 28px; border-radius: 6px; 
   display: flex; align-items: center; overflow: hidden;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   transition: transform 0.2s;
 }
-.gantt-bar:hover { transform: scaleY(1.1); }
-.gantt-bar.status-active { background: linear-gradient(135deg, #4A90E2, #357abd); }
-.gantt-bar.status-completed { background: linear-gradient(135deg, #10b981, #059669); }
-.gantt-bar.status-cancelled { background: linear-gradient(135deg, #ef4444, #dc2626); }
 .bar-progress { height: 100%; background: rgba(255,255,255,0.25); }
 
 /* Task Tooltip */
-.task-tooltip {
   position: fixed;
   z-index: 9999;
   background: #fff;
@@ -810,7 +643,6 @@ onMounted(loadData)
   max-width: 350px;
   min-width: 200px;
 }
-.tooltip-close {
   position: absolute;
   top: 4px;
   right: 4px;
@@ -821,8 +653,6 @@ onMounted(loadData)
   padding: 0.25rem;
   border-radius: 4px;
 }
-.tooltip-close:hover { background: #f0f0f0; color: #333; }
-.tooltip-content { font-size: 0.9rem; color: #333; padding-right: 1.5rem; word-wrap: break-word; }
 
 .no-data { padding: 3rem; text-align: center; color: #6c757d; }
 .no-data i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
@@ -846,8 +676,6 @@ onMounted(loadData)
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .stat-content h3 { font-size: 1.25rem; }
   .stat-content i { font-size: 1.75rem; }
-  .gantt-task-name { width: 120px; min-width: 120px; font-size: 0.75rem; padding: 0 0.5rem; }
-  .gantt-task-bar-container { min-width: 720px; }
   .year-filter, .dept-filter, .month-filter { min-width: 100px; }
 }
 

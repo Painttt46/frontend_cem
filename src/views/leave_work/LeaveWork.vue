@@ -145,16 +145,8 @@ export default {
       return this.hasAccess('/leave_work/approve')
     },
     filteredLeaveRecords() {
-      
-      if (this.isHROrAdmin || this.isLeaveApprover) {
-        return this.leaveRecords
-      }
-      
-      const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
-      
-      const filtered = this.leaveRecords.filter(record => record.employee_name === currentUserName)
-      
-      return filtered
+      return this.leaveRecords
+
     },
     pendingLeaveRecords() {
       const pending = this.filteredLeaveRecords.filter(record => 
