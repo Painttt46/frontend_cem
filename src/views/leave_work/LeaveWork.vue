@@ -192,12 +192,20 @@ export default {
     },
     doExport() {
       let records = this.filteredLeaveRecords
+      
+      console.log('Export - Total records:', records.length)
+      console.log('Export - Start date:', this.exportStartDate)
+      console.log('Export - End date:', this.exportEndDate)
 
       // Filter by date range
       if (this.exportStartDate || this.exportEndDate) {
         records = records.filter(r => {
-          const date = new Date(r.start_datetime)
+          // ใช้ start_date แทน start_datetime (ถ้ามี)
+          const dateStr = r.start_date || r.start_datetime
+          const date = new Date(dateStr)
           date.setHours(0, 0, 0, 0)
+          
+          console.log('Record date:', dateStr, '-> parsed:', date)
           
           if (this.exportStartDate) {
             const startDate = new Date(this.exportStartDate)
@@ -212,6 +220,8 @@ export default {
           return true
         })
       }
+      
+      console.log('Export - Filtered records:', records.length)
 
       if (records.length === 0) {
         this.$toast.add({ severity: 'warn', summary: 'ไม่มีข้อมูล', detail: 'ไม่มีข้อมูลการลาในช่วงเวลาที่เลือก', life: 3000 })
