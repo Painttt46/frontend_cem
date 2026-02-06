@@ -144,6 +144,7 @@ var newPassword = ref();
 var confirmPassword = ref('');
 var position = ref();
 var department = ref();
+var nickname = ref();
 function fetchData() {
   const currentUserId = localStorage.getItem('soc_user_id');
   
@@ -186,6 +187,7 @@ function fetchData() {
       role.value = { name: userData.role };
       position.value = userData.position;
       department.value = userData.department;
+      nickname.value = userData.nickname;
       id.value = userData.id;
       loading.value = false;
     })
@@ -210,7 +212,8 @@ function updateUser() {
     employee_id: employeeId.value || null,
     position: position.value || null,
     department: department.value || null,
-    role: role.value?.name || 'user'
+    role: role.value?.name || 'user',
+    nickname: nickname.value || null
   };
 
   window.axios.put(`/api/users/${id.value}`, data, {

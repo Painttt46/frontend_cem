@@ -54,7 +54,11 @@
                 <div class="info-item" v-if="step.start_date || step.end_date">
                   <i class="pi pi-calendar"></i>
                   <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
-                  <span v-if="step.created_by_name" class="created-by">| สร้างโดย: {{ step.created_by_name }}</span>
+                </div>
+                
+                <div class="info-item" v-if="step.created_by_name">
+                  <i class="pi pi-user-plus"></i>
+                  <span>สร้างโดย: {{ step.created_by_name }}</span>
                 </div>
                 
                 <div class="info-item completed-info" v-if="step.status === 'completed' && step.completed_by_name">
