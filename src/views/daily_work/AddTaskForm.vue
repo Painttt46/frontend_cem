@@ -24,7 +24,14 @@
             <Dropdown id="saleOwner" v-model="formData.saleOwner" :options="saleUsers" 
               optionLabel="label" optionValue="value" placeholder="เลือก Sale" 
               :filter="true" filterPlaceholder="ค้นหา..." :showClear="true"
-              class="corporate-input w-full" />
+              class="corporate-input w-full">
+              <template #option="{ option }">
+                <div style="line-height:1.4">
+                  <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
+                  <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+                </div>
+              </template>
+            </Dropdown>
           </div>
 
           <div class="input-group">
@@ -134,7 +141,14 @@ export default {
         const response = await this.$http.get('/api/users')
         this.saleUsers = response.data
           .filter(u => u.is_active && u.role && u.role.toLowerCase().includes('sale'))
-          .map(u => ({ label: `${u.firstname} ${u.lastname}`, value: `${u.firstname} ${u.lastname}` }))
+          .map(u => ({ 
+            label: `${u.firstname} ${u.lastname}`, 
+            value: `${u.firstname} ${u.lastname}`,
+            position: u.position || '',
+            department: u.department || '',
+            email: u.email || '',
+            phone: u.phone || ''
+          }))
       } catch { /* ignore */ }
     },
     loadCategories() {
