@@ -192,36 +192,26 @@ export default {
     },
     doExport() {
       let records = this.filteredLeaveRecords
-      
-      console.log('Export - Total records:', records.length)
-      console.log('Export - Start date:', this.exportStartDate)
-      console.log('Export - End date:', this.exportEndDate)
 
       // Filter by date range
       if (this.exportStartDate || this.exportEndDate) {
         records = records.filter(r => {
-          // ใช้ start_date แทน start_datetime (ถ้ามี)
-          const dateStr = r.start_date || r.start_datetime
-          const date = new Date(dateStr)
-          date.setHours(0, 0, 0, 0)
+          if (!r.start_datetime) return false
           
-          console.log('Record date:', dateStr, '-> parsed:', date)
+          // แปลงเป็น date string YYYY-MM-DD เพื่อเปรียบเทียบ
+          const recordDate = r.start_datetime.split('T')[0]
           
           if (this.exportStartDate) {
-            const startDate = new Date(this.exportStartDate)
-            startDate.setHours(0, 0, 0, 0)
-            if (date < startDate) return false
+            const startStr = this.exportStartDate.toISOString().split('T')[0]
+            if (recordDate < startStr) return false
           }
           if (this.exportEndDate) {
-            const endDate = new Date(this.exportEndDate)
-            endDate.setHours(23, 59, 59, 999)
-            if (date > endDate) return false
+            const endStr = this.exportEndDate.toISOString().split('T')[0]
+            if (recordDate > endStr) return false
           }
           return true
         })
       }
-      
-      console.log('Export - Filtered records:', records.length)
 
       if (records.length === 0) {
         this.$toast.add({ severity: 'warn', summary: 'ไม่มีข้อมูล', detail: 'ไม่มีข้อมูลการลาในช่วงเวลาที่เลือก', life: 3000 })
