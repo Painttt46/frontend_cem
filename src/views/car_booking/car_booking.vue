@@ -62,7 +62,7 @@
     </div>
 
     <!-- Form Modal -->
-    <BookingForm ref="bookingForm" v-show="showForm" :show-form="showForm" :selected-date="selectedDate"
+    <BookingForm ref="bookingForm" v-if="showForm" :show-form="showForm" :selected-date="selectedDate"
       :active-form="activeForm" :borrow-form="borrowForm" :return-form="returnForm" :cancel-form="cancelForm"
       :available-borrows="availableBorrows" :pending-borrows="pendingBorrows" :current-return-time="currentReturnTime"
       :selected-borrow-project="selectedBorrowProject" :selected-borrow-description="selectedBorrowDescription" @close-form="closeForm" @submit-borrow="submitBorrow"

@@ -162,6 +162,7 @@
 
 <script>
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 export default {
@@ -333,8 +334,8 @@ export default {
       })
     },
     hasImages(data) {
-      return (data.borrowRecord.images?.length > 0) ||
-        (data.returned && data.returnRecord.images?.length > 0)
+      return data.borrowRecord.has_images ||
+        (data.returned && data.returnRecord.has_images)
     },
     isWaitingToUse(data) {
       const now = new Date()
@@ -346,13 +347,19 @@ export default {
       // If current time is before booking time, show "รอใช้งาน"
       return now < borrowDateTime
     },
-    viewImages(data) {
+    async viewImages(data) {
       const images = []
-      if (data.borrowRecord.images?.length > 0) {
-        images.push(...data.borrowRecord.images.map(img => ({ src: img, type: 'ใช้รถ' })))
+      if (data.borrowRecord.has_images) {
+        const borrowImgs = await axios.get(`/api/car-booking/${data.borrowRecord.id}/images`).then(r => r.data)
+        if (Array.isArray(borrowImgs)) {
+          images.push(...borrowImgs.map(img => ({ src: img, type: 'ใช้รถ' })))
+        }
       }
-      if (data.returned && data.returnRecord.images?.length > 0) {
-        images.push(...data.returnRecord.images.map(img => ({ src: img, type: 'คืนรถ' })))
+      if (data.returned && data.returnRecord.has_images) {
+        const returnImgs = await axios.get(`/api/car-booking/${data.returnRecord.id}/images`).then(r => r.data)
+        if (Array.isArray(returnImgs)) {
+          images.push(...returnImgs.map(img => ({ src: img, type: 'คืนรถ' })))
+        }
       }
       this.$emit('view-images', images, data)
     },
