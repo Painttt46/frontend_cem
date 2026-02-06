@@ -603,11 +603,11 @@ export default {
       // Filter by status
       if (this.workStatusFilter) {
         if (this.workStatusFilter === 'no_status') {
-          // กรองเฉพาะที่ไม่มี project_statuses
+          // กรองเฉพาะที่ไม่มี project_statuses (ไม่สนใจ work_status)
           works = works.filter(work => {
-            if (!work.steps_data) return !work.work_status
+            if (!work.steps_data || work.steps_data.length === 0) return true
             const hasProjectStatus = work.steps_data.some(s => s.project_statuses && s.project_statuses.length > 0)
-            return !hasProjectStatus && !work.work_status
+            return !hasProjectStatus
           })
         } else {
           // กรองตาม project_statuses หรือ work_status
