@@ -56,14 +56,10 @@
                   <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
                 </div>
                 
-                <div class="info-item" v-if="step.created_by_name">
-                  <i class="pi pi-user-plus"></i>
-                  <span>สร้างโดย: {{ step.created_by_name }}</span>
-                </div>
-                
-                <div class="info-item completed-info" v-if="step.status === 'completed' && step.completed_by_name">
-                  <i class="pi pi-check-circle"></i>
-                  <span>เสร็จสิ้นโดย: {{ step.completed_by_name }}</span>
+                <div class="info-item" v-if="step.created_by_name || step.completed_by_name">
+                  <span v-if="step.created_by_name"><i class="pi pi-user-plus"></i> สร้างโดย: {{ step.created_by_name }}</span>
+                  <span v-if="step.created_by_name && step.status === 'completed' && step.completed_by_name"> | </span>
+                  <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}</span>
                 </div>
                 
                 <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
@@ -979,12 +975,11 @@ export default {
   margin-left: 0.5rem;
 }
 
-.completed-info {
+.completed-text {
   color: #16a34a;
-  font-weight: 500;
 }
 
-.completed-info i {
+.completed-text i {
   color: #16a34a;
 }
 
