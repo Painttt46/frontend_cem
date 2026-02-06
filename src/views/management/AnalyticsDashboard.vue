@@ -627,6 +627,7 @@ onMounted(loadData)
 .task-name:hover { color: #4A90E2; text-decoration: underline; }
 .task-dates { font-size: 0.7rem; color: #6c757d; }
 
+.gantt-bar {
   position: absolute; height: 28px; border-radius: 6px; 
   display: flex; align-items: center; overflow: hidden;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
@@ -635,6 +636,7 @@ onMounted(loadData)
 .bar-progress { height: 100%; background: rgba(255,255,255,0.25); }
 
 /* Task Tooltip */
+.task-tooltip {
   position: fixed;
   z-index: 9999;
   background: #fff;
@@ -645,6 +647,7 @@ onMounted(loadData)
   max-width: 350px;
   min-width: 200px;
 }
+.tooltip-close {
   position: absolute;
   top: 4px;
   right: 4px;
