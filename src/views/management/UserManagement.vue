@@ -59,7 +59,7 @@
           <Column field="firstname" header="ชื่อ-นามสกุล" class="name-col">
             <template #body="slotProps">
               <div class="user-info">
-                <div class="user-name">{{ slotProps.data.firstname }} {{ slotProps.data.lastname }}</div>
+                <div class="user-name">{{ slotProps.data.firstname }} {{ slotProps.data.lastname }}{{ slotProps.data.nickname ? ` (${slotProps.data.nickname})` : '' }}</div>
                 <div class="user-username">@{{ slotProps.data.username }}</div>
               </div>
             </template>
@@ -143,10 +143,16 @@
               <Button :icon="showPassword ? 'pi pi-eye-slash' : 'pi pi-eye'" 
                       @click="showPassword = !showPassword" text size="small" class="password-toggle" />
             </div>
-            <div class="field">
-            <label>ชื่อเล่น *</label>
-            <InputText v-model="userForm.nickname" required placeholder="ชื่อเล่น" />
           </div>
+          <div class="field">
+            <label>ชื่อเล่น</label>
+            <InputText v-model="userForm.nickname" placeholder="ชื่อเล่น" />
+          </div>
+        </div>
+        <div class="form-row" v-if="editMode">
+          <div class="field">
+            <label>ชื่อเล่น</label>
+            <InputText v-model="userForm.nickname" placeholder="ชื่อเล่น" />
           </div>
         </div>
         <div class="form-row">
@@ -237,7 +243,8 @@ const userForm = ref({
   position: '',
   department: '',
   role: 'user',
-  is_active: true
+  is_active: true,
+  nickname: ''
 })
 
 const roleOptions = ref([
@@ -371,7 +378,8 @@ const resetForm = () => {
     position: '',
     department: '',
     role: 'user',
-    is_active: true
+    is_active: true,
+    nickname: ''
   }
   editMode.value = false
 }
