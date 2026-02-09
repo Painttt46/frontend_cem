@@ -146,8 +146,8 @@
 
   <!-- Step Detail Dialog -->
   <Dialog v-model:visible="showStepDetail" :modal="true" :draggable="false" :closable="true"
-    :style="{ width: '720px', maxHeight: '90vh' }" :breakpoints="{ '960px': '80vw', '640px': '95vw' }"
-    :contentStyle="{ overflow: 'auto' }" class="step-detail-dlg" :showHeader="false">
+    :style="{ width: '900px', maxHeight: '90vh' }" :breakpoints="{ '960px': '92vw', '640px': '97vw' }"
+    :contentStyle="{ overflow: 'hidden' }" class="step-detail-dlg" :showHeader="false">
     <div v-if="selectedStep" class="step-detail-dialog">
       <!-- Custom Header -->
       <div class="dlg-header" :class="getStepClass(selectedStep)">
@@ -1263,10 +1263,18 @@ export default {
   padding: 0 !important;
   border: none;
   border-radius: 20px;
+  overflow: hidden !important;
 }
 .step-detail-dialog {
   display: flex;
   flex-direction: column;
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.step-detail-dialog::-webkit-scrollbar {
+  display: none;
 }
 
 /* Dialog Header */
