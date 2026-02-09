@@ -204,9 +204,9 @@
           </div>
         </div>
 
-        <div v-if="canCompleteStep(selectedStep)" class="dlg-action-footer">
+        <div v-if="canCompleteStep(selectedStep)" class="dlg-approve-section">
           <div class="dlg-action-divider"></div>
-          <button class="dlg-complete-btn" style="align-self: flex-start;" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
+          <button class="dlg-complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
             <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>
             {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'อนุมัติ — ทำเครื่องหมายเสร็จสิ้น' }}
           </button>
@@ -1273,9 +1273,8 @@ export default {
 }
 .dlg-user-chip i { font-size: 0.75rem; }
 
-/* Approve Button Footer */
-.step-detail-dialog .dlg-action-footer {
-  padding: 0 2rem 1.75rem;
+/* Approve Button */
+.dlg-approve-section {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1327,7 +1326,6 @@ export default {
   .dlg-body { padding: 1.25rem; gap: 1rem; }
   .dlg-grid { grid-template-columns: 1fr; gap: 0.75rem; }
   .dlg-desc { font-size: 0.9rem; padding: 0.75rem; }
-  .step-detail-dialog .dlg-action-footer { padding: 0 1.25rem 1.25rem; }
   .dlg-complete-btn { padding: 0.8rem 1rem; font-size: 0.95rem; border-radius: 12px; }
 }
 </style>
