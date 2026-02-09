@@ -1080,7 +1080,15 @@ export default {
 .completed-text i { color: #16a34a; }
 
 /* Step Detail Dialog */
-.step-detail-dlg :deep(.p-dialog) {
+.step-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+</style>
+
+<style>
+/* Step Detail Dialog - unscoped because Dialog teleports to body */
+.step-detail-dlg .p-dialog {
   border-radius: 20px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
@@ -1091,16 +1099,16 @@ export default {
   margin: 0 !important;
   border: none !important;
 }
-.step-detail-dlg :deep(.p-dialog-header) {
+.step-detail-dlg .p-dialog-header {
   display: none !important;
 }
-.step-detail-dlg :deep(.p-dialog-content) {
+.step-detail-dlg .p-dialog-content {
   padding: 0 !important;
   border: none !important;
   border-radius: 20px !important;
   overflow: hidden !important;
 }
-.step-detail-dlg :deep(.p-dialog-footer) {
+.step-detail-dlg .p-dialog-footer {
   border-radius: 0 0 20px 20px !important;
 }
 .step-detail-dialog {
@@ -1272,7 +1280,6 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  margin-left: 0;
 }
 .dlg-action-divider {
   width: 100%;
@@ -1323,10 +1330,5 @@ export default {
   .dlg-desc { font-size: 0.9rem; padding: 0.75rem; }
   .dlg-action-footer { padding: 0 1.25rem 1.25rem; }
   .dlg-complete-btn { padding: 0.8rem 1rem; font-size: 0.95rem; border-radius: 12px; }
-}
-
-.step-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
 }
 </style>
