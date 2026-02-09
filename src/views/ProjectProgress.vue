@@ -570,6 +570,15 @@ export default {
           status: 'completed'
         })
         step.status = 'completed'
+        // อัปเดต selectedStep ใน dialog ด้วย
+        if (this.selectedStep && this.selectedStep.id === step.id) {
+          this.selectedStep = { ...this.selectedStep, status: 'completed' }
+        }
+        // อัปเดต step ใน projects array
+        for (const p of this.projects) {
+          const s = p.steps?.find(s => s.id === step.id)
+          if (s) { s.status = 'completed'; break }
+        }
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'อัปเดตสถานะเสร็จสิ้นแล้ว', life: 3000 })
       } catch (error) {
