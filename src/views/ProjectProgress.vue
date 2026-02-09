@@ -145,61 +145,71 @@
   />
 
   <!-- Step Detail Dialog -->
-  <Dialog v-model:visible="showStepDetail" :header="selectedStep?.step_name || 'รายละเอียดขั้นตอน'" 
-    :modal="true" :style="{ width: '550px' }" :breakpoints="{ '768px': '95vw' }">
+  <Dialog v-model:visible="showStepDetail" :modal="true" :draggable="false" :closable="true"
+    :style="{ width: '580px', maxHeight: '90vh' }" :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
+    :contentStyle="{ overflow: 'auto' }" class="step-detail-dlg" :showHeader="false">
     <div v-if="selectedStep" class="step-detail-dialog">
-      <div class="detail-status-row">
-        <span class="detail-step-number">ขั้นตอนที่ {{ selectedStep._index }}</span>
-        <span class="step-status-badge" :class="getStepClass(selectedStep)">
+      <!-- Custom Header -->
+      <div class="dlg-header" :class="getStepClass(selectedStep)">
+        <div class="dlg-header-top">
+          <span class="dlg-step-badge">STEP {{ selectedStep._index }}</span>
+          <button class="dlg-close-btn" @click="showStepDetail = false"><i class="pi pi-times"></i></button>
+        </div>
+        <h3 class="dlg-title">{{ selectedStep.step_name }}</h3>
+        <span class="dlg-status-chip" :class="getStepClass(selectedStep)">
           <i :class="getStepIcon(selectedStep)"></i>
           {{ getStepStatusLabel(selectedStep) }}
         </span>
       </div>
 
-      <div v-if="selectedStep.description" class="detail-section">
-        <label><i class="pi pi-align-left"></i> รายละเอียด</label>
-        <p>{{ selectedStep.description }}</p>
-      </div>
-
-      <div v-if="selectedStep.project_statuses && selectedStep.project_statuses.length > 0" class="detail-section">
-        <label><i class="pi pi-folder"></i> สถานะโครงการ</label>
-        <div class="detail-badges">
-          <span v-for="ps in selectedStep.project_statuses" :key="ps" class="project-badge"
-            :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
-            {{ getProjectStatusLabel(ps) }}
-          </span>
+      <!-- Body -->
+      <div class="dlg-body">
+        <div v-if="selectedStep.description" class="dlg-section">
+          <div class="dlg-label"><i class="pi pi-align-left"></i> รายละเอียด</div>
+          <div class="dlg-desc">{{ selectedStep.description }}</div>
         </div>
-      </div>
 
-      <div v-if="selectedStep.start_date || selectedStep.end_date" class="detail-section">
-        <label><i class="pi pi-calendar"></i> ระยะเวลา</label>
-        <p>{{ formatDateRange(selectedStep.start_date, selectedStep.end_date) }}</p>
-      </div>
-
-      <div v-if="selectedStep.assigned_users && selectedStep.assigned_users.length > 0" class="detail-section">
-        <label><i class="pi pi-users"></i> ผู้รับผิดชอบ</label>
-        <div class="detail-badges">
-          <span v-for="(user, idx) in selectedStep.assigned_users" :key="idx" class="user-badge-lg">
-            {{ typeof user === 'object' ? user.name : user }}
-          </span>
+        <div class="dlg-grid">
+          <div v-if="selectedStep.start_date || selectedStep.end_date" class="dlg-grid-item">
+            <div class="dlg-label"><i class="pi pi-calendar"></i> ระยะเวลา</div>
+            <div class="dlg-value">{{ formatDateRange(selectedStep.start_date, selectedStep.end_date) }}</div>
+          </div>
+          <div v-if="selectedStep.created_by_name" class="dlg-grid-item">
+            <div class="dlg-label"><i class="pi pi-user-plus"></i> สร้างโดย</div>
+            <div class="dlg-value">{{ selectedStep.created_by_name }}</div>
+          </div>
+          <div v-if="selectedStep.status === 'completed' && selectedStep.completed_by_name" class="dlg-grid-item">
+            <div class="dlg-label"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย</div>
+            <div class="dlg-value">{{ selectedStep.completed_by_name }}{{ selectedStep.completed_at ? ` (${formatCompletedDate(selectedStep.completed_at)})` : '' }}</div>
+          </div>
         </div>
-      </div>
 
-      <div v-if="selectedStep.created_by_name" class="detail-section">
-        <label><i class="pi pi-user-plus"></i> สร้างโดย</label>
-        <p>{{ selectedStep.created_by_name }}</p>
-      </div>
+        <div v-if="selectedStep.project_statuses && selectedStep.project_statuses.length > 0" class="dlg-section">
+          <div class="dlg-label"><i class="pi pi-folder"></i> สถานะโครงการ</div>
+          <div class="dlg-chips">
+            <span v-for="ps in selectedStep.project_statuses" :key="ps" class="dlg-chip"
+              :style="{ background: getProjectStatusColor(ps) + '18', color: getProjectStatusColor(ps), border: '1px solid ' + getProjectStatusColor(ps) + '40' }">
+              {{ getProjectStatusLabel(ps) }}
+            </span>
+          </div>
+        </div>
 
-      <div v-if="selectedStep.status === 'completed' && selectedStep.completed_by_name" class="detail-section">
-        <label><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย</label>
-        <p>{{ selectedStep.completed_by_name }}{{ selectedStep.completed_at ? ` (${formatCompletedDate(selectedStep.completed_at)})` : '' }}</p>
-      </div>
+        <div v-if="selectedStep.assigned_users && selectedStep.assigned_users.length > 0" class="dlg-section">
+          <div class="dlg-label"><i class="pi pi-users"></i> ผู้รับผิดชอบ</div>
+          <div class="dlg-chips">
+            <span v-for="(user, idx) in selectedStep.assigned_users" :key="idx" class="dlg-user-chip">
+              <i class="pi pi-user"></i>
+              {{ typeof user === 'object' ? user.name : user }}
+            </span>
+          </div>
+        </div>
 
-      <div v-if="canCompleteStep(selectedStep)" class="detail-section" style="text-align: center; margin-top: 1rem;">
-        <button class="complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
-          <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
-          {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'ทำเครื่องหมายเสร็จสิ้น' }}
-        </button>
+        <div v-if="canCompleteStep(selectedStep)" class="dlg-action">
+          <button class="complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
+            <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
+            {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'ทำเครื่องหมายเสร็จสิ้น' }}
+          </button>
+        </div>
       </div>
     </div>
   </Dialog>
@@ -1237,53 +1247,184 @@ export default {
 .completed-text i { color: #16a34a; }
 
 /* Step Detail Dialog */
-.step-detail-dialog {
-  padding: 0.5rem 0;
+.step-detail-dlg :deep(.p-dialog) {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }
-.detail-status-row {
+.step-detail-dlg :deep(.p-dialog-content) {
+  padding: 0 !important;
+}
+.step-detail-dialog {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dialog Header */
+.dlg-header {
+  padding: 1.5rem 1.75rem 1.25rem;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+  position: relative;
+}
+.dlg-header.status-completed { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom-color: #bbf7d0; }
+.dlg-header.status-working { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-bottom-color: #fde68a; }
+.dlg-header.status-overdue { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-bottom-color: #fecaca; }
+.dlg-header.status-pending { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom-color: #e2e8f0; }
+
+.dlg-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.dlg-step-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #64748b;
+  background: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.dlg-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  justify-content: center;
+  color: #94a3b8;
+  transition: all 0.2s;
 }
-.detail-step-number {
-  font-size: 1rem;
-  font-weight: 600;
+.dlg-close-btn:hover {
+  background: rgba(0,0,0,0.06);
   color: #475569;
 }
-.detail-section {
-  margin-bottom: 1rem;
+.dlg-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
 }
-.detail-section label {
+.dlg-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  border-radius: 20px;
+  background: #e5e7eb;
+  color: #374151;
+}
+.dlg-status-chip.status-completed { background: #d1fae5; color: #047857; }
+.dlg-status-chip.status-working { background: #fef3c7; color: #b45309; }
+.dlg-status-chip.status-overdue { background: #fee2e2; color: #dc2626; }
+.dlg-status-chip.status-pending { background: #e5e7eb; color: #6b7280; }
+
+/* Dialog Body */
+.dlg-body {
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.dlg-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.dlg-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #374151;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.dlg-label i { font-size: 0.75rem; }
+.dlg-desc {
   font-size: 0.95rem;
-  margin-bottom: 0.4rem;
-}
-.detail-section p {
-  margin: 0;
-  color: #4b5563;
-  font-size: 1rem;
-  line-height: 1.6;
+  color: #334155;
+  line-height: 1.7;
   white-space: pre-wrap;
+  word-wrap: break-word;
+  background: #f8fafc;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
 }
-.detail-badges {
+.dlg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+.dlg-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.dlg-value {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+.dlg-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-.user-badge-lg {
-  background: #3b82f6;
-  color: #fff;
-  padding: 0.3rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
+.dlg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
+.dlg-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+}
+.dlg-user-chip i { font-size: 0.75rem; }
+.dlg-action {
+  text-align: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .dlg-header { padding: 1.25rem 1.25rem 1rem; }
+  .dlg-title { font-size: 1.1rem; }
+  .dlg-body { padding: 1.25rem; gap: 1rem; }
+  .dlg-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .dlg-desc { font-size: 0.9rem; padding: 0.75rem; }
+}
+
 .step-card:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   transform: translateY(-2px);
