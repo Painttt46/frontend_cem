@@ -146,7 +146,7 @@
 
   <!-- Step Detail Dialog -->
   <Dialog v-model:visible="showStepDetail" :modal="true" :draggable="false" :closable="true"
-    :style="{ width: '580px', maxHeight: '90vh' }" :breakpoints="{ '960px': '75vw', '640px': '95vw' }"
+    :style="{ width: '720px', maxHeight: '90vh' }" :breakpoints="{ '960px': '80vw', '640px': '95vw' }"
     :contentStyle="{ overflow: 'auto' }" class="step-detail-dlg" :showHeader="false">
     <div v-if="selectedStep" class="step-detail-dialog">
       <!-- Custom Header -->
@@ -204,10 +204,11 @@
           </div>
         </div>
 
-        <div v-if="canCompleteStep(selectedStep)" class="dlg-action">
-          <button class="complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
-            <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
-            {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'ทำเครื่องหมายเสร็จสิ้น' }}
+        <div v-if="canCompleteStep(selectedStep)" class="dlg-action-footer">
+          <div class="dlg-action-divider"></div>
+          <button class="dlg-complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
+            <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>
+            {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'อนุมัติ — ทำเครื่องหมายเสร็จสิ้น' }}
           </button>
         </div>
       </div>
@@ -1248,17 +1249,20 @@ export default {
 
 /* Step Detail Dialog */
 .step-detail-dlg :deep(.p-dialog) {
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   margin: 0 !important;
+  border: none;
 }
 .step-detail-dlg :deep(.p-dialog-content) {
   padding: 0 !important;
+  border: none;
+  border-radius: 20px;
 }
 .step-detail-dialog {
   display: flex;
@@ -1267,7 +1271,7 @@ export default {
 
 /* Dialog Header */
 .dlg-header {
-  padding: 1.5rem 1.75rem 1.25rem;
+  padding: 1.75rem 2rem 1.5rem;
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border-bottom: 1px solid #e2e8f0;
   position: relative;
@@ -1298,22 +1302,23 @@ export default {
   background: none;
   border: none;
   cursor: pointer;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #94a3b8;
   transition: all 0.2s;
+  font-size: 1rem;
 }
 .dlg-close-btn:hover {
-  background: rgba(0,0,0,0.06);
-  color: #475569;
+  background: rgba(0,0,0,0.08);
+  color: #334155;
 }
 .dlg-title {
   margin: 0 0 0.75rem 0;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #1e293b;
   line-height: 1.4;
@@ -1336,10 +1341,10 @@ export default {
 
 /* Dialog Body */
 .dlg-body {
-  padding: 1.5rem 1.75rem;
+  padding: 1.75rem 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 .dlg-section {
   display: flex;
@@ -1364,8 +1369,8 @@ export default {
   white-space: pre-wrap;
   word-wrap: break-word;
   background: #f8fafc;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
 }
 .dlg-grid {
@@ -1377,6 +1382,10 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  background: #f8fafc;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #f1f5f9;
 }
 .dlg-value {
   font-size: 0.95rem;
@@ -1403,26 +1412,67 @@ export default {
   gap: 0.35rem;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
-  padding: 0.35rem 0.85rem;
+  padding: 0.4rem 0.9rem;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
   box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
 }
 .dlg-user-chip i { font-size: 0.75rem; }
-.dlg-action {
-  text-align: center;
-  padding-top: 0.5rem;
-  border-top: 1px solid #f1f5f9;
+
+/* Approve Button Footer */
+.dlg-action-footer {
+  padding: 0 2rem 1.75rem;
+}
+.dlg-action-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  margin-bottom: 1.25rem;
+}
+.dlg-complete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+  letter-spacing: 0.3px;
+}
+.dlg-complete-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+}
+.dlg-complete-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+.dlg-complete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.dlg-complete-btn i {
+  font-size: 1.1rem;
 }
 
 /* Responsive */
 @media (max-width: 640px) {
   .dlg-header { padding: 1.25rem 1.25rem 1rem; }
-  .dlg-title { font-size: 1.1rem; }
+  .dlg-title { font-size: 1.15rem; }
   .dlg-body { padding: 1.25rem; gap: 1rem; }
   .dlg-grid { grid-template-columns: 1fr; gap: 0.75rem; }
   .dlg-desc { font-size: 0.9rem; padding: 0.75rem; }
+  .dlg-action-footer { padding: 0 1.25rem 1.25rem; }
+  .dlg-complete-btn { padding: 0.8rem 1rem; font-size: 0.95rem; border-radius: 12px; }
 }
 
 .step-card:hover {
