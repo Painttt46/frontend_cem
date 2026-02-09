@@ -1118,7 +1118,7 @@ export default {
 
 /* Dialog Header */
 .dlg-header {
-  padding: 1.75rem 2rem 1.5rem;
+  padding: 2.25rem 2rem 1.5rem;
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border-bottom: 1px solid #e2e8f0;
 }
@@ -1272,6 +1272,7 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-left: 0;
 }
 .dlg-action-divider {
   width: 100%;
@@ -1315,7 +1316,7 @@ export default {
 
 /* Responsive */
 @media (max-width: 640px) {
-  .dlg-header { padding: 1.25rem 1.25rem 1rem; }
+  .dlg-header { padding: 1.75rem 1.25rem 1rem; }
   .dlg-title { font-size: 1.15rem; }
   .dlg-body { padding: 1.25rem; gap: 1rem; }
   .dlg-grid { grid-template-columns: 1fr; gap: 0.75rem; }
