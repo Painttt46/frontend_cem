@@ -1105,7 +1105,7 @@ export default {
 .step-detail-dlg .p-dialog-content {
   padding: 0 !important;
   border: none !important;
-  border-radius: 20px !important;
+  border-radius: 0 !important;
   overflow: hidden !important;
 }
 .step-detail-dlg .p-dialog-footer {
@@ -1118,7 +1118,6 @@ export default {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  border-radius: 20px;
 }
 .step-detail-dialog::-webkit-scrollbar {
   display: none;
@@ -1275,13 +1274,13 @@ export default {
 .dlg-user-chip i { font-size: 0.75rem; }
 
 /* Approve Button Footer */
-.dlg-action-footer {
+.step-detail-dialog .dlg-action-footer {
   padding: 0 2rem 1.75rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
-.dlg-action-divider {
+.step-detail-dialog .dlg-action-divider {
   width: 100%;
   height: 1px;
   background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
@@ -1328,7 +1327,7 @@ export default {
   .dlg-body { padding: 1.25rem; gap: 1rem; }
   .dlg-grid { grid-template-columns: 1fr; gap: 0.75rem; }
   .dlg-desc { font-size: 0.9rem; padding: 0.75rem; }
-  .dlg-action-footer { padding: 0 1.25rem 1.25rem; }
+  .step-detail-dialog .dlg-action-footer { padding: 0 1.25rem 1.25rem; }
   .dlg-complete-btn { padding: 0.8rem 1rem; font-size: 0.95rem; border-radius: 12px; }
 }
 </style>
