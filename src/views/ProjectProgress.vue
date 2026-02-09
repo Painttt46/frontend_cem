@@ -206,7 +206,7 @@
 
         <div v-if="canCompleteStep(selectedStep)" class="dlg-action-footer">
           <div class="dlg-action-divider"></div>
-          <button class="dlg-complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
+          <button class="dlg-complete-btn" style="align-self: flex-start;" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
             <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"></i>
             {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'อนุมัติ — ทำเครื่องหมายเสร็จสิ้น' }}
           </button>
@@ -1089,7 +1089,7 @@ export default {
 <style>
 /* Step Detail Dialog - unscoped because Dialog teleports to body */
 .step-detail-dlg .p-dialog {
-  border-radius: 20px !important;
+  border-radius: 16px !important;
   overflow: hidden !important;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
   position: fixed !important;
@@ -1105,11 +1105,11 @@ export default {
 .step-detail-dlg .p-dialog-content {
   padding: 0 !important;
   border: none !important;
-  border-radius: 0 !important;
+  border-radius: 16px !important;
   overflow: hidden !important;
 }
 .step-detail-dlg .p-dialog-footer {
-  border-radius: 0 0 20px 20px !important;
+  border-radius: 0 0 16px 16px !important;
 }
 .step-detail-dialog {
   display: flex;
