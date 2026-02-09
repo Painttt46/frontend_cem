@@ -1283,6 +1283,7 @@ export default {
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border-bottom: 1px solid #e2e8f0;
   position: relative;
+  border-radius: 20px 20px 0 0;
 }
 .dlg-header.status-completed { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom-color: #bbf7d0; }
 .dlg-header.status-working { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-bottom-color: #fde68a; }
@@ -1431,8 +1432,12 @@ export default {
 /* Approve Button Footer */
 .dlg-action-footer {
   padding: 0 2rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .dlg-action-divider {
+  width: 100%;
   height: 1px;
   background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
   margin-bottom: 1.25rem;
