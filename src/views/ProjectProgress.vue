@@ -1249,21 +1249,27 @@ export default {
 
 /* Step Detail Dialog */
 .step-detail-dlg :deep(.p-dialog) {
-  border-radius: 20px;
-  overflow: hidden;
+  border-radius: 20px !important;
+  overflow: hidden !important;
   box-shadow: 0 25px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   margin: 0 !important;
-  border: none;
+  border: none !important;
+}
+.step-detail-dlg :deep(.p-dialog-header) {
+  display: none !important;
 }
 .step-detail-dlg :deep(.p-dialog-content) {
   padding: 0 !important;
-  border: none;
-  border-radius: 20px;
+  border: none !important;
+  border-radius: 20px !important;
   overflow: hidden !important;
+}
+.step-detail-dlg :deep(.p-dialog-footer) {
+  border-radius: 0 0 20px 20px !important;
 }
 .step-detail-dialog {
   display: flex;
@@ -1272,6 +1278,7 @@ export default {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  border-radius: 20px;
 }
 .step-detail-dialog::-webkit-scrollbar {
   display: none;
@@ -1282,8 +1289,6 @@ export default {
   padding: 1.75rem 2rem 1.5rem;
   background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border-bottom: 1px solid #e2e8f0;
-  position: relative;
-  border-radius: 20px 20px 0 0;
 }
 .dlg-header.status-completed { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom-color: #bbf7d0; }
 .dlg-header.status-working { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-bottom-color: #fde68a; }
@@ -1434,7 +1439,7 @@ export default {
   padding: 0 2rem 1.75rem;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
 }
 .dlg-action-divider {
   width: 100%;
@@ -1443,12 +1448,11 @@ export default {
   margin-bottom: 1.25rem;
 }
 .dlg-complete-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  width: 100%;
-  padding: 0.9rem 1.5rem;
+  padding: 0.7rem 1.5rem;
   background: linear-gradient(135deg, #10b981, #059669);
   color: white;
   border: none;
