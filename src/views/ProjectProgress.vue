@@ -71,7 +71,7 @@
               
               <div v-if="slotProps.data.steps && slotProps.data.steps.length > 0" class="workflow-timeline">
                 <div v-for="(step, index) in slotProps.data.steps" :key="step.id" class="workflow-step">
-                  <div class="step-card" :class="getStepClass(step)">
+                  <div class="step-card" :class="getStepClass(step)" @click="openStepDetail(step, index)" style="cursor: pointer;" :title="'คลิกเพื่อดูรายละเอียด: ' + step.step_name">
                     <div class="step-header">
                       <div class="step-number">{{ index + 1 }}</div>
                       <div class="step-status-badge" :class="getStepClass(step)">
@@ -143,6 +143,66 @@
     :userId="selectedUserId"
     :userName="selectedUserName"
   />
+
+  <!-- Step Detail Dialog -->
+  <Dialog v-model:visible="showStepDetail" :header="selectedStep?.step_name || 'รายละเอียดขั้นตอน'" 
+    :modal="true" :style="{ width: '550px' }" :breakpoints="{ '768px': '95vw' }">
+    <div v-if="selectedStep" class="step-detail-dialog">
+      <div class="detail-status-row">
+        <span class="detail-step-number">ขั้นตอนที่ {{ selectedStep._index }}</span>
+        <span class="step-status-badge" :class="getStepClass(selectedStep)">
+          <i :class="getStepIcon(selectedStep)"></i>
+          {{ getStepStatusLabel(selectedStep) }}
+        </span>
+      </div>
+
+      <div v-if="selectedStep.description" class="detail-section">
+        <label><i class="pi pi-align-left"></i> รายละเอียด</label>
+        <p>{{ selectedStep.description }}</p>
+      </div>
+
+      <div v-if="selectedStep.project_statuses && selectedStep.project_statuses.length > 0" class="detail-section">
+        <label><i class="pi pi-folder"></i> สถานะโครงการ</label>
+        <div class="detail-badges">
+          <span v-for="ps in selectedStep.project_statuses" :key="ps" class="project-badge"
+            :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
+            {{ getProjectStatusLabel(ps) }}
+          </span>
+        </div>
+      </div>
+
+      <div v-if="selectedStep.start_date || selectedStep.end_date" class="detail-section">
+        <label><i class="pi pi-calendar"></i> ระยะเวลา</label>
+        <p>{{ formatDateRange(selectedStep.start_date, selectedStep.end_date) }}</p>
+      </div>
+
+      <div v-if="selectedStep.assigned_users && selectedStep.assigned_users.length > 0" class="detail-section">
+        <label><i class="pi pi-users"></i> ผู้รับผิดชอบ</label>
+        <div class="detail-badges">
+          <span v-for="(user, idx) in selectedStep.assigned_users" :key="idx" class="user-badge-lg">
+            {{ typeof user === 'object' ? user.name : user }}
+          </span>
+        </div>
+      </div>
+
+      <div v-if="selectedStep.created_by_name" class="detail-section">
+        <label><i class="pi pi-user-plus"></i> สร้างโดย</label>
+        <p>{{ selectedStep.created_by_name }}</p>
+      </div>
+
+      <div v-if="selectedStep.status === 'completed' && selectedStep.completed_by_name" class="detail-section">
+        <label><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย</label>
+        <p>{{ selectedStep.completed_by_name }}{{ selectedStep.completed_at ? ` (${formatCompletedDate(selectedStep.completed_at)})` : '' }}</p>
+      </div>
+
+      <div v-if="canCompleteStep(selectedStep)" class="detail-section" style="text-align: center; margin-top: 1rem;">
+        <button class="complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
+          <i :class="completingStepId === selectedStep.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
+          {{ completingStepId === selectedStep.id ? 'กำลังบันทึก...' : 'ทำเครื่องหมายเสร็จสิ้น' }}
+        </button>
+      </div>
+    </div>
+  </Dialog>
   </div>
 </template>
 
@@ -169,7 +229,9 @@ export default {
       showUserInfoDialog: false,
       selectedUserId: null,
       selectedUserName: '',
-      allUsers: []
+      allUsers: [],
+      showStepDetail: false,
+      selectedStep: null
     }
   },
   computed: {
@@ -216,6 +278,10 @@ export default {
         const response = await axios.get('/api/users')
         this.allUsers = response.data
       } catch { /* ignore */ }
+    },
+    openStepDetail(step, index) {
+      this.selectedStep = { ...step, _index: index + 1 }
+      this.showStepDetail = true
     },
     showSaleUserInfo(saleName) {
       const user = this.allUsers.find(u => `${u.firstname} ${u.lastname}` === saleName)
@@ -1169,4 +1235,57 @@ export default {
 .clickable-name:hover { text-decoration: underline; color: #2563eb; }
 .completed-text { color: #16a34a; }
 .completed-text i { color: #16a34a; }
+
+/* Step Detail Dialog */
+.step-detail-dialog {
+  padding: 0.5rem 0;
+}
+.detail-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.detail-step-number {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+}
+.detail-section {
+  margin-bottom: 1rem;
+}
+.detail-section label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+.detail-section p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.user-badge-lg {
+  background: #3b82f6;
+  color: #fff;
+  padding: 0.3rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+.step-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
 </style>
