@@ -195,8 +195,8 @@
               <div class="summary-content">
                 <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.workingToday }}</h3>
-                  <p>พนักงานทำงานวันนี้</p>
+                  <h3>{{ stats.workingToday }}/{{ stats.totalEngineers }}</h3>
+                  <p>Engineer ลงงานวันนี้</p>
                 </div>
               </div>
             </template>
@@ -410,13 +410,24 @@
 
 
   <!-- Working Today Dialog -->
-  <Dialog v-model:visible="showWorkingDialog" modal header="พนักงานทำงานวันนี้"
-    :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false" position="center">
-    <DataTable :value="workingTodayUsers" paginator :rows="10" sortField="firstname" :sortOrder="1">
-      <Column field="firstname" header="ชื่อ" sortable />
-      <Column field="lastname" header="นามสกุล" sortable />
-      <Column field="department" header="แผนก" sortable />
-    </DataTable>
+  <Dialog v-model:visible="showWorkingDialog" modal header="Engineer ลงงานวันนี้"
+    :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false" position="center">
+    <div class="work-status-section">
+      <h4 style="color: #10b981; margin-bottom: 10px;">✅ ลงงานแล้ว ({{ workingTodayUsers.length }})</h4>
+      <DataTable :value="workingTodayUsers" :rows="5" :paginator="workingTodayUsers.length > 5">
+        <Column field="firstname" header="ชื่อ" sortable />
+        <Column field="lastname" header="นามสกุล" sortable />
+        <Column field="department" header="แผนก" sortable />
+      </DataTable>
+    </div>
+    <div class="work-status-section" style="margin-top: 20px;">
+      <h4 style="color: #ef4444; margin-bottom: 10px;">❌ ยังไม่ได้ลงงาน ({{ notWorkingUsers.length }})</h4>
+      <DataTable :value="notWorkingUsers" :rows="5" :paginator="notWorkingUsers.length > 5">
+        <Column field="firstname" header="ชื่อ" sortable />
+        <Column field="lastname" header="นามสกุล" sortable />
+        <Column field="department" header="แผนก" sortable />
+      </DataTable>
+    </div>
   </Dialog>
 
   <!-- Leaves Today Dialog -->
@@ -488,6 +499,7 @@ const selectedUserId = ref(null)
 // Task status dialog
 const allTasks = ref([])
 const workingTodayUsers = ref([])
+const notWorkingUsers = ref([])
 const leavesTodayList = ref([])
 const showTaskStatusDialog = ref(false)
 const showOverdueDialog = ref(false)
@@ -754,6 +766,7 @@ let touchEndX = 0
 const stats = ref({
   totalUsers: 0,
   workingToday: 0,
+  totalEngineers: 0,
   todayLeaves: 0,
   activeCars: 0,
   activeTasks: 0,
@@ -955,18 +968,26 @@ const loadData = async () => {
     const uniqueUserIds = [...new Set(todayLeavesUsers.map(l => l.user_id))]
     stats.value.todayLeaves = uniqueUserIds.length
 
-    // พนักงานที่ทำงานวันนี้ = คนที่ลงงานรายวันวันนี้
+    // Engineer ที่ลงงานวันนี้
+    const engineers = activeUsers.filter(u => u.role === 'engineer')
+    stats.value.totalEngineers = engineers.length
+
     const todayWorkUsers = dailyWork.filter(w => {
       const workDate = w.work_date?.split('T')[0]
       return workDate === today
     })
     const uniqueWorkUserIds = [...new Set(todayWorkUsers.map(w => w.user_id))]
-    stats.value.workingToday = uniqueWorkUserIds.length
+    
+    // นับเฉพาะ engineer ที่ลงงานแล้ว
+    const engineersWorked = engineers.filter(u => uniqueWorkUserIds.includes(u.id))
+    stats.value.workingToday = engineersWorked.length
 
     stats.value.activeCars = parseInt(dashSummary.active_cars) || 0
 
-    // Populate data for dialogs
-    workingTodayUsers.value = activeUsers.filter(u => uniqueWorkUserIds.includes(u.id))
+    // Populate data for dialogs - เฉพาะ engineer
+    workingTodayUsers.value = engineersWorked
+    notWorkingUsers.value = engineers.filter(u => !uniqueWorkUserIds.includes(u.id))
+    
     leavesTodayList.value = todayLeavesUsers.map(l => {
       const user = activeUsers.find(u => u.id === l.user_id) || {}
       return { ...l, firstname: user.firstname, lastname: user.lastname }

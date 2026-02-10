@@ -17,7 +17,7 @@
           <div class="form-grid">
             <div class="form-field">
               <label for="username">ชื่อผู้ใช้</label>
-              <InputText id="username" v-model="username" />
+              <InputText id="username" v-model="username" disabled />
             </div>
             <div class="form-field">
               <label for="nickname">ชื่อเล่น</label>
