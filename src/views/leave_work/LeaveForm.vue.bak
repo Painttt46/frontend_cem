@@ -7,15 +7,12 @@
         <div class="form-grid">
           <div class="input-group">
             <label for="name" class="input-label">ชื่อ-นามสกุล</label>
-            <Dropdown v-if="isLevel2Approver" id="name" v-model="selectedLeaveUser" :options="allUsersForLeave" 
-              optionLabel="displayName" class="corporate-dropdown" placeholder="เลือกพนักงาน"
-              :filter="true" filterPlaceholder="ค้นหาชื่อ..." @change="onLeaveUserChange" />
-            <InputText v-else id="name" :value="currentUserName" readonly class="corporate-input readonly-field" />
+            <InputText id="name" :value="currentUserName" readonly class="corporate-input readonly-field" />
           </div>
 
           <div class="input-group">
             <label for="position" class="input-label">ตำแหน่ง</label>
-            <InputText id="position" :value="leaveUserPosition" readonly class="corporate-input readonly-field" />
+            <InputText id="position" :value="currentUserPosition" readonly class="corporate-input readonly-field" />
           </div>
 
           <div class="input-group">
@@ -240,8 +237,6 @@ export default {
   data() {
     return {
       isLevel2Approver: false,
-      selectedLeaveUser: null,
-      allUsersForLeave: [],
       formData: {
         leaveType: '',
         startDate: null,
@@ -300,12 +295,6 @@ export default {
     },
     currentUserPosition() {
       return localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
-    },
-    leaveUserPosition() {
-      if (this.isLevel2Approver && this.selectedLeaveUser) {
-        return this.selectedLeaveUser.position || 'ไม่ระบุตำแหน่ง'
-      }
-      return this.currentUserPosition
     },
     selectedLeaveTypeAdvanceDays() {
       if (!this.formData.leaveType) return 0
@@ -527,19 +516,6 @@ export default {
         if (!userId) return;
         const response = await axios.get(`/api/leave/is-level2-approver/${userId}`);
         this.isLevel2Approver = response.data.isLevel2Approver || false;
-        if (this.isLevel2Approver) {
-          this.allUsersForLeave = this.users.map(u => ({
-            ...u,
-            displayName: `${u.firstname} ${u.lastname}`.trim()
-          }))
-          // เพิ่มตัวเองด้วย
-          const currentUser = {
-            id: parseInt(userId),
-            displayName: this.currentUserName,
-            position: this.currentUserPosition
-          }
-          this.allUsersForLeave.unshift(currentUser)
-        }
       } catch { /* ignore */ }
     },
 
@@ -616,24 +592,6 @@ export default {
       }
     },
 
-    async onLeaveUserChange() {
-      if (!this.selectedLeaveUser) {
-        this.quotaData = {}
-        this.selectedQuota = null
-        return
-      }
-      try {
-        const response = await axios.get(`/api/leave/quota/${this.selectedLeaveUser.id}`)
-        this.quotaData = response.data
-        if (this.formData.leaveType) {
-          this.selectedQuota = this.quotaData[this.formData.leaveType] || null
-        }
-      } catch {
-        this.quotaData = {}
-        this.selectedQuota = null
-      }
-    },
-
     getQuotaClass(remainingDays) {
       if (remainingDays <= 0) return 'quota-zero';
       if (remainingDays <= 2) return 'quota-low';
@@ -641,17 +599,6 @@ export default {
     },
 
     async submitForm() {
-      // Validate user selection for level 2 approver
-      if (this.isLevel2Approver && !this.selectedLeaveUser) {
-        this.$toast.add({
-          severity: 'error',
-          summary: 'กรุณาเลือกพนักงาน',
-          detail: 'กรุณาเลือกพนักงานที่ต้องการลาย้อนหลัง',
-          life: 4000
-        })
-        return
-      }
-
       if (!this.formData.leaveType) {
         this.$toast.add({
           severity: 'error',
@@ -685,27 +632,25 @@ export default {
         return
       }
 
-      // Check advance days requirement (skip for level 2 approver - can submit retroactive leave)
-      if (!this.isLevel2Approver) {
-        const selectedLeaveType = this.leaveTypes.find(t => t.value === this.formData.leaveType)
-        if (selectedLeaveType && selectedLeaveType.advance_days > 0 && this.formData.startDateTime) {
-          const today = new Date()
-          today.setHours(0, 0, 0, 0)
-          const startDate = new Date(this.formData.startDateTime)
-          startDate.setHours(0, 0, 0, 0)
-          
-          const diffTime = startDate - today
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-          
-          if (diffDays < selectedLeaveType.advance_days) {
-            this.$toast.add({
-              severity: 'error',
-              summary: 'ลาล่วงหน้าไม่เพียงพอ',
-              detail: `${selectedLeaveType.label} ต้องลาล่วงหน้าอย่างน้อย ${selectedLeaveType.advance_days} วัน (คุณลาล่วงหน้า ${diffDays} วัน)`,
-              life: 5000
-            })
-            return
-          }
+      // Check advance days requirement
+      const selectedLeaveType = this.leaveTypes.find(t => t.value === this.formData.leaveType)
+      if (selectedLeaveType && selectedLeaveType.advance_days > 0 && this.formData.startDateTime) {
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const startDate = new Date(this.formData.startDateTime)
+        startDate.setHours(0, 0, 0, 0)
+        
+        const diffTime = startDate - today
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+        
+        if (diffDays < selectedLeaveType.advance_days) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'ลาล่วงหน้าไม่เพียงพอ',
+            detail: `${selectedLeaveType.label} ต้องลาล่วงหน้าอย่างน้อย ${selectedLeaveType.advance_days} วัน (คุณลาล่วงหน้า ${diffDays} วัน)`,
+            life: 5000
+          })
+          return
         }
       }
 
@@ -741,14 +686,9 @@ export default {
         // Calculate total days
         const totalDays = this.calculateTotalDays();
         
-        // Determine user_id - use selected user if level 2 approver, otherwise current user
-        const targetUserId = (this.isLevel2Approver && this.selectedLeaveUser) 
-          ? this.selectedLeaveUser.id 
-          : localStorage.getItem('soc_user_id');
-        
         // Prepare data for API
         const leaveData = {
-          user_id: targetUserId,
+          user_id: localStorage.getItem('soc_user_id'),
           leave_type: this.formData.leaveType,
           start_datetime: this.formatDateTime(this.formData.startDateTime),
           end_datetime: this.formatDateTime(this.formData.endDateTime),
@@ -870,14 +810,6 @@ export default {
         quickLeave: null
       }
       this.selectedDelegate = null
-      this.selectedLeaveUser = null
-      this.selectedQuota = null
-      // Reload quota for current user if level 2 approver
-      if (this.isLevel2Approver) {
-        this.quotaData = {}
-      } else {
-        this.loadQuotaData()
-      }
     },
     handleFileUpload(event) {
       const files = Array.from(event.target.files)
