@@ -568,7 +568,12 @@ export default {
 
     canRequestCancel(record) {
       const currentUserId = localStorage.getItem('soc_user_id')
-      if (record.user_id != currentUserId) return false
+      const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
+      
+      // ตรวจสอบว่าเป็นของตัวเอง (เช็คทั้ง user_id และ employee_name)
+      const isOwner = (record.user_id == currentUserId) || (record.employee_name === currentUserName)
+      if (!isOwner) return false
+      
       if (record.status !== 'approved') return false
       
       const startDate = new Date(record.start_datetime)
