@@ -394,6 +394,8 @@ export default {
           return {
             ...record,
             name: record.employee_name,
+            user_name: record.employee_name,
+            position: record.employee_position,
             role: record.employee_role,
             leaveType: this.getLeaveTypeLabel(record.leave_type),
             startDate: this.formatDate(record.start_datetime),
