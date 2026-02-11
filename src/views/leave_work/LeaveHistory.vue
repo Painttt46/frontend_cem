@@ -111,6 +111,14 @@
                 @click="confirmDelete(slotProps.data)" 
                 v-tooltip="'ลบคำขอ'" 
                 class="delete-btn" />
+              <Button v-if="canRequestCancel(slotProps.data)" 
+                icon="pi pi-times-circle" 
+                size="small" 
+                severity="warning" 
+                text
+                @click="requestCancel(slotProps.data)" 
+                v-tooltip="'ขอยกเลิก'" 
+                class="cancel-btn" />
             </div>
           </template>
         </Column>
@@ -549,6 +557,8 @@ export default {
         'pending_level2': 'info',
         'approved': 'success',
         'rejected': 'danger',
+        'cancellation_requested': 'warning',
+        'cancelled': 'secondary',
         'รอการอนุมัติ': 'warning',
         'อนุมัติ': 'success',
         'ไม่อนุมัติ': 'danger'
@@ -556,12 +566,61 @@ export default {
       return severities[status] || 'secondary'
     },
 
+    canRequestCancel(record) {
+      const currentUserId = localStorage.getItem('soc_user_id')
+      if (record.user_id != currentUserId) return false
+      if (record.status !== 'approved') return false
+      
+      const startDate = new Date(record.start_datetime)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      startDate.setHours(0, 0, 0, 0)
+      
+      return startDate > today
+    },
+
+    requestCancel(record) {
+      this.$confirm.require({
+        message: `คุณต้องการขอยกเลิกการลานี้หรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nวันที่: ${this.formatDateTime(record.start_datetime)}`,
+        header: 'ยืนยันขอยกเลิก',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-warning',
+        acceptLabel: 'ขอยกเลิก',
+        rejectLabel: 'ยกเลิก',
+        accept: async () => {
+          try {
+            await this.$http.post(`/api/leave/${record.id}/request-cancel`, {
+              reason: 'ขอยกเลิกการลา'
+            })
+
+            this.$toast.add({
+              severity: 'success',
+              summary: 'สำเร็จ',
+              detail: 'ส่งคำขอยกเลิกเรียบร้อย รอ HR อนุมัติ',
+              life: 3000
+            })
+
+            this.$emit('request-deleted')
+          } catch (err) {
+            this.$toast.add({
+              severity: 'error',
+              summary: 'ส่งคำขอไม่สำเร็จ',
+              detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+              life: 4000
+            })
+          }
+        }
+      })
+    },
+
     getStatusLabel(status) {
       const labels = {
         'pending': 'รอหัวหน้างานอนุมัติ',
         'pending_level2': 'รอ HR อนุมัติ',
         'approved': 'อนุมัติแล้ว',
-        'rejected': 'ไม่อนุมัติ'
+        'rejected': 'ไม่อนุมัติ',
+        'cancellation_requested': 'รอยกเลิก',
+        'cancelled': 'ยกเลิกแล้ว'
       }
       return labels[status] || status
     },
@@ -1023,6 +1082,16 @@ export default {
 }
 
 .delete-btn .p-button-icon {
+  font-size: 0.9rem;
+}
+
+.cancel-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  padding: 0 !important;
+}
+
+.cancel-btn .p-button-icon {
   font-size: 0.9rem;
 }
 

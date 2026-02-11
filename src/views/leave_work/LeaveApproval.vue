@@ -142,6 +142,26 @@
           <template #body="slotProps">
             <div class="action-buttons" v-if="canApproveRecord(slotProps.data)">
               <Button 
+                v-if="slotProps.data.status === 'cancellation_requested'"
+                icon="pi pi-check" 
+                severity="success" 
+                size="small"
+                :disabled="disabled"
+                :loading="disabled"
+                @click="approveCancellation(slotProps.data.id)"
+                v-tooltip="'อนุมัติยกเลิก'"
+              />
+              <Button 
+                v-if="slotProps.data.status === 'cancellation_requested'"
+                icon="pi pi-times" 
+                severity="danger" 
+                size="small"
+                :disabled="disabled"
+                @click="rejectCancellation(slotProps.data.id)"
+                v-tooltip="'ไม่อนุมัติยกเลิก'"
+              />
+              <Button 
+                v-if="slotProps.data.status !== 'cancellation_requested'"
                 icon="pi pi-check" 
                 severity="success" 
                 size="small"
@@ -151,6 +171,7 @@
                 v-tooltip="getApproveTooltip(slotProps.data)"
               />
               <Button 
+                v-if="slotProps.data.status !== 'cancellation_requested'"
                 icon="pi pi-times" 
                 severity="danger" 
                 size="small"
@@ -162,6 +183,7 @@
             <div v-else class="status-badge">
               <Badge v-if="slotProps.data.status === 'pending'" value="รอหัวหน้างานอนุมัติ" severity="warning" />
               <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอ HR อนุมัติ" severity="info" />
+              <Badge v-else-if="slotProps.data.status === 'cancellation_requested'" value="รอ HR อนุมัติยกเลิก" severity="warning" />
             </div>
           </template>
         </Column>
@@ -418,7 +440,7 @@ export default {
     },
     canApproveRecord(record) {
       // ต้องเป็น status ที่รออนุมัติเท่านั้น
-      if (record.status !== 'pending' && record.status !== 'pending_level2') return false
+      if (record.status !== 'pending' && record.status !== 'pending_level2' && record.status !== 'cancellation_requested') return false
       
       // Admin approve/reject ได้ทุกรายการ
       if (this.isAdmin) return true
@@ -432,15 +454,91 @@ export default {
       // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'
       if (this.approverLevel === 1 && record.status === 'pending') return true
       
-      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2'
-      if (this.approverLevel === 2 && record.status === 'pending_level2') return true
+      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2' หรือ 'cancellation_requested'
+      if (this.approverLevel === 2 && (record.status === 'pending_level2' || record.status === 'cancellation_requested')) return true
       
       return false
     },
     getApproveTooltip(record) {
       if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (หัวหน้างาน)'
       if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (HR)'
+      if (record.status === 'cancellation_requested') return 'อนุมัติยกเลิก'
       return 'อนุมัติ'
+    },
+
+    async approveCancellation(leaveId) {
+      this.$confirm.require({
+        message: 'คุณต้องการอนุมัติการยกเลิกนี้หรือไม่?',
+        header: 'ยืนยันการอนุมัติยกเลิก',
+        icon: 'pi pi-check-circle',
+        acceptClass: 'p-button-success',
+        acceptLabel: 'อนุมัติ',
+        rejectLabel: 'ยกเลิก',
+        draggable: false,
+        accept: async () => {
+          try {
+            const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
+            const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
+            const approverInfo = `${approverName} (${approverPosition})`
+
+            await this.$http.put(`/api/leave/${leaveId}/cancel-status`, {
+              action: 'approve',
+              approved_by: approverInfo
+            })
+
+            this.$toast.add({
+              severity: 'success',
+              summary: 'สำเร็จ',
+              detail: 'อนุมัติยกเลิกการลาเรียบร้อย',
+              life: 3000
+            })
+
+            this.$emit('close-form')
+          } catch (err) {
+            this.$toast.add({
+              severity: 'error',
+              summary: 'อนุมัติไม่สำเร็จ',
+              detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+              life: 4000
+            })
+          }
+        }
+      })
+    },
+
+    async rejectCancellation(leaveId) {
+      this.$confirm.require({
+        message: 'คุณต้องการไม่อนุมัติการยกเลิกนี้หรือไม่? (การลาจะยังคงอนุมัติอยู่)',
+        header: 'ยืนยันไม่อนุมัติยกเลิก',
+        icon: 'pi pi-times-circle',
+        acceptClass: 'p-button-danger',
+        acceptLabel: 'ไม่อนุมัติ',
+        rejectLabel: 'ยกเลิก',
+        draggable: false,
+        accept: async () => {
+          try {
+            await this.$http.put(`/api/leave/${leaveId}/cancel-status`, {
+              action: 'reject'
+            })
+
+            this.$toast.add({
+              severity: 'info',
+              summary: 'สำเร็จ',
+              detail: 'ไม่อนุมัติการยกเลิก',
+              life: 3000
+            })
+
+            this.$emit('close-form')
+          } catch (err) {
+            this.$toast.add({
+              severity: 'error',
+              summary: 'ดำเนินการไม่สำเร็จ',
+              detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+              life: 4000
+            })
+          }
+        }
+      })
     }
   }
 }
