@@ -109,7 +109,6 @@
                   label="ลบคำขอ"
                   size="small" 
                   severity="danger" 
-                  outlined
                   @click="confirmDelete(slotProps.data)" 
                   class="action-btn" />
                 <Button v-if="canRequestCancel(slotProps.data)" 
@@ -117,7 +116,6 @@
                   label="ขอยกเลิก"
                   size="small" 
                   severity="warning" 
-                  outlined
                   @click="requestCancel(slotProps.data)" 
                   class="action-btn" />
               </div>
@@ -1088,13 +1086,18 @@ export default {
   font-size: 0.85rem !important;
   padding: 0.5rem 1rem !important;
   border-radius: 8px !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
+  font-weight: 600 !important;
+  border: none !important;
 }
 
-.action-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+.action-btn.p-button-danger {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+.action-btn.p-button-warning {
+  background: #f59e0b !important;
+  color: white !important;
 }
 
 .status-container {
