@@ -56,6 +56,14 @@
           </template>
         </Column>
 
+        <Column header="เหตุผลขอยกเลิก" style="min-width: 160px; width: 160px;">
+          <template #body="slotProps">
+            <span class="reason-text-wrap">
+              {{ slotProps.data.cancel_reason || '-' }}
+            </span>
+          </template>
+        </Column>
+
         <Column header="ผู้รับผิดชอบแทน" style="min-width: 200px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.has_delegation" class="delegate-info">

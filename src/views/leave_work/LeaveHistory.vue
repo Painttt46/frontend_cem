@@ -86,6 +86,14 @@
           </template>
         </Column>
 
+        <Column header="เหตุผลขอยกเลิก" style="min-width: 160px; width: 160px;">
+          <template #body="slotProps">
+            <span class="reason-text-wrap">
+              {{ slotProps.data.cancel_reason || '-' }}
+            </span>
+          </template>
+        </Column>
+
         <Column header="เอกสารแนบ" style="width: 80px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0" class="attachments-info">
@@ -244,6 +252,20 @@
       <p>{{ selectedRejectReason }}</p>
     </div>
   </Dialog>
+
+  <!-- Cancel Leave Reason Dialog -->
+  <Dialog v-model:visible="showCancelDialog" modal header="ขอยกเลิกการลา" :style="{ width: '480px' }"
+    :draggable="false">
+    <div class="cancel-reason-content">
+      <p class="cancel-reason-label">กรุณาระบุเหตุผลในการขอยกเลิกการลา *</p>
+      <Textarea v-model="cancelReason" rows="4" autoResize class="cancel-reason-textarea"
+        placeholder="เช่น ลาไม่จำเป็นแล้ว, มีการเปลี่ยนแผนงาน, ฯลฯ" />
+    </div>
+    <template #footer>
+      <Button label="ยกเลิก" icon="pi pi-times" severity="secondary" @click="closeCancelDialog" />
+      <Button label="ส่งคำขอยกเลิก" icon="pi pi-check" severity="danger" @click="submitCancelRequest" />
+    </template>
+  </Dialog>
 </template>
 
 <script>
@@ -276,6 +298,9 @@ export default {
       selectedUserId: null,
       showRejectReasonDialog: false,
       selectedRejectReason: '',
+      showCancelDialog: false,
+      cancelReason: '',
+      cancelRecord: null,
       workHours: {
         start_time: '09:00',
         end_time: '18:00',
@@ -597,49 +622,71 @@ export default {
       const isOwner = (record.user_id == currentUserId) || (record.employee_name === currentUserName)
       if (!isOwner) return false
 
-      // อนุมัติขั้นที่ 1 หรืออนุมัติเต็มที่แล้ว
-      if (record.status !== 'pending_level2' && record.status !== 'approved') return false
+      // กรณีอนุมัติขั้นที่ 1 แล้ว (รอ HR) ให้ขอยกเลิกได้เสมอ
+      if (record.status === 'pending_level2') {
+        return true
+      }
 
-      const startDate = new Date(record.start_datetime)
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      startDate.setHours(0, 0, 0, 0)
+      // อนุมัติครบ 2 ขั้นแล้วเท่านั้นค่อยเช็ค "เวลาเริ่มลา" ต้องอยู่ในอนาคต
+      if (record.status !== 'approved') return false
 
-      return startDate > today
+      const now = new Date()
+      const startDateTime = new Date(record.start_datetime)
+
+      // แสดงปุ่มเฉพาะกรณีที่เวลาเริ่มลา > เวลาปัจจุบัน (รวมเคสวันเดียวกันแต่ยังไม่ถึงเวลา)
+      return startDateTime > now
     },
 
     requestCancel(record) {
-      this.$confirm.require({
-        message: `คุณต้องการขอยกเลิกการลานี้หรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nวันที่เริ่ม: ${this.formatDateTime(record.start_datetime)}\nวันที่สิ้นสุด: ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${record.total_days} วัน`,
-        header: 'ยืนยันขอยกเลิก',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-warning',
-        acceptLabel: 'ขอยกเลิก',
-        rejectLabel: 'ยกเลิก',
-        accept: async () => {
-          try {
-            await this.$http.post(`/api/leave/${record.id}/request-cancel`, {
-              reason: 'ขอยกเลิกการลา'
-            })
+      this.cancelRecord = record
+      this.cancelReason = ''
+      this.showCancelDialog = true
+    },
 
-            this.$toast.add({
-              severity: 'success',
-              summary: 'สำเร็จ',
-              detail: 'ส่งคำขอยกเลิกเรียบร้อย รอ HR อนุมัติ',
-              life: 3000
-            })
+    async submitCancelRequest() {
+      if (!this.cancelReason || !this.cancelReason.trim()) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'กรุณาระบุเหตุผล',
+          detail: 'โปรดกรอกเหตุผลในการขอยกเลิกการลา',
+          life: 3000
+        })
+        return
+      }
 
-            this.$emit('request-deleted')
-          } catch (err) {
-            this.$toast.add({
-              severity: 'error',
-              summary: 'ส่งคำขอไม่สำเร็จ',
-              detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
-              life: 4000
-            })
-          }
-        }
-      })
+      if (!this.cancelRecord) return
+
+      try {
+        await this.$http.post(`/api/leave/${this.cancelRecord.id}/request-cancel`, {
+          reason: this.cancelReason.trim()
+        })
+
+        this.$toast.add({
+          severity: 'success',
+          summary: 'สำเร็จ',
+          detail: 'ส่งคำขอยกเลิกเรียบร้อย รอ HR อนุมัติ',
+          life: 3000
+        })
+
+        this.showCancelDialog = false
+        this.cancelRecord = null
+        this.cancelReason = ''
+
+        this.$emit('request-deleted')
+      } catch (err) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ส่งคำขอไม่สำเร็จ',
+          detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
+        })
+      }
+    },
+
+    closeCancelDialog() {
+      this.showCancelDialog = false
+      this.cancelRecord = null
+      this.cancelReason = ''
     },
 
     getStatusLabel(status) {
@@ -1266,5 +1313,22 @@ export default {
   margin: 0;
   color: #991b1b;
   line-height: 1.5;
+}
+
+.cancel-reason-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.cancel-reason-label {
+  margin: 0;
+  font-weight: 600;
+  color: #374151;
+}
+
+.cancel-reason-textarea :deep(.p-inputtextarea) {
+  width: 100%;
 }
 </style>
