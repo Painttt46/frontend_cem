@@ -111,7 +111,13 @@
 
         <Column header="สถานะการอนุมัติ" style="min-width: 180px;">
           <template #body="slotProps">
-            <div class="approval-status-box">
+            <div v-if="slotProps.data.status === 'cancel'" class="cancel-status-box">
+              <div class="cancel-info">
+                <i class="pi pi-exclamation-triangle" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                <span style="color: #92400e; font-weight: 600;">ขอยกเลิกการลาที่อนุมัติแล้ว</span>
+              </div>
+            </div>
+            <div v-else class="approval-status-box">
               <div class="approval-step" :class="{ 'completed': slotProps.data.approved_by_level1 }">
                 <i :class="slotProps.data.approved_by_level1 ? 'pi pi-check-circle' : 'pi pi-clock'"></i>
                 <div class="step-info">
@@ -859,6 +865,20 @@ export default {
 }
 .status-badge {
   display: flex;
+  justify-content: center;
+}
+
+.cancel-status-box {
+  padding: 1rem;
+  background: #fef3c7;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+}
+
+.cancel-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   justify-content: center;
 }
 
