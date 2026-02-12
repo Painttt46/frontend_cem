@@ -142,7 +142,7 @@
           <template #body="slotProps">
             <div class="action-buttons" v-if="canApproveRecord(slotProps.data)">
               <Button 
-                v-if="slotProps.data.status === 'cancellation_requested'"
+                v-if="slotProps.data.status === 'cancel'"
                 icon="pi pi-check" 
                 severity="success" 
                 size="small"
@@ -152,7 +152,7 @@
                 v-tooltip="'อนุมัติยกเลิก'"
               />
               <Button 
-                v-if="slotProps.data.status === 'cancellation_requested'"
+                v-if="slotProps.data.status === 'cancel'"
                 icon="pi pi-times" 
                 severity="danger" 
                 size="small"
@@ -161,7 +161,7 @@
                 v-tooltip="'ไม่อนุมัติยกเลิก'"
               />
               <Button 
-                v-if="slotProps.data.status !== 'cancellation_requested'"
+                v-if="slotProps.data.status !== 'cancel'"
                 icon="pi pi-check" 
                 severity="success" 
                 size="small"
@@ -171,7 +171,7 @@
                 v-tooltip="getApproveTooltip(slotProps.data)"
               />
               <Button 
-                v-if="slotProps.data.status !== 'cancellation_requested'"
+                v-if="slotProps.data.status !== 'cancel'"
                 icon="pi pi-times" 
                 severity="danger" 
                 size="small"
@@ -183,7 +183,7 @@
             <div v-else class="status-badge">
               <Badge v-if="slotProps.data.status === 'pending'" value="รอหัวหน้างานอนุมัติ" severity="warning" />
               <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอ HR อนุมัติ" severity="info" />
-              <Badge v-else-if="slotProps.data.status === 'cancellation_requested'" value="รอ HR อนุมัติยกเลิก" severity="warning" />
+              <Badge v-else-if="slotProps.data.status === 'cancel'" value="รอ HR อนุมัติยกเลิก" severity="warning" />
             </div>
           </template>
         </Column>
@@ -440,7 +440,7 @@ export default {
     },
     canApproveRecord(record) {
       // ต้องเป็น status ที่รออนุมัติเท่านั้น
-      if (record.status !== 'pending' && record.status !== 'pending_level2' && record.status !== 'cancellation_requested') return false
+      if (record.status !== 'pending' && record.status !== 'pending_level2' && record.status !== 'cancel') return false
       
       // Admin approve/reject ได้ทุกรายการ
       if (this.isAdmin) return true
@@ -454,15 +454,15 @@ export default {
       // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'
       if (this.approverLevel === 1 && record.status === 'pending') return true
       
-      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2' หรือ 'cancellation_requested'
-      if (this.approverLevel === 2 && (record.status === 'pending_level2' || record.status === 'cancellation_requested')) return true
+      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2' หรือ 'cancel'
+      if (this.approverLevel === 2 && (record.status === 'pending_level2' || record.status === 'cancel')) return true
       
       return false
     },
     getApproveTooltip(record) {
       if (record.status === 'pending') return 'อนุมัติขั้นที่ 1 (หัวหน้างาน)'
       if (record.status === 'pending_level2') return 'อนุมัติขั้นที่ 2 (HR)'
-      if (record.status === 'cancellation_requested') return 'อนุมัติยกเลิก'
+      if (record.status === 'cancel') return 'อนุมัติยกเลิก'
       return 'อนุมัติ'
     },
 

@@ -557,7 +557,7 @@ export default {
         'pending_level2': 'info',
         'approved': 'success',
         'rejected': 'danger',
-        'cancellation_requested': 'warning',
+        'cancel': 'warning',
         'cancelled': 'secondary',
         'รอการอนุมัติ': 'warning',
         'อนุมัติ': 'success',
@@ -624,7 +624,7 @@ export default {
         'pending_level2': 'รอ HR อนุมัติ',
         'approved': 'อนุมัติแล้ว',
         'rejected': 'ไม่อนุมัติ',
-        'cancellation_requested': 'รอยกเลิก',
+        'cancel': 'รอยกเลิก',
         'cancelled': 'ยกเลิกแล้ว'
       }
       return labels[status] || status

@@ -150,7 +150,7 @@ export default {
     },
     pendingLeaveRecords() {
       const pending = this.filteredLeaveRecords.filter(record => 
-        record.status === 'pending' || record.status === 'pending_level2' || record.status === 'cancellation_requested'
+        record.status === 'pending' || record.status === 'pending_level2' || record.status === 'cancel'
       )
       
       // Admin เห็นทุกรายการ
