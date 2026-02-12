@@ -183,7 +183,7 @@
             <div v-else class="status-badge">
               <Badge v-if="slotProps.data.status === 'pending'" value="รอหัวหน้างานอนุมัติ" severity="warning" />
               <Badge v-else-if="slotProps.data.status === 'pending_level2'" value="รอ HR อนุมัติ" severity="info" />
-              <Badge v-else-if="slotProps.data.status === 'cancel'" value="รอ HR อนุมัติยกเลิก" severity="warning" />
+              <Badge v-else-if="slotProps.data.status === 'cancel'" value="รอ HR อนุมัติยกเลิก" severity="contrast" />
             </div>
           </template>
         </Column>

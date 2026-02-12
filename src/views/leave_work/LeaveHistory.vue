@@ -557,7 +557,7 @@ export default {
         'pending_level2': 'info',
         'approved': 'success',
         'rejected': 'danger',
-        'cancel': 'warning',
+        'cancel': 'contrast',
         'cancelled': 'secondary',
         'รอการอนุมัติ': 'warning',
         'อนุมัติ': 'success',
