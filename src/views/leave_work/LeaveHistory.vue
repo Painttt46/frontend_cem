@@ -86,14 +86,6 @@
           </template>
         </Column>
 
-        <Column header="เหตุผลขอยกเลิก" style="min-width: 160px; width: 160px;">
-          <template #body="slotProps">
-            <span class="reason-text-wrap">
-              {{ slotProps.data.cancel_reason || '-' }}
-            </span>
-          </template>
-        </Column>
-
         <Column header="เอกสารแนบ" style="width: 80px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0" class="attachments-info">
@@ -105,7 +97,7 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="min-width: 200px;" headerClass="text-center justify-content-center" textAlign="center">
+        <Column header="สถานะ" style="min-width: 200px;">
           <template #body="slotProps">
             <div class="status-container-vertical">
               <Badge
@@ -118,6 +110,16 @@
                   severity="danger" @click="confirmDelete(slotProps.data)" class="action-btn" />
                 <Button v-if="canRequestCancel(slotProps.data)" icon="pi pi-times-circle" label="ขอยกเลิก" size="small"
                   severity="warning" @click="requestCancel(slotProps.data)" class="action-btn" />
+              </div>
+              <div v-if="slotProps.data.cancel_reason" class="cancel-reason-eye-row">
+                <Button
+                  icon="pi pi-eye"
+                  size="small"
+                  text
+                  rounded
+                  v-tooltip="'ดูเหตุผลขอยกเลิก'"
+                  @click="showCancelReason(slotProps.data.cancel_reason)"
+                />
               </div>
             </div>
           </template>
@@ -266,6 +268,15 @@
       <Button label="ส่งคำขอยกเลิก" icon="pi pi-check" severity="danger" @click="submitCancelRequest" />
     </template>
   </Dialog>
+
+  <!-- View Cancel Reason Dialog -->
+  <Dialog v-model:visible="showCancelViewDialog" modal header="เหตุผลขอยกเลิกการลา" :style="{ width: '400px' }"
+    :draggable="false">
+    <div class="cancel-reason-view-content">
+      <i class="pi pi-info-circle"></i>
+      <p>{{ selectedCancelReason || '-' }}</p>
+    </div>
+  </Dialog>
 </template>
 
 <script>
@@ -301,6 +312,8 @@ export default {
       showCancelDialog: false,
       cancelReason: '',
       cancelRecord: null,
+      showCancelViewDialog: false,
+      selectedCancelReason: '',
       workHours: {
         start_time: '09:00',
         end_time: '18:00',
@@ -689,6 +702,11 @@ export default {
       this.cancelReason = ''
     },
 
+    showCancelReason(reason) {
+      this.selectedCancelReason = reason
+      this.showCancelViewDialog = true
+    },
+
     getStatusLabel(status) {
       const labels = {
         'pending': 'รอหัวหน้างานอนุมัติ',
@@ -761,6 +779,10 @@ export default {
   border-bottom: 2px solid #e9ecef;
   padding: 1rem 0.75rem;
   font-size: 0.9rem;
+}
+
+.history-table :deep(th.text-center) {
+  text-align: center;
 }
 
 .history-table :deep(.p-datatable-tbody > tr > td) {
@@ -1330,5 +1352,31 @@ export default {
 
 .cancel-reason-textarea :deep(.p-inputtextarea) {
   width: 100%;
+}
+
+.cancel-reason-view-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.cancel-reason-view-content i {
+  color: #2563eb;
+  font-size: 1.25rem;
+  margin-top: 2px;
+}
+
+.cancel-reason-view-content p {
+  margin: 0;
+  color: #1e3a8a;
+  line-height: 1.5;
+}
+
+.cancel-reason-eye-row {
+  margin-top: 0.25rem;
 }
 </style>

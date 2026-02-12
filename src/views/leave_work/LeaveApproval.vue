@@ -56,14 +56,6 @@
           </template>
         </Column>
 
-        <Column header="เหตุผลขอยกเลิก" style="min-width: 160px; width: 160px;">
-          <template #body="slotProps">
-            <span class="reason-text-wrap">
-              {{ slotProps.data.cancel_reason || '-' }}
-            </span>
-          </template>
-        </Column>
-
         <Column header="ผู้รับผิดชอบแทน" style="min-width: 200px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.has_delegation" class="delegate-info">
@@ -123,6 +115,16 @@
               <div class="cancel-info">
                 <i class="pi pi-exclamation-triangle" style="color: #f59e0b; font-size: 1.2rem;"></i>
                 <span style="color: #92400e; font-weight: 600;">ขอยกเลิกการลาที่อนุมัติแล้ว</span>
+              </div>
+              <div v-if="slotProps.data.cancel_reason" class="cancel-reason-eye-row">
+                <Button
+                  icon="pi pi-eye"
+                  size="small"
+                  text
+                  rounded
+                  v-tooltip="'ดูเหตุผลขอยกเลิก'"
+                  @click="showCancelReason(slotProps.data.cancel_reason)"
+                />
               </div>
             </div>
             <div v-else class="approval-status-box">
@@ -256,6 +258,14 @@
   </Dialog>
 
   <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
+
+  <!-- View Cancel Reason Dialog -->
+  <Dialog v-model:visible="showCancelReasonDialog" modal header="เหตุผลขอยกเลิกการลา" :style="{ width: '400px' }" :draggable="false">
+    <div class="cancel-reason-view-content">
+      <i class="pi pi-info-circle"></i>
+      <p>{{ selectedCancelReason || '-' }}</p>
+    </div>
+  </Dialog>
 </template>
 
 <script>
@@ -298,7 +308,9 @@ export default {
       fullImageUrl: '',
       leaveTypes: [],
       showUserDialog: false,
-      selectedUserId: null
+      selectedUserId: null,
+      showCancelReasonDialog: false,
+      selectedCancelReason: ''
     }
   },
   async mounted() {
@@ -451,6 +463,10 @@ export default {
         other: 'ลาอื่นๆ'
       }
       return types[type] || type
+    },
+    showCancelReason(reason) {
+      this.selectedCancelReason = reason
+      this.showCancelReasonDialog = true
     },
     canApproveRecord(record) {
       // ต้องเป็น status ที่รออนุมัติเท่านั้น
@@ -895,6 +911,12 @@ export default {
   justify-content: center;
 }
 
+.cancel-reason-eye-row {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
 .approval-status-box {
   display: flex;
   flex-direction: column;
@@ -947,5 +969,27 @@ export default {
   font-size: 0.75rem;
   color: #9ca3af;
   font-style: italic;
+}
+
+.cancel-reason-view-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  border-left: 3px solid #3b82f6;
+}
+
+.cancel-reason-view-content i {
+  color: #2563eb;
+  font-size: 1.25rem;
+  margin-top: 2px;
+}
+
+.cancel-reason-view-content p {
+  margin: 0;
+  color: #1e3a8a;
+  line-height: 1.5;
 }
 </style>
