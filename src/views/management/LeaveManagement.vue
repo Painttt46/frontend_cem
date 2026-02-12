@@ -451,7 +451,7 @@ const saveQuota = async () => {
   const newQuota = newQuotaHours.value / 8
   const newRemaining = newRemainingHours.value / 8
   
-  if (newQuota === currentQuota.value && newRemaining === currentRemaining.value) {
+  if (newQuota === currentQuota.value && newRemaining === currentRemaining.value && addQuotaDays.value === 0) {
     toast.add({
       severity: 'info',
       summary: 'ไม่มีการเปลี่ยนแปลง',
@@ -473,10 +473,11 @@ const saveQuota = async () => {
 
   saving.value = true
   try {
-    await axios.put(`/api/leave/quota/${editingUser.value.id}/${editingLeaveType.value.value}`, {
-      quota: newQuota,
-      remaining: newRemaining
-    })
+    const payload = addQuotaDays.value > 0 
+      ? { addQuota: addQuotaDays.value }
+      : { quota: newQuota, remaining: newRemaining }
+    
+    await axios.put(`/api/leave/quota/${editingUser.value.id}/${editingLeaveType.value.value}`, payload)
 
     toast.add({
       severity: 'success',
