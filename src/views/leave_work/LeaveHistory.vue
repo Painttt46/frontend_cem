@@ -100,37 +100,17 @@
         <Column header="สถานะ" style="min-width: 200px;">
           <template #body="slotProps">
             <div class="status-container-vertical">
-              <Badge
-                :value="getStatusLabel(slotProps.data.status)"
-                :style="getStatusStyle(slotProps.data.status)"
-                class="status-badge-large"
-              />
+              <Badge :value="getStatusLabel(slotProps.data.status)" :style="getStatusStyle(slotProps.data.status)"
+                class="status-badge-large" />
               <div class="action-buttons-row">
                 <Button v-if="canDeleteRequest(slotProps.data)" icon="pi pi-trash" label="ลบคำขอ" size="small"
                   severity="danger" @click="confirmDelete(slotProps.data)" class="action-btn" />
                 <Button v-if="canRequestCancel(slotProps.data)" icon="pi pi-times-circle" label="ขอยกเลิก" size="small"
                   severity="warning" @click="requestCancel(slotProps.data)" class="action-btn" />
               </div>
-              <div v-if="canHrResetQuota(slotProps.data)" class="hr-action-row">
-                <Button
-                  icon="pi pi-undo"
-                  label="ลบ/คืนโควต้า"
-                  size="small"
-                  severity="danger"
-                  outlined
-                  class="action-btn hr-reset-btn"
-                  @click="confirmHrReset(slotProps.data)"
-                />
-              </div>
               <div v-if="slotProps.data.cancel_reason" class="cancel-reason-eye-row">
-                <Button
-                  icon="pi pi-eye"
-                  size="small"
-                  text
-                  rounded
-                  v-tooltip="'ดูเหตุผลขอยกเลิก'"
-                  @click="showCancelReason(slotProps.data.cancel_reason)"
-                />
+                <Button icon="pi pi-eye" size="small" text rounded v-tooltip="'ดูเหตุผลขอยกเลิก'"
+                  @click="showCancelReason(slotProps.data.cancel_reason)" />
               </div>
             </div>
           </template>
@@ -196,6 +176,13 @@
               </div>
             </div>
           </template>
+        </Column>
+        <Column header="ลบ/คืนโควต้า" style="width: 100px;">
+          <div v-if="canHrResetQuota(slotProps.data)" class="hr-action-row">
+            <Button icon="pi pi-undo" label="ลบ/คืนโควต้า" size="small" severity="danger" outlined
+              class="action-btn hr-reset-btn" @click="confirmHrReset(slotProps.data)" />
+          </div>
+
         </Column>
 
         <Column header="วันที่ส่งคำขอ" :sortable="true">
