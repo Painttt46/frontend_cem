@@ -154,6 +154,14 @@
           <Badge :value="editingLeaveType?.label" :style="{ backgroundColor: editingLeaveType?.color, color: '#fff' }" />
         </div>
         
+        <div class="field add-quota-field">
+          <label>เพิ่มวันลา (วัน)</label>
+          <InputNumber v-model="addQuotaDays" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" :step="0.5" @input="handleAddQuota" />
+          <small class="field-hint">เพิ่มวันลาทั้งโควต้าทั้งหมดและคงเหลือพร้อมกัน</small>
+        </div>
+        
+        <Divider />
+        
         <div class="field">
           <label>โควต้าทั้งหมด (ชม./ปี) *</label>
           <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
@@ -255,6 +263,7 @@ const currentQuota = ref(0)
 const currentRemaining = ref(0)
 const newQuotaHours = ref(0)
 const newRemainingHours = ref(0)
+const addQuotaDays = ref(0)
 
 // Computed filtered users
 const filteredUsers = computed(() => {
@@ -412,7 +421,19 @@ const editQuota = (user, leaveType) => {
   currentRemaining.value = user[`${leaveType.value}_remaining`] || 0
   newQuotaHours.value = currentQuota.value * 8
   newRemainingHours.value = currentRemaining.value * 8
+  addQuotaDays.value = 0
   showEditQuotaDialog.value = true
+}
+
+const handleAddQuota = () => {
+  if (addQuotaDays.value > 0) {
+    const addHours = addQuotaDays.value * 8
+    newQuotaHours.value = (currentQuota.value * 8) + addHours
+    newRemainingHours.value = (currentRemaining.value * 8) + addHours
+  } else {
+    newQuotaHours.value = currentQuota.value * 8
+    newRemainingHours.value = currentRemaining.value * 8
+  }
 }
 
 const closeEditDialog = () => {
@@ -423,6 +444,7 @@ const closeEditDialog = () => {
   currentRemaining.value = 0
   newQuotaHours.value = 0
   newRemainingHours.value = 0
+  addQuotaDays.value = 0
 }
 
 const saveQuota = async () => {
@@ -862,6 +884,23 @@ const saveLeaveType = async () => {
 .header-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.add-quota-field {
+  background: #f0fdf4;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 2px solid #86efac;
+}
+
+.add-quota-field label {
+  color: #166534 !important;
+  font-weight: 700 !important;
+}
+
+.add-quota-field .field-hint {
+  color: #15803d;
+  font-weight: 500;
 }
 
 .holiday-form .field {
