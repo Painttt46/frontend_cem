@@ -557,8 +557,8 @@ export default {
         'pending_level2': 'info',
         'approved': 'success',
         'rejected': 'danger',
-        'cancel': 'contrast',
-        'cancelled': 'secondary',
+        'cancel': 'secondary',
+        'cancelled': 'contrast',
         'รอการอนุมัติ': 'warning',
         'อนุมัติ': 'success',
         'ไม่อนุมัติ': 'danger'
@@ -570,11 +570,12 @@ export default {
       const currentUserId = localStorage.getItem('soc_user_id')
       const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
       
-      // ตรวจสอบว่าเป็นของตัวเอง (เช็คทั้ง user_id และ employee_name)
+      // ตรวจสอบว่าเป็นของตัวเอง
       const isOwner = (record.user_id == currentUserId) || (record.employee_name === currentUserName)
       if (!isOwner) return false
       
-      if (record.status !== 'approved') return false
+      // อนุมัติขั้นที่ 1 หรืออนุมัติเต็มที่แล้ว
+      if (record.status !== 'pending_level2' && record.status !== 'approved') return false
       
       const startDate = new Date(record.start_datetime)
       const today = new Date()

@@ -160,6 +160,11 @@ export default {
       if (this.approverLevel === 0) return []
       
       const filtered = pending.filter(record => {
+        // การยกเลิกต้องเป็น Level 2 เท่านั้น
+        if (record.status === 'cancel') {
+          return this.approverLevel === 2 || this.approverLevel === 3
+        }
+        
         // เช็ค level
         if (this.approverLevel === 1 && record.status !== 'pending') return false
         if (this.approverLevel === 2 && record.status !== 'pending_level2') return false

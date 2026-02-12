@@ -448,6 +448,11 @@ export default {
       // ต้องเป็น status ที่รออนุมัติเท่านั้น
       if (record.status !== 'pending' && record.status !== 'pending_level2' && record.status !== 'cancel') return false
       
+      // การยกเลิกต้องเป็น Level 2 เท่านั้น
+      if (record.status === 'cancel') {
+        return this.approverLevel === 2 || this.approverLevel === 3
+      }
+      
       // Admin approve/reject ได้ทุกรายการ
       if (this.isAdmin) return true
       
@@ -460,8 +465,8 @@ export default {
       // Level 1 approver สามารถ approve ได้เฉพาะ status = 'pending'
       if (this.approverLevel === 1 && record.status === 'pending') return true
       
-      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2' หรือ 'cancel'
-      if (this.approverLevel === 2 && (record.status === 'pending_level2' || record.status === 'cancel')) return true
+      // Level 2 approver สามารถ approve ได้เฉพาะ status = 'pending_level2'
+      if (this.approverLevel === 2 && record.status === 'pending_level2') return true
       
       return false
     },

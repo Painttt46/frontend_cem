@@ -279,10 +279,10 @@ export default {
       this.currentTime = new Date(Date.now() + this.serverTimeOffset)
     }, 1000)
     
-    // Auto refresh ทุก 60 วินาที
+    // Auto refresh ทุก 30 วินาที
     this.refreshInterval = setInterval(() => {
       this.loadRecords(true)
-    }, 60000)
+    }, 30000)
     
     this.syncInterval = setInterval(() => {
       this.syncServerTime()
