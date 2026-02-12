@@ -119,6 +119,15 @@
             </div>
           </div>
         </div>
+        
+        <div class="field add-quota-field">
+          <label>เพิ่มโควต้าให้พนักงานทุกคน (วัน)</label>
+          <InputNumber v-model="editingLeaveTypeData.addQuotaDays" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" :step="0.5" />
+          <small class="field-hint">เพิ่มโควต้าให้พนักงานทุกคนในประเภทการลานี้</small>
+        </div>
+        
+        <Divider />
+        
         <div class="field">
           <label>โควต้าเริ่มต้น (ชม./ปี)</label>
           <InputNumber v-model="editingLeaveTypeData.default_quota_hours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
@@ -588,7 +597,8 @@ const deleteLeaveType = async (leaveType) => {
 const editLeaveType = (type) => {
   editingLeaveTypeData.value = { 
     ...type,
-    default_quota_hours: (type.default_quota || 0) * 8
+    default_quota_hours: (type.default_quota || 0) * 8,
+    addQuotaDays: 0
   }
   showEditLeaveTypeDialog.value = true
 }
@@ -602,7 +612,8 @@ const saveLeaveType = async () => {
       display_name: editingLeaveTypeData.value.label,
       color: editingLeaveTypeData.value.color,
       advance_days: editingLeaveTypeData.value.advance_days,
-      default_quota: editingLeaveTypeData.value.default_quota_hours / 8
+      default_quota: editingLeaveTypeData.value.default_quota_hours / 8,
+      addQuota: editingLeaveTypeData.value.addQuotaDays || 0
     })
 
     toast.add({

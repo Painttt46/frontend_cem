@@ -6,8 +6,8 @@
         <p>ยังไม่มีข้อมูลการลางาน</p>
       </div>
 
-      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
-        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else :data="records" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
+        responsiveLayout="scroll" class="history-table" stripedRows>
 
         <Column field="id" header="รหัสคำขอ" :sortable="true">
           <template #body="slotProps">
@@ -97,27 +97,19 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="min-width: 200px;">
+        <Column header="สถานะ" style="min-width: 200px;" headerClass="text-center justify-content-center">
           <template #body="slotProps">
             <div class="status-container-vertical">
-              <Badge :value="getStatusLabel(slotProps.data.status)"
-                :severity="getStatusSeverity(slotProps.data.status)" 
-                class="status-badge-large" />
+              <Badge
+                :value="getStatusLabel(slotProps.data.status)"
+                :style="getStatusStyle(slotProps.data.status)"
+                class="status-badge-large"
+              />
               <div class="action-buttons-row">
-                <Button v-if="canDeleteRequest(slotProps.data)" 
-                  icon="pi pi-trash" 
-                  label="ลบคำขอ"
-                  size="small" 
-                  severity="danger" 
-                  @click="confirmDelete(slotProps.data)" 
-                  class="action-btn" />
-                <Button v-if="canRequestCancel(slotProps.data)" 
-                  icon="pi pi-times-circle" 
-                  label="ขอยกเลิก"
-                  size="small" 
-                  severity="warning" 
-                  @click="requestCancel(slotProps.data)" 
-                  class="action-btn" />
+                <Button v-if="canDeleteRequest(slotProps.data)" icon="pi pi-trash" label="ลบคำขอ" size="small"
+                  severity="danger" @click="confirmDelete(slotProps.data)" class="action-btn" />
+                <Button v-if="canRequestCancel(slotProps.data)" icon="pi pi-times-circle" label="ขอยกเลิก" size="small"
+                  severity="warning" @click="requestCancel(slotProps.data)" class="action-btn" />
               </div>
             </div>
           </template>
@@ -127,44 +119,57 @@
           <template #body="slotProps">
             <div class="approver-container">
               <!-- Step 1: หัวหน้างาน -->
-              <div class="approver-item" :class="{ 
+              <div class="approver-item" :class="{
                 'approved': slotProps.data.approved_by_level1,
                 'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1
               }">
                 <div class="approver-badge-wrapper">
                   <i v-if="slotProps.data.approved_by_level1" class="pi pi-check-circle" style="color: #10b981;"></i>
-                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1"
+                    class="pi pi-times-circle" style="color: #ef4444;"></i>
                   <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
-                  <Badge value="หัวหน้างาน" :severity="slotProps.data.approved_by_level1 ? 'info' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1 ? 'danger' : 'secondary')" />
+                  <Badge value="หัวหน้างาน"
+                    :severity="slotProps.data.approved_by_level1 ? 'info' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1 ? 'danger' : 'secondary')" />
                 </div>
-                <span v-if="slotProps.data.approved_by_level1" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
+                <span v-if="slotProps.data.approved_by_level1" class="approver-text clickable-name"
+                  @click="showUserInfo(slotProps.data.approved_by_level1, slotProps.data.approved_by_level1_id)">
                   {{ slotProps.data.approved_by_level1 }}
                 </span>
-                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1" class="approver-text rejected-text clickable-name" @click="showApproverInfo(slotProps.data.rejected_by)">
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1"
+                  class="approver-text rejected-text clickable-name"
+                  @click="showApproverInfo(slotProps.data.rejected_by)">
                   {{ slotProps.data.rejected_by }}
-                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text
+                    size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
                 </span>
                 <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
 
               <!-- Step 2: HR (ไม่แสดงถ้าถูกปฏิเสธตั้งแต่ step 1) -->
-              <div v-if="!(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1)" class="approver-item" :class="{ 
-                'approved': slotProps.data.approved_by_level2,
-                'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2,
-                'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2)
-              }">
+              <div v-if="!(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1)"
+                class="approver-item" :class="{
+                  'approved': slotProps.data.approved_by_level2,
+                  'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2,
+                  'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2)
+                }">
                 <div class="approver-badge-wrapper">
                   <i v-if="slotProps.data.approved_by_level2" class="pi pi-check-circle" style="color: #10b981;"></i>
-                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2"
+                    class="pi pi-times-circle" style="color: #ef4444;"></i>
                   <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
-                  <Badge value="HR" :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : 'secondary')" />
+                  <Badge value="HR"
+                    :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : 'secondary')" />
                 </div>
-                <span v-if="slotProps.data.approved_by_level2" class="approver-text clickable-name" @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
+                <span v-if="slotProps.data.approved_by_level2" class="approver-text clickable-name"
+                  @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
                   {{ slotProps.data.approved_by_level2 }}
                 </span>
-                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2" class="approver-text rejected-text clickable-name" @click="showApproverInfo(slotProps.data.rejected_by)">
+                <span v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2"
+                  class="approver-text rejected-text clickable-name"
+                  @click="showApproverInfo(slotProps.data.rejected_by)">
                   {{ slotProps.data.rejected_by }}
-                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
+                  <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text
+                    size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
                 </span>
                 <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
@@ -182,7 +187,8 @@
   </Card>
 
   <!-- Work Details Dialog -->
-  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
+  <Dialog v-model:visible="showWorkDetailsDialog" modal header="รายละเอียดงานที่มอบหมาย"
+    :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
     <div class="work-details-content">
       <p>{{ selectedWorkDetails }}</p>
     </div>
@@ -192,7 +198,8 @@
   </Dialog>
 
   <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }"
+    :draggable="false">
     <div class="attachments-content">
       <div v-if="selectedAttachments.length === 0" class="no-attachments">
         <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
@@ -221,19 +228,17 @@
   </Dialog>
 
   <!-- Full Image Dialog -->
-  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
+  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }"
+    :draggable="false">
     <img :src="fullImageUrl" class="full-image" />
   </Dialog>
 
   <!-- User Info Dialog -->
-  <UserInfoDialog 
-    v-model:visible="showUserInfoDialog" 
-    :user-name="selectedUserName"
-    :user-id="selectedUserId"
-  />
+  <UserInfoDialog v-model:visible="showUserInfoDialog" :user-name="selectedUserName" :user-id="selectedUserId" />
 
   <!-- Reject Reason Dialog -->
-  <Dialog v-model:visible="showRejectReasonDialog" modal header="เหตุผลที่ไม่อนุมัติ" :style="{ width: '400px' }" :draggable="false">
+  <Dialog v-model:visible="showRejectReasonDialog" modal header="เหตุผลที่ไม่อนุมัติ" :style="{ width: '400px' }"
+    :draggable="false">
     <div class="reject-reason-content">
       <i class="pi pi-info-circle"></i>
       <p>{{ selectedRejectReason }}</p>
@@ -319,11 +324,11 @@ export default {
       const [we] = this.workHours.end_time.split(':').map(Number)
       const [ls] = this.workHours.lunch_start.split(':').map(Number)
       const [le] = this.workHours.lunch_end.split(':').map(Number)
-      
-      const startDate = new Date(start); startDate.setHours(0,0,0,0)
-      const endDate = new Date(end); endDate.setHours(0,0,0,0)
+
+      const startDate = new Date(start); startDate.setHours(0, 0, 0, 0)
+      const endDate = new Date(end); endDate.setHours(0, 0, 0, 0)
       let totalMinutes = 0
-      
+
       const calcDayMinutes = (s, e) => {
         const sMin = s.getHours() * 60 + s.getMinutes()
         const eMin = e.getHours() * 60 + e.getMinutes()
@@ -335,7 +340,7 @@ export default {
         if (aEnd > aStart) mins += aEnd - aStart
         return Math.max(0, mins)
       }
-      
+
       if (startDate.getTime() === endDate.getTime()) {
         totalMinutes = calcDayMinutes(start, end)
       } else {
@@ -363,7 +368,7 @@ export default {
         const response = await this.$http.get('/api/leave/leave-types')
         this.leaveTypes = response.data
       } catch { // ignore
-        
+
       }
     },
     getLeaveTypeColor(type) {
@@ -432,7 +437,7 @@ export default {
         const response = await this.$http.get(`/api/files/download/${fileName}`, {
           responseType: 'blob'
         })
-        
+
         // Create download link
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
@@ -551,37 +556,55 @@ export default {
       }
       return types[type] || type
     },
-    getStatusSeverity(status) {
-      const severities = {
-        'pending': 'warning',
-        'pending_level2': 'info',
-        'approved': 'success',
-        'rejected': 'danger',
-        'cancel': 'secondary',
-        'cancelled': 'contrast',
-        'รอการอนุมัติ': 'warning',
-        'อนุมัติ': 'success',
-        'ไม่อนุมัติ': 'danger'
+    getStatusStyle(status) {
+      const styles = {
+        pending: {
+          backgroundColor: '#facc15', // เหลือง - รอหัวหน้า
+          color: '#1f2937'
+        },
+        pending_level2: {
+          backgroundColor: '#3b82f6', // ฟ้า - รอ HR
+          color: '#ffffff'
+        },
+        approved: {
+          backgroundColor: '#22c55e', // เขียว - อนุมัติแล้ว
+          color: '#ffffff'
+        },
+        rejected: {
+          backgroundColor: '#ef4444', // แดง - ไม่อนุมัติ
+          color: '#ffffff'
+        },
+        cancel: {
+          backgroundColor: '#a855f7', // ม่วง - รออนุมัติการยกเลิก
+          color: '#ffffff'
+        },
+        cancelled: {
+          backgroundColor: '#9ca3af', // เทา - ยกเลิกแล้ว
+          color: '#111827'
+        }
       }
-      return severities[status] || 'secondary'
+      return styles[status] || {
+        backgroundColor: '#e5e7eb',
+        color: '#111827'
+      }
     },
 
     canRequestCancel(record) {
       const currentUserId = localStorage.getItem('soc_user_id')
       const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
-      
+
       // ตรวจสอบว่าเป็นของตัวเอง
       const isOwner = (record.user_id == currentUserId) || (record.employee_name === currentUserName)
       if (!isOwner) return false
-      
+
       // อนุมัติขั้นที่ 1 หรืออนุมัติเต็มที่แล้ว
       if (record.status !== 'pending_level2' && record.status !== 'approved') return false
-      
+
       const startDate = new Date(record.start_datetime)
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       startDate.setHours(0, 0, 0, 0)
-      
+
       return startDate > today
     },
 
@@ -625,7 +648,7 @@ export default {
         'pending_level2': 'รอ HR อนุมัติ',
         'approved': 'อนุมัติแล้ว',
         'rejected': 'ไม่อนุมัติ',
-        'cancel': 'รอยกเลิก',
+        'cancel': 'รอ HR อนุมัติการยกเลิก',
         'cancelled': 'ยกเลิกแล้ว'
       }
       return labels[status] || status
@@ -1067,6 +1090,7 @@ export default {
     font-size: 0.8rem;
   }
 }
+
 .status-container-vertical {
   display: flex;
   flex-direction: column;
