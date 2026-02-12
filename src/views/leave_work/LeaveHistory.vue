@@ -111,6 +111,17 @@
                 <Button v-if="canRequestCancel(slotProps.data)" icon="pi pi-times-circle" label="ขอยกเลิก" size="small"
                   severity="warning" @click="requestCancel(slotProps.data)" class="action-btn" />
               </div>
+              <div v-if="canHrResetQuota(slotProps.data)" class="hr-action-row">
+                <Button
+                  icon="pi pi-undo"
+                  label="ลบ/คืนโควต้า"
+                  size="small"
+                  severity="danger"
+                  outlined
+                  class="action-btn hr-reset-btn"
+                  @click="confirmHrReset(slotProps.data)"
+                />
+              </div>
               <div v-if="slotProps.data.cancel_reason" class="cancel-reason-eye-row">
                 <Button
                   icon="pi pi-eye"
@@ -314,6 +325,7 @@ export default {
       cancelRecord: null,
       showCancelViewDialog: false,
       selectedCancelReason: '',
+      isLevel2Approver: false,
       workHours: {
         start_time: '09:00',
         end_time: '18:00',
@@ -336,6 +348,7 @@ export default {
   async mounted() {
     await this.loadLeaveTypes()
     await this.loadWorkHours()
+    await this.checkIsLevel2Approver()
   },
   created() {
     this.$http = axios
@@ -353,6 +366,16 @@ export default {
         }
       } catch {
         // Use default
+      }
+    },
+    async checkIsLevel2Approver() {
+      try {
+        const userId = localStorage.getItem('soc_user_id')
+        if (!userId) return
+        const res = await this.$http.get(`/api/leave/is-level2-approver/${userId}`)
+        this.isLevel2Approver = !!res.data?.isLevel2Approver
+      } catch {
+        this.isLevel2Approver = false
       }
     },
     calculateHours(data) {
@@ -705,6 +728,46 @@ export default {
     showCancelReason(reason) {
       this.selectedCancelReason = reason
       this.showCancelViewDialog = true
+    },
+
+    canHrResetQuota(record) {
+      if (!this.isLevel2Approver || !record) return false
+      // ให้ HR จัดการเฉพาะคำขอที่เคยอนุมัติแล้วหรืออยู่ระหว่างกระบวนการยกเลิก
+      return ['approved', 'cancel', 'cancelled', 'pending_level2'].includes(record.status)
+    },
+
+    confirmHrReset(record) {
+      this.$confirm.require({
+        message: `คุณต้องการลบคำขอนี้และคืนโควต้าการลาหรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nช่วงวันที่ลา: ${this.formatDateTime(record.start_datetime)} - ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${record.total_days} วัน (${this.calculateHours(record)} ชม.)`,
+        header: 'ยืนยันลบและคืนโควต้า (HR)',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        acceptLabel: 'ลบและคืนโควต้า',
+        rejectLabel: 'ยกเลิก',
+        accept: () => this.hrResetQuota(record)
+      })
+    },
+
+    async hrResetQuota(record) {
+      try {
+        await this.$http.delete(`/api/leave/${record.id}/admin-reset`)
+
+        this.$toast.add({
+          severity: 'success',
+          summary: 'สำเร็จ',
+          detail: 'ลบคำขอและคืนโควต้าการลาเรียบร้อยแล้ว',
+          life: 3000
+        })
+
+        this.$emit('request-deleted')
+      } catch (err) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ดำเนินการไม่สำเร็จ',
+          detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+          life: 4000
+        })
+      }
     },
 
     getStatusLabel(status) {
@@ -1172,6 +1235,12 @@ export default {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hr-action-row {
+  margin-top: 0.25rem;
+  display: flex;
   justify-content: center;
 }
 
