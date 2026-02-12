@@ -623,6 +623,18 @@ export default {
         return
       }
       try {
+        // โหลด work hours ของ user ที่เลือก
+        const userRole = this.selectedLeaveUser.role || 'user'
+        const workHoursResponse = await axios.get(`/api/settings/role-work-hours/${userRole}`)
+        this.workHours = {
+          start_time: workHoursResponse.data.start_time?.substring(0, 5) || '09:00',
+          end_time: workHoursResponse.data.end_time?.substring(0, 5) || '18:00',
+          lunch_start: workHoursResponse.data.lunch_start?.substring(0, 5) || '12:00',
+          lunch_end: workHoursResponse.data.lunch_end?.substring(0, 5) || '13:00'
+        }
+        this.generateAllowedTimes()
+        
+        // โหลด quota
         const response = await axios.get(`/api/leave/quota/${this.selectedLeaveUser.id}`)
         this.quotaData = response.data
         if (this.formData.leaveType) {

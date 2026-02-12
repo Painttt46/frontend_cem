@@ -97,28 +97,30 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="min-width: 180px;">
+        <Column header="สถานะ" style="min-width: 200px;">
           <template #body="slotProps">
-            <div class="status-container">
+            <div class="status-container-vertical">
               <Badge :value="getStatusLabel(slotProps.data.status)"
                 :severity="getStatusSeverity(slotProps.data.status)" 
                 class="status-badge-large" />
-              <Button v-if="canDeleteRequest(slotProps.data)" 
-                icon="pi pi-trash" 
-                size="small" 
-                severity="danger" 
-                text
-                @click="confirmDelete(slotProps.data)" 
-                v-tooltip="'ลบคำขอ'" 
-                class="delete-btn" />
-              <Button v-if="canRequestCancel(slotProps.data)" 
-                icon="pi pi-times-circle" 
-                size="small" 
-                severity="warning" 
-                text
-                @click="requestCancel(slotProps.data)" 
-                v-tooltip="'ขอยกเลิก'" 
-                class="cancel-btn" />
+              <div class="action-buttons-row">
+                <Button v-if="canDeleteRequest(slotProps.data)" 
+                  icon="pi pi-trash" 
+                  label="ลบคำขอ"
+                  size="small" 
+                  severity="danger" 
+                  outlined
+                  @click="confirmDelete(slotProps.data)" 
+                  class="action-btn" />
+                <Button v-if="canRequestCancel(slotProps.data)" 
+                  icon="pi pi-times-circle" 
+                  label="ขอยกเลิก"
+                  size="small" 
+                  severity="warning" 
+                  outlined
+                  @click="requestCancel(slotProps.data)" 
+                  class="action-btn" />
+              </div>
             </div>
           </template>
         </Column>
@@ -586,7 +588,7 @@ export default {
 
     requestCancel(record) {
       this.$confirm.require({
-        message: `คุณต้องการขอยกเลิกการลานี้หรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nวันที่: ${this.formatDateTime(record.start_datetime)}`,
+        message: `คุณต้องการขอยกเลิกการลานี้หรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nวันที่เริ่ม: ${this.formatDateTime(record.start_datetime)}\nวันที่สิ้นสุด: ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${record.total_days} วัน`,
         header: 'ยืนยันขอยกเลิก',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-warning',
@@ -1066,6 +1068,35 @@ export default {
     font-size: 0.8rem;
   }
 }
+.status-container-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.action-buttons-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.action-btn {
+  min-width: 100px !important;
+  font-size: 0.85rem !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
 .status-container {
   display: flex;
   align-items: center;
