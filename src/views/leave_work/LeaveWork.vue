@@ -160,17 +160,27 @@ export default {
       if (this.approverLevel === 0) return []
       
       const filtered = pending.filter(record => {
-        // การยกเลิกต้องเป็น Level 2 เท่านั้น
+        // การยกเลิกต้องเป็น Level 2 หรือ Level 3 เท่านั้น
         if (record.status === 'cancel') {
           return this.approverLevel === 2 || this.approverLevel === 3
         }
         
-        // เช็ค level
-        if (this.approverLevel === 1 && record.status !== 'pending') return false
-        if (this.approverLevel === 2 && record.status !== 'pending_level2') return false
-        // level 3 ดูได้ทั้งหมด
+        // Level 1 เห็นเฉพาะ pending
+        if (this.approverLevel === 1) {
+          return record.status === 'pending'
+        }
         
-        // เช็ค department filter (ว่าง = ทุกแผนก) - case insensitive
+        // Level 2 เห็นเฉพาะ pending_level2
+        if (this.approverLevel === 2) {
+          return record.status === 'pending_level2'
+        }
+        
+        // Level 3 ดูได้ทั้งหมด (pending และ pending_level2)
+        return true
+      })
+      
+      // เช็ค department filter (ว่าง = ทุกแผนก) - case insensitive
+      return filtered.filter(record => {
         const recordDept = (record.department || '').toLowerCase().trim()
         const deptMatch = this.approverDepartments.length === 0 || 
           this.approverDepartments.some(d => (d || '').toLowerCase() === recordDept)
@@ -182,8 +192,6 @@ export default {
         
         return deptMatch && posMatch
       })
-      
-      return filtered
     },
     pendingLeaveCount() {
       return this.pendingLeaveRecords.length
