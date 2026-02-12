@@ -105,7 +105,7 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="min-width: 200px;" headerClass="text-center justify-content-center">
+        <Column header="สถานะ" style="min-width: 200px;" headerClass="text-center justify-content-center" textAlign="center">
           <template #body="slotProps">
             <div class="status-container-vertical">
               <Badge
