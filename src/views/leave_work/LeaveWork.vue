@@ -273,14 +273,15 @@ export default {
     <head>
         <meta charset="UTF-8">
         <style>
+            /* CSS พื้นฐาน */
             body { font-family: 'TH Sarabun New', Sarabun, Arial, sans-serif; font-size: 14pt; }
-            /* ลบ width: 100% ออก เพื่อไม่ให้ background ยาวเกิน */
-            table { border-collapse: collapse; table-layout: fixed; } 
+            table { border-collapse: collapse; width: 100%; table-layout: fixed; }
             td, th { border: 1px solid #cbd5e1; vertical-align: middle; }
             .header-bg { background-color: #1e40af; color: white; }
             .sub-header-bg { background-color: #3b82f6; color: white; }
             .text-center { text-align: center; }
             .text-left { text-align: left; }
+            .text-right { text-align: right; }
             .font-bold { font-weight: bold; }
         </style>
     </head>
@@ -289,10 +290,10 @@ export default {
     <table border="1" cellpadding="5" cellspacing="0">
         
         <tr style="height:0px; visibility:hidden;">
-            <td width="50"></td>  <td width="90"></td>  <td width="160"></td> <td width="110"></td> <td width="110"></td> <td width="100"></td> <td width="90"></td>  <td width="90"></td>  <td width="50"></td>  <td width="50"></td>  <td width="150"></td> </tr>
+            <td width="50"></td>  <td width="100"></td> <td width="150"></td> <td width="120"></td> <td width="120"></td> <td width="100"></td> <td width="100"></td> <td width="100"></td> <td width="60"></td>  <td width="60"></td>  <td width="200"></td> </tr>
 
         <tr>
-            <td colspan="11" align="center" style="text-align:center; padding:20px; border:3px solid #1e40af; background:#ffffff; height:120px;">
+            <td colspan="11" style="text-align:center; padding:20px; border:3px solid #1e40af; background:#ffffff; height:120px;">
                 <div style="font-size:24pt; font-weight:bold; color:#1e40af;">GENT SOLUTION CO., LTD.</div>
                 <div style="font-size:18pt; font-weight:bold; color:#3b82f6;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
                 <div style="font-size:14pt; color:#475569;">📅 วันที่พิมพ์: ${today} &nbsp;|&nbsp; 📊 ช่วงเวลา: ${dateRange}</div>
@@ -302,11 +303,11 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="sub-header-bg font-bold" style="font-size:16pt; padding:10px; text-align:center;">
+            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:10px;">
                 📊 สรุปภาพรวมการลางาน
             </td>
         </tr>
-        <tr align="center" style="text-align:center; background-color:#eff6ff;">
+        <tr class="text-center" style="background-color:#eff6ff;">
             <td colspan="3" style="padding:15px;">
                 <div style="color:#64748b;">รายการทั้งหมด</div>
                 <div style="font-size:20pt; color:#1e40af; font-weight:bold;">${summary.total}</div>
@@ -331,11 +332,11 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="sub-header-bg font-bold" style="font-size:16pt; padding:10px; text-align:center;">
+            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:10px;">
                 📋 สรุปตามประเภทการลา
             </td>
         </tr>
-        <tr class="header-bg font-bold" align="center" style="text-align:center;">
+        <tr class="header-bg text-center font-bold">
             <td colspan="4" style="padding:8px;">ประเภท</td>
             <td colspan="2" style="padding:8px;">จำนวนครั้ง</td>
             <td colspan="2" style="padding:8px;">จำนวนวัน</td>
@@ -343,8 +344,8 @@ export default {
         </tr>
         ${Object.entries(summary.byType).map(([type, data], i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
-        return `<tr style="background:${bgColor};" align="center">
-                <td colspan="4" align="left" class="font-bold" style="text-align:left; padding:8px; padding-left:15px;">${type}</td>
+        return `<tr style="background:${bgColor}; text-align:center;">
+                <td colspan="4" class="text-left font-bold" style="padding:8px; padding-left:15px;">${type}</td>
                 <td colspan="2" style="padding:8px;">${data.count}</td>
                 <td colspan="2" style="padding:8px;">${data.days.toFixed(1)}</td>
                 <td colspan="3" style="padding:8px; font-weight:bold; color:#3b82f6;">${data.hours}</td>
@@ -354,19 +355,19 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="sub-header-bg font-bold" style="font-size:16pt; padding:10px; text-align:center;">
+            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:10px;">
                 🏢 สรุปตามแผนก
             </td>
         </tr>
-        <tr class="header-bg font-bold" align="center" style="text-align:center;">
+        <tr class="header-bg text-center font-bold">
             <td colspan="5" style="padding:8px;">แผนก</td>
             <td colspan="3" style="padding:8px;">จำนวนครั้ง</td>
             <td colspan="3" style="padding:8px;">รวมชั่วโมง</td>
         </tr>
         ${Object.entries(summary.byDepartment).map(([dept, data], i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
-        return `<tr style="background:${bgColor};" align="center">
-                <td colspan="5" align="left" class="font-bold" style="text-align:left; padding:8px; padding-left:15px;">${dept}</td>
+        return `<tr style="background:${bgColor}; text-align:center;">
+                <td colspan="5" class="text-left font-bold" style="padding:8px; padding-left:15px;">${dept}</td>
                 <td colspan="3" style="padding:8px;">${data.count}</td>
                 <td colspan="3" style="padding:8px; font-weight:bold; color:#3b82f6;">${data.hours}</td>
             </tr>`;
@@ -375,19 +376,19 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="sub-header-bg font-bold" style="font-size:16pt; padding:10px; text-align:center;">
+            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:10px;">
                 📄 รายละเอียดการลาแต่ละรายการ
             </td>
         </tr>
-        <tr class="header-bg font-bold" align="center" style="text-align:center; font-size:12pt;">
+        <tr class="header-bg text-center font-bold" style="font-size:12pt;">
             <td style="padding:10px;">ลำดับ</td>
             <td style="padding:10px;">วันที่ส่งคำขอ</td>
             <td style="padding:10px;">ชื่อ-นามสกุล</td>
             <td style="padding:10px;">แผนก</td>
             <td style="padding:10px;">ตำแหน่ง</td>
             <td style="padding:10px;">ประเภทการลา</td>
-            <td style="padding:10px;">เริ่ม</td>
-            <td style="padding:10px;">สิ้นสุด</td>
+            <td style="padding:10px;">วันที่เริ่มลา</td>
+            <td style="padding:10px;">วันที่สิ้นสุด</td>
             <td style="padding:10px;">วัน</td>
             <td style="padding:10px;">ชม.</td>
             <td style="padding:10px;">เหตุผล</td>
@@ -398,17 +399,17 @@ export default {
         const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
         return `<tr style="background:${bgColor}; font-size:12pt; vertical-align:top;">
-                <td align="center" style="text-align:center; padding:10px;">${i + 1}</td>
-                <td align="center" style="text-align:center; padding:10px;">${createdDate}</td>
-                <td align="left" style="text-align:left; padding:10px;"><b>${r.user_name || '-'}</b></td>
-                <td align="center" style="text-align:center; padding:10px;">${r.department || '-'}</td>
-                <td align="center" style="text-align:center; padding:10px;">${r.position || '-'}</td>
-                <td align="center" class="font-bold" style="text-align:center; padding:10px; color:#7c3aed;">${r.leave_type || '-'}</td>
-                <td align="center" style="text-align:center; padding:10px;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-                <td align="center" style="text-align:center; padding:10px;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-                <td align="center" class="font-bold" style="text-align:center; padding:10px;">${calcDays(r)}</td>
-                <td align="center" class="font-bold" style="text-align:center; padding:10px; color:#3b82f6;">${calcHours(r)}</td>
-                <td align="left" style="text-align:left; padding:10px;">${r.reason || '-'}</td>
+                <td class="text-center" style="padding:10px;">${i + 1}</td>
+                <td class="text-center" style="padding:10px;">${createdDate}</td>
+                <td class="text-left" style="padding:10px;"><b>${r.user_name || '-'}</b></td>
+                <td class="text-center" style="padding:10px;">${r.department || '-'}</td>
+                <td class="text-center" style="padding:10px;">${r.position || '-'}</td>
+                <td class="text-center font-bold" style="padding:10px; color:#7c3aed;">${r.leave_type || '-'}</td>
+                <td class="text-center" style="padding:10px;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+                <td class="text-center" style="padding:10px;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+                <td class="text-center font-bold" style="padding:10px;">${calcDays(r)}</td>
+                <td class="text-center font-bold" style="padding:10px; color:#3b82f6;">${calcHours(r)}</td>
+                <td class="text-left" style="padding:10px;">${r.reason || '-'}</td>
             </tr>`;
       }).join('')}
 
