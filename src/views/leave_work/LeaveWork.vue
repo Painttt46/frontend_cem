@@ -298,7 +298,6 @@ export default {
                 <img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'" style="margin-bottom:10px;"/>
                 <div style="font-size:26pt; font-weight:bold; color:#1e40af; margin-bottom:8px;">GENT SOLUTION CO., LTD.</div>
                 <div style="font-size:20pt; font-weight:bold; color:#3b82f6; border-top:2px solid #3b82f6; border-bottom:2px solid #3b82f6; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
-                 <div style="font-size:14pt; color:#475569;">📅 วันที่พิมพ์: ${this.today || '-'} &nbsp;|&nbsp; 📊 ช่วงเวลา: ${this.dateRange || '-'}</div>
             </td>
         </tr>
         
@@ -312,17 +311,17 @@ export default {
         <tr align="center">
             <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รายการทั้งหมด</div>
-                <div style="font-size:24pt; color:#1e40af; font-weight:bold;">${this.summary.total}</div>
+                <div style="font-size:24pt; color:#1e40af; font-weight:bold;">${summary.total}</div>
                 <div style="font-size:12pt; color:#64748b;">รายการ</div>
             </td>
             <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมวันลา</div>
-                <div style="font-size:24pt; color:#0891b2; font-weight:bold;">${this.summary.totalDays}</div>
+                <div style="font-size:24pt; color:#0891b2; font-weight:bold;">${summary.totalDays}</div>
                 <div style="font-size:12pt; color:#64748b;">วัน</div>
             </td>
             <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมชั่วโมง</div>
-                <div style="font-size:24pt; color:#7c3aed; font-weight:bold;">${this.summary.totalHours}</div>
+                <div style="font-size:24pt; color:#7c3aed; font-weight:bold;">${summary.totalHours}</div>
                 <div style="font-size:12pt; color:#64748b;">ชั่วโมง</div>
             </td>
             <td colspan="2" align="center" style="padding:18px; background-color:#dcfce7; text-align:center;">
@@ -399,11 +398,10 @@ export default {
             <td style="background-color:#1e40af; color:white; padding:10px;">เหตุผล</td>
         </tr>
 
-        ${this.records.map((r, i) => {
+        ${records.map((r, i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f8fafc';
         const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
-        // ย้ายสี background มาที่ td ทุกช่อง
         return `<tr style="font-size:12pt;">
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${i + 1}</td>
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${createdDate}</td>
@@ -413,8 +411,8 @@ export default {
                 <td align="center" class="font-bold" style="padding:8px; color:#7c3aed; text-align:center; background-color:${bgColor};">${r.leave_type || '-'}</td>
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-                <td align="center" class="font-bold" style="padding:8px; text-align:center; background-color:${bgColor};">${this.calcDays(r)}</td>
-                <td align="center" class="font-bold" style="padding:8px; color:#3b82f6; text-align:center; background-color:${bgColor};">${this.calcHours(r)}</td>
+                <td align="center" class="font-bold" style="padding:8px; text-align:center; background-color:${bgColor};">${calcDays(r)}</td>
+                <td align="center" class="font-bold" style="padding:8px; color:#3b82f6; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
                 <td align="left" style="padding:8px; text-align:left; background-color:${bgColor};">${r.reason || '-'}</td>
             </tr>`;
       }).join('')}
