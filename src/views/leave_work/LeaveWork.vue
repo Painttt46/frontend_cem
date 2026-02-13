@@ -20,40 +20,35 @@
           <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
         </Button>
       </div>
-      <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning" size="small">
+      <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning"
+        size="small">
         <span class="btn-text">Export</span>
       </Button>
     </div>
 
     <!-- Main Content - History -->
     <div class="main-content">
-      <LeaveHistory 
-        :records="filteredLeaveRecords" 
-        @view-attachments="viewAttachments" 
-        @request-deleted="loadLeaveRecords" 
-      />
+      <LeaveHistory :records="filteredLeaveRecords" @view-attachments="viewAttachments"
+        @request-deleted="loadLeaveRecords" />
     </div>
 
     <!-- Leave Form Dialog -->
-    <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', maxWidth: '900px' }" class="leave-dialog" :draggable="false">
+    <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', maxWidth: '900px' }"
+      class="leave-dialog" :draggable="false">
       <LeaveForm @submit-leave="submitLeave" @close-form="showLeaveDialog = false" />
     </Dialog>
 
     <!-- Approval Dialog -->
-    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา" :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
-      <LeaveApproval 
-        :records="pendingLeaveRecords" 
-        :approver-level="approverLevel"
-        :disabled="approving"
-        :is-admin="currentUserRole === 'admin'"
-        @approve-leave="approveLeave" 
-        @reject-leave="openRejectDialog" 
-        @close-form="showApprovalDialog = false"
-      />
+    <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา"
+      :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
+      <LeaveApproval :records="pendingLeaveRecords" :approver-level="approverLevel" :disabled="approving"
+        :is-admin="currentUserRole === 'admin'" @approve-leave="approveLeave" @reject-leave="openRejectDialog"
+        @close-form="showApprovalDialog = false" />
     </Dialog>
 
     <!-- Reject Dialog -->
-    <Dialog v-model:visible="showRejectDialog" modal header="ไม่อนุมัติการลา" :style="{ width: '400px' }" :draggable="false">
+    <Dialog v-model:visible="showRejectDialog" modal header="ไม่อนุมัติการลา" :style="{ width: '400px' }"
+      :draggable="false">
       <div class="reject-form">
         <label class="input-label">เหตุผลที่ไม่อนุมัติ *</label>
         <Textarea v-model="rejectReason" rows="3" class="w-full" placeholder="กรุณาระบุเหตุผล..." />
@@ -65,7 +60,8 @@
     </Dialog>
 
     <!-- Export Dialog -->
-    <Dialog v-model:visible="showExportDialog" modal header="Export รายงานการลา" :style="{ width: '400px' }" :draggable="false">
+    <Dialog v-model:visible="showExportDialog" modal header="Export รายงานการลา" :style="{ width: '400px' }"
+      :draggable="false">
       <div class="export-form">
         <label class="input-label">ช่วงวันที่</label>
         <div class="date-range">
@@ -149,42 +145,42 @@ export default {
 
     },
     pendingLeaveRecords() {
-      const pending = this.filteredLeaveRecords.filter(record => 
+      const pending = this.filteredLeaveRecords.filter(record =>
         record.status === 'pending' || record.status === 'pending_level2' || record.status === 'cancel'
       )
-      
+
       // Admin เห็นทุกรายการ
       if (this.currentUserRole === 'admin') return pending
-      
+
       // Filter ตาม approver level และ department/position
       if (this.approverLevel === 0) return []
-      
+
       const filtered = pending.filter(record => {
         // Level 1 - เห็นเฉพาะ pending (ไม่เห็นรายการยกเลิก)
         if (this.approverLevel === 1) {
           return record.status === 'pending'
         }
-        
+
         // Level 2 - เห็น pending_level2 และรายการยกเลิก
         if (this.approverLevel === 2) {
           return record.status === 'pending_level2' || record.status === 'cancel'
         }
-        
+
         // Level 3 - ดูได้ทั้งหมด
         return true
       })
-      
+
       // เช็ค department filter (ว่าง = ทุกแผนก) - case insensitive
       return filtered.filter(record => {
         const recordDept = (record.department || '').toLowerCase().trim()
-        const deptMatch = this.approverDepartments.length === 0 || 
+        const deptMatch = this.approverDepartments.length === 0 ||
           this.approverDepartments.some(d => (d || '').toLowerCase() === recordDept)
-        
+
         // เช็ค position filter (ว่าง = ทุกตำแหน่ง) - case insensitive
         const recordPos = (record.position || '').toLowerCase().trim()
-        const posMatch = this.approverPositions.length === 0 || 
+        const posMatch = this.approverPositions.length === 0 ||
           this.approverPositions.some(p => (p || '').toLowerCase() === recordPos)
-        
+
         return deptMatch && posMatch
       })
     },
@@ -208,10 +204,10 @@ export default {
       if (this.exportStartDate || this.exportEndDate) {
         records = records.filter(r => {
           if (!r.start_datetime) return false
-          
+
           const recordDate = new Date(r.start_datetime)
           const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
-          
+
           if (this.exportStartDate) {
             const start = new Date(this.exportStartDate)
             const startOnly = new Date(start.getFullYear(), start.getMonth(), start.getDate())
@@ -241,7 +237,7 @@ export default {
       // สรุปภาพรวม
       const totalHours = records.reduce((sum, r) => sum + calcHours(r), 0)
       const totalDays = records.reduce((sum, r) => sum + calcDays(r), 0)
-      
+
       const summary = {
         total: records.length,
         totalHours: totalHours,
@@ -250,7 +246,7 @@ export default {
         byDepartment: {},
         byPosition: {}
       }
-      
+
       // สรุปตามประเภทการลา
       records.forEach(r => {
         const type = r.leave_type || 'อื่นๆ'
@@ -258,13 +254,13 @@ export default {
         summary.byType[type].count++
         summary.byType[type].hours += calcHours(r)
         summary.byType[type].days += calcDays(r)
-        
+
         // สรุปตามแผนก
         const dept = r.department || 'ไม่ระบุแผนก'
         if (!summary.byDepartment[dept]) summary.byDepartment[dept] = { count: 0, hours: 0 }
         summary.byDepartment[dept].count++
         summary.byDepartment[dept].hours += calcHours(r)
-        
+
         // สรุปตามตำแหน่ง
         const pos = r.position || 'ไม่ระบุตำแหน่ง'
         if (!summary.byPosition[pos]) summary.byPosition[pos] = { count: 0, hours: 0 }
@@ -273,166 +269,187 @@ export default {
       })
 
       const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
-      const dateRange = this.exportStartDate || this.exportEndDate 
+      const dateRange = this.exportStartDate || this.exportEndDate
         ? `${this.exportStartDate ? this.exportStartDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'} - ${this.exportEndDate ? this.exportEndDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'}`
         : 'ทั้งหมด'
-      
+
       let html = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
-        <head><meta charset="UTF-8"></head>
-        <body style="font-family: TH Sarabun New, Sarabun, Arial; font-size: 14pt; padding: 20px;">
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            br { mso-data-placement:same-cell; } 
+            .header-cell { background-color: #1e40af; color: white; font-weight: bold; text-align: center; }
+            .sub-header { background-color: #3b82f6; color: white; font-weight: bold; text-align: center; }
+        </style>
+    </head>
+    <body style="font-family: 'TH Sarabun New', Sarabun, Arial, sans-serif; font-size: 14pt;">
+
+    <table border="0" cellpadding="0" cellspacing="0" style="width:100%; border-collapse:collapse;">
         
-        <!-- หัวเอกสาร -->
-        <table border="1" cellpadding="20" style="width:100%; table-layout:fixed; margin-bottom:25px; border:3px solid #1e40af; border-collapse:collapse;">
-          <tr>
-            <td style="text-align:center; padding:25px; background:#ffffff;">
-              <img src="${window.location.origin}/NGENT.png" width="150" height="65" onerror="this.style.display='none'" style="margin-bottom:15px;"/>
-              <div style="font-size:26pt; font-weight:bold; color:#1e40af; margin-top:10px; letter-spacing:1.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">GENT SOLUTION CO., LTD.</div>
-              <div style="font-size:20pt; font-weight:bold; color:#3b82f6; margin-top:10px; border-top:2px solid #3b82f6; border-bottom:2px solid #3b82f6; padding:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
-              <div style="font-size:14pt; color:#475569; margin-top:12px; font-weight:600;">📅 วันที่พิมพ์: ${today}</div>
-              <div style="font-size:14pt; color:#475569; margin-top:5px; font-weight:600;">📊 ช่วงเวลา: ${dateRange}</div>
+        <tr>
+            <td colspan="11" style="text-align:center; padding:20px; border:3px solid #1e40af;">
+                <img src="${window.location.origin}/NGENT.png" width="150" height="65" onerror="this.style.display='none'" style="margin-bottom:15px;"/>
+                <div style="font-size:24pt; font-weight:bold; color:#1e40af; margin-top:5px;">GENT SOLUTION CO., LTD.</div>
+                <div style="font-size:18pt; font-weight:bold; color:#3b82f6; margin-top:5px;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
+                <div style="font-size:14pt; color:#475569; margin-top:10px;">
+                    📅 วันที่พิมพ์: ${today} &nbsp;|&nbsp; 📊 ช่วงเวลา: ${dateRange}
+                </div>
             </td>
-          </tr>
-        </table>
+        </tr>
         
-        <!-- สรุปภาพรวม -->
-        <table border="1" cellpadding="15" style="border-collapse:collapse; width:100%; table-layout:fixed; margin-bottom:25px; border:2px solid #3b82f6;">
-          <tr>
-            <td colspan="4" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
-              📊 สรุปภาพรวมการลางาน
-            </td>
-          </tr>
-          <tr style="text-align:center; background:#eff6ff;">
-            <td style="padding:20px; border:1px solid #93c5fd; width:25%;">
-              <div style="font-size:13pt; color:#475569; margin-bottom:8px; font-weight:600;">จำนวนรายการทั้งหมด</div>
-              <div style="font-size:28pt; font-weight:bold; color:#1e40af; margin:8px 0;">${summary.total}</div>
-              <div style="font-size:12pt; color:#64748b; font-weight:600;">รายการ</div>
-            </td>
-            <td style="padding:20px; border:1px solid #93c5fd; width:25%;">
-              <div style="font-size:13pt; color:#475569; margin-bottom:8px; font-weight:600;">รวมจำนวนวันลา</div>
-              <div style="font-size:28pt; font-weight:bold; color:#0891b2; margin:8px 0;">${summary.totalDays}</div>
-              <div style="font-size:12pt; color:#64748b; font-weight:600;">วัน</div>
-            </td>
-            <td style="padding:20px; border:1px solid #93c5fd; width:25%;">
-              <div style="font-size:13pt; color:#475569; margin-bottom:8px; font-weight:600;">รวมชั่วโมงลา</div>
-              <div style="font-size:28pt; font-weight:bold; color:#7c3aed; margin:8px 0;">${summary.totalHours}</div>
-              <div style="font-size:12pt; color:#64748b; font-weight:600;">ชั่วโมง</div>
-            </td>
-            <td style="padding:20px; border:1px solid #93c5fd; background:#dcfce7; width:25%;">
-              <div style="font-size:13pt; color:#166534; margin-bottom:8px; font-weight:600;">สถานะ</div>
-              <div style="font-size:24pt; font-weight:bold; color:#16a34a; margin:8px 0;">✓ อนุมัติแล้ว</div>
-              <div style="font-size:12pt; color:#15803d; font-weight:600;">ทุกรายการ</div>
-            </td>
-          </tr>
-        </table>
+        <tr style="height:20px;"><td colspan="11"></td></tr>
 
-        <!-- สรุปตามประเภทการลา -->
-        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; table-layout:fixed; margin-bottom:25px; border:2px solid #3b82f6;">
-          <tr>
-            <td colspan="4" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
-              📋 สรุปตามประเภทการลา
+        <tr>
+            <td colspan="11" style="padding:0; border:2px solid #3b82f6;">
+                <table width="100%" border="1" cellpadding="15" cellspacing="0" style="border-collapse:collapse; table-layout:fixed;">
+                    <tr>
+                        <td colspan="4" style="background:#3b82f6; color:white; font-size:16pt; font-weight:bold; text-align:center; padding:10px;">
+                            📊 สรุปภาพรวมการลางาน
+                        </td>
+                    </tr>
+                    <tr style="text-align:center; background:#eff6ff;">
+                        <td width="25%">
+                            <div style="font-size:13pt; color:#64748b;">รายการทั้งหมด</div>
+                            <div style="font-size:24pt; font-weight:bold; color:#1e40af;">${summary.total}</div>
+                        </td>
+                        <td width="25%">
+                            <div style="font-size:13pt; color:#64748b;">รวมวันลา</div>
+                            <div style="font-size:24pt; font-weight:bold; color:#0891b2;">${summary.totalDays}</div>
+                        </td>
+                        <td width="25%">
+                            <div style="font-size:13pt; color:#64748b;">รวมชั่วโมง</div>
+                            <div style="font-size:24pt; font-weight:bold; color:#7c3aed;">${summary.totalHours}</div>
+                        </td>
+                        <td width="25%" style="background:#dcfce7;">
+                            <div style="font-size:13pt; color:#166534;">สถานะ</div>
+                            <div style="font-size:20pt; font-weight:bold; color:#16a34a;">✓ อนุมัติแล้ว</div>
+                        </td>
+                    </tr>
+                </table>
             </td>
-          </tr>
-          <tr style="background:#1e40af; color:white; font-weight:bold; text-align:center; font-size:13pt;">
-            <th style="padding:12px; width:40%; border:1px solid #3b82f6;">ประเภท</th>
-            <th style="padding:12px; width:20%; border:1px solid #3b82f6;">จำนวนครั้ง</th>
-            <th style="padding:12px; width:20%; border:1px solid #3b82f6;">จำนวนวัน</th>
-            <th style="padding:12px; width:20%; border:1px solid #3b82f6;">จำนวนชั่วโมง</th>
-          </tr>
-          ${Object.entries(summary.byType).map(([type, data], i) => {
-            const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9'
-            return `<tr style="background:${bgColor};">
-              <td style="padding:12px; font-weight:bold; color:#1e293b; font-size:13pt; border:1px solid #cbd5e1;">${type}</td>
-              <td style="text-align:center; padding:12px; font-size:13pt; border:1px solid #cbd5e1;">${data.count} ครั้ง</td>
-              <td style="text-align:center; padding:12px; font-size:13pt; border:1px solid #cbd5e1;">${data.days.toFixed(1)} วัน</td>
-              <td style="text-align:center; padding:12px; font-weight:bold; color:#3b82f6; font-size:14pt; border:1px solid #cbd5e1;">${data.hours} ชม.</td>
-            </tr>`
-          }).join('')}
-        </table>
+        </tr>
 
-        <!-- สรุปตามแผนก -->
-        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; table-layout:fixed; margin-bottom:25px; border:2px solid #3b82f6;">
-          <tr>
-            <td colspan="3" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
-              🏢 สรุปตามแผนก
+        <tr style="height:20px;"><td colspan="11"></td></tr>
+
+        <tr>
+            <td colspan="11" style="padding:0; border:2px solid #3b82f6;">
+                <table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+                     <tr>
+                        <td colspan="4" style="background:#3b82f6; color:white; font-size:16pt; font-weight:bold; text-align:center; padding:10px;">
+                            📋 สรุปตามประเภทการลา
+                        </td>
+                    </tr>
+                    <tr style="background:#1e40af; color:white; text-align:center;">
+                        <th width="40%" style="padding:10px;">ประเภท</th>
+                        <th width="20%">จำนวนครั้ง</th>
+                        <th width="20%">จำนวนวัน</th>
+                        <th width="20%">จำนวนชั่วโมง</th>
+                    </tr>
+                    ${Object.entries(summary.byType).map(([type, data], i) => {
+        const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
+        return `<tr style="background:${bgColor}; text-align:center;">
+                            <td style="text-align:left; padding:10px; font-weight:bold;">${type}</td>
+                            <td>${data.count}</td>
+                            <td>${data.days.toFixed(1)}</td>
+                            <td>${data.hours}</td>
+                        </tr>`;
+      }).join('')}
+                </table>
             </td>
-          </tr>
-          <tr style="background:#1e40af; color:white; font-weight:bold; text-align:center; font-size:13pt;">
-            <th style="padding:12px; width:50%; border:1px solid #3b82f6;">แผนก</th>
-            <th style="padding:12px; width:25%; border:1px solid #3b82f6;">จำนวนครั้ง</th>
-            <th style="padding:12px; width:25%; border:1px solid #3b82f6;">รวมชั่วโมง</th>
-          </tr>
-          ${Object.entries(summary.byDepartment).map(([dept, data], i) => {
-            const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9'
-            return `<tr style="background:${bgColor};">
-              <td style="padding:12px; font-weight:bold; color:#1e293b; font-size:13pt; border:1px solid #cbd5e1;">${dept}</td>
-              <td style="text-align:center; padding:12px; font-size:13pt; border:1px solid #cbd5e1;">${data.count} ครั้ง</td>
-              <td style="text-align:center; padding:12px; font-weight:bold; color:#3b82f6; font-size:14pt; border:1px solid #cbd5e1;">${data.hours} ชม.</td>
-            </tr>`
-          }).join('')}
-        </table>
+        </tr>
 
-        <!-- รายละเอียดแต่ละรายการ -->
-        <table border="1" cellpadding="10" style="border-collapse:collapse; width:100%; table-layout:fixed; border:2px solid #3b82f6;">
-          <tr>
-            <td colspan="11" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
-              📄 รายละเอียดการลาแต่ละรายการ
+        <tr style="height:20px;"><td colspan="11"></td></tr>
+
+        <tr>
+            <td colspan="11" style="padding:0; border:2px solid #3b82f6;">
+                <table width="100%" border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+                     <tr>
+                        <td colspan="3" style="background:#3b82f6; color:white; font-size:16pt; font-weight:bold; text-align:center; padding:10px;">
+                            🏢 สรุปตามแผนก
+                        </td>
+                    </tr>
+                    <tr style="background:#1e40af; color:white; text-align:center;">
+                        <th width="50%" style="padding:10px;">แผนก</th>
+                        <th width="25%">จำนวนครั้ง</th>
+                        <th width="25%">รวมชั่วโมง</th>
+                    </tr>
+                    ${Object.entries(summary.byDepartment).map(([dept, data], i) => {
+        const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
+        return `<tr style="background:${bgColor}; text-align:center;">
+                            <td style="text-align:left; padding:10px; font-weight:bold;">${dept}</td>
+                            <td>${data.count}</td>
+                            <td>${data.hours}</td>
+                        </tr>`;
+      }).join('')}
+                </table>
             </td>
-          </tr>
-          <tr style="background:#1e40af; color:white; font-weight:bold; font-size:12pt; text-align:center;">
-            <th style="padding:10px; width:5%; border:1px solid #3b82f6;">ลำดับ</th>
-            <th style="padding:10px; width:9%; border:1px solid #3b82f6;">วันที่ส่งคำขอ</th>
-            <th style="padding:10px; width:12%; border:1px solid #3b82f6;">ชื่อ-นามสกุล</th>
-            <th style="padding:10px; width:10%; border:1px solid #3b82f6;">แผนก</th>
-            <th style="padding:10px; width:10%; border:1px solid #3b82f6;">ตำแหน่ง</th>
-            <th style="padding:10px; width:10%; border:1px solid #3b82f6;">ประเภทการลา</th>
-            <th style="padding:10px; width:9%; border:1px solid #3b82f6;">วันที่เริ่มลา</th>
-            <th style="padding:10px; width:9%; border:1px solid #3b82f6;">วันที่สิ้นสุด</th>
-            <th style="padding:10px; width:5%; border:1px solid #3b82f6;">วัน</th>
-            <th style="padding:10px; width:6%; border:1px solid #3b82f6;">ชั่วโมง</th>
-            <th style="padding:10px; width:15%; border:1px solid #3b82f6;">เหตุผล</th>
-          </tr>`
+        </tr>
 
-      records.forEach((r, i) => {
-        const bgColor = i % 2 === 0 ? '#ffffff' : '#f8fafc'
-        const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'
-        html += `<tr style="background:${bgColor}; font-size:12pt;">
-          <td style="text-align:center; padding:10px; font-weight:bold; color:#64748b; border:1px solid #cbd5e1;">${i + 1}</td>
-          <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${createdDate}</td>
-          <td style="padding:10px; border:1px solid #cbd5e1;"><b>${r.user_name || '-'}</b></td>
-          <td style="padding:10px; border:1px solid #cbd5e1;">${r.department || '-'}</td>
-          <td style="padding:10px; border:1px solid #cbd5e1;">${r.position || '-'}</td>
-          <td style="padding:10px; text-align:center; font-weight:bold; color:#7c3aed; border:1px solid #cbd5e1;">${r.leave_type || '-'}</td>
-          <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-          <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-          <td style="text-align:center; padding:10px; font-weight:bold; border:1px solid #cbd5e1;">${calcDays(r)}</td>
-          <td style="text-align:center; padding:10px; font-weight:bold; color:#3b82f6; border:1px solid #cbd5e1;">${calcHours(r)}</td>
-          <td style="padding:10px; border:1px solid #cbd5e1;">${r.reason || '-'}</td>
-        </tr>`
-      })
+        <tr style="height:20px;"><td colspan="11"></td></tr>
 
-      html += `</table></body></html>`
+        <tr style="background:#3b82f6; color:white; text-align:center; font-weight:bold; font-size:14pt;">
+            <td colspan="11" style="padding:10px; border:2px solid #3b82f6;">📄 รายละเอียดการลาแต่ละรายการ</td>
+        </tr>
+        <tr style="background:#1e40af; color:white; font-weight:bold; text-align:center; font-size:12pt;">
+            <th width="5%" style="padding:10px; border:1px solid #cbd5e1;">ลำดับ</th>
+            <th width="10%" style="border:1px solid #cbd5e1;">วันที่ส่งคำขอ</th>
+            <th width="12%" style="border:1px solid #cbd5e1;">ชื่อ-นามสกุล</th>
+            <th width="10%" style="border:1px solid #cbd5e1;">แผนก</th>
+            <th width="10%" style="border:1px solid #cbd5e1;">ตำแหน่ง</th>
+            <th width="10%" style="border:1px solid #cbd5e1;">ประเภทการลา</th>
+            <th width="9%" style="border:1px solid #cbd5e1;">เริ่ม</th>
+            <th width="9%" style="border:1px solid #cbd5e1;">สิ้นสุด</th>
+            <th width="5%" style="border:1px solid #cbd5e1;">วัน</th>
+            <th width="5%" style="border:1px solid #cbd5e1;">ชม.</th>
+            <th width="15%" style="border:1px solid #cbd5e1;">เหตุผล</th>
+        </tr>
 
-      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
-      const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
-      link.download = `รายงานการลา_อนุมัติแล้ว_${new Date().toISOString().slice(0, 10)}.xls`
-      link.click()
-      URL.revokeObjectURL(link.href)
+        ${records.map((r, i) => {
+        const bgColor = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+        const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
-      this.showExportDialog = false
-      this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: `Export รายงานเรียบร้อย (${records.length} รายการ)`, life: 3000 })
+        return `<tr style="background:${bgColor}; font-size:12pt; vertical-align:top;">
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${i + 1}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${createdDate}</td>
+                <td style="padding:10px; border:1px solid #cbd5e1;">${r.user_name || '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${r.department || '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${r.position || '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1; color:#7c3aed; font-weight:bold;">${r.leave_type || '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1; font-weight:bold;">${calcDays(r)}</td>
+                <td style="text-align:center; padding:10px; border:1px solid #cbd5e1; font-weight:bold; color:#3b82f6;">${calcHours(r)}</td>
+                <td style="padding:10px; border:1px solid #cbd5e1;">${r.reason || '-'}</td>
+            </tr>`;
+      }).join('')}
+
+    </table>
+    </body>
+    </html>
+`;
+
+      // ส่วน Export ไฟล์ (คงเดิม)
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `รายงานการลา_อนุมัติแล้ว_${new Date().toISOString().slice(0, 10)}.xls`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+      this.showExportDialog = false;
+      this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: `Export รายงานเรียบร้อย (${records.length} รายการ)`, life: 3000 });
     },
     async checkLeaveApprover() {
       try {
         const userId = localStorage.getItem('soc_user_id')
         const hasPermission = this.hasAccess('/leave_work/approve')
-        
+
         // ถ้ามี permission แสดงปุ่มได้
         if (hasPermission) {
           this.isLeaveApprover = true
         }
-        
+
         if (!userId) {
           // มี permission แต่ไม่มี userId → เห็นปุ่มแต่ไม่มีรายการ
           this.approverLevel = 0
@@ -440,23 +457,23 @@ export default {
           this.approverPositions = []
           return
         }
-        
+
         const response = await this.$http.get('/api/settings/leave-approval')
         const level1 = response.data.level1 || []
         const level2 = response.data.level2 || []
-        
+
         const myLevel1 = level1.find(a => a.user_id == userId && a.can_approve)
         const myLevel2 = level2.find(a => a.user_id == userId && a.can_approve)
-        
+
         // ถ้าอยู่ใน leave-approval settings ก็เป็น approver ได้
         if (myLevel1 || myLevel2) {
           this.isLeaveApprover = true
         }
-        
+
         // รวม department/position filters จากทุก level ที่มีสิทธิ์
         let depts = []
         let positions = []
-        
+
         if (myLevel1) {
           depts = depts.concat(myLevel1.department_ids || [])
           positions = positions.concat(myLevel1.position_ids || [])
@@ -465,10 +482,10 @@ export default {
           depts = depts.concat(myLevel2.department_ids || [])
           positions = positions.concat(myLevel2.position_ids || [])
         }
-        
+
         this.approverDepartments = [...new Set(depts)]
         this.approverPositions = [...new Set(positions)]
-        
+
         if (myLevel1 && myLevel2) {
           this.approverLevel = 3
         } else if (myLevel1) {
@@ -479,7 +496,7 @@ export default {
           this.approverLevel = 0
         }
       } catch { // ignore
-        
+
       }
     },
     showLeaveForm() {
@@ -531,10 +548,10 @@ export default {
 
     async approveLeave(leaveId) {
       if (this.approving) return
-      
+
       // Refresh ข้อมูลก่อนเพื่อให้ได้ status ล่าสุด
       await this.loadLeaveRecords()
-      
+
       // Get current leave request to check its status
       const leaveRequest = this.pendingLeaveRecords.find(r => r.id === leaveId)
       if (!leaveRequest) {
@@ -546,11 +563,11 @@ export default {
         })
         return
       }
-      
+
       const currentStatus = leaveRequest.status
-      
+
       // Determine confirm message based on current status
-      const confirmMessage = currentStatus === 'pending_level2' 
+      const confirmMessage = currentStatus === 'pending_level2'
         ? 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 2 - HR)'
         : 'คุณต้องการอนุมัติคำขอลางานนี้หรือไม่? (ขั้นที่ 1 - หัวหน้างาน)'
 
@@ -570,14 +587,14 @@ export default {
             const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
             const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
             const approverInfo = `${approverName} (${approverPosition})`
-            
+
             // ส่งไป backend โดยไม่ระบุ approval_level - ให้ backend ตรวจสอบ status จริงจาก DB
             const response = await this.$http.put(`/api/leave/${leaveId}/status`, {
               status: 'approved',
               approved_by: approverInfo,
               approved_by_id: approverId
             })
-            
+
             await this.loadLeaveRecords()
 
             const newStatus = response.data?.status
@@ -615,18 +632,18 @@ export default {
 
     async confirmReject() {
       if (!this.rejectReason.trim()) return
-      
+
       try {
         const approverName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
         const approverPosition = localStorage.getItem('soc_position') || 'ไม่ระบุตำแหน่ง'
         const approverInfo = `${approverName} (${approverPosition})`
-        
+
         await this.$http.put(`/api/leave/${this.rejectLeaveId}/status`, {
           status: 'rejected',
           approved_by: approverInfo,
           reject_reason: this.rejectReason.trim()
         })
-        
+
         this.showRejectDialog = false
         await this.loadLeaveRecords()
 
@@ -700,7 +717,7 @@ export default {
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
-  
+
   background: #e5e7eb;
   height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -836,9 +853,17 @@ export default {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 .main-content {
@@ -934,7 +959,8 @@ export default {
     flex-direction: column;
   }
 
-  .leave-btn, .approval-btn {
+  .leave-btn,
+  .approval-btn {
     width: 100% !important;
     min-width: auto !important;
   }
@@ -969,6 +995,7 @@ export default {
     gap: 0.75rem;
   }
 }
+
 :deep(.leave-dialog.p-dialog),
 :deep(.approval-dialog.p-dialog) {
   height: auto !important;
