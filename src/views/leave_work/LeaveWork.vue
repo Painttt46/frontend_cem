@@ -283,10 +283,10 @@ export default {
       let html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
         <head><meta charset="UTF-8"></head>
-        <body style="font-family: TH Sarabun New, Sarabun, Arial; font-size: 14pt;">
+        <body style="font-family: TH Sarabun New, Sarabun, Arial; font-size: 14pt; padding: 20px;">
         
         <!-- หัวเอกสาร -->
-        <table border="1" cellpadding="20" style="width:100%; margin-bottom:25px; border:3px solid #1e40af; border-collapse:collapse;">
+        <table border="1" cellpadding="20" style="width:100%; table-layout:fixed; margin-bottom:25px; border:3px solid #1e40af; border-collapse:collapse;">
           <tr>
             <td style="text-align:center; padding:25px; background:#ffffff;">
               <img src="${window.location.origin}/NGENT.png" width="150" height="65" onerror="this.style.display='none'" style="margin-bottom:15px;"/>
@@ -299,7 +299,7 @@ export default {
         </table>
         
         <!-- สรุปภาพรวม -->
-        <table border="1" cellpadding="15" style="border-collapse:collapse; width:100%; margin-bottom:25px; border:2px solid #3b82f6;">
+        <table border="1" cellpadding="15" style="border-collapse:collapse; width:100%; table-layout:fixed; margin-bottom:25px; border:2px solid #3b82f6;">
           <tr>
             <td colspan="4" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
               📊 สรุปภาพรวมการลางาน
@@ -330,7 +330,7 @@ export default {
         </table>
 
         <!-- สรุปตามประเภทการลา -->
-        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; margin-bottom:25px; border:2px solid #3b82f6;">
+        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; table-layout:fixed; margin-bottom:25px; border:2px solid #3b82f6;">
           <tr>
             <td colspan="4" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
               📋 สรุปตามประเภทการลา
@@ -354,7 +354,7 @@ export default {
         </table>
 
         <!-- สรุปตามแผนก -->
-        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; margin-bottom:25px; border:2px solid #3b82f6;">
+        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; table-layout:fixed; margin-bottom:25px; border:2px solid #3b82f6;">
           <tr>
             <td colspan="3" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
               🏢 สรุปตามแผนก
@@ -376,7 +376,7 @@ export default {
         </table>
 
         <!-- รายละเอียดแต่ละรายการ -->
-        <table border="1" cellpadding="10" style="border-collapse:collapse; width:100%; border:2px solid #3b82f6;">
+        <table border="1" cellpadding="10" style="border-collapse:collapse; width:100%; table-layout:fixed; border:2px solid #3b82f6;">
           <tr>
             <td colspan="11" style="font-size:16pt; font-weight:bold; color:#ffffff; background:#3b82f6; padding:12px; text-align:center;">
               📄 รายละเอียดการลาแต่ละรายการ
@@ -384,16 +384,16 @@ export default {
           </tr>
           <tr style="background:#1e40af; color:white; font-weight:bold; font-size:12pt; text-align:center;">
             <th style="padding:10px; width:5%; border:1px solid #3b82f6;">ลำดับ</th>
-            <th style="padding:10px; width:10%; border:1px solid #3b82f6;">วันที่ส่งคำขอ</th>
+            <th style="padding:10px; width:9%; border:1px solid #3b82f6;">วันที่ส่งคำขอ</th>
             <th style="padding:10px; width:12%; border:1px solid #3b82f6;">ชื่อ-นามสกุล</th>
             <th style="padding:10px; width:10%; border:1px solid #3b82f6;">แผนก</th>
             <th style="padding:10px; width:10%; border:1px solid #3b82f6;">ตำแหน่ง</th>
             <th style="padding:10px; width:10%; border:1px solid #3b82f6;">ประเภทการลา</th>
-            <th style="padding:10px; width:10%; border:1px solid #3b82f6;">วันที่เริ่มลา</th>
-            <th style="padding:10px; width:10%; border:1px solid #3b82f6;">วันที่สิ้นสุด</th>
+            <th style="padding:10px; width:9%; border:1px solid #3b82f6;">วันที่เริ่มลา</th>
+            <th style="padding:10px; width:9%; border:1px solid #3b82f6;">วันที่สิ้นสุด</th>
             <th style="padding:10px; width:5%; border:1px solid #3b82f6;">วัน</th>
             <th style="padding:10px; width:6%; border:1px solid #3b82f6;">ชั่วโมง</th>
-            <th style="padding:10px; width:12%; border:1px solid #3b82f6;">เหตุผล</th>
+            <th style="padding:10px; width:15%; border:1px solid #3b82f6;">เหตุผล</th>
           </tr>`
 
       records.forEach((r, i) => {
@@ -414,45 +414,7 @@ export default {
         </tr>`
       })
 
-      html += `</table>
-        
-        <!-- ส่วนท้ายเอกสาร -->
-        <table border="0" cellpadding="15" style="width:100%; margin-top:30px;">
-          <tr>
-            <td style="text-align:left; padding:15px;">
-              <div style="font-size:13pt; color:#475569; line-height:1.8;">
-                <b>สรุป:</b> รายงานนี้แสดงข้อมูลการลางานที่ได้รับการอนุมัติทั้งหมด <b>${records.length}</b> รายการ<br/>
-                รวมเป็น <b>${summary.totalDays}</b> วัน หรือ <b>${summary.totalHours}</b> ชั่วโมง<br/>
-                <br/>
-                <div style="margin-top:30px; padding-top:20px; border-top:2px solid #cbd5e1;">
-                  <b>ผู้จัดทำรายงาน:</b> ${approverName} (${approverPosition})<br/>
-                  <b>วันที่:</b> ${today}<br/>
-                  <b>บริษัท:</b> GENT SOLUTION CO., LTD.
-                </div>
-              </div>
-            </td>
-          </tr>
-        </table>
-        
-        <!-- ลายเซ็น -->
-        <table border="0" cellpadding="15" style="width:100%; margin-top:40px;">
-          <tr>
-            <td style="text-align:center; width:50%; padding:20px;">
-              <div style="border-top:2px solid #000; display:inline-block; padding-top:10px; margin-top:50px; min-width:200px;">
-                <b>ผู้จัดทำ</b><br/>
-                <span style="font-size:11pt; color:#64748b;">${approverName}</span>
-              </div>
-            </td>
-            <td style="text-align:center; width:50%; padding:20px;">
-              <div style="border-top:2px solid #000; display:inline-block; padding-top:10px; margin-top:50px; min-width:200px;">
-                <b>ผู้อนุมัติ</b><br/>
-                <span style="font-size:11pt; color:#64748b;">(.....................................)</span>
-              </div>
-            </td>
-          </tr>
-        </table>
-        
-        </body></html>`
+      html += `</table></body></html>`
 
       const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
       const link = document.createElement('a')
