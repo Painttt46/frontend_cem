@@ -343,10 +343,8 @@ export default {
             <td colspan="2" style="background-color:#1e40af; color:white; padding:10px;">จำนวนวัน</td>
             <td colspan="3" style="background-color:#1e40af; color:white; padding:10px;">จำนวนชั่วโมง</td>
         </tr>
-        ${Object.entries(this.summary.byType).map(([type, data], i) => {
-        // สีสลับแถว
+        ${Object.entries(summary.byType).map(([type, data], i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
-        // ย้ายสี background มาที่ td ทุกช่อง
         return `<tr>
                 <td colspan="4" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${type}</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
@@ -367,9 +365,8 @@ export default {
             <td colspan="3" style="background-color:#1e40af; color:white; padding:10px;">จำนวนครั้ง</td>
             <td colspan="3" style="background-color:#1e40af; color:white; padding:10px;">รวมชั่วโมง</td>
         </tr>
-        ${Object.entries(this.summary.byDepartment).map(([dept, data], i) => {
+        ${Object.entries(summary.byDepartment).map(([dept, data], i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
-        // ย้ายสี background มาที่ td ทุกช่อง
         return `<tr>
                 <td colspan="5" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${dept}</td>
                 <td colspan="3" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
