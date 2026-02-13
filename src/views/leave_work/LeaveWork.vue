@@ -268,11 +268,6 @@ export default {
         summary.byPosition[pos].hours += calcHours(r)
       })
 
-      const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
-      const dateRange = this.exportStartDate || this.exportEndDate
-        ? `${this.exportStartDate ? this.exportStartDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'} - ${this.exportEndDate ? this.exportEndDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'}`
-        : 'ทั้งหมด'
-
       let html = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
       <head>
