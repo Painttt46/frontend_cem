@@ -186,7 +186,7 @@
             </div>
           </template>
         </Column>
-        <Column header="ลบ/คืนโควต้า" style="width: 200px;">
+        <Column header="ลบ/คืนโควต้า" style="width: 250px;">
           <template #body="slotProps">
             <div v-if="canHrResetQuota(slotProps.data)" class="hr-action-row">
               <Button icon="pi pi-undo" label="ลบ/คืนโควต้า" size="small" severity="danger" outlined
