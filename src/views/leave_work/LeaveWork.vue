@@ -423,7 +423,7 @@ export default {
       const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.download = `รายงานการลา_อนุมัติแล้ว_${new Date().toISOString().slice(0, 10)}.csv`
+      link.download = `รายงานการลา_อนุมัติแล้ว_${new Date().toISOString().slice(0, 10)}.xls`
       link.click()
       URL.revokeObjectURL(link.href)
 
