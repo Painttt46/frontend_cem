@@ -274,10 +274,11 @@ export default {
         <meta charset="UTF-8">
         <style>
             body { font-family: 'TH Sarabun New', Sarabun, Arial, sans-serif; font-size: 14pt; margin: 0; padding: 20px; }
+            /* ล็อคความกว้างตาราง และบังคับ layout */
             table { border-collapse: collapse; table-layout: fixed; width: 1200px; }
             td, th { border: 1px solid #cbd5e1; vertical-align: middle; padding: 8px; }
-            .header-bg { background-color: #1e40af; color: white; }
-            .sub-header-bg { background-color: #3b82f6; color: white; }
+            
+            /* Class ช่วยเหลือ */
             .text-center { text-align: center; }
             .text-left { text-align: left; }
             .font-bold { font-weight: bold; }
@@ -285,127 +286,110 @@ export default {
     </head>
     <body>
 
-    <table border="1" cellpadding="8" cellspacing="0" style="width:1200px;">
+    <table border="1" cellpadding="8" cellspacing="0" width="1200" style="width:1200px;">
         
-        <!-- กำหนดความกว้างคอลัมน์แบบแน่นอน -->
-        <colgroup>
-            <col width="60">   <!-- ลำดับ -->
-            <col width="110">  <!-- วันที่ส่งคำขอ -->
-            <col width="140">  <!-- ชื่อ-นามสกุล -->
-            <col width="110">  <!-- แผนก -->
-            <col width="120">  <!-- ตำแหน่ง -->
-            <col width="120">  <!-- ประเภทการลา -->
-            <col width="110">  <!-- วันที่เริ่มลา -->
-            <col width="110">  <!-- วันที่สิ้นสุด -->
-            <col width="60">   <!-- วัน -->
-            <col width="70">   <!-- ชม. -->
-            <col width="190">  <!-- เหตุผล -->
-        </colgroup>
+        <tr style="height:0px; visibility:hidden;">
+            <td width="60"></td>  <td width="110"></td> <td width="140"></td> <td width="110"></td> <td width="120"></td> <td width="120"></td> <td width="110"></td> <td width="110"></td> <td width="60"></td>  <td width="70"></td>  <td width="190"></td> </tr>
 
-        <!-- ส่วนหัว -->
         <tr>
-            <td colspan="11" style="text-align:center; padding:25px; border:3px solid #1e40af; background:#ffffff;">
+            <td colspan="11" align="center" style="text-align:center; padding:25px; border:3px solid #1e40af; background:#ffffff;">
                 <div style="font-size:26pt; font-weight:bold; color:#1e40af; margin-bottom:8px;">GENT SOLUTION CO., LTD.</div>
                 <div style="font-size:20pt; font-weight:bold; color:#3b82f6; border-top:2px solid #3b82f6; border-bottom:2px solid #3b82f6; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
             </td>
         </tr>
         
-        <tr style="height:15px;"><td colspan="11" style="border:none; background:none;"></td></tr>
+        <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
-        <!-- สรุปภาพรวม -->
         <tr>
-            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:12px;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📊 สรุปภาพรวมการลางาน
             </td>
         </tr>
-        <tr class="text-center" style="background-color:#eff6ff;">
-            <td colspan="3" style="padding:18px;">
+        <tr align="center" style="background-color:#eff6ff;">
+            <td colspan="3" align="center" style="padding:18px; text-align:center;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รายการทั้งหมด</div>
                 <div style="font-size:24pt; color:#1e40af; font-weight:bold;">${summary.total}</div>
                 <div style="font-size:12pt; color:#64748b;">รายการ</div>
             </td>
-            <td colspan="3" style="padding:18px;">
+            <td colspan="3" align="center" style="padding:18px; text-align:center;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมวันลา</div>
                 <div style="font-size:24pt; color:#0891b2; font-weight:bold;">${summary.totalDays}</div>
                 <div style="font-size:12pt; color:#64748b;">วัน</div>
             </td>
-            <td colspan="3" style="padding:18px;">
+            <td colspan="3" align="center" style="padding:18px; text-align:center;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมชั่วโมง</div>
                 <div style="font-size:24pt; color:#7c3aed; font-weight:bold;">${summary.totalHours}</div>
                 <div style="font-size:12pt; color:#64748b;">ชั่วโมง</div>
             </td>
-            <td colspan="2" style="padding:18px; background-color:#dcfce7;">
+            <td colspan="2" align="center" style="padding:18px; background-color:#dcfce7; text-align:center;">
                 <div style="color:#166534; font-size:13pt; margin-bottom:6px;">สถานะ</div>
                 <div style="font-size:20pt; color:#16a34a; font-weight:bold;">✓ อนุมัติแล้ว</div>
             </td>
         </tr>
 
-        <tr style="height:15px;"><td colspan="11" style="border:none; background:none;"></td></tr>
+        <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
-        <!-- สรุปตามประเภทการลา -->
         <tr>
-            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:12px;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📋 สรุปตามประเภทการลา
             </td>
         </tr>
-        <tr class="header-bg text-center font-bold">
-            <td colspan="4" style="padding:10px;">ประเภท</td>
-            <td colspan="2" style="padding:10px;">จำนวนครั้ง</td>
-            <td colspan="2" style="padding:10px;">จำนวนวัน</td>
-            <td colspan="3" style="padding:10px;">จำนวนชั่วโมง</td>
+        <tr align="center" class="font-bold" style="text-align:center;">
+            <td colspan="4" style="background-color:#1e40af; color:white; padding:10px;">ประเภท</td>
+            <td colspan="2" style="background-color:#1e40af; color:white; padding:10px;">จำนวนครั้ง</td>
+            <td colspan="2" style="background-color:#1e40af; color:white; padding:10px;">จำนวนวัน</td>
+            <td colspan="3" style="background-color:#1e40af; color:white; padding:10px;">จำนวนชั่วโมง</td>
         </tr>
         ${Object.entries(summary.byType).map(([type, data], i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
         return `<tr style="background:${bgColor};">
-                <td colspan="4" class="text-left font-bold" style="padding:10px;">${type}</td>
-                <td colspan="2" class="text-center" style="padding:10px;">${data.count} ครั้ง</td>
-                <td colspan="2" class="text-center" style="padding:10px;">${data.days.toFixed(1)} วัน</td>
-                <td colspan="3" class="text-center font-bold" style="padding:10px; color:#3b82f6;">${data.hours} ชม.</td>
+                <td colspan="4" align="left" class="font-bold" style="padding:10px; text-align:left;">${type}</td>
+                <td colspan="2" align="center" style="padding:10px; text-align:center;">${data.count} ครั้ง</td>
+                <td colspan="2" align="center" style="padding:10px; text-align:center;">${data.days.toFixed(1)} วัน</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3b82f6; text-align:center;">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
-        <tr style="height:15px;"><td colspan="11" style="border:none; background:none;"></td></tr>
+        <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
-        <!-- สรุปตามแผนก -->
         <tr>
-            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:12px;">
+             <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
                 🏢 สรุปตามแผนก
             </td>
         </tr>
-        <tr class="header-bg text-center font-bold">
-            <td colspan="5" style="padding:10px;">แผนก</td>
-            <td colspan="3" style="padding:10px;">จำนวนครั้ง</td>
-            <td colspan="3" style="padding:10px;">รวมชั่วโมง</td>
+        <tr align="center" class="font-bold" style="text-align:center;">
+            <td colspan="5" style="background-color:#1e40af; color:white; padding:10px;">แผนก</td>
+            <td colspan="3" style="background-color:#1e40af; color:white; padding:10px;">จำนวนครั้ง</td>
+            <td colspan="3" style="background-color:#1e40af; color:white; padding:10px;">รวมชั่วโมง</td>
         </tr>
         ${Object.entries(summary.byDepartment).map(([dept, data], i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9';
         return `<tr style="background:${bgColor};">
-                <td colspan="5" class="text-left font-bold" style="padding:10px;">${dept}</td>
-                <td colspan="3" class="text-center" style="padding:10px;">${data.count} ครั้ง</td>
-                <td colspan="3" class="text-center font-bold" style="padding:10px; color:#3b82f6;">${data.hours} ชม.</td>
+                <td colspan="5" align="left" class="font-bold" style="padding:10px; text-align:left;">${dept}</td>
+                <td colspan="3" align="center" style="padding:10px; text-align:center;">${data.count} ครั้ง</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3b82f6; text-align:center;">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
-        <tr style="height:15px;"><td colspan="11" style="border:none; background:none;"></td></tr>
+        <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
-        <!-- รายละเอียดการลา -->
         <tr>
-            <td colspan="11" class="sub-header-bg font-bold text-center" style="font-size:16pt; padding:12px;">
+             <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📄 รายละเอียดการลาแต่ละรายการ
             </td>
         </tr>
-        <tr class="header-bg text-center font-bold" style="font-size:12pt;">
-            <td style="padding:10px;">ลำดับ</td>
-            <td style="padding:10px;">วันที่ส่งคำขอ</td>
-            <td style="padding:10px;">ชื่อ-นามสกุล</td>
-            <td style="padding:10px;">แผนก</td>
-            <td style="padding:10px;">ตำแหน่ง</td>
-            <td style="padding:10px;">ประเภทการลา</td>
-            <td style="padding:10px;">วันที่เริ่มลา</td>
-            <td style="padding:10px;">วันที่สิ้นสุด</td>
-            <td style="padding:10px;">วัน</td>
-            <td style="padding:10px;">ชม.</td>
-            <td style="padding:10px;">เหตุผล</td>
+        <tr align="center" class="font-bold" style="font-size:12pt; text-align:center;">
+            <td style="background-color:#1e40af; color:white; padding:10px;">ลำดับ</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">วันที่ส่งคำขอ</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">ชื่อ-นามสกุล</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">แผนก</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">ตำแหน่ง</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">ประเภทการลา</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">วันที่เริ่มลา</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">วันที่สิ้นสุด</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">วัน</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">ชม.</td>
+            <td style="background-color:#1e40af; color:white; padding:10px;">เหตุผล</td>
         </tr>
 
         ${records.map((r, i) => {
@@ -413,17 +397,17 @@ export default {
         const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-';
 
         return `<tr style="background:${bgColor}; font-size:12pt;">
-                <td class="text-center" style="padding:8px;">${i + 1}</td>
-                <td class="text-center" style="padding:8px;">${createdDate}</td>
-                <td class="text-left" style="padding:8px;"><b>${r.user_name || '-'}</b></td>
-                <td class="text-center" style="padding:8px;">${r.department || '-'}</td>
-                <td class="text-center" style="padding:8px;">${r.position || '-'}</td>
-                <td class="text-center font-bold" style="padding:8px; color:#7c3aed;">${r.leave_type || '-'}</td>
-                <td class="text-center" style="padding:8px;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-                <td class="text-center" style="padding:8px;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
-                <td class="text-center font-bold" style="padding:8px;">${calcDays(r)}</td>
-                <td class="text-center font-bold" style="padding:8px; color:#3b82f6;">${calcHours(r)}</td>
-                <td class="text-left" style="padding:8px;">${r.reason || '-'}</td>
+                <td align="center" style="padding:8px; text-align:center;">${i + 1}</td>
+                <td align="center" style="padding:8px; text-align:center;">${createdDate}</td>
+                <td align="left" style="padding:8px; text-align:left;"><b>${r.user_name || '-'}</b></td>
+                <td align="center" style="padding:8px; text-align:center;">${r.department || '-'}</td>
+                <td align="center" style="padding:8px; text-align:center;">${r.position || '-'}</td>
+                <td align="center" class="font-bold" style="padding:8px; color:#7c3aed; text-align:center;">${r.leave_type || '-'}</td>
+                <td align="center" style="padding:8px; text-align:center;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+                <td align="center" style="padding:8px; text-align:center;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+                <td align="center" class="font-bold" style="padding:8px; text-align:center;">${calcDays(r)}</td>
+                <td align="center" class="font-bold" style="padding:8px; color:#3b82f6; text-align:center;">${calcHours(r)}</td>
+                <td align="left" style="padding:8px; text-align:left;">${r.reason || '-'}</td>
             </tr>`;
       }).join('')}
 
