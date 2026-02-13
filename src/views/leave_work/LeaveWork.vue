@@ -274,11 +274,8 @@ export default {
         <meta charset="UTF-8">
         <style>
             body { font-family: 'TH Sarabun New', Sarabun, Arial, sans-serif; font-size: 14pt; margin: 0; padding: 20px; }
-            /* ล็อคความกว้างตาราง และบังคับ layout */
             table { border-collapse: collapse; table-layout: fixed; width: 1200px; }
             td, th { border: 1px solid #cbd5e1; vertical-align: middle; padding: 8px; }
-            
-            /* Class ช่วยเหลือ */
             .text-center { text-align: center; }
             .text-left { text-align: left; }
             .font-bold { font-weight: bold; }
@@ -289,7 +286,8 @@ export default {
     <table border="1" cellpadding="8" cellspacing="0" width="1200" style="width:1200px;">
         
         <tr style="height:0px; visibility:hidden;">
-            <td width="60"></td>  <td width="110"></td> <td width="140"></td> <td width="110"></td> <td width="120"></td> <td width="120"></td> <td width="110"></td> <td width="110"></td> <td width="60"></td>  <td width="70"></td>  <td width="190"></td> </tr>
+            <td width="60"></td>  <td width="110"></td> <td width="140"></td> <td width="110"></td> <td width="120"></td> <td width="120"></td> <td width="110"></td> <td width="110"></td> <td width="60"></td> <td width="70"></td> <td width="190"></td>
+        </tr>
 
         <tr>
             <td colspan="11" align="center" style="text-align:center; padding:25px; border:3px solid #1e40af; background:#ffffff;">
@@ -305,18 +303,18 @@ export default {
                 📊 สรุปภาพรวมการลางาน
             </td>
         </tr>
-        <tr align="center" style="background-color:#eff6ff;">
-            <td colspan="3" align="center" style="padding:18px; text-align:center;">
+        <tr align="center">
+            <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รายการทั้งหมด</div>
                 <div style="font-size:24pt; color:#1e40af; font-weight:bold;">${summary.total}</div>
                 <div style="font-size:12pt; color:#64748b;">รายการ</div>
             </td>
-            <td colspan="3" align="center" style="padding:18px; text-align:center;">
+            <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมวันลา</div>
                 <div style="font-size:24pt; color:#0891b2; font-weight:bold;">${summary.totalDays}</div>
                 <div style="font-size:12pt; color:#64748b;">วัน</div>
             </td>
-            <td colspan="3" align="center" style="padding:18px; text-align:center;">
+            <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมชั่วโมง</div>
                 <div style="font-size:24pt; color:#7c3aed; font-weight:bold;">${summary.totalHours}</div>
                 <div style="font-size:12pt; color:#64748b;">ชั่วโมง</div>
@@ -353,7 +351,7 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-             <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
                 🏢 สรุปตามแผนก
             </td>
         </tr>
@@ -374,7 +372,7 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-             <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📄 รายละเอียดการลาแต่ละรายการ
             </td>
         </tr>
