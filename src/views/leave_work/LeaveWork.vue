@@ -201,12 +201,15 @@ export default {
     doExport() {
       let records = this.filteredLeaveRecords
 
-      // Filter by date range (ใช้วันที่ส่งคำขอ created_at)
+      // กรองเฉพาะสถานะที่อนุมัติเท่านั้น
+      records = records.filter(r => r.status === 'approved')
+
+      // Filter by date range (ใช้วันที่เริ่มลา start_datetime)
       if (this.exportStartDate || this.exportEndDate) {
         records = records.filter(r => {
-          if (!r.created_at) return false
+          if (!r.start_datetime) return false
           
-          const recordDate = new Date(r.created_at)
+          const recordDate = new Date(r.start_datetime)
           const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
           
           if (this.exportStartDate) {
@@ -224,108 +227,242 @@ export default {
       }
 
       if (records.length === 0) {
-        this.$toast.add({ severity: 'warn', summary: 'ไม่มีข้อมูล', detail: 'ไม่มีข้อมูลการลาในช่วงเวลาที่เลือก', life: 3000 })
+        this.$toast.add({ severity: 'warn', summary: 'ไม่มีข้อมูล', detail: 'ไม่มีข้อมูลการลาที่อนุมัติแล้วในช่วงเวลาที่เลือก', life: 3000 })
         return
       }
 
       // เรียงจากวันล่าสุดไปเก่าสุด
       records = [...records].sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
 
-      // คำนวณชั่วโมงจาก total_days * 8 แล้วปัดเศษ
+      // คำนวณชั่วโมงและวันจาก total_days
       const calcHours = (r) => Math.round((parseFloat(r.total_days) || 0) * 8)
+      const calcDays = (r) => parseFloat(r.total_days) || 0
 
-      // สรุปภาพรวม (นับเฉพาะอนุมัติ)
-      const approvedRecords = records.filter(r => r.status === 'approved')
+      // สรุปภาพรวม
+      const totalHours = records.reduce((sum, r) => sum + calcHours(r), 0)
+      const totalDays = records.reduce((sum, r) => sum + calcDays(r), 0)
+      
       const summary = {
         total: records.length,
-        totalHours: approvedRecords.reduce((sum, r) => sum + calcHours(r), 0),
-        approved: approvedRecords.length,
-        pending: records.filter(r => r.status === 'pending').length,
-        rejected: records.filter(r => r.status === 'rejected').length,
-        byType: {}
+        totalHours: totalHours,
+        totalDays: totalDays.toFixed(1),
+        byType: {},
+        byDepartment: {},
+        byPosition: {}
       }
-      approvedRecords.forEach(r => {
+      
+      // สรุปตามประเภทการลา
+      records.forEach(r => {
         const type = r.leave_type || 'อื่นๆ'
-        if (!summary.byType[type]) summary.byType[type] = { count: 0, hours: 0 }
+        if (!summary.byType[type]) summary.byType[type] = { count: 0, hours: 0, days: 0 }
         summary.byType[type].count++
         summary.byType[type].hours += calcHours(r)
+        summary.byType[type].days += calcDays(r)
+        
+        // สรุปตามแผนก
+        const dept = r.department || 'ไม่ระบุแผนก'
+        if (!summary.byDepartment[dept]) summary.byDepartment[dept] = { count: 0, hours: 0 }
+        summary.byDepartment[dept].count++
+        summary.byDepartment[dept].hours += calcHours(r)
+        
+        // สรุปตามตำแหน่ง
+        const pos = r.position || 'ไม่ระบุตำแหน่ง'
+        if (!summary.byPosition[pos]) summary.byPosition[pos] = { count: 0, hours: 0 }
+        summary.byPosition[pos].count++
+        summary.byPosition[pos].hours += calcHours(r)
       })
 
-      const statusMap = { pending: 'รออนุมัติ', approved: 'อนุมัติแล้ว', rejected: 'ไม่อนุมัติ' }
       const today = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
       const dateRange = this.exportStartDate || this.exportEndDate 
         ? `${this.exportStartDate ? this.exportStartDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'} - ${this.exportEndDate ? this.exportEndDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'}`
         : 'ทั้งหมด'
       
+      const approverName = `${localStorage.getItem('soc_firstname') || ''} ${localStorage.getItem('soc_lastname') || ''}`.trim()
+      const approverPosition = localStorage.getItem('soc_position') || 'ผู้จัดการ'
+      
       let html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
         <head><meta charset="UTF-8"></head>
-        <body style="font-family: TH Sarabun New, Sarabun, Arial;">
+        <body style="font-family: TH Sarabun New, Sarabun, Arial; font-size: 14pt;">
         
-        <table border="0" cellpadding="10" style="width:100%; margin-bottom:15px; background:#e0f2fe;">
+        <!-- หัวเอกสาร -->
+        <table border="0" cellpadding="15" style="width:100%; margin-bottom:20px;">
           <tr>
-            <td colspan="9" style="text-align:center; padding:15px;">
-              <img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'"/>
-              <div style="font-size:20pt; font-weight:bold; color:#1e40af; margin-top:5px;">GENT SOLUTION</div>
-              <div style="font-size:14pt; color:#475569;">รายงานสรุปการลางาน | วันที่: ${today} | ช่วง: ${dateRange}</div>
+            <td style="text-align:center; padding:20px; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); border-radius:10px;">
+              <img src="${window.location.origin}/NGENT.png" width="140" height="60" onerror="this.style.display='none'" style="margin-bottom:10px;"/>
+              <div style="font-size:22pt; font-weight:bold; color:#ffffff; margin-top:10px; letter-spacing:1px;">GENT SOLUTION CO., LTD.</div>
+              <div style="font-size:18pt; font-weight:bold; color:#dbeafe; margin-top:8px;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
+              <div style="font-size:13pt; color:#e0f2fe; margin-top:5px;">วันที่พิมพ์: ${today}</div>
+              <div style="font-size:13pt; color:#e0f2fe;">ช่วงเวลา: ${dateRange}</div>
             </td>
           </tr>
         </table>
         
-        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; margin-bottom:15px;">
-          <tr><td colspan="9" style="font-size:14pt; font-weight:bold; color:#1e40af; background:#dbeafe;">สรุปภาพรวม (เฉพาะที่อนุมัติ)</td></tr>
-          <tr style="text-align:center;">
-            <td style="background:#fff;" colspan="2"><div style="font-size:11pt; color:#666;">รายการทั้งหมด</div><div style="font-size:18pt; font-weight:bold;">${summary.total}</div></td>
-            <td style="background:#fff;" colspan="2"><div style="font-size:11pt; color:#666;">รวมชั่วโมงลา</div><div style="font-size:18pt; font-weight:bold;">${summary.totalHours} ชม.</div></td>
-            <td style="background:#dcfce7;" colspan="2"><div style="font-size:11pt; color:#166534;">อนุมัติแล้ว</div><div style="font-size:18pt; font-weight:bold; color:#166534;">${summary.approved}</div></td>
-            <td style="background:#fef3c7;" colspan="2"><div style="font-size:11pt; color:#92400e;">รออนุมัติ</div><div style="font-size:18pt; font-weight:bold; color:#92400e;">${summary.pending}</div></td>
-            <td style="background:#fee2e2;"><div style="font-size:11pt; color:#991b1b;">ไม่อนุมัติ</div><div style="font-size:18pt; font-weight:bold; color:#991b1b;">${summary.rejected}</div></td>
+        <!-- สรุปภาพรวม -->
+        <table border="1" cellpadding="15" style="border-collapse:collapse; width:100%; margin-bottom:20px; border:2px solid #3b82f6;">
+          <tr>
+            <td colspan="4" style="font-size:16pt; font-weight:bold; color:#1e40af; background:#dbeafe; padding:12px; text-align:center;">
+              📊 สรุปภาพรวมการลางาน
+            </td>
           </tr>
-          <tr><td colspan="9" style="font-size:12pt; background:#fff;">แยกตามประเภท: ${Object.entries(summary.byType).map(([type, data]) => `<b>${type}</b> ${data.count} ครั้ง (${data.hours} ชม.)`).join(' | ')}</td></tr>
+          <tr style="text-align:center; background:#eff6ff;">
+            <td style="padding:15px; border:1px solid #93c5fd;">
+              <div style="font-size:12pt; color:#64748b; margin-bottom:5px;">จำนวนรายการทั้งหมด</div>
+              <div style="font-size:24pt; font-weight:bold; color:#1e40af;">${summary.total}</div>
+              <div style="font-size:11pt; color:#94a3b8;">รายการ</div>
+            </td>
+            <td style="padding:15px; border:1px solid #93c5fd;">
+              <div style="font-size:12pt; color:#64748b; margin-bottom:5px;">รวมจำนวนวันลา</div>
+              <div style="font-size:24pt; font-weight:bold; color:#0891b2;">${summary.totalDays}</div>
+              <div style="font-size:11pt; color:#94a3b8;">วัน</div>
+            </td>
+            <td style="padding:15px; border:1px solid #93c5fd;">
+              <div style="font-size:12pt; color:#64748b; margin-bottom:5px;">รวมชั่วโมงลา</div>
+              <div style="font-size:24pt; font-weight:bold; color:#7c3aed;">${summary.totalHours}</div>
+              <div style="font-size:11pt; color:#94a3b8;">ชั่วโมง</div>
+            </td>
+            <td style="padding:15px; border:1px solid #93c5fd; background:#dcfce7;">
+              <div style="font-size:12pt; color:#166534; margin-bottom:5px;">สถานะ</div>
+              <div style="font-size:20pt; font-weight:bold; color:#16a34a;">✓ อนุมัติแล้ว</div>
+              <div style="font-size:11pt; color:#22c55e;">ทุกรายการ</div>
+            </td>
+          </tr>
         </table>
 
-        <table border="1" cellpadding="8" style="border-collapse:collapse; width:100%;">
-          <tr style="background:#3b82f6; color:white; font-weight:bold; font-size:13pt;">
-            <th>ลำดับ</th>
-            <th>ชื่อ-นามสกุล</th>
-            <th>ตำแหน่ง</th>
-            <th>ประเภทการลา</th>
-            <th>วันที่เริ่มลา</th>
-            <th>วันที่สิ้นสุด</th>
-            <th>จำนวน</th>
-            <th>เหตุผล</th>
-            <th>สถานะ</th>
+        <!-- สรุปตามประเภทการลา -->
+        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; margin-bottom:20px; border:2px solid #3b82f6;">
+          <tr>
+            <td colspan="4" style="font-size:15pt; font-weight:bold; color:#1e40af; background:#dbeafe; padding:10px;">
+              📋 สรุปตามประเภทการลา
+            </td>
+          </tr>
+          <tr style="background:#3b82f6; color:white; font-weight:bold; text-align:center;">
+            <th style="padding:10px;">ประเภท</th>
+            <th style="padding:10px;">จำนวนครั้ง</th>
+            <th style="padding:10px;">จำนวนวัน</th>
+            <th style="padding:10px;">จำนวนชั่วโมง</th>
+          </tr>
+          ${Object.entries(summary.byType).map(([type, data], i) => {
+            const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9'
+            return `<tr style="background:${bgColor};">
+              <td style="padding:10px; font-weight:bold; color:#334155;">${type}</td>
+              <td style="text-align:center; padding:10px;">${data.count} ครั้ง</td>
+              <td style="text-align:center; padding:10px;">${data.days.toFixed(1)} วัน</td>
+              <td style="text-align:center; padding:10px; font-weight:bold; color:#3b82f6;">${data.hours} ชม.</td>
+            </tr>`
+          }).join('')}
+        </table>
+
+        <!-- สรุปตามแผนก -->
+        <table border="1" cellpadding="12" style="border-collapse:collapse; width:100%; margin-bottom:20px; border:2px solid #3b82f6;">
+          <tr>
+            <td colspan="3" style="font-size:15pt; font-weight:bold; color:#1e40af; background:#dbeafe; padding:10px;">
+              🏢 สรุปตามแผนก
+            </td>
+          </tr>
+          <tr style="background:#3b82f6; color:white; font-weight:bold; text-align:center;">
+            <th style="padding:10px;">แผนก</th>
+            <th style="padding:10px;">จำนวนครั้ง</th>
+            <th style="padding:10px;">รวมชั่วโมง</th>
+          </tr>
+          ${Object.entries(summary.byDepartment).map(([dept, data], i) => {
+            const bgColor = i % 2 === 0 ? '#ffffff' : '#f1f5f9'
+            return `<tr style="background:${bgColor};">
+              <td style="padding:10px; font-weight:bold; color:#334155;">${dept}</td>
+              <td style="text-align:center; padding:10px;">${data.count} ครั้ง</td>
+              <td style="text-align:center; padding:10px; font-weight:bold; color:#3b82f6;">${data.hours} ชม.</td>
+            </tr>`
+          }).join('')}
+        </table>
+
+        <!-- รายละเอียดแต่ละรายการ -->
+        <table border="1" cellpadding="10" style="border-collapse:collapse; width:100%; border:2px solid #3b82f6;">
+          <tr>
+            <td colspan="11" style="font-size:15pt; font-weight:bold; color:#1e40af; background:#dbeafe; padding:10px;">
+              📄 รายละเอียดการลาแต่ละรายการ
+            </td>
+          </tr>
+          <tr style="background:#3b82f6; color:white; font-weight:bold; font-size:12pt; text-align:center;">
+            <th style="padding:8px;">ลำดับ</th>
+            <th style="padding:8px;">วันที่ส่งคำขอ</th>
+            <th style="padding:8px;">ชื่อ-นามสกุล</th>
+            <th style="padding:8px;">แผนก</th>
+            <th style="padding:8px;">ตำแหน่ง</th>
+            <th style="padding:8px;">ประเภทการลา</th>
+            <th style="padding:8px;">วันที่เริ่มลา</th>
+            <th style="padding:8px;">วันที่สิ้นสุด</th>
+            <th style="padding:8px;">วัน</th>
+            <th style="padding:8px;">ชั่วโมง</th>
+            <th style="padding:8px;">เหตุผล</th>
           </tr>`
 
       records.forEach((r, i) => {
         const bgColor = i % 2 === 0 ? '#ffffff' : '#f8fafc'
-        const statusStyle = r.status === 'approved' ? 'background:#dcfce7; color:#166534;' : r.status === 'rejected' ? 'background:#fee2e2; color:#991b1b;' : 'background:#fef3c7; color:#92400e;'
+        const createdDate = r.created_at ? new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'
         html += `<tr style="background:${bgColor}; font-size:12pt;">
-          <td style="text-align:center">${i + 1}</td>
-          <td><b>${r.user_name || '-'}</b></td>
-          <td>${r.position || '-'}</td>
-          <td>${r.leave_type || '-'}</td>
-          <td style="text-align:center">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH') : '-'}</td>
-          <td style="text-align:center">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH') : '-'}</td>
-          <td style="text-align:center"><b>${calcHours(r)} ชม.</b></td>
-          <td>${r.reason || '-'}</td>
-          <td style="text-align:center; ${statusStyle} font-weight:bold;">${statusMap[r.status] || r.status}</td>
+          <td style="text-align:center; padding:8px; font-weight:bold; color:#64748b;">${i + 1}</td>
+          <td style="text-align:center; padding:8px;">${createdDate}</td>
+          <td style="padding:8px;"><b>${r.user_name || '-'}</b></td>
+          <td style="padding:8px;">${r.department || '-'}</td>
+          <td style="padding:8px;">${r.position || '-'}</td>
+          <td style="padding:8px; text-align:center; font-weight:bold; color:#7c3aed;">${r.leave_type || '-'}</td>
+          <td style="text-align:center; padding:8px;">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+          <td style="text-align:center; padding:8px;">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
+          <td style="text-align:center; padding:8px; font-weight:bold;">${calcDays(r)}</td>
+          <td style="text-align:center; padding:8px; font-weight:bold; color:#3b82f6;">${calcHours(r)}</td>
+          <td style="padding:8px;">${r.reason || '-'}</td>
         </tr>`
       })
 
       html += `</table>
-        <p style="margin-top:15px; font-size:12pt; color:#666;">จำนวนรายการทั้งหมด: <b>${records.length}</b> รายการ | GENT SOLUTION CO., LTD.</p>
+        
+        <!-- ส่วนท้ายเอกสาร -->
+        <table border="0" cellpadding="15" style="width:100%; margin-top:30px;">
+          <tr>
+            <td style="text-align:left; padding:15px;">
+              <div style="font-size:13pt; color:#475569; line-height:1.8;">
+                <b>สรุป:</b> รายงานนี้แสดงข้อมูลการลางานที่ได้รับการอนุมัติทั้งหมด <b>${records.length}</b> รายการ<br/>
+                รวมเป็น <b>${summary.totalDays}</b> วัน หรือ <b>${summary.totalHours}</b> ชั่วโมง<br/>
+                <br/>
+                <div style="margin-top:30px; padding-top:20px; border-top:2px solid #cbd5e1;">
+                  <b>ผู้จัดทำรายงาน:</b> ${approverName} (${approverPosition})<br/>
+                  <b>วันที่:</b> ${today}<br/>
+                  <b>บริษัท:</b> GENT SOLUTION CO., LTD.
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+        
+        <!-- ลายเซ็น -->
+        <table border="0" cellpadding="15" style="width:100%; margin-top:40px;">
+          <tr>
+            <td style="text-align:center; width:50%; padding:20px;">
+              <div style="border-top:2px solid #000; display:inline-block; padding-top:10px; margin-top:50px; min-width:200px;">
+                <b>ผู้จัดทำ</b><br/>
+                <span style="font-size:11pt; color:#64748b;">${approverName}</span>
+              </div>
+            </td>
+            <td style="text-align:center; width:50%; padding:20px;">
+              <div style="border-top:2px solid #000; display:inline-block; padding-top:10px; margin-top:50px; min-width:200px;">
+                <b>ผู้อนุมัติ</b><br/>
+                <span style="font-size:11pt; color:#64748b;">(.....................................)</span>
+              </div>
+            </td>
+          </tr>
+        </table>
+        
         </body></html>`
 
       const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.download = `รายงานการลา_${new Date().toISOString().slice(0, 10)}.xls`
+      link.download = `รายงานการลา_อนุมัติแล้ว_${new Date().toISOString().slice(0, 10)}.xls`
       link.click()
       URL.revokeObjectURL(link.href)
 
       this.showExportDialog = false
-      this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'Export รายงานเรียบร้อย', life: 3000 })
+      this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: `Export รายงานเรียบร้อย (${records.length} รายการ)`, life: 3000 })
     },
     async checkLeaveApprover() {
       try {
