@@ -277,9 +277,6 @@ export default {
         ? `${this.exportStartDate ? this.exportStartDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'} - ${this.exportEndDate ? this.exportEndDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'}`
         : 'ทั้งหมด'
       
-      const approverName = `${localStorage.getItem('soc_firstname') || ''} ${localStorage.getItem('soc_lastname') || ''}`.trim()
-      const approverPosition = localStorage.getItem('soc_position') || 'ผู้จัดการ'
-      
       let html = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
         <head><meta charset="UTF-8"></head>
