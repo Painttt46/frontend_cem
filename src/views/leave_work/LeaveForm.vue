@@ -433,7 +433,11 @@ export default {
     },
     // รวม date + time เป็น DateTime
     updateStartDateTime() {
-      if (this.formData.startDate && this.formData.startTime) {
+      if (this.formData.startDate) {
+        // ถ้ายังไม่ได้เลือกเวลา ใช้เวลาเริ่มงาน
+        if (!this.formData.startTime) {
+          this.formData.startTime = this.workHours.start_time
+        }
         const [hours, minutes] = this.formData.startTime.split(':').map(Number)
         const date = new Date(this.formData.startDate)
         date.setHours(hours, minutes, 0, 0)
@@ -441,7 +445,11 @@ export default {
       }
     },
     updateEndDateTime() {
-      if (this.formData.endDate && this.formData.endTime) {
+      if (this.formData.endDate) {
+        // ถ้ายังไม่ได้เลือกเวลา ใช้เวลาเลิกงาน
+        if (!this.formData.endTime) {
+          this.formData.endTime = this.workHours.end_time
+        }
         const [hours, minutes] = this.formData.endTime.split(':').map(Number)
         const date = new Date(this.formData.endDate)
         date.setHours(hours, minutes, 0, 0)
