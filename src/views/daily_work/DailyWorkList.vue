@@ -291,7 +291,7 @@
       <div>คุณต้องการยกเลิกงานนี้หรือไม่?</div>
       <div style="display: flex; align-items: center; gap: 0.5rem;">
         <Checkbox v-model="cancelDeletePermanently" inputId="deletePermanently" :binary="true" />
-        <label for="deletePermanently">ลบรายการนี้ออกไปเลย</label>
+        <label for="deletePermanently">ลบรายการนี้ออกจากระบบ</label>
       </div>
     </div>
     <template #footer>
@@ -525,6 +525,7 @@ export default {
             detail: 'ลบรายการเรียบร้อยแล้ว',
             life: 3000
           })
+          this.$emit('refresh-data')
         } else {
           await this.cancelRecord(record)
         }

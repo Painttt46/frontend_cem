@@ -351,6 +351,9 @@ export default {
     this.$http = axios
   },
   methods: {
+    isValidIntId(id) {
+      return typeof id === 'number' ? Number.isInteger(id) : /^\d+$/.test(String(id || ''))
+    },
     async loadWorkHours() {
       try {
         const role = localStorage.getItem('soc_role') || 'user'
@@ -455,6 +458,16 @@ export default {
 
     async deleteRequest(id) {
       try {
+        if (!this.isValidIntId(id)) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'ลบไม่สำเร็จ',
+            detail: 'ข้อมูลรหัสคำขอไม่ถูกต้อง',
+            life: 4000
+          })
+          return
+        }
+
         await this.$http.delete(`/api/leave/${id}`, {
           headers: {
           }
@@ -747,6 +760,16 @@ export default {
 
     async hrResetQuota(record) {
       try {
+        if (!this.isValidIntId(record?.id)) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'ดำเนินการไม่สำเร็จ',
+            detail: 'ข้อมูลรหัสคำขอไม่ถูกต้อง',
+            life: 4000
+          })
+          return
+        }
+
         await this.$http.delete(`/api/leave/${record.id}/admin-reset`)
 
         this.$toast.add({
