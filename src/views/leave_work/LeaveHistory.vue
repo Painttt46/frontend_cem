@@ -160,15 +160,18 @@
                 class="approver-item" :class="{
                   'approved': slotProps.data.approved_by_level2,
                   'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2,
-                  'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2)
+                  'pending-cancel': slotProps.data.status === 'cancel' && slotProps.data.approved_by_level1,
+                  'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2) && slotProps.data.status !== 'cancel'
                 }">
                 <div class="approver-badge-wrapper">
                   <i v-if="slotProps.data.approved_by_level2" class="pi pi-check-circle" style="color: #10b981;"></i>
                   <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2"
                     class="pi pi-times-circle" style="color: #ef4444;"></i>
+                  <i v-else-if="slotProps.data.status === 'cancel' && slotProps.data.approved_by_level1"
+                    class="pi pi-exclamation-triangle" style="color: #f59e0b;"></i>
                   <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
                   <Badge value="HR"
-                    :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : 'secondary')" />
+                    :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : (slotProps.data.status === 'cancel' && slotProps.data.approved_by_level1 ? 'warning' : 'secondary'))" />
                 </div>
                 <span v-if="slotProps.data.approved_by_level2" class="approver-text clickable-name"
                   @click="showUserInfo(slotProps.data.approved_by_level2, slotProps.data.approved_by_level2_id)">
@@ -181,6 +184,7 @@
                   <Button v-if="slotProps.data.reject_reason" icon="pi pi-info-circle" severity="danger" text
                     size="small" @click.stop="showRejectReason(slotProps.data.reject_reason)" v-tooltip="'ดูเหตุผล'" />
                 </span>
+                <span v-else-if="slotProps.data.status === 'cancel' && slotProps.data.approved_by_level1" class="approver-text cancel-pending-text">รอยกเลิก</span>
                 <span v-else class="approver-text pending-text">รอดำเนินการ</span>
               </div>
             </div>
@@ -1402,6 +1406,17 @@ export default {
 .pending-text {
   color: #94a3b8;
   font-style: italic;
+}
+
+.cancel-pending-text {
+  color: #f59e0b;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.approver-item.pending-cancel {
+  border-left-color: #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
 }
 
 .reject-reason-content {
