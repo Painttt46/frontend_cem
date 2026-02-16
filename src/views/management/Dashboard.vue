@@ -1144,38 +1144,44 @@ const renderCharts = (leaves, tasks) => {
     const leaveYear = new Date(l.start_datetime).getFullYear()
     if (leaveYear !== currentYear) return
 
-    const userName = userNameMap.value[l.user_id] || l.user_name || 'ไม่ระบุ'
+    const userId = l.user_id
+    const userName = userNameMap.value[userId] || l.user_name || 'ไม่ระบุ'
     const leaveType = l.leave_type || 'อื่นๆ'
     const days = parseFloat(l.total_days) || 0
 
-    if (!users[userName]) {
-      users[userName] = { total: 0 }
+    // Prefer grouping by user_id when available to enable click -> user details
+    const key = (userId !== null && userId !== undefined) ? String(userId) : `unknown:${userName}`
+
+    if (!users[key]) {
+      users[key] = { total: 0, userId: userId ?? null, userName }
     }
-    if (!users[userName][leaveType]) {
-      users[userName][leaveType] = 0
+    if (!users[key][leaveType]) {
+      users[key][leaveType] = 0
     }
-    users[userName][leaveType] += days
-    users[userName].total += days
+    users[key][leaveType] += days
+    users[key].total += days
     leaveTypes.add(leaveType)
   })
 
   // Sort by total leave days and limit to top 15
-  const sortedUsers = Object.entries(users)
+  const sortedUserKeys = Object.entries(users)
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 15)
-    .map(([name]) => name)
+    .map(([key]) => key)
+
+  const labels = sortedUserKeys.map(key => users[key].userName)
 
   // สร้าง datasets สำหรับแต่ละประเภทการลา
   const datasets = Array.from(leaveTypes).map(type => ({
     label: type,
-    data: sortedUsers.map(userName => users[userName][type] || 0),
+    data: sortedUserKeys.map(key => users[key][type] || 0),
     backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random() * 16777215).toString(16)
   }))
 
   leaveChartInstance = new Chart(leaveChart.value, {
     type: 'bar',
     data: {
-      labels: sortedUsers,
+      labels,
       datasets: datasets
     },
     options: {
@@ -1190,6 +1196,24 @@ const renderCharts = (leaves, tasks) => {
       },
       plugins: {
         legend: { display: true, position: 'top' }
+      },
+      onHover: (event, elements) => {
+        const canvas = event?.native?.target
+        if (canvas && canvas.style) {
+          canvas.style.cursor = elements && elements.length ? 'pointer' : 'default'
+        }
+      },
+      onClick: (event, elements) => {
+        if (!elements || elements.length === 0) return
+        const index = elements[0].index
+        const key = sortedUserKeys[index]
+        const userId = users[key]?.userId
+
+        // If we have a real user_id, open per-user details dialog
+        if (userId !== null && userId !== undefined) {
+          selectedUserId.value = userId
+          showUserDialog.value = true
+        }
       }
     }
   })
