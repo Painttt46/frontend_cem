@@ -286,6 +286,20 @@
     </form>
   </Dialog>
 
+  <Dialog v-model:visible="cancelDialog" modal header="ยืนยันการยกเลิก" :style="{ width: '90vw', maxWidth: '460px' }" position="center" :draggable="false">
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <div>คุณต้องการยกเลิกงานนี้หรือไม่?</div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <Checkbox v-model="cancelDeletePermanently" inputId="deletePermanently" :binary="true" />
+        <label for="deletePermanently">ลบรายการนี้ออกไปเลย</label>
+      </div>
+    </div>
+    <template #footer>
+      <Button label="ปิด" severity="secondary" outlined @click="closeCancelDialog" />
+      <Button label="ยืนยัน" severity="danger" @click="confirmCancelAction" />
+    </template>
+  </Dialog>
+
   <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
 </template>
 
@@ -293,6 +307,7 @@
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
+import Checkbox from 'primevue/checkbox'
 
 import { addDays } from '@/utils/dateUtils'
 import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
@@ -301,7 +316,8 @@ export default {
   name: 'DailyWorkList',
   components: {
     UserInfoDialog,
-    EnhancedDataTable
+    EnhancedDataTable,
+    Checkbox
   },
   inject: ['$confirm', '$toast'],
   emits: ['refresh-data'],
@@ -377,6 +393,9 @@ export default {
       fullImageDialog: false,
       fullImageUrl: '',
       editDialog: false,
+      cancelDialog: false,
+      cancelDeletePermanently: false,
+      cancelRecordTarget: null,
       editFormData: {
         id: null,
         task_id: null,
@@ -484,15 +503,41 @@ export default {
       return now > cutoff
     },
     confirmCancel(record) {
-      this.$confirm.require({
-        message: 'คุณต้องการยกเลิกงานนี้หรือไม่?',
-        header: 'ยืนยันการยกเลิก',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
-        acceptLabel: 'ยกเลิกงาน',
-        rejectLabel: 'ปิด',
-        accept: () => this.cancelRecord(record)
-      })
+      this.cancelRecordTarget = record
+      this.cancelDeletePermanently = false
+      this.cancelDialog = true
+    },
+    closeCancelDialog() {
+      this.cancelDialog = false
+      this.cancelDeletePermanently = false
+      this.cancelRecordTarget = null
+    },
+    async confirmCancelAction() {
+      if (!this.cancelRecordTarget) return
+      const record = this.cancelRecordTarget
+
+      try {
+        if (this.cancelDeletePermanently) {
+          await this.$http.delete(`/api/daily-work/${record.id}`)
+          this.$toast.add({
+            severity: 'success',
+            summary: 'สำเร็จ',
+            detail: 'ลบรายการเรียบร้อยแล้ว',
+            life: 3000
+          })
+        } else {
+          await this.cancelRecord(record)
+        }
+
+        this.closeCancelDialog()
+      } catch {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ผิดพลาด',
+          detail: this.cancelDeletePermanently ? 'ไม่สามารถลบรายการได้' : 'ไม่สามารถยกเลิกงานได้',
+          life: 3000
+        })
+      }
     },
     async cancelRecord(record) {
       try {
@@ -516,12 +561,7 @@ export default {
         this.$emit('refresh-data')
         this.loadWorkRecords()
       } catch {
-        this.$toast.add({
-          severity: 'error',
-          summary: 'ผิดพลาด',
-          detail: 'ไม่สามารถยกเลิกงานได้',
-          life: 3000
-        })
+        throw new Error('cancel failed')
       }
     },
 
