@@ -345,10 +345,6 @@ export default {
       return this.minStartDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
     },
     calculateDays() {
-      console.log('[calculateDays] Called', {
-        startDateTime: this.formData.startDateTime,
-        endDateTime: this.formData.endDateTime
-      })
       if (this.formData.startDateTime && this.formData.endDateTime) {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
@@ -448,41 +444,27 @@ export default {
     },
     // รวม date + time เป็น DateTime
     updateStartDateTime() {
-      console.log('[updateStartDateTime] Called', {
-        startDate: this.formData.startDate,
-        startTime: this.formData.startTime,
-        workHours: this.workHours
-      })
       if (this.formData.startDate) {
         // ถ้ายังไม่ได้เลือกเวลา ใช้เวลาเริ่มงาน
         if (!this.formData.startTime) {
           this.formData.startTime = this.workHours.start_time
-          console.log('[updateStartDateTime] Set default startTime:', this.formData.startTime)
         }
         const [hours, minutes] = this.formData.startTime.split(':').map(Number)
         const date = new Date(this.formData.startDate)
         date.setHours(hours, minutes, 0, 0)
         this.formData.startDateTime = date
-        console.log('[updateStartDateTime] startDateTime set to:', this.formData.startDateTime)
       }
     },
     updateEndDateTime() {
-      console.log('[updateEndDateTime] Called', {
-        endDate: this.formData.endDate,
-        endTime: this.formData.endTime,
-        workHours: this.workHours
-      })
       if (this.formData.endDate) {
         // ถ้ายังไม่ได้เลือกเวลา ใช้เวลาเลิกงาน
         if (!this.formData.endTime) {
           this.formData.endTime = this.workHours.end_time
-          console.log('[updateEndDateTime] Set default endTime:', this.formData.endTime)
         }
         const [hours, minutes] = this.formData.endTime.split(':').map(Number)
         const date = new Date(this.formData.endDate)
         date.setHours(hours, minutes, 0, 0)
         this.formData.endDateTime = date
-        console.log('[updateEndDateTime] endDateTime set to:', this.formData.endDateTime)
       }
     },
     
