@@ -1209,10 +1209,10 @@ const renderCharts = (leaves, tasks) => {
         const key = sortedUserKeys[index]
         const userId = users[key]?.userId
 
-        // If we have a real user_id, open per-user details dialog
+        // If we have a real user_id, switch to per-user dashboard
         if (userId !== null && userId !== undefined) {
-          selectedUserId.value = userId
-          showUserDialog.value = true
+          selectedUser.value = userId
+          onUserChange()
         }
       }
     }
