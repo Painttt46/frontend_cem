@@ -375,10 +375,17 @@ export default {
     async checkIsLevel2Approver() {
       try {
         const userId = localStorage.getItem('soc_user_id')
-        if (!userId) return
+        console.log('[checkIsLevel2Approver] userId:', userId)
+        if (!userId) {
+          console.log('[checkIsLevel2Approver] No userId found')
+          return
+        }
         const res = await this.$http.get(`/api/leave/is-level2-approver/${userId}`)
+        console.log('[checkIsLevel2Approver] API response:', res.data)
         this.isLevel2Approver = !!res.data?.isLevel2Approver
-      } catch {
+        console.log('[checkIsLevel2Approver] isLevel2Approver set to:', this.isLevel2Approver)
+      } catch (error) {
+        console.error('[checkIsLevel2Approver] Error:', error)
         this.isLevel2Approver = false
       }
     },
@@ -745,9 +752,15 @@ export default {
     },
 
     canHrResetQuota(record) {
-      if (!this.isLevel2Approver || !record) return false
-      // ให้ HR จัดการเฉพาะคำขอที่เคยอนุมัติแล้วหรืออยู่ระหว่างกระบวนการยกเลิก
-      return ['approved', 'cancel', 'cancelled', 'pending_level2'].includes(record.status)
+      console.log('[canHrResetQuota] isLevel2Approver:', this.isLevel2Approver, 'record:', record?.id, 'status:', record?.status)
+      if (!this.isLevel2Approver || !record) {
+        console.log('[canHrResetQuota] Returning false - isLevel2Approver:', this.isLevel2Approver, 'record:', !!record)
+        return false
+      }
+      // ให้ Level 2 Approver จัดการเฉพาะคำขอที่เคยอนุมัติแล้วหรืออยู่ระหว่างกระบวนการยกเลิก
+      const canShow = ['approved', 'cancel', 'cancelled', 'pending_level2'].includes(record.status)
+      console.log('[canHrResetQuota] Can show button:', canShow)
+      return canShow
     },
 
     confirmHrReset(record) {
