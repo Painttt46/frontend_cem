@@ -398,6 +398,17 @@ export default {
         const days = Math.round((totalHours / hoursPerDay) * 100) / 100
         const hoursDisplay = Number.isInteger(totalHours) ? totalHours : totalHours.toFixed(1)
         const daysDisplay = Number.isInteger(days) ? days : days.toFixed(2)
+        
+        // ถ้าเป็น 0 วัน แสดงว่าเลือกวันหยุด
+        if (days === 0 && startDate.getTime() === endDate.getTime()) {
+          const day = startDate.getDay()
+          if (day === 0 || day === 6) {
+            return '0 วัน (วันหยุดสุดสัปดาห์)'
+          } else if (this.holidayDates.includes(startDate.getTime())) {
+            return '0 วัน (วันหยุดนักขัตฤกษ์)'
+          }
+        }
+        
         return `${daysDisplay} วัน (${hoursDisplay} ชม.)`
       }
       return '0 วัน (0 ชม.)'
