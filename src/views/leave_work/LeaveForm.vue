@@ -58,7 +58,8 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
-                :minDate="minStartDate" :disabledDates="disabledDates" placeholder="เลือกวันที่">
+                :minDate="minStartDate" :disabledDates="disabledDates" placeholder="เลือกวันที่"
+                @date-select="updateStartDateTime">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
                     {{ slotProps.date.day }}
@@ -76,7 +77,8 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
                 :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" class="corporate-input date-only advance-calendar" :manualInput="false" required
-                placeholder="เลือกวันที่">
+                placeholder="เลือกวันที่"
+                @date-select="updateEndDateTime">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
                     {{ slotProps.date.day }}
