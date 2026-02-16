@@ -576,6 +576,7 @@ const completedTasksList = computed(() => {
 })
 const selectedUser = ref(null)
 const userOptions = ref([])
+const userNameMap = ref({})
 const allLeaves = ref([])
 const allDailyWork = ref([])
 const allRoleHoursMap = ref({})
@@ -933,6 +934,11 @@ const loadData = async () => {
       value: u.id
     })).sort((a, b) => a.label.localeCompare(b.label, 'th'))
 
+    userNameMap.value = activeUsers.reduce((acc, u) => {
+      acc[u.id] = `${u.firstname} ${u.lastname}`
+      return acc
+    }, {})
+
     // Calculate stats
     stats.value.totalUsers = activeUsers.length
 
@@ -1138,7 +1144,7 @@ const renderCharts = (leaves, tasks) => {
     const leaveYear = new Date(l.start_datetime).getFullYear()
     if (leaveYear !== currentYear) return
 
-    const userName = l.user_name || 'ไม่ระบุ'
+    const userName = userNameMap.value[l.user_id] || l.user_name || 'ไม่ระบุ'
     const leaveType = l.leave_type || 'อื่นๆ'
     const days = parseFloat(l.total_days) || 0
 
