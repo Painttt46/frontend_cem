@@ -533,10 +533,12 @@ export default {
             displayName: `${u.firstname} ${u.lastname}`.trim()
           }))
           // เพิ่มตัวเองด้วย
+          const currentUserRole = localStorage.getItem('soc_role') || 'user'
           const currentUser = {
             id: parseInt(userId),
             displayName: this.currentUserName,
-            position: this.currentUserPosition
+            position: this.currentUserPosition,
+            role: currentUserRole
           }
           this.allUsersForLeave.unshift(currentUser)
         }
