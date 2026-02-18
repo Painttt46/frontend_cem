@@ -106,6 +106,7 @@ import Password from 'primevue/password';
 import Message from 'primevue/message';
 import Toast from "primevue/toast";
 import { useConfirm } from "primevue/useconfirm";
+import axios from '@/utils/axiosConfig';
 
 const router = useRouter();
 const toast = useToast();
@@ -162,7 +163,7 @@ function fetchData() {
   loading.value = true;
   
   // Use axios
-  window.axios.get('/api/users')
+  axios.get('/api/users')
     .then(response => {
       const users = response.data;
       const userData = users.find(user => user.id == currentUserId);
@@ -216,7 +217,7 @@ function updateUser() {
     nickname: nickname.value || null
   };
 
-  window.axios.put(`/api/users/${id.value}`, data, {
+  axios.put(`/api/users/${id.value}`, data, {
     headers: {
     }
   }).then(() => {
@@ -276,7 +277,7 @@ function changePassword() {
     password: newPassword.value 
   };
   
-  window.axios.put(`/api/users/${id.value}/password`, data, {
+  axios.put(`/api/users/${id.value}/password`, data, {
       headers: {
       }
   })
