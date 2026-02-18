@@ -33,7 +33,6 @@ export default {
   },
   data() {
     return {
-      tokenCheckInterval: null,
       loadingTimeout: null
     }
   },
@@ -53,45 +52,15 @@ export default {
     }
   },
   mounted() {
-    // ตรวจสอบ token expiration ทุก 1 นาที
-    this.tokenCheckInterval = setInterval(() => {
-      this.checkTokenExpiration()
-    }, 60000)
-
     // Enable drag scroll for tables
     this.initDragScroll()
   },
   beforeUnmount() {
-    if (this.tokenCheckInterval) {
-      clearInterval(this.tokenCheckInterval)
-    }
     if (this.loadingTimeout) {
       clearTimeout(this.loadingTimeout)
     }
   },
   methods: {
-    checkTokenExpiration() {
-      const token = localStorage.getItem('soc_token')
-      if (!token) return
-      
-      try {
-        const parts = token.split('.')
-        if (parts.length !== 3) return
-        
-        const payload = JSON.parse(atob(parts[1]))
-        if (Date.now() >= payload.exp * 1000) {
-          // Token หมดอายุ - logout
-          localStorage.clear()
-          sessionStorage.clear()
-          document.cookie.split(";").forEach((c) => {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
-          })
-          this.$router.push('/login')
-        }
-      } catch {
-        // ignore parse errors
-      }
-    },
     initDragScroll() {
       let startX, scrollLeft, wrapper = null
 

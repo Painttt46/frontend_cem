@@ -166,23 +166,6 @@ const router = createRouter({
 
 // ✅ Route Guard ตรวจสอบการ Login และสิทธิ์การเข้าถึง
 router.beforeEach(async (to, from, next) => {
-  // 🧪 TEST MODE: Skip authentication
-  const TEST_MODE = false; // เปลี่ยนเป็น true เมื่อต้องการ test
-  
-  if (TEST_MODE) {
-    // Set mock data for testing
-    if (!localStorage.getItem('soc_user_id')) {
-      localStorage.setItem('soc_user_id', '1');
-      localStorage.setItem('soc_role', 'admin');
-      localStorage.setItem('soc_token', 'test-token');
-      localStorage.setItem('soc_firstname', 'Test');
-      localStorage.setItem('soc_lastname', 'User');
-      localStorage.setItem('soc_position', 'Developer');
-    }
-    next();
-    return;
-  }
-  
   const userId = localStorage.getItem("soc_user_id");
   const role = localStorage.getItem("soc_role");
   const token = localStorage.getItem("soc_token");

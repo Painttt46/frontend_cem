@@ -37,8 +37,6 @@ import ProgressBar from 'primevue/progressbar';
 
 import {nextTick} from 'vue';
 
-window.axios = axios;
-
 const DEFAULT_TITLE = "Vue SOC Application";
 router.afterEach((to) => {
     nextTick(() => {
