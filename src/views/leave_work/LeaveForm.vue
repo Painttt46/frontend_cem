@@ -349,11 +349,11 @@ export default {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        const [ws] = this.workHours.start_time.split(':').map(Number)
-        const [we] = this.workHours.end_time.split(':').map(Number)
-        const [ls] = this.workHours.lunch_start.split(':').map(Number)
-        const [le] = this.workHours.lunch_end.split(':').map(Number)
-        const hoursPerDay = (ls - ws) + (we - le)
+        const [ws, wsm = 0] = this.workHours.start_time.split(':').map(Number)
+        const [we, wem = 0] = this.workHours.end_time.split(':').map(Number)
+        const [ls, lsm = 0] = this.workHours.lunch_start.split(':').map(Number)
+        const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
+        const hoursPerDay = ((ls * 60 + lsm) - (ws * 60 + wsm) + (we * 60 + wem) - (le * 60 + lem)) / 60
         let totalHours = 0
         
         const startDate = new Date(start)
@@ -390,10 +390,11 @@ export default {
           }
         }
         
-        // แสดงชั่วโมงจริง และวันที่ปัดเศษ 2 ตำแหน่ง
-        const days = Math.round((totalHours / hoursPerDay) * 100) / 100
+        // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
+        const rawDays = totalHours / hoursPerDay
+        const days = Math.round(rawDays * 2) / 2
         const hoursDisplay = Number.isInteger(totalHours) ? totalHours : totalHours.toFixed(1)
-        const daysDisplay = Number.isInteger(days) ? days : days.toFixed(2)
+        const daysDisplay = Number.isInteger(days) ? days : days.toFixed(1)
         
         // ถ้าเป็น 0 วัน แสดงว่าเลือกวันหยุด
         if (days === 0 && startDate.getTime() === endDate.getTime()) {
@@ -474,12 +475,12 @@ export default {
       const startMinutes = start.getHours() * 60 + start.getMinutes()
       const endMinutes = end.getHours() * 60 + end.getMinutes()
       
-      const [ws] = this.workHours.start_time.split(':').map(Number)
-      const [we] = this.workHours.end_time.split(':').map(Number)
-      const [ls] = this.workHours.lunch_start.split(':').map(Number)
-      const [le] = this.workHours.lunch_end.split(':').map(Number)
+      const [ws, wsm = 0] = this.workHours.start_time.split(':').map(Number)
+      const [we, wem = 0] = this.workHours.end_time.split(':').map(Number)
+      const [ls, lsm = 0] = this.workHours.lunch_start.split(':').map(Number)
+      const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
       
-      const wsMin = ws * 60, weMin = we * 60, lsMin = ls * 60, leMin = le * 60
+      const wsMin = ws * 60 + wsm, weMin = we * 60 + wem, lsMin = ls * 60 + lsm, leMin = le * 60 + lem
       
       let minutes = 0
       // ช่วงเช้า
@@ -835,11 +836,11 @@ export default {
         const start = new Date(this.formData.startDateTime)
         const end = new Date(this.formData.endDateTime)
         
-        const [ws] = this.workHours.start_time.split(':').map(Number)
-        const [we] = this.workHours.end_time.split(':').map(Number)
-        const [ls] = this.workHours.lunch_start.split(':').map(Number)
-        const [le] = this.workHours.lunch_end.split(':').map(Number)
-        const hoursPerDay = (ls - ws) + (we - le)
+        const [ws, wsm = 0] = this.workHours.start_time.split(':').map(Number)
+        const [we, wem = 0] = this.workHours.end_time.split(':').map(Number)
+        const [ls, lsm = 0] = this.workHours.lunch_start.split(':').map(Number)
+        const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
+        const hoursPerDay = ((ls * 60 + lsm) - (ws * 60 + wsm) + (we * 60 + wem) - (le * 60 + lem)) / 60
         let totalHours = 0
         
         const startDate = new Date(start)
@@ -874,8 +875,9 @@ export default {
           }
         }
         
-        // ปัดเศษเป็น 2 ตำแหน่งเพื่อความแม่นยำ
-        return Math.round((totalHours / hoursPerDay) * 100) / 100
+        // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
+        const rawDays = totalHours / hoursPerDay
+        return Math.round(rawDays * 2) / 2
       }
       return 0
     },
