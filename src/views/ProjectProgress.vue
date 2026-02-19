@@ -79,7 +79,7 @@
                         {{ getStepStatusLabel(step) }}
                       </div>
                       <button v-if="canCompleteStep(step)" class="complete-btn"
-                        @click="confirmCompleteStep(step)" :disabled="completingStepId === step.id">
+                        @click.stop="confirmCompleteStep(step)" :disabled="completingStepId === step.id">
                         <i :class="completingStepId === step.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
                         {{ completingStepId === step.id ? 'กำลังบันทึก...' : 'เสร็จสิ้น' }}
                       </button>
