@@ -15,8 +15,22 @@
         <Button @click="showWorkForm" class="work-btn" icon="pi pi-clock" raised>
           <span class="btn-text">ลงตารางงาน</span>
         </Button>
+        <div class="filter-buttons">
+          <Button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]" icon="pi pi-list">
+            <span class="btn-text">ทั้งหมด</span>
+            <span class="filter-count">{{ workRecords.length }}</span>
+          </Button>
+          <Button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]" icon="pi pi-calendar">
+            <span class="btn-text">วันนี้</span>
+            <span class="filter-count">{{ todayCount }}</span>
+          </Button>
+          <Button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]" icon="pi pi-calendar-plus">
+            <span class="btn-text">งานล่วงหน้า</span>
+            <span class="filter-count">{{ futureCount }}</span>
+          </Button>
+        </div>
       </div>
-      <DailyWorkList ref="workList" :records="workRecords" @refresh-data="loadWorkRecords" />
+      <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" />
     </div>
 
     <!-- Work Form Dialog -->
@@ -56,10 +70,30 @@ export default {
       currentTime: new Date(),
       workRecords: [],
       loading: false,
-      showWorkDialog: false
+      showWorkDialog: false,
+      activeFilter: 'all'
     }
   },
   computed: {
+    todayStr() {
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    },
+    todayCount() {
+      return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr).length
+    },
+    futureCount() {
+      return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr).length
+    },
+    filteredRecords() {
+      if (this.activeFilter === 'today') {
+        return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr)
+      }
+      if (this.activeFilter === 'future') {
+        return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr)
+      }
+      return this.workRecords
+    },
     currentDateTime() {
       return this.currentTime.toLocaleString('th-TH', {
         year: 'numeric',
@@ -100,6 +134,9 @@ export default {
     handleWorkRecordUpdate() {
       // Auto-refresh when work record is updated
       this.loadWorkRecords()
+    },
+    setFilter(filter) {
+      this.activeFilter = filter
     }
   },
   created() {
@@ -140,6 +177,69 @@ export default {
   margin-bottom: 1.5rem;
   margin-top: 0rem;
   justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  background: #f3f4f6 !important;
+  border: 2px solid #e5e7eb !important;
+  color: #374151 !important;
+  padding: 0.6rem 1.2rem !important;
+  font-weight: 500 !important;
+  border-radius: 10px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.4rem !important;
+}
+
+.filter-btn:hover {
+  background: #e5e7eb !important;
+  border-color: #9ca3af !important;
+}
+
+.filter-btn.active {
+  background: #1e3a8a !important;
+  border-color: #1e3a8a !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.35) !important;
+}
+
+.filter-btn.filter-today.active {
+  background: #059669 !important;
+  border-color: #059669 !important;
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+}
+
+.filter-btn.filter-future.active {
+  background: #7c3aed !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35) !important;
+}
+
+.filter-count {
+  background: rgba(255,255,255,0.25);
+  color: inherit;
+  border-radius: 20px;
+  padding: 0.05rem 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.filter-btn:not(.active) .filter-count {
+  background: #e5e7eb;
+  color: #6b7280;
 }
 
 .work-btn {
