@@ -351,6 +351,12 @@ export default {
     await this.loadLeaveTypes()
     await this.loadWorkHours()
     await this.checkIsLevel2Approver()
+    if (this.records?.length) await this.preloadWorkHoursForRecords(this.records)
+  },
+  watch: {
+    records(newRecords) {
+      if (newRecords?.length) this.preloadWorkHoursForRecords(newRecords)
+    }
   },
   created() {
     this.$http = axios
@@ -386,6 +392,10 @@ export default {
         return wh
       } catch { /* ignore */ }
       return this.workHours
+    },
+    async preloadWorkHoursForRecords(records) {
+      const roles = [...new Set(records.map(r => r.employee_role).filter(Boolean))]
+      await Promise.all(roles.map(role => this.getWorkHoursForRole(role)))
     },
     async checkIsLevel2Approver() {
       try {

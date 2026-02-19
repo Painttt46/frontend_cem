@@ -323,6 +323,12 @@ export default {
   async mounted() {
     await this.loadLeaveTypes()
     await this.loadWorkHours()
+    if (this.records?.length) await this.preloadWorkHoursForRecords(this.records)
+  },
+  watch: {
+    records(newRecords) {
+      if (newRecords?.length) this.preloadWorkHoursForRecords(newRecords)
+    }
   },
   methods: {
     showUserInfo(userId) {
@@ -358,6 +364,10 @@ export default {
         return wh
       } catch { /* ignore */ }
       return this.workHours
+    },
+    async preloadWorkHoursForRecords(records) {
+      const roles = [...new Set(records.map(r => r.employee_role).filter(Boolean))]
+      await Promise.all(roles.map(role => this.getWorkHoursForRole(role)))
     },
     calculateHours(data) {
       const wh = this.workHoursCache[data.employee_role] || this.workHours
