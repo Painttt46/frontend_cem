@@ -95,8 +95,7 @@
           
           <Column field="role" header="Role" class="role-col">
             <template #body="slotProps">
-              <Badge :value="slotProps.data.role" 
-                     :severity="getRoleSeverity(slotProps.data.role)" />
+              <span class="role-badge" :style="getRoleStyle(slotProps.data.role)">{{ slotProps.data.role || '-' }}</span>
             </template>
           </Column>
           
@@ -280,12 +279,24 @@ const addNewRole = () => {
   }
 }
 
-const getRoleSeverity = (role) => {
-  switch (role) {
-    case 'admin': return 'danger'
-    case 'hr': return 'warning'
-    default: return 'info'
-  }
+const getRoleStyle = (role) => {
+  const colors = [
+    { bg: '#fee2e2', text: '#991b1b' },
+    { bg: '#fef3c7', text: '#92400e' },
+    { bg: '#dbeafe', text: '#1e40af' },
+    { bg: '#dcfce7', text: '#166534' },
+    { bg: '#f3e8ff', text: '#6b21a8' },
+    { bg: '#ffedd5', text: '#9a3412' },
+    { bg: '#cffafe', text: '#155e75' },
+    { bg: '#fce7f3', text: '#9d174d' },
+    { bg: '#e0e7ff', text: '#3730a3' },
+    { bg: '#d1fae5', text: '#065f46' }
+  ]
+  const key = (role || '').toLowerCase()
+  let hash = 0
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) % colors.length
+  const c = colors[hash]
+  return { backgroundColor: c.bg, color: c.text }
 }
 
 const sortByEmployeeId = (event) => {
@@ -738,6 +749,15 @@ onMounted(() => {
 .p-badge {
   font-size: 0.75rem;
   font-weight: 500;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 /* Tooltip Styling */
