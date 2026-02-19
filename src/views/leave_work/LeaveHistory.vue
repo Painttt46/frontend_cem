@@ -332,7 +332,8 @@ export default {
         end_time: '18:00',
         lunch_start: '12:00',
         lunch_end: '13:00'
-      }
+      },
+      workHoursCache: {}
     }
   },
   computed: {
@@ -368,9 +369,23 @@ export default {
           lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
           lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
         }
-      } catch {
-        // Use default
-      }
+      } catch { /* ignore */ }
+    },
+    async getWorkHoursForRole(role) {
+      if (!role) return this.workHours
+      if (this.workHoursCache[role]) return this.workHoursCache[role]
+      try {
+        const response = await this.$http.get(`/api/settings/role-work-hours/${role}`)
+        const wh = {
+          start_time: response.data.start_time?.substring(0, 5) || '09:00',
+          end_time: response.data.end_time?.substring(0, 5) || '18:00',
+          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
+          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
+        }
+        this.workHoursCache[role] = wh
+        return wh
+      } catch { /* ignore */ }
+      return this.workHours
     },
     async checkIsLevel2Approver() {
       try {
@@ -383,12 +398,16 @@ export default {
       }
     },
     calculateHours(data) {
+      const wh = this.workHoursCache[data.employee_role] || this.workHours
+      if (data.employee_role && !this.workHoursCache[data.employee_role]) {
+        this.getWorkHoursForRole(data.employee_role)
+      }
       const start = new Date(data.start_datetime)
       const end = new Date(data.end_datetime)
-      const [ws, wsm = 0] = this.workHours.start_time.split(':').map(Number)
-      const [we, wem = 0] = this.workHours.end_time.split(':').map(Number)
-      const [ls, lsm = 0] = this.workHours.lunch_start.split(':').map(Number)
-      const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
+      const [ws, wsm = 0] = wh.start_time.split(':').map(Number)
+      const [we, wem = 0] = wh.end_time.split(':').map(Number)
+      const [ls, lsm = 0] = wh.lunch_start.split(':').map(Number)
+      const [le, lem = 0] = wh.lunch_end.split(':').map(Number)
 
       const wsMin = ws * 60 + wsm, weMin = we * 60 + wem
       const lsMin = ls * 60 + lsm, leMin = le * 60 + lem
@@ -406,6 +425,7 @@ export default {
         if (mEnd > mStart) mins += mEnd - mStart
         const aStart = Math.max(sMin, leMin), aEnd = Math.min(eMin, weMin)
         if (aEnd > aStart) mins += aEnd - aStart
+        if (mins >= fullDayMinutes * 0.9) return fullDayMinutes
         return Math.max(0, mins)
       }
 
