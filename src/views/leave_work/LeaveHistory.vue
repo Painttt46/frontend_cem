@@ -80,13 +80,13 @@
           </template>
         </Column>
 
-        <Column field="reason" header="เหตุผล" style="min-width: 160px; width: 160px;">
+        <Column v-if="showSensitiveColumns" field="reason" header="เหตุผล" style="min-width: 160px; width: 160px;">
           <template #body="slotProps">
             <span class="reason-text-wrap">{{ slotProps.data.reason }}</span>
           </template>
         </Column>
 
-        <Column header="เอกสารแนบ" style="width: 80px;">
+        <Column v-if="showSensitiveColumns" header="เอกสารแนบ" style="width: 80px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0" class="attachments-info">
               <Button icon="pi pi-paperclip" size="small" severity="info" outlined
@@ -305,7 +305,11 @@ export default {
   emits: ['view-attachments', 'request-deleted'],
   inject: ['$confirm', '$toast'],
   props: {
-    records: Array
+    records: Array,
+    showSensitiveColumns: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {

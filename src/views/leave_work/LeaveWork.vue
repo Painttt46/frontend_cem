@@ -28,8 +28,8 @@
 
     <!-- Main Content - History -->
     <div class="main-content">
-      <LeaveHistory :records="filteredLeaveRecords" @view-attachments="viewAttachments"
-        @request-deleted="loadLeaveRecords" />
+      <LeaveHistory :records="filteredLeaveRecords" :showSensitiveColumns="isInApprovalList || currentUserRole === 'admin'"
+        @view-attachments="viewAttachments" @request-deleted="loadLeaveRecords" />
     </div>
 
     <!-- Leave Form Dialog -->
