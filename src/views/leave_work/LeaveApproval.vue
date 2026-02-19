@@ -340,7 +340,7 @@ export default {
           lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
           lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
         }
-      } catch { }
+      } catch { /* ignore */ }
     },
     calculateHours(data) {
       const start = new Date(data.start_datetime)
