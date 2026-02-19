@@ -385,10 +385,14 @@ export default {
     calculateHours(data) {
       const start = new Date(data.start_datetime)
       const end = new Date(data.end_datetime)
-      const [ws] = this.workHours.start_time.split(':').map(Number)
-      const [we] = this.workHours.end_time.split(':').map(Number)
-      const [ls] = this.workHours.lunch_start.split(':').map(Number)
-      const [le] = this.workHours.lunch_end.split(':').map(Number)
+      const [ws, wsm = 0] = this.workHours.start_time.split(':').map(Number)
+      const [we, wem = 0] = this.workHours.end_time.split(':').map(Number)
+      const [ls, lsm = 0] = this.workHours.lunch_start.split(':').map(Number)
+      const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
+
+      const wsMin = ws * 60 + wsm, weMin = we * 60 + wem
+      const lsMin = ls * 60 + lsm, leMin = le * 60 + lem
+      const fullDayMinutes = (lsMin - wsMin) + (weMin - leMin)
 
       const startDate = new Date(start); startDate.setHours(0, 0, 0, 0)
       const endDate = new Date(end); endDate.setHours(0, 0, 0, 0)
@@ -397,7 +401,6 @@ export default {
       const calcDayMinutes = (s, e) => {
         const sMin = s.getHours() * 60 + s.getMinutes()
         const eMin = e.getHours() * 60 + e.getMinutes()
-        const wsMin = ws * 60, weMin = we * 60, lsMin = ls * 60, leMin = le * 60
         let mins = 0
         const mStart = Math.max(sMin, wsMin), mEnd = Math.min(eMin, lsMin)
         if (mEnd > mStart) mins += mEnd - mStart
@@ -414,19 +417,20 @@ export default {
           const day = current.getDay()
           if (day !== 0 && day !== 6) {
             if (current.getTime() === startDate.getTime()) {
-              const dayEnd = new Date(current); dayEnd.setHours(we, 0, 0, 0)
+              const dayEnd = new Date(current); dayEnd.setHours(we, wem, 0, 0)
               totalMinutes += calcDayMinutes(start, dayEnd)
             } else if (current.getTime() === endDate.getTime()) {
-              const dayStart = new Date(current); dayStart.setHours(ws, 0, 0, 0)
+              const dayStart = new Date(current); dayStart.setHours(ws, wsm, 0, 0)
               totalMinutes += calcDayMinutes(dayStart, end)
             } else {
-              totalMinutes += ((ls - ws) + (we - le)) * 60
+              totalMinutes += fullDayMinutes
             }
           }
           current.setDate(current.getDate() + 1)
         }
       }
-      return (totalMinutes / 60).toFixed(1)
+      const hours = totalMinutes / 60
+      return Number.isInteger(hours) ? hours : hours.toFixed(1)
     },
     async loadLeaveTypes() {
       try {

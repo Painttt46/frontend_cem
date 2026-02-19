@@ -46,7 +46,7 @@
 
         <Column header="จำนวน">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ (slotProps.data.total_days * 8).toFixed(1) }} ชม.)
+            {{ slotProps.data.total_days }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
         </Column>
 
@@ -310,11 +310,18 @@ export default {
       showUserDialog: false,
       selectedUserId: null,
       showCancelReasonDialog: false,
-      selectedCancelReason: ''
+      selectedCancelReason: '',
+      workHours: {
+        start_time: '09:00',
+        end_time: '18:00',
+        lunch_start: '12:00',
+        lunch_end: '13:00'
+      }
     }
   },
   async mounted() {
     await this.loadLeaveTypes()
+    await this.loadWorkHours()
   },
   methods: {
     showUserInfo(userId) {
@@ -322,6 +329,64 @@ export default {
         this.selectedUserId = userId
         this.showUserDialog = true
       }
+    },
+    async loadWorkHours() {
+      try {
+        const role = localStorage.getItem('soc_role') || 'user'
+        const response = await this.$http.get(`/api/settings/role-work-hours/${role}`)
+        this.workHours = {
+          start_time: response.data.start_time?.substring(0, 5) || '09:00',
+          end_time: response.data.end_time?.substring(0, 5) || '18:00',
+          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
+          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
+        }
+      } catch { }
+    },
+    calculateHours(data) {
+      const start = new Date(data.start_datetime)
+      const end = new Date(data.end_datetime)
+      const [ws, wsm = 0] = this.workHours.start_time.split(':').map(Number)
+      const [we, wem = 0] = this.workHours.end_time.split(':').map(Number)
+      const [ls, lsm = 0] = this.workHours.lunch_start.split(':').map(Number)
+      const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
+      const wsMin = ws * 60 + wsm, weMin = we * 60 + wem
+      const lsMin = ls * 60 + lsm, leMin = le * 60 + lem
+      const fullDayMinutes = (lsMin - wsMin) + (weMin - leMin)
+      const startDate = new Date(start); startDate.setHours(0, 0, 0, 0)
+      const endDate = new Date(end); endDate.setHours(0, 0, 0, 0)
+      let totalMinutes = 0
+      const calcMins = (s, e) => {
+        const sMin = s.getHours() * 60 + s.getMinutes()
+        const eMin = e.getHours() * 60 + e.getMinutes()
+        let m = 0
+        const mS = Math.max(sMin, wsMin), mE = Math.min(eMin, lsMin)
+        if (mE > mS) m += mE - mS
+        const aS = Math.max(sMin, leMin), aE = Math.min(eMin, weMin)
+        if (aE > aS) m += aE - aS
+        return Math.max(0, m)
+      }
+      if (startDate.getTime() === endDate.getTime()) {
+        totalMinutes = calcMins(start, end)
+      } else {
+        const cur = new Date(startDate)
+        while (cur <= endDate) {
+          const day = cur.getDay()
+          if (day !== 0 && day !== 6) {
+            if (cur.getTime() === startDate.getTime()) {
+              const de = new Date(cur); de.setHours(we, wem, 0, 0)
+              totalMinutes += calcMins(start, de)
+            } else if (cur.getTime() === endDate.getTime()) {
+              const ds = new Date(cur); ds.setHours(ws, wsm, 0, 0)
+              totalMinutes += calcMins(ds, end)
+            } else {
+              totalMinutes += fullDayMinutes
+            }
+          }
+          cur.setDate(cur.getDate() + 1)
+        }
+      }
+      const hours = totalMinutes / 60
+      return Number.isInteger(hours) ? hours : hours.toFixed(1)
     },
     async loadLeaveTypes() {
       try {
