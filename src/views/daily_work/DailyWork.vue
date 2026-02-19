@@ -16,18 +16,21 @@
           <span class="btn-text">ลงตารางงาน</span>
         </Button>
         <div class="filter-buttons">
-          <Button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]" icon="pi pi-list">
-            <span class="btn-text">ทั้งหมด</span>
+          <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
+            <i class="pi pi-list"></i>
+            <span>ทั้งหมด</span>
             <span class="filter-count">{{ workRecords.length }}</span>
-          </Button>
-          <Button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]" icon="pi pi-calendar">
-            <span class="btn-text">วันนี้</span>
+          </button>
+          <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
+            <i class="pi pi-sun"></i>
+            <span>วันนี้</span>
             <span class="filter-count">{{ todayCount }}</span>
-          </Button>
-          <Button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]" icon="pi pi-calendar-plus">
-            <span class="btn-text">งานล่วงหน้า</span>
+          </button>
+          <button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]">
+            <i class="pi pi-calendar-plus"></i>
+            <span>งานล่วงหน้า</span>
             <span class="filter-count">{{ futureCount }}</span>
-          </Button>
+          </button>
         </div>
       </div>
       <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" />
@@ -176,70 +179,87 @@ export default {
   gap: 1rem;
   margin-bottom: 1.5rem;
   margin-top: 0rem;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
 }
 
 .filter-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 0;
   align-items: center;
-  flex-wrap: wrap;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .filter-btn {
-  background: #f3f4f6 !important;
-  border: 2px solid #e5e7eb !important;
-  color: #374151 !important;
-  padding: 0.6rem 1.2rem !important;
-  font-weight: 500 !important;
-  border-radius: 10px !important;
-  transition: all 0.2s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 0.4rem !important;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .filter-btn:hover {
-  background: #e5e7eb !important;
-  border-color: #9ca3af !important;
+  background: #e2e8f0;
+  color: #334155;
 }
 
 .filter-btn.active {
-  background: #1e3a8a !important;
-  border-color: #1e3a8a !important;
-  color: white !important;
-  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.35) !important;
+  background: white;
+  color: #1e3a8a;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 
 .filter-btn.filter-today.active {
-  background: #059669 !important;
-  border-color: #059669 !important;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35) !important;
+  color: #059669;
 }
 
 .filter-btn.filter-future.active {
-  background: #7c3aed !important;
-  border-color: #7c3aed !important;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35) !important;
+  color: #7c3aed;
 }
 
 .filter-count {
-  background: rgba(255,255,255,0.25);
-  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  color: #64748b;
   border-radius: 20px;
-  padding: 0.05rem 0.45rem;
-  font-size: 0.78rem;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  min-width: 20px;
-  text-align: center;
+  min-width: 22px;
   line-height: 1.4;
+  transition: all 0.2s ease;
 }
 
-.filter-btn:not(.active) .filter-count {
-  background: #e5e7eb;
-  color: #6b7280;
+.filter-btn.active .filter-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.filter-btn.filter-today.active .filter-count {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.filter-btn.filter-future.active .filter-count {
+  background: #ede9fe;
+  color: #5b21b6;
 }
 
 .work-btn {
