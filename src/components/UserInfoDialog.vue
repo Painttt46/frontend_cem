@@ -111,13 +111,7 @@ export default {
       }
     },
     getRoleLabel(role) {
-      const roles = {
-        'admin': 'ผู้ดูแลระบบ',
-        'manager': 'ผู้จัดการ',
-        'hr': 'ฝ่ายบุคคล',
-        'user': 'ผู้ใช้งาน'
-      }
-      return roles[role?.toLowerCase()] || role
+      return role || '-'
     },
     getRoleSeverity(role) {
       const severities = {
