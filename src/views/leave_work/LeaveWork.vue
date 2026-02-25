@@ -20,27 +20,29 @@
           <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
         </Button>
       </div>
-      <div class="filter-buttons">
-        <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
-          <i class="pi pi-list"></i>
-          <span>ทั้งหมด</span>
-          <span class="filter-count">{{ leaveRecords.length }}</span>
-        </button>
-        <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
-          <i class="pi pi-sun"></i>
-          <span>วันนี้</span>
-          <span class="filter-count">{{ todayCount }}</span>
-        </button>
-        <button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]">
-          <i class="pi pi-calendar-plus"></i>
-          <span>ลาล่วงหน้า</span>
-          <span class="filter-count">{{ futureCount }}</span>
-        </button>
+      <div class="right-section">
+        <div class="filter-buttons">
+          <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
+            <i class="pi pi-list"></i>
+            <span>ทั้งหมด</span>
+            <span class="filter-count">{{ leaveRecords.length }}</span>
+          </button>
+          <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
+            <i class="pi pi-sun"></i>
+            <span>วันนี้</span>
+            <span class="filter-count">{{ todayCount }}</span>
+          </button>
+          <button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]">
+            <i class="pi pi-calendar-plus"></i>
+            <span>ลาล่วงหน้า</span>
+            <span class="filter-count">{{ futureCount }}</span>
+          </button>
+        </div>
+        <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning"
+          size="small">
+          <span class="btn-text">Export</span>
+        </Button>
       </div>
-      <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning"
-        size="small">
-        <span class="btn-text">Export</span>
-      </Button>
     </div>
 
     <!-- Main Content - History -->
@@ -772,6 +774,13 @@ export default {
   flex-wrap: wrap;
 }
 
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .filter-buttons {
   display: flex;
   gap: 0;
@@ -1063,11 +1072,18 @@ export default {
 
   .action-buttons {
     flex-direction: column;
+    gap: 1rem;
   }
 
   .action-buttons .left-buttons {
     width: 100%;
     flex-direction: column;
+  }
+
+  .right-section {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
   }
 
   .filter-buttons {
