@@ -20,6 +20,23 @@
           <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
         </Button>
       </div>
+      <div class="filter-buttons">
+        <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
+          <i class="pi pi-list"></i>
+          <span>ทั้งหมด</span>
+          <span class="filter-count">{{ leaveRecords.length }}</span>
+        </button>
+        <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
+          <i class="pi pi-sun"></i>
+          <span>วันนี้</span>
+          <span class="filter-count">{{ todayCount }}</span>
+        </button>
+        <button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]">
+          <i class="pi pi-calendar-plus"></i>
+          <span>ลาล่วงหน้า</span>
+          <span class="filter-count">{{ futureCount }}</span>
+        </button>
+      </div>
       <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning"
         size="small">
         <span class="btn-text">Export</span>
@@ -116,6 +133,7 @@ export default {
       approverLevel: 0,  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
       approverDepartments: [],  // แผนกที่ดูแล
       approverPositions: [],    // ตำแหน่งที่ดูแล
+      activeFilter: 'all',
       // Reject dialog
       showRejectDialog: false,
       rejectLeaveId: null,
@@ -133,6 +151,16 @@ export default {
     currentUserId() {
       return localStorage.getItem('soc_user_id') || ''
     },
+    todayStr() {
+      const d = new Date()
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    },
+    todayCount() {
+      return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) === this.todayStr).length
+    },
+    futureCount() {
+      return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) > this.todayStr).length
+    },
     isHROrAdmin() {
       return this.hasAccess('/leave_work/approve')
     },
@@ -141,6 +169,12 @@ export default {
       return this.hasAccess('/leave_work/approve')
     },
     filteredLeaveRecords() {
+      if (this.activeFilter === 'today') {
+        return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) === this.todayStr)
+      }
+      if (this.activeFilter === 'future') {
+        return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) > this.todayStr)
+      }
       return this.leaveRecords
     },
     pendingLeaveRecords() {
@@ -691,6 +725,10 @@ export default {
         minute: '2-digit',
         timeZone: 'Asia/Bangkok'
       })
+    },
+
+    setFilter(filter) {
+      this.activeFilter = filter
     }
   },
 
@@ -732,6 +770,84 @@ export default {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 4px;
+  border: 1px solid #e2e8f0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.filter-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.filter-btn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.filter-btn.active {
+  background: white;
+  color: #1e3a8a;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.filter-btn.filter-today.active {
+  color: #059669;
+}
+
+.filter-btn.filter-future.active {
+  color: #7c3aed;
+}
+
+.filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  color: #64748b;
+  border-radius: 20px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  min-width: 22px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+}
+
+.filter-btn.active .filter-count {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.filter-btn.filter-today.active .filter-count {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.filter-btn.filter-future.active .filter-count {
+  background: #ede9fe;
+  color: #5b21b6;
 }
 
 .export-btn {
@@ -954,6 +1070,13 @@ export default {
     flex-direction: column;
   }
 
+  .filter-buttons {
+    width: 100%;
+    justify-content: center;
+    order: -1;
+    margin-bottom: 1rem;
+  }
+
   .leave-btn,
   .approval-btn {
     width: 100% !important;
@@ -980,6 +1103,16 @@ export default {
 
   .datetime-display {
     font-size: 0.9rem;
+  }
+
+  .filter-buttons {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .filter-btn {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.8rem;
   }
 
   .main-content {
