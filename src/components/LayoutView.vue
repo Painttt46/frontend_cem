@@ -1,4 +1,14 @@
 <template>
+  <!-- Announcement Banner -->
+  <AnnouncementBanner 
+    ref="announcementBanner"
+    title="ประกาศสำคัญ"
+    message="ยินดีต้อนรับสู่ระบบ CEM กรุณาอ่านประกาศก่อนใช้งาน"
+  />
+
+  <!-- Announcement Input -->
+  <AnnouncementInput />
+
   <Toast />
   <ConfirmDialog :draggable="false"></ConfirmDialog>
   <ConfirmPopup group="templating">
@@ -22,7 +32,7 @@
   </Dialog>
   <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100%; overflow: hidden;">
+  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible, 'banner-visible': bannerVisible }" style="height: 100vh; width: 100%; overflow: hidden;">
     <div class="row" style="height: 100%; overflow: hidden;">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
@@ -108,6 +118,26 @@
               </router-link>
             </li>
           </ul>
+          
+          <!-- Banner Toggle Button - iPhone Style -->
+          <div class="nav-item ml-2 mt-3">
+            <div class="banner-toggle-container">
+              <div class="banner-toggle-label">
+                <span class="toggle-text">Open/Close Text Chat</span>
+                <label class="ios-toggle-switch">
+                  <input 
+                    type="checkbox" 
+                    v-model="bannerVisible" 
+                    @change="toggleBanner"
+                    class="toggle-input"
+                  >
+                  <div class="toggle-slider"></div>
+                  <div class="toggle-knob"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+          
           <div class="nav-item ml-2"
             style="width: 100%; color: white; vertical-align: bottom; display: flex; justify-content: center;">
             <Button @click="openPosition('bottom')" style="
@@ -157,6 +187,8 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
+import AnnouncementBanner from "./AnnouncementBanner.vue";
+import AnnouncementInput from "./AnnouncementInput.vue";
 
 const { loadPermissions, hasAccess } = usePermissions();
 
@@ -165,6 +197,8 @@ const visible = ref(false);
 const sessionDialog = ref(false);
 const sidebarVisible = ref(true);
 const isMobile = ref(window.innerWidth <= 768);
+const announcementBanner = ref(null);
+const bannerVisible = ref(true);
 
 const openPosition = (pos) => {
   position.value = pos;
@@ -173,6 +207,17 @@ const openPosition = (pos) => {
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value;
+};
+
+const toggleBanner = () => {
+  // เช็คว่า bannerVisible เปลี่ยนค่าแล้ว (จาก v-model)
+  if (announcementBanner.value) {
+    if (bannerVisible.value) {
+      announcementBanner.value.showBanner();
+    } else {
+      announcementBanner.value.closeBanner();
+    }
+  }
 };
 
 const closeSidebarOnMobile = () => {
@@ -212,6 +257,7 @@ const currentDateTime = computed(() => {
   })
 });
 
+// eslint-disable-next-line
 function fetchData() {
   axios.get('/user', {
   }).then(user_response => {
@@ -219,6 +265,7 @@ function fetchData() {
   });
 }
 
+// eslint-disable-next-line
 const resetTimer = () => {
   timeout.value = 300; // รีเซ็ตเวลาเป็น 5 นาที
 };
@@ -239,18 +286,44 @@ onMounted(() => {
     soc_user_firstLetter.value = soc_user.value.charAt(0).toUpperCase();
   }
 
+  // เริ่มต้นด้วยการตรวจสอบสถานะป้าย
+  checkBannerStatus();
+
+  // แสดงป้ายพร้อมข้อความที่กระจาย
+  if (announcementBanner.value) {
+    announcementBanner.value.showBanner();
+  }
+  
   // Update time every second
   setInterval(() => {
     currentTime.value = new Date();
   }, 1000);
-  fetchData
+  
+  // Listen for banner visibility changes
+  const checkBannerInterval = setInterval(() => {
+    checkBannerStatus();
+  }, 1000);
+  
+  // Store interval ID for cleanup
+  window.bannerCheckInterval = checkBannerInterval;
 });
+
+const checkBannerStatus = () => {
+  const wasClosed = localStorage.getItem('announcementBannerClosed');
+  // ถ้าเคยปิดไว้ ให้ตั้งค่า bannerVisible เป็น false
+  bannerVisible.value = wasClosed !== 'true';
+};
 
 onUnmounted(() => {
   clearInterval(countdownTimer);
   window.removeEventListener("mousemove", resetTimer);
   window.removeEventListener("keydown", resetTimer);
   window.removeEventListener("resize", updateIsMobile);
+  
+  // Clean up banner check interval
+  if (window.bannerCheckInterval) {
+    clearInterval(window.bannerCheckInterval);
+  }
 });
 
 const showSessionDialog = () => {
@@ -308,6 +381,11 @@ const startCountdown = () => {
 
 .p-menuitem-link span {
   color: black !important;
+}
+
+/* Banner spacing adjustment */
+.banner-visible {
+  padding-top: 80px;
 }
 
 .sidebar-toggle-btn {
@@ -415,6 +493,102 @@ h4 {
   transform: translateY(0) !important;
 }
 
+/* iPhone Style Toggle Switch */
+.banner-toggle-container {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.banner-toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.5rem;
+  border-radius: 8px;
+}
+
+.toggle-text {
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  flex: 1;
+  text-align: left;
+  padding-left: 0.5rem;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ios-toggle-switch {
+  position: relative;
+  width: 60px;
+  height: 32px;
+  flex-shrink: 0;
+  cursor: pointer;
+  display: block;
+}
+
+.toggle-input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 34px;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-input:checked + .toggle-slider {
+  background: linear-gradient(135deg, #4A90E2, #D73527);
+  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-input:checked ~ .toggle-knob {
+  transform: translateX(28px);
+}
+
+.toggle-input:checked ~ .toggle-knob i {
+  color: #4A90E2;
+}
+
+/* Hover effects */
+.ios-toggle-switch:hover .toggle-slider {
+  background-color: #bbb;
+}
+
+.toggle-input:checked + .toggle-slider:hover {
+  background: linear-gradient(135deg, #3d7bc8, #c02d21);
+}
+
+/* Active effect */
+.ios-toggle-switch:active .toggle-knob {
+  transform: scale(0.95);
+}
+
+.toggle-input:checked ~ .toggle-knob:active {
+  transform: translateX(28px) scale(0.95);
+}
+
 .content-padding {
   padding-right: 0;
   padding-left: 1rem;
@@ -422,6 +596,10 @@ h4 {
 
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
+  .banner-visible {
+    padding-top: 110px;
+  }
+
   .content-padding {
     padding-right: 1.3rem;
     padding-left: 0;

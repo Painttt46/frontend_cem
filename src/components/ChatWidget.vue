@@ -230,7 +230,7 @@ export default {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   border: none;
   color: white;
-  font-size: 24px;
+  font-size: 26px;
   cursor: pointer;
   box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
   transition: transform 0.2s;
