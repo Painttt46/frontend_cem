@@ -974,9 +974,10 @@ const loadData = async () => {
     const uniqueUserIds = [...new Set(todayLeavesUsers.map(l => l.user_id))]
     stats.value.todayLeaves = uniqueUserIds.length
 
-    // Engineer ที่ลงงานวันนี้
+    // Engineer ที่ลงงานวันนี้ (ไม่นับคนที่ลาวันนี้)
     const engineers = activeUsers.filter(u => u.role === 'engineer')
-    stats.value.totalEngineers = engineers.length
+    const availableEngineers = engineers.filter(u => !uniqueUserIds.includes(u.id))
+    stats.value.totalEngineers = availableEngineers.length
 
     const todayWorkUsers = dailyWork.filter(w => {
       const workDate = w.work_date?.split('T')[0]
@@ -984,15 +985,15 @@ const loadData = async () => {
     })
     const uniqueWorkUserIds = [...new Set(todayWorkUsers.map(w => w.user_id))]
     
-    // นับเฉพาะ engineer ที่ลงงานแล้ว
-    const engineersWorked = engineers.filter(u => uniqueWorkUserIds.includes(u.id))
+    // นับเฉพาะ engineer ที่ลงงานแล้ว (ไม่รวมคนที่ลา)
+    const engineersWorked = availableEngineers.filter(u => uniqueWorkUserIds.includes(u.id))
     stats.value.workingToday = engineersWorked.length
 
     stats.value.activeCars = parseInt(dashSummary.active_cars) || 0
 
-    // Populate data for dialogs - เฉพาะ engineer
+    // Populate data for dialogs - เฉพาะ engineer ที่ไม่ได้ลา
     workingTodayUsers.value = engineersWorked
-    notWorkingUsers.value = engineers.filter(u => !uniqueWorkUserIds.includes(u.id))
+    notWorkingUsers.value = availableEngineers.filter(u => !uniqueWorkUserIds.includes(u.id))
     
     leavesTodayList.value = todayLeavesUsers.map(l => {
       const user = activeUsers.find(u => u.id === l.user_id) || {}
