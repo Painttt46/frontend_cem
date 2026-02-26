@@ -7,7 +7,7 @@
   />
 
   <!-- Announcement Input -->
-  <AnnouncementInput />
+  <AnnouncementInput @message-added="announcementBanner?.refreshBanner()" />
 
   <Toast />
   <ConfirmDialog :draggable="false"></ConfirmDialog>

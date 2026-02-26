@@ -4,6 +4,7 @@
       <div class="banner-content">
         
         <div 
+          ref="wrapperRef"
           class="marquee-wrapper" 
           :style="{ 
             animationDuration: animationDuration, 
@@ -37,7 +38,8 @@
 
 <script setup>
 /* global defineProps, defineExpose */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
+import axios from 'axios'
 
 const props = defineProps({
   title: { type: String, default: 'ประกาศ' },
@@ -47,48 +49,61 @@ const props = defineProps({
 })
 
 const isVisible = ref(true)
+const announcementItems = ref([])
 
-// ข้อมูลจำลอง (จำลองว่า Database ส่งมาแค่ 1 หรือ 2 ข้อความ)
-const announcementItems = ref([
-  { icon: '📢', text: 'ประกาศด่วนจากระบบ!', tag: 'h4', type: 'highlight' },
-  { icon: '⚠️', text: 'แจ้งเตือนระบบ!', tag: 'h4', type: 'warning' }
-  // ลองลบข้อความให้เหลือแค่ 1 อันดูก็ได้ครับ โค้ดนี้จะยังทำงานได้เนียนกริบ
-])
+// 1 group เสมอ → แสดงข้อมูลชุดเดียว แต่ animation loop ต่อเนื่อง
+const groupCount = computed(() => 1)
 
-// 🌟 พระเอกของเรา: คำนวณจำนวนชุดอัตโนมัติ 
-const groupCount = computed(() => {
-  const currentItemsCount = announcementItems.value.length;
-  if (currentItemsCount === 0) return 4; // กันพังกรณีไม่มีข้อมูล
+const wrapperRef = ref(null)
+const measuredWidth = ref(0)
 
-  // เราต้องการให้มีกล่องข้อความบนจอ "อย่างน้อย 15 กล่อง" รวมกัน เพื่อให้ล้นจอเสมอ
-  // สมมติมี 1 ข้อความ -> 15 / 1 = ทำซ้ำ 15 ชุด
-  // สมมติมี 5 ข้อความ -> 15 / 5 = ทำซ้ำ 3 ชุด
-  const requiredGroups = Math.ceil(15 / currentItemsCount);
-  
-  // แต่ขั้นต่ำต้องไม่น้อยกว่า 4 ชุดเพื่อให้ Animation ลูปได้เนียนตา
-  return Math.max(requiredGroups, 4);
+// วัดความกว้างจริงจาก DOM หลัง items โหลดเสร็จ
+watch(announcementItems, async () => {
+  await nextTick()
+  if (wrapperRef.value) {
+    measuredWidth.value = wrapperRef.value.scrollWidth
+  }
 })
 
-// คำนวณความเร็ว
+// ความเร็วคงที่ 280px/s โดยใช้ความกว้างจริง (fallback ประมาณ 350px/item)
 const animationDuration = computed(() => {
-  const timePerItem = 1; // 1 ข้อความใช้เวลา 4 วินาที
-  const calculatedTime = announcementItems.value.length * timePerItem;
-  
-  // กำหนดเวลาขั้นต่ำไว้ 10 วินาที จะได้ไม่วิ่งเร็วจนอ่านไม่ทันถ้ามีแค่ 1 ข้อความ
-  return `${Math.max(calculatedTime, 4)}s`; 
+  const contentWidth = measuredWidth.value || announcementItems.value.length * 350 || 350
+  const totalDistance = window.innerWidth + contentWidth
+  return `${Math.round(totalDistance / 230)}s`
 })
 
-const closeBanner = () => {
-  isVisible.value = false
-  localStorage.setItem('announcementBannerClosed', 'true')
-}
-
-const showBanner = () => {
+function showBanner() {
   isVisible.value = true
   localStorage.removeItem('announcementBannerClosed')
 }
 
+function closeBanner() {
+  isVisible.value = false
+  localStorage.setItem('announcementBannerClosed', 'true')
+}
+
+async function fetchBannerMessages() {
+  try {
+    // TODO: Replace with your actual token logic
+    const token = localStorage.getItem('token')
+    const response = await axios.get('/api/banner', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    // Map DB fields to component fields
+    announcementItems.value = response.data.map(item => ({
+      icon: item.type === 'urgent' ? '⚠️' : item.type === 'info' ? 'ℹ️' : '📢',
+      text: item.text || item.alt_text || '',
+      tag: 'h4',
+      type: item.type || 'info'
+    }))
+  } catch (err) {
+    // fallback: show nothing or mock
+    announcementItems.value = []
+  }
+}
+
 onMounted(() => {
+  fetchBannerMessages()
   const wasClosed = localStorage.getItem('announcementBannerClosed')
   if (wasClosed === 'true') {
     isVisible.value = false
@@ -186,8 +201,8 @@ defineExpose({ showBanner, closeBanner })
 .item-4 { animation: floatUpDown 3s ease-in-out infinite 1.5s; }
 
 @keyframes scroll-left {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-100% / var(--group-count))); } 
+  from { transform: translateX(100vw); }
+  to   { transform: translateX(-100%); }
 }
 
 @keyframes floatUpDown {
