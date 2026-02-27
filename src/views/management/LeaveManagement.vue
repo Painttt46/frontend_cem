@@ -194,7 +194,7 @@
       <div class="holiday-form">
         <div class="field">
           <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
-          <Calendar v-model="selectedHolidayDates" :viewDate="holidayCalendarViewDate" @month-change="onHolidayMonthChange" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
+          <Calendar v-model="selectedHolidayDates" :viewDate="holidayCalendarViewDate" @date-select="onHolidayDateSelect" @month-change="onHolidayMonthChange" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
             <template #date="slotProps">
               <span :class="getHolidayDateClass(slotProps.date)" class="date-cell">
                 {{ slotProps.date.day }}
@@ -225,7 +225,7 @@
 import { useDragScroll } from '@/composables/useDragScroll'
 useDragScroll('.p-datatable-wrapper')
 
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
@@ -322,6 +322,13 @@ const getHolidayDateClass = (dateObj) => {
     return 'holiday-date'
   }
   return ''
+}
+
+const onHolidayDateSelect = () => {
+  const preserved = new Date(holidayCalendarViewDate.value)
+  nextTick(() => {
+    holidayCalendarViewDate.value = preserved
+  })
 }
 
 const onHolidayMonthChange = ({ month, year }) => {
