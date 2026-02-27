@@ -194,7 +194,7 @@
       <div class="holiday-form">
         <div class="field">
           <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
-          <Calendar v-model="selectedHolidayDates" :viewDate="holidayCalendarViewDate" @date-select="onHolidayDateSelect" @month-change="onHolidayMonthChange" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
+          <Calendar v-model="calendarClickValue" :viewDate="holidayCalendarViewDate" @date-select="onHolidayDateClick" @month-change="onHolidayMonthChange" selectionMode="single" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
             <template #date="slotProps">
               <span :class="getHolidayDateClass(slotProps.date)" class="date-cell">
                 {{ slotProps.date.day }}
@@ -225,7 +225,7 @@
 import { useDragScroll } from '@/composables/useDragScroll'
 useDragScroll('.p-datatable-wrapper')
 
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
@@ -244,6 +244,7 @@ const showEditLeaveTypeDialog = ref(false)
 const showHolidayDialog = ref(false)
 const holidays = ref([])
 const selectedHolidayDates = ref([])
+const calendarClickValue = ref(null)
 const holidayCalendarViewDate = ref(new Date())
 const savingHolidays = ref(false)
 const adding = ref(false)
@@ -315,20 +316,34 @@ const existingHolidayTimestamps = computed(() => {
   })
 })
 
+const pendingHolidayTimestamps = computed(() => {
+  return selectedHolidayDates.value.map(d => {
+    const date = new Date(d)
+    date.setHours(0, 0, 0, 0)
+    return date.getTime()
+  })
+})
+
 const getHolidayDateClass = (dateObj) => {
   const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
   checkDate.setHours(0, 0, 0, 0)
-  if (existingHolidayTimestamps.value.includes(checkDate.getTime())) {
-    return 'holiday-date'
-  }
+  const ts = checkDate.getTime()
+  if (existingHolidayTimestamps.value.includes(ts)) return 'holiday-date'
+  if (pendingHolidayTimestamps.value.includes(ts)) return 'pending-holiday-date'
   return ''
 }
 
-const onHolidayDateSelect = () => {
-  const preserved = new Date(holidayCalendarViewDate.value)
-  nextTick(() => {
-    holidayCalendarViewDate.value = preserved
-  })
+const onHolidayDateClick = (date) => {
+  calendarClickValue.value = null
+  const clicked = new Date(date)
+  clicked.setHours(0, 0, 0, 0)
+  const ts = clicked.getTime()
+  const idx = pendingHolidayTimestamps.value.indexOf(ts)
+  if (idx >= 0) {
+    selectedHolidayDates.value.splice(idx, 1)
+  } else {
+    selectedHolidayDates.value.push(new Date(clicked))
+  }
 }
 
 const onHolidayMonthChange = ({ month, year }) => {
@@ -959,6 +974,12 @@ const saveLeaveType = async () => {
 
 .holiday-date {
   background-color: #ef4444 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.pending-holiday-date {
+  background-color: #3b82f6 !important;
   color: #fff !important;
   font-weight: 600;
 }
