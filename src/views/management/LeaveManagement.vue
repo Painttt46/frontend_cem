@@ -194,7 +194,7 @@
       <div class="holiday-form">
         <div class="field">
           <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
-          <Calendar v-model="selectedHolidayDates" v-model:viewDate="holidayCalendarViewDate" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
+          <Calendar v-model="selectedHolidayDates" :viewDate="holidayCalendarViewDate" @month-change="onHolidayMonthChange" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
             <template #date="slotProps">
               <span :class="getHolidayDateClass(slotProps.date)" class="date-cell">
                 {{ slotProps.date.day }}
@@ -322,6 +322,10 @@ const getHolidayDateClass = (dateObj) => {
     return 'holiday-date'
   }
   return ''
+}
+
+const onHolidayMonthChange = ({ month, year }) => {
+  holidayCalendarViewDate.value = new Date(year, month - 1, 1)
 }
 
 onMounted(() => {
