@@ -194,7 +194,7 @@
       <div class="holiday-form">
         <div class="field">
           <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
-          <Calendar v-model="calendarClickValue" :viewDate="holidayCalendarViewDate" @date-select="onHolidayDateClick" @month-change="onHolidayMonthChange" selectionMode="single" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
+          <Calendar v-model="calendarClickValue" :viewDate="holidayCalendarViewDate" @date-select="onHolidayDateClick" @month-change="onHolidayMonthChange" selectionMode="single" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy">
             <template #date="slotProps">
               <span :class="getHolidayDateClass(slotProps.date)" class="date-cell">
                 {{ slotProps.date.day }}
@@ -214,8 +214,8 @@
         </div>
       </div>
       <template #footer>
-        <Button label="ปิด" icon="pi pi-times" @click="showHolidayDialog = false" severity="secondary" />
-        <Button label="บันทึกวันหยุด" icon="pi pi-check" @click="saveHolidays" :loading="savingHolidays" :disabled="!selectedHolidayDates?.length" />
+        <Button label="ปิด" icon="pi pi-times" @click="closeHolidayDialog" severity="secondary" />
+        <Button label="บันทึกวันหยุด" icon="pi pi-check" @click="saveHolidays" :loading="savingHolidays" :disabled="!selectedHolidayDates?.length && !pendingDeleteIds?.length" />
       </template>
     </Dialog>
   </div>
@@ -244,6 +244,7 @@ const showEditLeaveTypeDialog = ref(false)
 const showHolidayDialog = ref(false)
 const holidays = ref([])
 const selectedHolidayDates = ref([])
+const pendingDeleteIds = ref([])
 const calendarClickValue = ref(null)
 const holidayCalendarViewDate = ref(new Date())
 const savingHolidays = ref(false)
@@ -324,10 +325,21 @@ const pendingHolidayTimestamps = computed(() => {
   })
 })
 
+const pendingDeleteTimestamps = computed(() => {
+  return pendingDeleteIds.value.map(id => {
+    const h = holidays.value.find(h => h.id === id)
+    if (!h) return null
+    const d = new Date(h.holiday_date)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  }).filter(Boolean)
+})
+
 const getHolidayDateClass = (dateObj) => {
   const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
   checkDate.setHours(0, 0, 0, 0)
   const ts = checkDate.getTime()
+  if (pendingDeleteTimestamps.value.includes(ts)) return 'delete-holiday-date'
   if (existingHolidayTimestamps.value.includes(ts)) return 'holiday-date'
   if (pendingHolidayTimestamps.value.includes(ts)) return 'pending-holiday-date'
   return ''
@@ -338,9 +350,29 @@ const onHolidayDateClick = (date) => {
   const clicked = new Date(date)
   clicked.setHours(0, 0, 0, 0)
   const ts = clicked.getTime()
-  const idx = pendingHolidayTimestamps.value.indexOf(ts)
-  if (idx >= 0) {
-    selectedHolidayDates.value.splice(idx, 1)
+
+  // คลิกวันที่ mark ลบอยู่แล้ว → ยกเลิก mark
+  if (pendingDeleteTimestamps.value.includes(ts)) {
+    const h = holidays.value.find(h => {
+      const d = new Date(h.holiday_date)
+      d.setHours(0, 0, 0, 0)
+      return d.getTime() === ts
+    })
+    if (h) pendingDeleteIds.value = pendingDeleteIds.value.filter(id => id !== h.id)
+    return
+  }
+
+  // คลิกวันหยุดที่บันทึกแล้ว → mark ลบ
+  const savedIdx = existingHolidayTimestamps.value.indexOf(ts)
+  if (savedIdx >= 0) {
+    pendingDeleteIds.value.push(holidays.value[savedIdx].id)
+    return
+  }
+
+  // toggle pending add
+  const pendingIdx = pendingHolidayTimestamps.value.indexOf(ts)
+  if (pendingIdx >= 0) {
+    selectedHolidayDates.value.splice(pendingIdx, 1)
   } else {
     selectedHolidayDates.value.push(new Date(clicked))
   }
@@ -348,6 +380,12 @@ const onHolidayDateClick = (date) => {
 
 const onHolidayMonthChange = ({ month, year }) => {
   holidayCalendarViewDate.value = new Date(year, month - 1, 1)
+}
+
+const closeHolidayDialog = () => {
+  showHolidayDialog.value = false
+  selectedHolidayDates.value = []
+  pendingDeleteIds.value = []
 }
 
 onMounted(() => {
@@ -368,19 +406,25 @@ const formatHolidayDate = (date) => {
 }
 
 const saveHolidays = async () => {
-  if (!selectedHolidayDates.value?.length) return
+  if (!selectedHolidayDates.value?.length && !pendingDeleteIds.value?.length) return
   savingHolidays.value = true
   try {
-    const dates = selectedHolidayDates.value.map(d => {
-      const date = new Date(d)
-      const y = date.getFullYear()
-      const m = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${y}-${m}-${day}`
-    })
-    await axios.post('/api/leave/holidays', { dates })
+    if (pendingDeleteIds.value.length) {
+      await Promise.all(pendingDeleteIds.value.map(id => axios.delete(`/api/leave/holidays/${id}`)))
+      pendingDeleteIds.value = []
+    }
+    if (selectedHolidayDates.value.length) {
+      const dates = selectedHolidayDates.value.map(d => {
+        const date = new Date(d)
+        const y = date.getFullYear()
+        const m = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${y}-${m}-${day}`
+      })
+      await axios.post('/api/leave/holidays', { dates })
+      selectedHolidayDates.value = []
+    }
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'บันทึกวันหยุดเรียบร้อย', life: 3000 })
-    selectedHolidayDates.value = []
     await loadHolidays()
   } catch (err) {
     toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: err.response?.data?.error || 'ไม่สามารถบันทึกได้', life: 3000 })
@@ -982,6 +1026,13 @@ const saveLeaveType = async () => {
   background-color: #3b82f6 !important;
   color: #fff !important;
   font-weight: 600;
+}
+
+.delete-holiday-date {
+  background-color: #9ca3af !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-decoration: line-through;
 }
 
 .existing-holidays h4 {
