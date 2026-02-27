@@ -305,10 +305,6 @@ const filteredUsers = computed(() => {
   return filtered
 })
 
-const existingHolidayDates = computed(() => {
-  return holidays.value.map(h => new Date(h.holiday_date))
-})
-
 const existingHolidayTimestamps = computed(() => {
   return holidays.value.map(h => {
     const d = new Date(h.holiday_date)
