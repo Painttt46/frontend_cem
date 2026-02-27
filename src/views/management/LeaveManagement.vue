@@ -194,7 +194,7 @@
       <div class="holiday-form">
         <div class="field">
           <label>เลือกวันหยุด (คลิกวันที่ในปฏิทิน)</label>
-          <Calendar v-model="selectedHolidayDates" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
+          <Calendar v-model="selectedHolidayDates" v-model:viewDate="holidayCalendarViewDate" selectionMode="multiple" :inline="true" class="w-full holiday-calendar" dateFormat="dd/mm/yy" :disabledDates="existingHolidayDates">
             <template #date="slotProps">
               <span :class="getHolidayDateClass(slotProps.date)" class="date-cell">
                 {{ slotProps.date.day }}
@@ -244,6 +244,7 @@ const showEditLeaveTypeDialog = ref(false)
 const showHolidayDialog = ref(false)
 const holidays = ref([])
 const selectedHolidayDates = ref([])
+const holidayCalendarViewDate = ref(new Date())
 const savingHolidays = ref(false)
 const adding = ref(false)
 const saving = ref(false)
@@ -346,7 +347,10 @@ const saveHolidays = async () => {
   try {
     const dates = selectedHolidayDates.value.map(d => {
       const date = new Date(d)
-      return date.toISOString().split('T')[0]
+      const y = date.getFullYear()
+      const m = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
     })
     await axios.post('/api/leave/holidays', { dates })
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'บันทึกวันหยุดเรียบร้อย', life: 3000 })
