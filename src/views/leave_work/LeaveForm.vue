@@ -58,7 +58,7 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
-                :minDate="minStartDate" :disabledDates="disabledDates" placeholder="เลือกวันที่"
+                :minDate="minStartDate" :disabledDates="disabledDates" :disabledDays="[0, 6]" placeholder="เลือกวันที่"
                 @date-select="updateStartDateTime">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
@@ -76,7 +76,7 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" class="corporate-input date-only advance-calendar" :manualInput="false" required
+                :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" :disabledDays="[0, 6]" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่"
                 @date-select="updateEndDateTime">
                 <template #date="slotProps">
@@ -422,10 +422,15 @@ export default {
     }
   },
   methods: {
-    // Add N working days (Mon-Fri, non-holiday) to a date
+    // Add N working days (Mon-Fri, non-holiday) to a date, counting fromDate itself
     addWorkingDays(fromDate, days) {
       const result = new Date(fromDate)
       let count = 0
+      // Count fromDate if it's a working day
+      const d0 = result.getDay()
+      if (d0 !== 0 && d0 !== 6 && !this.holidayDates.includes(result.getTime())) {
+        count++
+      }
       while (count < days) {
         result.setDate(result.getDate() + 1)
         const day = result.getDay()
@@ -446,10 +451,9 @@ export default {
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
       checkDate.setHours(0, 0, 0, 0)
       if (checkDate <= today) return false
-      // Count working days strictly between today and checkDate (exclusive both ends)
+      // Count working days from today (inclusive) up to checkDate (exclusive)
       let workingDays = 0
       const cur = new Date(today)
-      cur.setDate(cur.getDate() + 1)
       while (cur < checkDate) {
         const d = cur.getDay()
         if (d !== 0 && d !== 6 && !this.holidayDates.includes(cur.getTime())) {
@@ -764,7 +768,6 @@ export default {
           
           let workingDays = 0
           const cur = new Date(today)
-          cur.setDate(cur.getDate() + 1)
           while (cur < startDate) {
             const d = cur.getDay()
             if (d !== 0 && d !== 6 && !this.holidayDates.includes(cur.getTime())) {
