@@ -445,17 +445,29 @@ export default {
       today.setHours(0, 0, 0, 0)
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
       checkDate.setHours(0, 0, 0, 0)
-      if (checkDate < today) return false
-      return checkDate < this.minStartDate
+      if (checkDate <= today) return false
+      // Count working days strictly between today and checkDate (exclusive both ends)
+      let workingDays = 0
+      const cur = new Date(today)
+      cur.setDate(cur.getDate() + 1)
+      while (cur < checkDate) {
+        const d = cur.getDay()
+        if (d !== 0 && d !== 6 && !this.holidayDates.includes(cur.getTime())) {
+          workingDays++
+        }
+        cur.setDate(cur.getDate() + 1)
+      }
+      return workingDays < this.selectedLeaveTypeAdvanceDays
     },
     getDateClass(dateObj) {
-      if (this.isAdvanceDay(dateObj)) {
-        return 'advance-day-blocked'
-      }
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
       checkDate.setHours(0, 0, 0, 0)
+      // Holidays always show red (takes priority over advance-blocked yellow)
       if (this.holidayDates.includes(checkDate.getTime())) {
         return 'holiday-date'
+      }
+      if (this.isAdvanceDay(dateObj)) {
+        return 'advance-day-blocked'
       }
       return ''
     },
