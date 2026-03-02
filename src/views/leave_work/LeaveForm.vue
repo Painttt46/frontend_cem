@@ -58,7 +58,7 @@
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
-                :minDate="minStartDate" :disabledDates="disabledDates" :disabledDays="[0, 6]" placeholder="เลือกวันที่"
+                :minDate="minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" placeholder="เลือกวันที่"
                 @date-select="updateStartDateTime">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
@@ -76,7 +76,7 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" :disabledDays="[0, 6]" class="corporate-input date-only advance-calendar" :manualInput="false" required
+                :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่"
                 @date-select="updateEndDateTime">
                 <template #date="slotProps">
@@ -339,7 +339,12 @@ export default {
       })
     },
     disabledDates() {
+      if (this.isLevel2Approver) return []
       return this.holidays.map(h => new Date(h.holiday_date))
+    },
+    disabledDays() {
+      if (this.isLevel2Approver) return []
+      return [0, 6]
     },
     formatMinDate() {
       return this.minStartDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -445,7 +450,7 @@ export default {
     },
     // Check if date is in advance days period (working days)
     isAdvanceDay(dateObj) {
-      if (!this.selectedLeaveTypeAdvanceDays) return false
+      if (!this.selectedLeaveTypeAdvanceDays || this.isLevel2Approver) return false
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
