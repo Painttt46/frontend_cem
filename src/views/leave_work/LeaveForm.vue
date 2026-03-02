@@ -434,6 +434,8 @@ export default {
           count++
         }
       }
+      // move one more day so that 'days' working days have fully passed
+      result.setDate(result.getDate() + 1)
       return result
     },
     // Check if date is in advance days period (working days)
@@ -750,7 +752,7 @@ export default {
           let workingDays = 0
           const cur = new Date(today)
           cur.setDate(cur.getDate() + 1)
-          while (cur <= startDate) {
+          while (cur < startDate) {
             const d = cur.getDay()
             if (d !== 0 && d !== 6 && !this.holidayDates.includes(cur.getTime())) {
               workingDays++
