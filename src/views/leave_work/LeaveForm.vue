@@ -462,8 +462,9 @@ export default {
     getDateClass(dateObj) {
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
       checkDate.setHours(0, 0, 0, 0)
-      // Holidays always show red (takes priority over advance-blocked yellow)
-      if (this.holidayDates.includes(checkDate.getTime())) {
+      const dayOfWeek = checkDate.getDay()
+      // Weekends and holidays always show red
+      if (dayOfWeek === 0 || dayOfWeek === 6 || this.holidayDates.includes(checkDate.getTime())) {
         return 'holiday-date'
       }
       if (this.isAdvanceDay(dateObj)) {
