@@ -747,7 +747,6 @@ export default {
           const startDate = new Date(this.formData.startDateTime)
           startDate.setHours(0, 0, 0, 0)
           
-          const diffTime = startDate - today
           let workingDays = 0
           const cur = new Date(today)
           cur.setDate(cur.getDate() + 1)
