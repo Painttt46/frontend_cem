@@ -327,7 +327,7 @@ export default {
       today.setHours(0, 0, 0, 0)
       const advanceDays = this.selectedLeaveTypeAdvanceDays
       if (advanceDays > 0) {
-        today.setDate(today.getDate() + advanceDays)
+        return this.addWorkingDays(today, advanceDays)
       }
       return today
     },
@@ -422,15 +422,29 @@ export default {
     }
   },
   methods: {
-    // Check if date is in advance days period
+    // Add N working days (Mon-Fri, non-holiday) to a date
+    addWorkingDays(fromDate, days) {
+      const result = new Date(fromDate)
+      let count = 0
+      while (count < days) {
+        result.setDate(result.getDate() + 1)
+        const day = result.getDay()
+        const isHoliday = this.holidayDates.includes(result.getTime())
+        if (day !== 0 && day !== 6 && !isHoliday) {
+          count++
+        }
+      }
+      return result
+    },
+    // Check if date is in advance days period (working days)
     isAdvanceDay(dateObj) {
       if (!this.selectedLeaveTypeAdvanceDays) return false
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
       checkDate.setHours(0, 0, 0, 0)
-      const diffDays = Math.floor((checkDate - today) / (1000 * 60 * 60 * 24))
-      return diffDays >= 0 && diffDays < this.selectedLeaveTypeAdvanceDays
+      if (checkDate < today) return false
+      return checkDate < this.minStartDate
     },
     getDateClass(dateObj) {
       if (this.isAdvanceDay(dateObj)) {
@@ -734,13 +748,22 @@ export default {
           startDate.setHours(0, 0, 0, 0)
           
           const diffTime = startDate - today
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+          let workingDays = 0
+          const cur = new Date(today)
+          cur.setDate(cur.getDate() + 1)
+          while (cur <= startDate) {
+            const d = cur.getDay()
+            if (d !== 0 && d !== 6 && !this.holidayDates.includes(cur.getTime())) {
+              workingDays++
+            }
+            cur.setDate(cur.getDate() + 1)
+          }
           
-          if (diffDays < selectedLeaveType.advance_days) {
+          if (workingDays < selectedLeaveType.advance_days) {
             this.$toast.add({
               severity: 'error',
               summary: 'ลาล่วงหน้าไม่เพียงพอ',
-              detail: `${selectedLeaveType.label} ต้องลาล่วงหน้าอย่างน้อย ${selectedLeaveType.advance_days} วัน (คุณลาล่วงหน้า ${diffDays} วัน)`,
+              detail: `${selectedLeaveType.label} ต้องลาล่วงหน้าอย่างน้อย ${selectedLeaveType.advance_days} วันทำการ (คุณลาล่วงหน้า ${workingDays} วันทำการ)`,
               life: 5000
             })
             return
