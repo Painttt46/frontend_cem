@@ -45,6 +45,19 @@
       </div>
     </div>
 
+    <!-- Date Search Bar -->
+    <div class="date-search-bar" v-if="permissionsLoaded">
+      <div class="date-search-inner">
+        <i class="pi pi-search" style="color: #64748b;"></i>
+        <span class="date-search-label">ค้นหาตามวันที่ลา :</span>
+        <Calendar v-model="searchStartDate" dateFormat="dd/mm/yy" placeholder="วันเริ่มต้น" showIcon showButtonBar class="date-search-cal" />
+        <span class="date-search-sep">—</span>
+        <Calendar v-model="searchEndDate" dateFormat="dd/mm/yy" placeholder="วันสิ้นสุด" showIcon showButtonBar class="date-search-cal" />
+        <Button v-if="searchStartDate || searchEndDate" icon="pi pi-times" size="small" severity="secondary" text rounded @click="clearDateSearch" v-tooltip="'ล้างการค้นหา'" />
+        <Badge v-if="searchStartDate || searchEndDate" :value="`พบ ${filteredLeaveRecords.length} รายการ`" severity="info" class="date-result-badge" />
+      </div>
+    </div>
+
     <!-- Main Content - History -->
     <div class="main-content">
       <LeaveHistory :records="filteredLeaveRecords" :showSensitiveColumns="isInApprovalList || currentUserRole === 'admin'"
@@ -143,7 +156,10 @@ export default {
       // Export dialog
       showExportDialog: false,
       exportStartDate: null,
-      exportEndDate: null
+      exportEndDate: null,
+      // Date search
+      searchStartDate: null,
+      searchEndDate: null
     }
   },
   computed: {
@@ -171,13 +187,23 @@ export default {
       return this.hasAccess('/leave_work/approve')
     },
     filteredLeaveRecords() {
+      let records = this.leaveRecords
       if (this.activeFilter === 'today') {
-        return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) === this.todayStr)
+        records = records.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) === this.todayStr)
+      } else if (this.activeFilter === 'future') {
+        records = records.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) > this.todayStr)
       }
-      if (this.activeFilter === 'future') {
-        return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) > this.todayStr)
+      if (this.searchStartDate || this.searchEndDate) {
+        const searchStart = this.searchStartDate ? this.toDateStr(this.searchStartDate) : '0000-00-00'
+        const searchEnd = this.searchEndDate ? this.toDateStr(this.searchEndDate) : '9999-12-31'
+        records = records.filter(r => {
+          if (!r.start_datetime) return false
+          const recStart = r.start_datetime.substring(0, 10)
+          const recEnd = (r.end_datetime || r.start_datetime).substring(0, 10)
+          return recStart <= searchEnd && recEnd >= searchStart
+        })
       }
-      return this.leaveRecords
+      return records
     },
     pendingLeaveRecords() {
       const pending = this.filteredLeaveRecords.filter(record =>
@@ -731,6 +757,16 @@ export default {
 
     setFilter(filter) {
       this.activeFilter = filter
+    },
+
+    toDateStr(date) {
+      const d = new Date(date)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    },
+
+    clearDateSearch() {
+      this.searchStartDate = null
+      this.searchEndDate = null
     }
   },
 
@@ -1187,5 +1223,52 @@ export default {
 
 .export-form .date-range .p-calendar {
   flex: 1;
+}
+
+.date-search-bar {
+  margin-bottom: 1rem;
+  background: white;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.date-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.date-search-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.date-search-sep {
+  color: #94a3b8;
+  font-weight: 300;
+}
+
+.date-search-cal {
+  width: 180px;
+}
+
+.date-result-badge {
+  font-size: 0.8rem !important;
+}
+
+@media (max-width: 768px) {
+  .date-search-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .date-search-cal {
+    width: 100%;
+  }
 }
 </style>
