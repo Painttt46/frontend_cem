@@ -6,8 +6,17 @@
         <p>ยังไม่มีข้อมูลการลางาน</p>
       </div>
 
-      <EnhancedDataTable v-else :data="records" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
+      <EnhancedDataTable v-else :data="dateFilteredRecords" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
         responsiveLayout="scroll" class="history-table" stripedRows>
+
+        <template #extraControls>
+          <div class="date-search-controls">
+            <Calendar v-model="dateSearchStart" dateFormat="dd/mm/yy" placeholder="วันเริ่มต้น" showIcon showButtonBar class="date-search-cal" />
+            <span class="date-search-sep">—</span>
+            <Calendar v-model="dateSearchEnd" dateFormat="dd/mm/yy" placeholder="วันสิ้นสุด" showIcon showButtonBar class="date-search-cal" />
+            <Button v-if="dateSearchStart || dateSearchEnd" icon="pi pi-times" size="small" severity="secondary" text rounded @click="dateSearchStart = null; dateSearchEnd = null" v-tooltip="'ล้างการค้นหาวันที่'" />
+          </div>
+        </template>
 
         <Column field="id" header="รหัสคำขอ" :sortable="true">
           <template #body="slotProps">
@@ -337,10 +346,28 @@ export default {
         lunch_start: '12:00',
         lunch_end: '13:00'
       },
-      workHoursCache: {}
+      workHoursCache: {},
+      // Date search
+      dateSearchStart: null,
+      dateSearchEnd: null
     }
   },
   computed: {
+    dateFilteredRecords() {
+      if (!this.dateSearchStart && !this.dateSearchEnd) return this.records
+      const toStr = (d) => {
+        const dt = new Date(d)
+        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+      }
+      const s = this.dateSearchStart ? toStr(this.dateSearchStart) : '0000-00-00'
+      const e = this.dateSearchEnd ? toStr(this.dateSearchEnd) : '9999-12-31'
+      return (this.records || []).filter(r => {
+        if (!r.start_datetime) return false
+        const rStart = r.start_datetime.substring(0, 10)
+        const rEnd = (r.end_datetime || r.start_datetime).substring(0, 10)
+        return rStart <= e && rEnd >= s
+      })
+    },
     hoursPerDay() {
       const [wsH, wsM] = this.workHours.start_time.split(':').map(Number)
       const [weH, weM] = this.workHours.end_time.split(':').map(Number)
@@ -1520,5 +1547,32 @@ export default {
 
 .cancel-reason-eye-row {
   margin-top: 0.25rem;
+}
+
+.date-search-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.date-search-cal {
+  width: 165px;
+}
+
+.date-search-sep {
+  color: #94a3b8;
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .date-search-controls {
+    width: 100%;
+  }
+
+  .date-search-cal {
+    width: 100%;
+  }
 }
 </style>

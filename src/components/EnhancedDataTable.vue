@@ -8,6 +8,7 @@
           <InputText v-model="localSearch" placeholder="ค้นหาทั่วไป..." class="w-full" />
         </IconField>
       </div>
+      <slot name="extraControls" />
       <div class="control-buttons">
         <Button 
           :icon="advancedMode ? 'pi pi-times' : 'pi pi-filter'" 
