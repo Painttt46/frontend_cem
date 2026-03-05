@@ -114,28 +114,21 @@
               </div>
             </div>
 
-            <div class="detail-row fuel-row">
+            <div class="detail-row">
               <div class="detail-label">
                 <i class="pi pi-bolt" style="color: #f59e0b;"></i>
                 ระดับน้ำมัน
               </div>
-              <div class="detail-value">
-                <div class="fuel-gauge">
-                  <div v-for="seg in 5" :key="seg" class="fuel-segment" :class="seg <= fuelSegments(selectedCarRecord.fuel_level_borrow) ? fuelLevelClass(selectedCarRecord.fuel_level_borrow) : 'fuel-empty'"></div>
-                </div>
-                <span class="fuel-text">{{ selectedCarRecord.fuel_level_borrow || 0 }}%</span>
-              </div>
             </div>
+            <FuelGauge :modelValue="selectedCarRecord.fuel_level_borrow || 50" :disabled="true" />
 
-            <div class="detail-row">
+            <div class="detail-row" style="margin-top: 0.5rem;">
               <div class="detail-label">
                 <i class="pi pi-wallet" style="color: #8b5cf6;"></i>
                 Easy Pass
               </div>
-              <div class="detail-value easy-pass-value">
-                {{ formatEasyPass(selectedCarRecord.easy_pass_borrow) }}
-              </div>
             </div>
+            <EasyPassCard :modelValue="selectedCarRecord.easy_pass_borrow || 500" :maxAmount="3000" :disabled="true" />
           </div>
         </div>
 
@@ -212,28 +205,21 @@
               </div>
             </div>
 
-            <div class="detail-row fuel-row">
+            <div class="detail-row">
               <div class="detail-label">
                 <i class="pi pi-bolt" style="color: #f59e0b;"></i>
                 ระดับน้ำมัน
               </div>
-              <div class="detail-value">
-                <div class="fuel-gauge">
-                  <div v-for="seg in 5" :key="seg" class="fuel-segment" :class="seg <= fuelSegments(selectedCarRecord.fuel_level_borrow) ? fuelLevelClass(selectedCarRecord.fuel_level_borrow) : 'fuel-empty'"></div>
-                </div>
-                <span class="fuel-text">{{ selectedCarRecord.fuel_level_borrow || 0 }}%</span>
-              </div>
             </div>
+            <FuelGauge :modelValue="selectedCarRecord.fuel_level_borrow || 50" :disabled="true" />
 
-            <div class="detail-row">
+            <div class="detail-row" style="margin-top: 0.5rem;">
               <div class="detail-label">
                 <i class="pi pi-wallet" style="color: #8b5cf6;"></i>
                 Easy Pass
               </div>
-              <div class="detail-value easy-pass-value">
-                {{ formatEasyPass(selectedCarRecord.easy_pass_borrow) }}
-              </div>
             </div>
+            <EasyPassCard :modelValue="selectedCarRecord.easy_pass_borrow || 500" :maxAmount="3000" :disabled="true" />
           </div>
         </div>
 
@@ -248,8 +234,12 @@
 </template>
 
 <script>
+import FuelGauge from '@/components/FuelGauge.vue'
+import EasyPassCard from '@/components/EasyPassCard.vue'
+
 export default {
   name: 'CarCalendar',
+  components: { FuelGauge, EasyPassCard },
   props: {
     records: Array,
     availableBorrows: Array,
@@ -300,25 +290,6 @@ export default {
     formatColleagues(colleagues) {
       if (!colleagues?.length) return '-'
       return colleagues.map(c => typeof c === 'object' ? (c.name || c.value) : c).join(', ')
-    },
-    fuelLevelClass(level) {
-      const n = level || 0
-      if (n >= 60) return 'fuel-high'
-      if (n >= 30) return 'fuel-mid'
-      return 'fuel-low'
-    },
-    fuelSegments(level) {
-      const n = level || 0
-      if (n >= 80) return 5
-      if (n >= 60) return 4
-      if (n >= 40) return 3
-      if (n >= 20) return 2
-      if (n > 0) return 1
-      return 0
-    },
-    formatEasyPass(value) {
-      if (value == null) return 'ไม่ระบุ'
-      return `฿${Number(value).toLocaleString()}`
     },
     previousMonth() {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1)
@@ -821,42 +792,6 @@ export default {
 .status-active {
   color: #ffc107;
   font-weight: bold;
-}
-
-/* Fuel gauge */
-.fuel-row .detail-value {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.fuel-gauge {
-  display: flex;
-  gap: 3px;
-  align-items: flex-end;
-}
-
-.fuel-segment {
-  width: 10px;
-  border-radius: 2px;
-  transition: background 0.3s ease;
-}
-.fuel-segment:nth-child(1) { height: 8px; }
-.fuel-segment:nth-child(2) { height: 12px; }
-.fuel-segment:nth-child(3) { height: 16px; }
-.fuel-segment:nth-child(4) { height: 20px; }
-.fuel-segment:nth-child(5) { height: 24px; }
-
-.fuel-empty { background: #e5e7eb; }
-.fuel-high { background: #22c55e; }
-.fuel-mid { background: #f59e0b; }
-.fuel-low { background: #ef4444; }
-
-.fuel-text {
-  font-weight: 700;
-  font-size: 0.9rem;
-  min-width: 36px;
-  text-align: right;
 }
 
 .easy-pass-value {
