@@ -385,7 +385,7 @@ const startCountdown = () => {
 
 /* Banner spacing adjustment */
 .banner-visible {
-  padding-top: 80px;
+  padding-top: 72px;
 }
 
 .sidebar-toggle-btn {
@@ -597,7 +597,7 @@ h4 {
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
   .banner-visible {
-    padding-top: 110px;
+    padding-top: 100px;
   }
 
   .content-padding {

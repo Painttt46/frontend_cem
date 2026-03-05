@@ -20,7 +20,7 @@
 
           <!-- Chat preview -->
           <div class="chat-preview" v-if="newAnnouncement.text">
-            <span class="chat-icon">{{ newAnnouncement.icon }}</span>
+            <img v-if="imagePreview" :src="imagePreview" class="chat-preview-img" alt="preview" />
             <div class="chat-body">
               <span class="chat-text">{{ newAnnouncement.text }}</span>
               <span v-if="senderDisplayName" class="chat-sender">— {{ senderDisplayName }}</span>
@@ -48,28 +48,30 @@
             />
           </div>
 
-          <!-- icon + type -->
-          <div class="form-row">
-            <div class="form-group">
-              <label>ไอคอน</label>
-              <select v-model="newAnnouncement.icon" class="field-select">
-                <option value="📢">📢 ประกาศ</option>
-                <option value="⚠️">⚠️ เตือน</option>
-                <option value="✨">✨ ใหม่</option>
-                <option value="🚀">🚀 อัปเดต</option>
-                <option value="📅">📅 กำหนดการ</option>
-                <option value="🎉">🎉 สำเร็จ</option>
-              </select>
+          <!-- image upload + type -->
+          <div class="form-group">
+            <label>รูปภาพ <span class="label-optional">(ไม่บังคับ)</span></label>
+            <div class="image-upload-area" @click="$refs.imageInput.click()">
+              <img v-if="imagePreview" :src="imagePreview" class="image-preview" alt="preview" />
+              <div v-else class="upload-placeholder">
+                <i class="pi pi-image"></i>
+                <span>คลิกเพื่ออัปโหลดรูป</span>
+              </div>
+              <button v-if="imagePreview" type="button" class="remove-image-btn" @click.stop="removeImage">
+                <i class="pi pi-times"></i>
+              </button>
             </div>
-            <div class="form-group">
-              <label>ประเภท</label>
-              <select v-model="newAnnouncement.type" class="field-select">
-                <option value="">ปกติ</option>
-                <option value="highlight">โดดเด่น</option>
-                <option value="warning">เตือน</option>
-                <option value="info">ข้อมูล</option>
-              </select>
-            </div>
+            <input ref="imageInput" type="file" accept="image/*" hidden @change="onImageSelected" />
+          </div>
+
+          <div class="form-group">
+            <label>ประเภท</label>
+            <select v-model="newAnnouncement.type" class="field-select">
+              <option value="info">🔵 น้ำเงิน</option>
+              <option value="highlight">🟡 เหลือง</option>
+              <option value="warning">🟠 ส้ม</option>
+              <option value="urgent">🔴 แดง</option>
+            </select>
           </div>
 
           <div class="form-actions">
@@ -110,10 +112,28 @@ const senderDisplayName = ref(
 )
 
 const newAnnouncement = ref({
-  icon: '📢',
   text: '',
-  type: ''
+  type: 'info'
 })
+
+const selectedImage = ref(null)
+const imagePreview = ref(null)
+
+const onImageSelected = (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) {
+    toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'รูปภาพต้องมีขนาดไม่เกิน 5MB', life: 3000 })
+    return
+  }
+  selectedImage.value = file
+  imagePreview.value = URL.createObjectURL(file)
+}
+
+const removeImage = () => {
+  selectedImage.value = null
+  imagePreview.value = null
+}
 
 const toggleInput = () => {
   isExpanded.value = !isExpanded.value
@@ -123,7 +143,9 @@ const toggleInput = () => {
 }
 
 const clearForm = () => {
-  newAnnouncement.value = { icon: '📢', text: '', type: '' }
+  newAnnouncement.value = { text: '', type: 'info' }
+  selectedImage.value = null
+  imagePreview.value = null
 }
 
 const submitAnnouncement = async () => {
@@ -135,11 +157,16 @@ const submitAnnouncement = async () => {
   isSubmitting.value = true
 
   try {
-    await axios.post('/api/banner', {
-      text: newAnnouncement.value.text,
-      type: newAnnouncement.value.type || 'info',
-      icon: newAnnouncement.value.icon,
-      sender_name: senderDisplayName.value.trim() || null
+    const formData = new FormData()
+    formData.append('text', newAnnouncement.value.text)
+    formData.append('type', newAnnouncement.value.type || 'info')
+    formData.append('alt_text', senderDisplayName.value.trim() || '')
+    if (selectedImage.value) {
+      formData.append('image', selectedImage.value)
+    }
+
+    await axios.post('/api/banner', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     })
 
     toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'บันทึกข้อความประกาศเรียบร้อยแล้ว', life: 3000 })
@@ -226,7 +253,6 @@ const submitAnnouncement = async () => {
   padding: 10px 12px;
   border-left: 3px solid #4A90E2;
 }
-.chat-icon { font-size: 1.3rem; line-height: 1.4; }
 .chat-body { display: flex; flex-direction: column; gap: 2px; }
 .chat-text { font-size: 0.88rem; color: #222; font-weight: 500; line-height: 1.4; }
 .chat-sender { font-size: 0.75rem; color: #888; font-style: italic; }
@@ -295,6 +321,64 @@ const submitAnnouncement = async () => {
 /* Animations */
 .slide-up-enter-active, .slide-up-leave-active { transition: all 0.25s ease; }
 .slide-up-enter-from, .slide-up-leave-to { opacity: 0; transform: translateY(12px); }
+
+/* Image upload */
+.image-upload-area {
+  position: relative;
+  border: 2px dashed #d0d0d0;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  background: #fafafa;
+}
+.image-upload-area:hover {
+  border-color: #4A90E2;
+  background: #f0f6ff;
+}
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #aaa;
+  font-size: 13px;
+}
+.upload-placeholder i { font-size: 1.5rem; color: #bbb; }
+.image-preview {
+  max-height: 80px;
+  max-width: 100%;
+  border-radius: 6px;
+  object-fit: contain;
+}
+.remove-image-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+}
+.remove-image-btn:hover { background: rgba(215,53,39,0.8); }
+.chat-preview-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
 
 @media (max-width: 480px) {
   .announcement-input-panel { width: 300px; }
