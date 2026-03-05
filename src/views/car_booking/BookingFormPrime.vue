@@ -501,10 +501,12 @@ export default {
         // ตรวจสอบว่าไม่ได้เลือกซ้ำ
         const colleagues = this.borrowForm?.colleagues || []
         const alreadySelected = colleagues.some(c => c.name === user.displayName)
+        const fullName = `${user.firstname} ${user.lastname}`.trim()
 
         if (!alreadySelected) {
           const newColleagues = [...colleagues, {
             name: user.displayName,
+            fullName: fullName,
             position: user.position || '',
             department: user.department || ''
           }]

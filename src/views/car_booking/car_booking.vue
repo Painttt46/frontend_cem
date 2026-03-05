@@ -196,8 +196,7 @@ export default {
         const isBorrower = r.name === currentUserName
         const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
           r.colleagues.some(colleague => {
-            const colleagueName = typeof colleague === 'string' ? colleague : colleague?.name
-            return colleagueName === currentUserName
+            return this.normalizeColleagueName(colleague) === currentUserName
           })
 
         return isBorrower || isColleague
@@ -214,8 +213,7 @@ export default {
         const isBorrower = r.name === currentUserName
         const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
           r.colleagues.some(colleague => {
-            const colleagueName = typeof colleague === 'string' ? colleague : colleague?.name
-            return colleagueName === currentUserName
+            return this.normalizeColleagueName(colleague) === currentUserName
           })
 
         return isBorrower || isColleague
@@ -250,8 +248,7 @@ export default {
         const isBorrower = r.name === currentUserName
         const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
           r.colleagues.some(colleague => {
-            const colleagueName = typeof colleague === 'string' ? colleague : colleague?.name
-            return colleagueName === currentUserName
+            return this.normalizeColleagueName(colleague) === currentUserName
           })
 
         return isBorrower || isColleague
@@ -313,6 +310,11 @@ export default {
       const firstName = localStorage.getItem('soc_firstname') || ''
       const lastName = localStorage.getItem('soc_lastname') || ''
       return `${firstName} ${lastName}`.trim()
+    },
+    // ตัด (nickname) ออกจากชื่อ colleague เพื่อเปรียบเทียบกับ currentUserName
+    normalizeColleagueName(colleague) {
+      if (typeof colleague === 'string') return colleague.replace(/\s*\(.*?\)\s*$/, '').trim()
+      return colleague?.fullName || colleague?.name?.replace(/\s*\(.*?\)\s*$/, '').trim() || ''
     },
     async loadRecords(silent = false) {
       try {
