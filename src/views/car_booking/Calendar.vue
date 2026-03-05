@@ -121,9 +121,9 @@
               </div>
               <div class="detail-value">
                 <div class="fuel-segments">
-                  <div v-for="seg in 5" :key="seg" class="fuel-seg" :class="seg <= fuelSegments(selectedCarRecord.fuel_level_borrow) ? fuelColorClass(selectedCarRecord.fuel_level_borrow) : 'seg-empty'"></div>
+                  <div v-for="seg in 5" :key="seg" class="fuel-seg" :class="seg <= fuelSegments(latestFuel) ? fuelColorClass(latestFuel) : 'seg-empty'"></div>
                 </div>
-                <span class="fuel-text">{{ selectedCarRecord.fuel_level_borrow || 0 }}%</span>
+                <span class="fuel-text">{{ latestFuel }}%</span>
               </div>
             </div>
 
@@ -133,7 +133,7 @@
                 Easy Pass
               </div>
             </div>
-            <EasyPassCard :modelValue="selectedCarRecord.easy_pass_borrow || 500" :maxAmount="3000" :disabled="true" />
+            <EasyPassCard :modelValue="latestEasyPass" :maxAmount="3000" :disabled="true" />
           </div>
         </div>
 
@@ -217,9 +217,9 @@
               </div>
               <div class="detail-value">
                 <div class="fuel-segments">
-                  <div v-for="seg in 5" :key="seg" class="fuel-seg" :class="seg <= fuelSegments(selectedCarRecord.fuel_level_borrow) ? fuelColorClass(selectedCarRecord.fuel_level_borrow) : 'seg-empty'"></div>
+                  <div v-for="seg in 5" :key="seg" class="fuel-seg" :class="seg <= fuelSegments(latestFuel) ? fuelColorClass(latestFuel) : 'seg-empty'"></div>
                 </div>
-                <span class="fuel-text">{{ selectedCarRecord.fuel_level_borrow || 0 }}%</span>
+                <span class="fuel-text">{{ latestFuel }}%</span>
               </div>
             </div>
 
@@ -229,7 +229,7 @@
                 Easy Pass
               </div>
             </div>
-            <EasyPassCard :modelValue="selectedCarRecord.easy_pass_borrow || 500" :maxAmount="3000" :disabled="true" />
+            <EasyPassCard :modelValue="latestEasyPass" :maxAmount="3000" :disabled="true" />
           </div>
         </div>
 
@@ -261,7 +261,9 @@ export default {
       dayNames: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
       showCarDialog: false,
       showBookingDialog: false,
-      selectedCarRecord: null
+      selectedCarRecord: null,
+      latestFuel: 50,
+      latestEasyPass: 500
     }
   },
   computed: {
@@ -330,7 +332,7 @@ export default {
         this.$emit('select-date', date)
       }
     },
-    showCarDetails(date) {
+    async showCarDetails(date) {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
 
@@ -342,10 +344,11 @@ export default {
       const activeBooking = this.records.find(r => r.status === 'active')
       if (activeBooking) {
         this.selectedCarRecord = activeBooking
+        await this.fetchLatestFuel()
         this.showCarDialog = true
       }
     },
-    showBookingDetails(date) {
+    async showBookingDetails(date) {
       const dateStr = date.toDateString()
       const borrowRecord = this.records.find(r =>
         (r.status === 'pending' || r.status === 'active') &&
@@ -354,7 +357,18 @@ export default {
 
       if (borrowRecord) {
         this.selectedCarRecord = borrowRecord
+        await this.fetchLatestFuel()
         this.showBookingDialog = true
+      }
+    },
+    async fetchLatestFuel() {
+      try {
+        const response = await this.$http.get('/api/car-booking/latest-fuel')
+        this.latestFuel = response.data.fuel_level || 50
+        this.latestEasyPass = response.data.easy_pass_balance || 500
+      } catch {
+        this.latestFuel = 50
+        this.latestEasyPass = 500
       }
     },
     formatDate(dateString) {
