@@ -164,9 +164,9 @@
         </div>
         
         <div class="field add-quota-field">
-          <label>เพิ่มวันลา (วัน)</label>
-          <InputNumber v-model="addQuotaDays" :min="0" :max="365" showButtons class="w-full" suffix=" วัน" :step="0.5" @input="handleAddQuota" />
-          <small class="field-hint">เพิ่มวันลาทั้งโควต้าทั้งหมดและคงเหลือพร้อมกัน</small>
+          <label>เพิ่มชั่วโมงลา (ชม.)</label>
+          <InputNumber v-model="addQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" @input="handleAddQuota" />
+          <small class="field-hint">{{ addQuotaHours > 0 ? `= ${(addQuotaHours / 8).toFixed(2)} วัน` : '' }} เพิ่มโควต้าทั้งหมดและคงเหลือพร้อมกัน</small>
         </div>
         
         <Divider />
@@ -275,7 +275,7 @@ const currentQuota = ref(0)
 const currentRemaining = ref(0)
 const newQuotaHours = ref(0)
 const newRemainingHours = ref(0)
-const addQuotaDays = ref(0)
+const addQuotaHours = ref(0)
 
 // Computed filtered users
 const filteredUsers = computed(() => {
@@ -500,15 +500,14 @@ const editQuota = (user, leaveType) => {
   currentRemaining.value = user[`${leaveType.value}_remaining`] || 0
   newQuotaHours.value = currentQuota.value * 8
   newRemainingHours.value = currentRemaining.value * 8
-  addQuotaDays.value = 0
+  addQuotaHours.value = 0
   showEditQuotaDialog.value = true
 }
 
 const handleAddQuota = () => {
-  if (addQuotaDays.value > 0) {
-    const addHours = addQuotaDays.value * 8
-    newQuotaHours.value = (currentQuota.value * 8) + addHours
-    newRemainingHours.value = (currentRemaining.value * 8) + addHours
+  if (addQuotaHours.value > 0) {
+    newQuotaHours.value = (currentQuota.value * 8) + addQuotaHours.value
+    newRemainingHours.value = (currentRemaining.value * 8) + addQuotaHours.value
   } else {
     newQuotaHours.value = currentQuota.value * 8
     newRemainingHours.value = currentRemaining.value * 8
@@ -523,14 +522,14 @@ const closeEditDialog = () => {
   currentRemaining.value = 0
   newQuotaHours.value = 0
   newRemainingHours.value = 0
-  addQuotaDays.value = 0
+  addQuotaHours.value = 0
 }
 
 const saveQuota = async () => {
   const newQuota = newQuotaHours.value / 8
   const newRemaining = newRemainingHours.value / 8
   
-  if (newQuota === currentQuota.value && newRemaining === currentRemaining.value && addQuotaDays.value === 0) {
+  if (newQuota === currentQuota.value && newRemaining === currentRemaining.value && addQuotaHours.value === 0) {
     toast.add({
       severity: 'info',
       summary: 'ไม่มีการเปลี่ยนแปลง',
@@ -552,8 +551,8 @@ const saveQuota = async () => {
 
   saving.value = true
   try {
-    const payload = addQuotaDays.value > 0 
-      ? { addQuota: addQuotaDays.value }
+    const payload = addQuotaHours.value > 0 
+      ? { addQuota: addQuotaHours.value / 8 }
       : { quota: newQuota, remaining: newRemaining }
     
     await axios.put(`/api/leave/quota/${editingUser.value.id}/${editingLeaveType.value.value}`, payload)
