@@ -400,7 +400,7 @@ export default {
       const currentUserId = localStorage.getItem('soc_user_id')
       const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
       const isOwner = (this.selectedRecord.user_id == currentUserId) || (this.selectedRecord.employee_name === currentUserName)
-      if (!isOwner) return false
+      if (!isOwner && !this.isLevel2Approver) return false
       const now = new Date()
       const createdAt = new Date(this.selectedRecord.created_at)
       createdAt.setHours(0, 0, 0, 0)
@@ -612,7 +612,7 @@ export default {
     },
 
     canEditRecord(record) {
-      if (!this.isOwnerRecord(record)) return false
+      if (!this.isOwnerRecord(record) && !this.isLevel2Approver) return false
       const now = new Date()
       const createdAt = new Date(record.created_at)
       createdAt.setHours(0, 0, 0, 0)
