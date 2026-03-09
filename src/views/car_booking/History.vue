@@ -209,7 +209,11 @@ export default {
           returned: returned
         }
       })
-      return groups.sort((a, b) => b.id - a.id)
+      return groups.sort((a, b) => {
+          const aTime = new Date(a.borrowRecord.updated_at || 0).getTime()
+          const bTime = new Date(b.borrowRecord.updated_at || 0).getTime()
+          return bTime - aTime || b.id - a.id
+        })
     },
     groupedRecordsWithDuration() {
       return this.groupedRecords.map(group => {
