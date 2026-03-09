@@ -95,46 +95,6 @@
           </template>
         </Column>
 
-        <Column header="ระดับน้ำมัน" style="min-width: 110px;">
-          <template #body="slotProps">
-            <div v-if="slotProps.data.borrowRecord.fuel_level_borrow != null" class="fuel-col">
-              <div class="fuel-row-inline">
-                <span class="fuel-label-sm">ไป</span>
-                <div class="fuel-segs-sm">
-                  <div v-for="seg in 5" :key="seg" class="fuel-seg-sm"
-                    :class="seg <= fuelSegments(slotProps.data.borrowRecord.fuel_level_borrow) ? fuelColorClass(slotProps.data.borrowRecord.fuel_level_borrow) : 'seg-empty'"></div>
-                </div>
-                <span class="fuel-pct-sm">{{ slotProps.data.borrowRecord.fuel_level_borrow }}%</span>
-              </div>
-              <div v-if="slotProps.data.returned && slotProps.data.borrowRecord.fuel_level_return != null" class="fuel-row-inline">
-                <span class="fuel-label-sm">คืน</span>
-                <div class="fuel-segs-sm">
-                  <div v-for="seg in 5" :key="seg" class="fuel-seg-sm"
-                    :class="seg <= fuelSegments(slotProps.data.borrowRecord.fuel_level_return) ? fuelColorClass(slotProps.data.borrowRecord.fuel_level_return) : 'seg-empty'"></div>
-                </div>
-                <span class="fuel-pct-sm">{{ slotProps.data.borrowRecord.fuel_level_return }}%</span>
-              </div>
-            </div>
-            <span v-else>-</span>
-          </template>
-        </Column>
-
-        <Column header="EasyPass" style="min-width: 110px;">
-          <template #body="slotProps">
-            <div v-if="slotProps.data.borrowRecord.easy_pass_borrow != null" class="easypass-col">
-              <div class="easypass-row">
-                <span class="fuel-label-sm">ไป</span>
-                <span class="easypass-val">฿{{ formatMoney(slotProps.data.borrowRecord.easy_pass_borrow) }}</span>
-              </div>
-              <div v-if="slotProps.data.returned && slotProps.data.borrowRecord.easy_pass_return != null" class="easypass-row">
-                <span class="fuel-label-sm">คืน</span>
-                <span class="easypass-val">฿{{ formatMoney(slotProps.data.borrowRecord.easy_pass_return) }}</span>
-              </div>
-            </div>
-            <span v-else>-</span>
-          </template>
-        </Column>
-
         <Column field="duration" header="ระยะเวลา" />
 
         <Column header="รูปภาพ">
@@ -408,26 +368,6 @@ export default {
     viewDescription(description) {
       this.selectedDescription = description
       this.showDescriptionModal = true
-    },
-    fuelSegments(fuel) {
-      if (fuel == null) return 0
-      const pct = Number(fuel)
-      if (pct <= 10) return 0
-      if (pct <= 30) return 1
-      if (pct <= 50) return 2
-      if (pct <= 70) return 3
-      if (pct <= 90) return 4
-      return 5
-    },
-    fuelColorClass(fuel) {
-      const pct = Number(fuel)
-      if (pct <= 20) return 'seg-red'
-      if (pct <= 50) return 'seg-yellow'
-      return 'seg-green'
-    },
-    formatMoney(val) {
-      if (val == null) return '-'
-      return Number(val).toLocaleString('th-TH')
     }
   }
 }
@@ -746,21 +686,4 @@ export default {
   width: fit-content;
   margin-top: 0.25rem;
 }
-
-/* Fuel level in history */
-.fuel-col { display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
-.fuel-row-inline { display: flex; align-items: center; gap: 0.25rem; }
-.fuel-segs-sm { display: flex; gap: 2px; }
-.fuel-seg-sm { width: 10px; height: 8px; border-radius: 2px; }
-.fuel-label-sm { font-size: 0.65rem; color: #888; min-width: 1.5rem; }
-.fuel-pct-sm { font-size: 0.75rem; color: #555; }
-.seg-empty { background: #e9ecef; }
-.seg-green { background: #22c55e; }
-.seg-yellow { background: #f59e0b; }
-.seg-red { background: #ef4444; }
-
-/* EasyPass in history */
-.easypass-col { display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
-.easypass-row { display: flex; align-items: center; gap: 0.35rem; }
-.easypass-val { font-size: 0.8rem; font-weight: 600; color: #8b5cf6; }
 </style>

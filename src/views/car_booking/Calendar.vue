@@ -13,6 +13,33 @@
           <i class="pi pi-chevron-right"></i>
         </button>
       </div>
+      <!-- Car Status Bar -->
+      <div class="car-status-bar">
+        <div class="status-item">
+          <i class="pi pi-bolt" style="color: #f59e0b;"></i>
+          <span class="status-label">ระดับน้ำมัน</span>
+          <div class="status-fuel">
+            <div class="fuel-segs-bar">
+              <div v-for="seg in 5" :key="seg" class="fuel-seg-bar"
+                :class="seg <= fuelSegments(latestFuel) ? fuelColorClass(latestFuel) : 'seg-empty'"></div>
+            </div>
+            <span class="status-value">{{ latestFuel }}%</span>
+          </div>
+        </div>
+        <div class="status-divider"></div>
+        <div class="status-item">
+          <i class="pi pi-wallet" style="color: #8b5cf6;"></i>
+          <span class="status-label">EasyPass</span>
+          <span class="status-value easypass-val">฿{{ formatMoney(latestEasyPass) }}</span>
+        </div>
+        <div class="status-divider"></div>
+        <div class="status-item">
+          <i class="pi pi-map-marker" style="color: #22c55e;"></i>
+          <span class="status-label">สถานที่คืนรถ</span>
+          <span class="status-value">{{ latestReturnLocation || 'ไม่ระบุ' }}</span>
+        </div>
+      </div>
+
       <div class="calendar-container">
         <div class="calendar">
           <div class="day-header" v-for="day in dayNames" :key="day">{{ day }}</div>
@@ -263,7 +290,8 @@ export default {
       showBookingDialog: false,
       selectedCarRecord: null,
       latestFuel: 50,
-      latestEasyPass: 500
+      latestEasyPass: 500,
+      latestReturnLocation: null
     }
   },
   computed: {
@@ -296,6 +324,9 @@ export default {
 
       return dates
     }
+  },
+  mounted() {
+    this.fetchLatestFuel()
   },
   methods: {
     formatColleagues(colleagues) {
@@ -366,10 +397,16 @@ export default {
         const response = await this.$http.get('/api/car-booking/latest-fuel')
         this.latestFuel = response.data.fuel_level || 50
         this.latestEasyPass = response.data.easy_pass_balance || 500
+        this.latestReturnLocation = response.data.return_location || null
       } catch {
         this.latestFuel = 50
         this.latestEasyPass = 500
+        this.latestReturnLocation = null
       }
+    },
+    formatMoney(val) {
+      if (val == null) return '-'
+      return Number(val).toLocaleString('th-TH')
     },
     formatDate(dateString) {
       const date = new Date(dateString)
@@ -449,6 +486,74 @@ export default {
   font-weight: bold;
   display: inline-block;
   width: fit-content;
+}
+
+/* Car Status Bar */
+.car-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  margin: 0.75rem 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.status-label {
+  font-size: 0.78rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.status-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.easypass-val {
+  color: #8b5cf6;
+}
+
+.status-fuel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.fuel-segs-bar {
+  display: flex;
+  gap: 2px;
+}
+
+.fuel-seg-bar {
+  width: 12px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.seg-empty { background: #dee2e6; }
+.seg-high { background: #22c55e; }
+.seg-mid  { background: #f59e0b; }
+.seg-low  { background: #ef4444; }
+
+.status-divider {
+  width: 1px;
+  height: 28px;
+  background: #dee2e6;
+  margin: 0 0.5rem;
 }
 
 .calendar-container {
