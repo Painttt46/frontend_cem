@@ -165,21 +165,21 @@
         
         <div class="field add-quota-field">
           <label>เพิ่มชั่วโมงลา (ชม.)</label>
-          <InputNumber v-model="addQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" @input="handleAddQuota" />
-          <small class="field-hint">{{ addQuotaHours > 0 ? `= ${(addQuotaHours / 8).toFixed(2)} วัน` : '' }} เพิ่มโควต้าทั้งหมดและคงเหลือพร้อมกัน</small>
+          <InputNumber v-model="addQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="0.5" @input="handleAddQuota" />
+          <small class="field-hint">{{ addQuotaHours > 0 ? `= ${(addQuotaHours / 8).toFixed(2)} วัน (0.5 ชม. = 30 นาที)` : '0.5 ชม. = 30 นาที' }} เพิ่มโควต้าทั้งหมดและคงเหลือพร้อมกัน</small>
         </div>
         
         <Divider />
         
         <div class="field">
           <label>โควต้าทั้งหมด (ชม./ปี) *</label>
-          <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
+          <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="0.5" />
           <small class="field-hint">ปัจจุบัน: {{ currentQuota * 8 }} ชม. ({{ currentQuota }} วัน)</small>
         </div>
         
         <div class="field">
           <label>โควต้าคงเหลือ (ชม.) *</label>
-          <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="1" />
+          <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="0.5" />
           <small class="field-hint">ปัจจุบัน: {{ currentRemaining * 8 }} ชม. ({{ currentRemaining }} วัน)</small>
         </div>
       </div>
