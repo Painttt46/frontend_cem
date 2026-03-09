@@ -65,10 +65,10 @@
                 <div class="quota-cell">
                   <div class="quota-row">
                     <small>โควต้า:</small>
-                    <span class="quota-value">{{ data[`${type.value}_quota`] || 0 }} วัน ({{ (data[`${type.value}_quota`] || 0) * 8 }} ชม.)</span>
+                    <span class="quota-value">{{ fmtNum(data[`${type.value}_quota`] || 0) }} วัน ({{ fmtNum((data[`${type.value}_quota`] || 0) * 8) }} ชม.)</span>
                     <Button icon="pi pi-pencil" size="small" text @click="editQuota(data, type)" />
                   </div>
-                  <small class="remaining">คงเหลือ: {{ data[`${type.value}_remaining`] || 0 }} วัน ({{ (data[`${type.value}_remaining`] || 0) * 8 }} ชม.)</small>
+                  <small class="remaining">คงเหลือ: {{ fmtNum(data[`${type.value}_remaining`] || 0) }} วัน ({{ fmtNum((data[`${type.value}_remaining`] || 0) * 8) }} ชม.)</small>
                 </div>
               </template>
             </Column>
@@ -174,13 +174,13 @@
         <div class="field">
           <label>โควต้าทั้งหมด (ชม./ปี) *</label>
           <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="0.5" />
-          <small class="field-hint">ปัจจุบัน: {{ currentQuota * 8 }} ชม. ({{ currentQuota }} วัน)</small>
+          <small class="field-hint">ปัจจุบัน: {{ fmtNum(currentQuota * 8) }} ชม. ({{ fmtNum(currentQuota) }} วัน)</small>
         </div>
         
         <div class="field">
           <label>โควต้าคงเหลือ (ชม.) *</label>
           <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="0.5" />
-          <small class="field-hint">ปัจจุบัน: {{ currentRemaining * 8 }} ชม. ({{ currentRemaining }} วัน)</small>
+          <small class="field-hint">ปัจจุบัน: {{ fmtNum(currentRemaining * 8) }} ชม. ({{ fmtNum(currentRemaining) }} วัน)</small>
         </div>
       </div>
       <template #footer>
@@ -267,6 +267,8 @@ const selectedDepartment = ref(null)
 const selectedPosition = ref(null)
 const departments = ref([])
 const positions = ref([])
+
+const fmtNum = (val) => parseFloat((+val).toPrecision(10))
 
 // Edit quota states
 const editingUser = ref(null)
