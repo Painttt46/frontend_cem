@@ -59,6 +59,7 @@
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" placeholder="เลือกวันที่"
+                :viewDate="formData.startDate || calendarViewDate"
                 @date-select="updateStartDateTime">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
@@ -78,6 +79,7 @@
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
                 :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่"
+                :viewDate="formData.endDate || formData.startDate || calendarViewDate"
                 @date-select="updateEndDateTime">
                 <template #date="slotProps">
                   <span :class="getDateClass(slotProps.date)" class="date-cell">
@@ -244,6 +246,7 @@ export default {
       isLevel2Approver: false,
       selectedLeaveUser: null,
       allUsersForLeave: [],
+      calendarViewDate: new Date(),
       formData: {
         leaveType: '',
         startDate: null,
