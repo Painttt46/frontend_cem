@@ -97,10 +97,13 @@
 
         <Column v-if="showSensitiveColumns" header="เอกสารแนบ" style="width: 80px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0" class="attachments-info">
-              <Button icon="pi pi-paperclip" size="small" severity="info" outlined
-                @click="showAttachments(slotProps.data.attachments)"
-                v-tooltip="`${slotProps.data.attachments.length} ไฟล์`" />
+            <div v-if="slotProps.data.attachments && slotProps.data.attachments.length > 0 || canEditRecord(slotProps.data)" class="attachments-info">
+              <Button icon="pi pi-paperclip" size="small"
+                :severity="canEditRecord(slotProps.data) ? 'info' : 'secondary'" outlined
+                @click="showAttachments(slotProps.data)"
+                v-tooltip="slotProps.data.attachments && slotProps.data.attachments.length > 0
+                  ? `${slotProps.data.attachments.length} ไฟล์${canEditRecord(slotProps.data) ? ' · แนบเพิ่มได้' : ''}`
+                  : 'เพิ่มเอกสาร'" />
             </div>
             <span v-else>-</span>
           </template>
@@ -232,6 +235,17 @@
   <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }"
     :draggable="false">
     <div class="attachments-content">
+      <!-- Upload zone (เจ้าของ + ช่วงเวลาที่อนุญาต) -->
+      <div v-if="canEditAttachments" class="upload-zone">
+        <label class="upload-label">
+          <i class="pi pi-upload"></i>
+          <span>{{ uploadingAttachments ? 'กำลังอัปโหลด...' : 'คลิกเพื่อเพิ่มเอกสาร' }}</span>
+          <input type="file" multiple :disabled="uploadingAttachments"
+            @change="uploadAttachmentFiles" class="upload-input" />
+        </label>
+        <small class="upload-hint">สามารถเพิ่มได้ถึง {{ attachmentDeadlineText }}</small>
+      </div>
+
       <div v-if="selectedAttachments.length === 0" class="no-attachments">
         <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
         <p>ไม่มีเอกสารแนบ</p>
@@ -249,6 +263,8 @@
           <div class="file-actions">
             <Button icon="pi pi-download" size="small" severity="success" outlined @click="downloadFile(file)"
               v-tooltip="'ดาวน์โหลด'" />
+            <Button v-if="canEditAttachments" icon="pi pi-trash" size="small" severity="danger" outlined
+              @click="deleteAttachment(file)" v-tooltip="'ลบเอกสาร'" />
           </div>
         </div>
       </div>
@@ -326,6 +342,8 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
+      selectedRecord: null,
+      uploadingAttachments: false,
       fullImageDialog: false,
       fullImageUrl: '',
       leaveTypes: [],
@@ -376,6 +394,26 @@ export default {
       const morning = (lsH * 60 + (lsM || 0)) - (wsH * 60 + (wsM || 0))
       const afternoon = (weH * 60 + (weM || 0)) - (leH * 60 + (leM || 0))
       return (morning + afternoon) / 60
+    },
+    canEditAttachments() {
+      if (!this.selectedRecord) return false
+      const currentUserId = localStorage.getItem('soc_user_id')
+      const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
+      const isOwner = (this.selectedRecord.user_id == currentUserId) || (this.selectedRecord.employee_name === currentUserName)
+      if (!isOwner) return false
+      const now = new Date()
+      const createdAt = new Date(this.selectedRecord.created_at)
+      createdAt.setHours(0, 0, 0, 0)
+      const deadline = new Date(this.selectedRecord.end_datetime)
+      deadline.setDate(deadline.getDate() + 15)
+      deadline.setHours(23, 59, 59, 999)
+      return now >= createdAt && now <= deadline
+    },
+    attachmentDeadlineText() {
+      if (!this.selectedRecord) return ''
+      const deadline = new Date(this.selectedRecord.end_datetime)
+      deadline.setDate(deadline.getDate() + 15)
+      return deadline.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
     }
   },
   async mounted() {
@@ -567,9 +605,74 @@ export default {
       this.showWorkDetailsDialog = true
     },
 
-    showAttachments(attachments) {
-      this.selectedAttachments = attachments || []
+    isOwnerRecord(record) {
+      const currentUserId = localStorage.getItem('soc_user_id')
+      const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
+      return (record.user_id == currentUserId) || (record.employee_name === currentUserName)
+    },
+
+    canEditRecord(record) {
+      if (!this.isOwnerRecord(record)) return false
+      const now = new Date()
+      const createdAt = new Date(record.created_at)
+      createdAt.setHours(0, 0, 0, 0)
+      const deadline = new Date(record.end_datetime)
+      deadline.setDate(deadline.getDate() + 15)
+      deadline.setHours(23, 59, 59, 999)
+      return now >= createdAt && now <= deadline
+    },
+
+    showAttachments(record) {
+      this.selectedRecord = record
+      this.selectedAttachments = record.attachments ? [...record.attachments] : []
       this.showAttachmentsDialog = true
+    },
+
+    async uploadAttachmentFiles(event) {
+      const files = event.target.files
+      if (!files || files.length === 0) return
+      this.uploadingAttachments = true
+      try {
+        const formData = new FormData()
+        for (const file of files) formData.append('files', file)
+        const uploadRes = await this.$http.post('/api/files/upload?type=leave', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+        const newFiles = uploadRes.data.files || []
+        const updated = [...this.selectedAttachments, ...newFiles]
+        await this.$http.put(`/api/leave/${this.selectedRecord.id}/attachments`, { attachments: updated })
+        this.selectedAttachments = updated
+        this.selectedRecord.attachments = updated
+        this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: `เพิ่มเอกสาร ${newFiles.length} ไฟล์`, life: 3000 })
+      } catch (err) {
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: err.response?.data?.error || 'อัปโหลดไม่สำเร็จ', life: 3000 })
+      } finally {
+        this.uploadingAttachments = false
+        event.target.value = ''
+      }
+    },
+
+    async deleteAttachment(fileName) {
+      try {
+        await this.$confirm.require({
+          message: 'ต้องการลบเอกสารแนบนี้ใช่หรือไม่?',
+          header: 'ยืนยันการลบ',
+          icon: 'pi pi-exclamation-triangle',
+          acceptClass: 'p-button-danger',
+          acceptLabel: 'ลบ',
+          rejectLabel: 'ยกเลิก',
+          accept: async () => {
+            try {
+              await this.$http.delete(`/api/files/${fileName}`)
+            } catch { /* ไม่หยุดแม้ลบไฟล์ไม่สำเร็จ */ }
+            const updated = this.selectedAttachments.filter(f => f !== fileName)
+            await this.$http.put(`/api/leave/${this.selectedRecord.id}/attachments`, { attachments: updated })
+            this.selectedAttachments = updated
+            this.selectedRecord.attachments = updated
+            this.$toast.add({ severity: 'success', summary: 'ลบสำเร็จ', detail: 'ลบเอกสารแนบแล้ว', life: 3000 })
+          }
+        })
+      } catch { /* user ยกเลิก */ }
     },
 
     async downloadFile(fileName) {
@@ -1037,6 +1140,36 @@ export default {
 
 .attachments-content {
   padding: 1rem;
+}
+
+.upload-zone {
+  border: 2px dashed #0ea5e9;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #f0f9ff;
+  text-align: center;
+}
+
+.upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: #0369a1;
+  font-weight: 500;
+}
+
+.upload-input {
+  display: none;
+}
+
+.upload-hint {
+  color: #6c757d;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
 }
 
 .no-attachments {
