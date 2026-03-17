@@ -261,15 +261,17 @@ export default {
     },
 
     showColleagueInfo(colleague) {
-      // colleague อาจเป็น object {id, name, value} หรือ string (ชื่อ)
+      // colleague อาจเป็น object {id, name, fullName, value} หรือ string (ชื่อ)
       if (typeof colleague === 'object') {
-        // ถ้ามี id ใช้ id
+        // ถ้ามี id ใช้ id (ข้อมูลใหม่)
         if (colleague.id) {
           this.selectedUserId = colleague.id
+          this.selectedUserName = null
           this.showUserDialog = true
         } else {
-          // ถ้าไม่มี id ใช้ name หรือ value
-          const name = colleague.name || colleague.value
+          // ใช้ fullName ก่อน (ไม่มี nickname) ถ้าไม่มีให้ตัด nickname ออกจาก name
+          const name = colleague.fullName ||
+            (colleague.name || colleague.value || '').replace(/\s*\(.*?\)\s*$/, '').trim()
           if (name) {
             this.selectedUserId = null
             this.selectedUserName = name
@@ -277,9 +279,9 @@ export default {
           }
         }
       } else if (typeof colleague === 'string') {
-        // ถ้าเป็น string ค้นหาจากชื่อ
+        // ตัด nickname ออก เช่น "วีรภัทร สมิธ (ภัทร)" → "วีรภัทร สมิธ"
         this.selectedUserId = null
-        this.selectedUserName = colleague
+        this.selectedUserName = colleague.replace(/\s*\(.*?\)\s*$/, '').trim()
         this.showUserDialog = true
       }
     },

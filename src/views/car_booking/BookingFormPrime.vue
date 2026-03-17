@@ -505,6 +505,7 @@ export default {
 
         if (!alreadySelected) {
           const newColleagues = [...colleagues, {
+            id: user.id,
             name: user.displayName,
             fullName: fullName,
             position: user.position || '',
