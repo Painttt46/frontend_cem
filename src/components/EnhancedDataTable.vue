@@ -65,11 +65,14 @@
     </div>
 
     <!-- Pass through DataTable with filtered data -->
-    <DataTable 
-      :value="filteredData" 
+    <DataTable
+      :value="filteredData"
       v-bind="$attrs"
     >
       <slot />
+      <template v-if="$slots.expansion" #expansion="slotProps">
+        <slot name="expansion" v-bind="slotProps" />
+      </template>
     </DataTable>
   </div>
 </template>

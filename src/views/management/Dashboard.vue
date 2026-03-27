@@ -113,8 +113,9 @@
             <Column header="ขั้นตอน" style="min-width: 150px">
               <template #body="{ data }">
                 <div v-if="data.steps_data && data.steps_data.length > 0" class="steps-mini">
-                  <span v-for="step in data.steps_data" :key="step.id" class="step-tag"
-                    :style="{ borderLeftColor: step.status === 'completed' ? '#10b981' : '#3b82f6' }">
+                  <span v-for="step in data.steps_data" :key="step.id" class="step-tag step-tag-link"
+                    :class="'step-status-' + (step.status || 'pending')"
+                    @click="$router.push({ path: '/project-progress', query: { taskId: data.task_id, stepId: step.id } })">
                     {{ step.step_name }}
                   </span>
                 </div>
@@ -305,8 +306,14 @@
       <!-- Work Statistics -->
       <Card>
         <template #content>
-          <h3 class="mb-3">สถิติเวลาทำงานของพนักงาน (รายปี)</h3>
-          <DataTable :value="workStatistics" :loading="loading" paginator :rows="10" sortField="totalHours"
+          <div class="stats-header mb-3">
+            <h3>สถิติเวลาทำงานของพนักงาน</h3>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <InputText v-model="statsSearch" placeholder="ค้นหา ชื่อ / ชื่อเล่น / โครงการ / step..." style="font-size:0.85rem;padding:5px 10px;min-width:260px" />
+              <Dropdown v-model="selectedStatsYear" :options="statsYearOptions" optionLabel="label" optionValue="value" style="min-width:110px" />
+            </div>
+          </div>
+          <DataTable :value="workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="totalHours"
             :sortOrder="-1" :expandedRows="expandedRows">
             <Column :expander="true" style="width: 3rem" />
             <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
@@ -328,10 +335,48 @@
                 <span style="font-weight: 600; color: #f59e0b">{{ formatHoursMinutes(data.expectedHours) }}</span>
               </template>
             </Column>
-            <Column field="percentage" header="%" sortable style="min-width: 80px">
+                    <Column field="percentage" header="%" sortable style="min-width: 80px">
               <template #body="{ data }">
-                <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#10b981' : '#ef4444' }">{{
-                  data.percentage }}%</span>
+                <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#10b981' : '#ef4444' }">{{ data.percentage }}%</span>
+              </template>
+            </Column>
+            <Column header="Workload" style="min-width: 220px">
+              <template #body="{ data }">
+                <span v-if="!data.workload || data.workload.length === 0" class="text-muted" style="font-size:0.8rem">ไม่มีงาน</span>
+                <div v-else class="workload-dropdown-wrap">
+                  <button class="wl-toggle" @click.stop="openWorkloadUserId = openWorkloadUserId === data.userId ? null : data.userId">
+                    <span>โครงการ {{ data.workload.length }} รายการ</span>
+                    <i :class="openWorkloadUserId === data.userId ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="font-size:0.7rem;margin-left:auto"></i>
+                  </button>
+                  <div v-if="openWorkloadUserId === data.userId" class="wl-dropdown">
+                    <div v-for="proj in data.workload" :key="proj.taskId" class="project-group">
+                      <div class="project-header" @click.stop="proj._expanded = !proj._expanded">
+                        <div class="project-info">
+                          <span class="project-name">{{ proj.taskName }}</span>
+                          <span class="project-progress">{{ proj.progress }}% ({{ proj.completedSteps }}/{{ proj.totalSteps }})</span>
+                        </div>
+                        <div class="progress-bar">
+                          <div class="progress-fill" :style="{ width: proj.progress + '%' }"></div>
+                        </div>
+                        <i :class="proj._expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="font-size:0.65rem;color:#6b7280"></i>
+                      </div>
+                      <div v-if="proj._expanded" class="steps-list">
+                        <div v-for="step in proj.steps" :key="step.stepId" class="workload-item"
+                          :class="'wl-' + step.stepStatus"
+                          @click="$router.push({ path: '/project-progress', query: { taskId: step.taskId, stepId: step.stepId } })"
+                          :title="step.stepName">
+                          <span class="wl-dot"></span>
+                          <div class="wl-info">
+                            <div class="wl-step">{{ step.stepOrder }}. {{ step.stepName }}</div>
+                            <div v-if="step.projectStatuses && step.projectStatuses.length" class="wl-status-badges">
+                              <span v-for="status in step.projectStatuses" :key="status" class="status-mini" :style="{ backgroundColor: getStatusColor(status) }">{{ status }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </template>
             </Column>
 
@@ -479,10 +524,11 @@
 </template>
 
 <script setup>
+/* eslint-disable no-unused-vars */
 import { useDragScroll } from '@/composables/useDragScroll'
 useDragScroll('.p-datatable-wrapper')
 
-import { ref, onMounted, nextTick, watch, computed } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
@@ -616,10 +662,11 @@ const periodOptions = [
   { label: 'วันนี้', value: 'today' },
   { label: 'สัปดาห์นี้', value: 'week' },
   { label: 'เดือนนี้', value: 'month' },
-  { label: 'ปีนี้', value: 'year' }
+  { label: 'ปีนี้', value: 'year' },
+  { label: 'ทั้งหมด', value: 'all' }
 ]
 
-const getDateRange = () => {
+const dateRange = computed(() => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   let startDate = today
@@ -640,9 +687,12 @@ const getDateRange = () => {
     case 'year':
       startDate = new Date(today.getFullYear(), 0, 1)
       break
+    case 'all':
+      startDate = new Date(2000, 0, 1)
+      break
   }
   return { startDate, endDate: now }
-}
+})
 
 const userLeaveData = computed(() => {
   if (!selectedUser.value) return {}
@@ -659,7 +709,7 @@ const userLeaveData = computed(() => {
 
 const userTimesheetSummary = computed(() => {
   if (!selectedUser.value) return { totalHours: 0, expectedHours: 0, totalTasks: 0, totalProjects: 0 }
-  const { startDate, endDate } = getDateRange()
+  const { startDate, endDate } = dateRange.value
   let totalHours = 0
   let taskCount = 0
   const projects = new Set()
@@ -686,7 +736,7 @@ const userTimesheetSummary = computed(() => {
 
 const userTimesheetDaily = computed(() => {
   if (!selectedUser.value) return []
-  const { startDate, endDate } = getDateRange()
+  const { startDate, endDate } = dateRange.value
 
   const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
 
@@ -724,16 +774,32 @@ const calcOverdueDays = (dateStr) => {
   return Math.floor((today - endDate) / (1000 * 60 * 60 * 24))
 }
 
-const onUserChange = async () => {
+// Watch selectedUser: handle both select and clear (X button)
+watch(selectedUser, async (val) => {
   await nextTick()
+  if (val) {
+    await nextTick()
+    renderUserLeaveChart()
+  } else {
+    // User cleared - re-render main charts
+    await nextTick()
+    await nextTick()
+    renderCharts(allLeaves.value, allTasks.value)
+  }
+})
+
+const onUserChange = async () => { /* handled by watch */ }
+
+// Re-render chart when leave data changes (e.g. after data load)
+watch(userLeaveData, async () => {
   if (selectedUser.value) {
+    await nextTick()
     renderUserLeaveChart()
   }
-}
+})
 
 const clearUserFilter = () => {
   selectedUser.value = null
-  loadData()
 }
 
 const renderUserLeaveChart = () => {
@@ -777,7 +843,28 @@ const stats = ref({
 })
 
 const workStatistics = ref([])
+const openWorkloadUserId = ref(null)
 const expandedRows = ref([])
+const selectedStatsYear = ref(new Date().getFullYear())
+const statsYearOptions = computed(() => {
+  const thisYear = new Date().getFullYear()
+  return Array.from({ length: 5 }, (_, i) => ({ label: String(thisYear - i), value: thisYear - i }))
+})
+const statsSearch = ref('')
+const workStatisticsFiltered = computed(() => {
+  const q = statsSearch.value.trim().toLowerCase()
+  return workStatistics.value.filter(r => {
+    if (r.year !== selectedStatsYear.value) return false
+    if (!q) return true
+    if (r.userName?.toLowerCase().includes(q)) return true
+    if (r.nickname?.toLowerCase().includes(q)) return true
+    if (r.department?.toLowerCase().includes(q)) return true
+    return r.workload?.some(proj =>
+      proj.taskName?.toLowerCase().includes(q) ||
+      proj.steps?.some(s => s.stepName?.toLowerCase().includes(q))
+    )
+  })
+})
 const leaveChart = ref(null)
 const taskChart = ref(null)
 let leaveChartInstance = null
@@ -788,7 +875,16 @@ const categoryColors = ref({})
 onMounted(async () => {
   await Promise.all([loadLeaveTypeColors(), loadWorkStatusColors(), loadCategoryColors()])
   loadData()
+  document.addEventListener('click', closeWorkloadDropdown)
 })
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeWorkloadDropdown)
+})
+
+const closeWorkloadDropdown = () => {
+  openWorkloadUserId.value = null
+}
 
 // Swipe handlers
 const handleTouchStart = (e) => {
@@ -869,6 +965,23 @@ const loadCategoryColors = async () => {
 
 const getCategoryColor = (cat) => {
   return categoryColors.value[cat] || '#6c757d'
+}
+
+const calcStepStatus = (step) => {
+  if (step.status === 'completed') return 'completed'
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  if (step.end_date) {
+    const endDate = new Date(step.end_date)
+    endDate.setHours(0, 0, 0, 0)
+    if (today > endDate) return 'overdue'
+  }
+  if (step.has_work_logged && step.latest_work_date) {
+    const wDate = new Date(step.latest_work_date)
+    wDate.setHours(0, 0, 0, 0)
+    if (wDate <= today) return 'working'
+  }
+  return 'pending'
 }
 
 const getStatusColor = (status) => {
@@ -1039,81 +1152,93 @@ const loadData = async () => {
       return endDate < todayDate && isTaskActive(t)
     }).length
 
-    // Work Statistics - คำนวณเวลาทำงานของแต่ละคน (รายปี)
-    const currentYear = new Date().getFullYear()
-    const userWorkData = {}
-
-    dailyWork.forEach(w => {
-      const workYear = new Date(w.work_date).getFullYear()
-      if (workYear !== currentYear) return
-
-      const userId = w.user_id
-      if (!userId) return // ข้ามถ้าไม่มี userId
-
-      if (!userWorkData[userId]) {
-        const user = activeUsers.find(u => u.id === userId)
-        if (!user) return // ข้ามถ้าไม่เจอ user ใน activeUsers
-
-        userWorkData[userId] = {
-          userId: userId,
-          userName: `${user.firstname} ${user.lastname}`,
-          department: user.department || 'N/A',
-          hoursPerDay: userRoleHours[userId] || 7,
-          lunchBreak: userLunchBreak[userId] || 1,
-          totalHours: 0,
-          taskCount: 0,
-          workDays: new Set(),
-          taskHours: {} // เก็บชั่วโมงของแต่ละงาน
-        }
-      }
-
-      // นับวันทำงาน
-      userWorkData[userId].workDays.add(w.work_date?.split('T')[0])
-
-      // คำนวณชั่วโมงหักพักกลางวัน
-      const hours = calcWorkHours(w.start_time, w.end_time, userWorkData[userId].lunchBreak)
-
-      if (hours > 0) {
-        userWorkData[userId].totalHours += hours
-
-        // เก็บชั่วโมงของแต่ละงาน
-        const taskName = w.task_name || w.project_name || 'ไม่ระบุ'
-        if (!userWorkData[userId].taskHours[taskName]) {
-          userWorkData[userId].taskHours[taskName] = 0
-        }
-        userWorkData[userId].taskHours[taskName] += hours
-      }
-
-      userWorkData[userId].taskCount += 1
+    // Work Statistics - คำนวณเวลาทำงานของสแต่ละคน (รายปี)
+    // Build workload per user from task steps assigned_users
+    const userWorkloadMap = {}
+    const taskTotalStepsMap = {}
+    const taskCompletedStepsMap = {}
+    tasks.forEach(task => {
+      const steps = task.steps || []
+      taskTotalStepsMap[task.id] = steps.length
+      taskCompletedStepsMap[task.id] = steps.filter(s => s.status === 'completed').length
+      steps.forEach((step, idx) => {
+        const assignees = step.assigned_users || []
+        assignees.forEach(u => {
+          const uid = typeof u === 'object' ? u.id : u
+          if (!uid) return
+          if (!userWorkloadMap[uid]) userWorkloadMap[uid] = []
+          userWorkloadMap[uid].push({ taskId: task.id, taskName: task.task_name, stepId: step.id, stepName: step.step_name, stepOrder: idx + 1, stepStatus: calcStepStatus(step), projectStatuses: step.project_statuses || [] })
+        })
+      })
     })
 
-    workStatistics.value = Object.values(userWorkData).map(data => {
-      // สร้างรายละเอียดงานทั้งหมด
-      const taskDetails = Object.entries(data.taskHours)
-        .map(([taskName, hours]) => ({
-          taskName: taskName,
-          hours: hours,
-          percentage: (hours / data.totalHours) * 100
-        }))
-        .sort((a, b) => b.hours - a.hours)
-
-      const expectedHours = data.workDays.size * data.hoursPerDay
-
-      return {
-        userId: data.userId,
-        userName: data.userName,
-        department: data.department,
-        totalHours: data.totalHours,
-        expectedHours: expectedHours,
-        percentage: expectedHours > 0 ? Math.round(data.totalHours / expectedHours * 100) : 0,
-        taskCount: data.taskCount,
-        avgHoursPerTask: data.taskCount > 0 ? data.totalHours / data.taskCount : 0,
-        taskDetails: taskDetails
+    const userWorkData = {}
+    dailyWork.forEach(w => {
+      const workYear = new Date(w.work_date).getFullYear()
+      const userId = w.user_id
+      if (!userId) return
+      const key = `${userId}_${workYear}`
+      if (!userWorkData[key]) {
+        const user = activeUsers.find(u => u.id === userId)
+        if (!user) return
+        userWorkData[key] = { userId, year: workYear, userName: `${user.firstname} ${user.lastname}`, nickname: user.nickname || '', department: user.department || 'N/A', hoursPerDay: userRoleHours[userId] || 7, lunchBreak: userLunchBreak[userId] || 1, totalHours: 0, taskCount: 0, workDays: new Set(), taskHours: {} }
       }
+      userWorkData[key].workDays.add(w.work_date?.split('T')[0])
+      const hours = calcWorkHours(w.start_time, w.end_time, userWorkData[key].lunchBreak)
+      if (hours > 0) {
+        userWorkData[key].totalHours += hours
+        const taskName = w.task_name || 'ไม่ระบุ'
+        userWorkData[key].taskHours[taskName] = (userWorkData[key].taskHours[taskName] || 0) + hours
+      }
+      userWorkData[key].taskCount += 1
+    })
+
+    // เพิ่ม user ที่มี workload แต่ไม่มี dailyWork (เช่น pending steps)
+    Object.keys(userWorkloadMap).forEach(uid => {
+      const uidNum = parseInt(uid)
+      const hasData = Object.values(userWorkData).some(d => d.userId === uidNum)
+      if (!hasData) {
+        const user = activeUsers.find(u => u.id === uidNum)
+        if (!user) return
+        const key = `${uidNum}_${new Date().getFullYear()}`
+        userWorkData[key] = { userId: uidNum, year: new Date().getFullYear(), userName: `${user.firstname} ${user.lastname}`, nickname: user.nickname || '', department: user.department || 'N/A', hoursPerDay: userRoleHours[uidNum] || 7, lunchBreak: userLunchBreak[uidNum] || 1, totalHours: 0, taskCount: 0, workDays: new Set(), taskHours: {} }
+      }
+    })
+
+    const statusOrder = { working: 0, in_progress: 1, overdue: 2, pending: 3, completed: 4 }
+    workStatistics.value = Object.values(userWorkData).map(data => {
+      const taskDetails = Object.entries(data.taskHours).map(([taskName, hours]) => ({ taskName, hours, percentage: (hours / data.totalHours) * 100 })).sort((a, b) => b.hours - a.hours)
+      const expectedHours = data.workDays.size * data.hoursPerDay
+      const rawWorkload = userWorkloadMap[data.userId] || []
+      
+      // จัดกลุ่ม workload ตามโครงการ
+      const projectGroups = {}
+      rawWorkload.forEach(w => {
+        if (!projectGroups[w.taskId]) {
+          projectGroups[w.taskId] = { taskId: w.taskId, taskName: w.taskName, steps: [] }
+        }
+        projectGroups[w.taskId].steps.push(w)
+      })
+      
+      // คำนวณ % ความคืบหน้าของแต่ละโครงการ
+      const workload = Object.values(projectGroups).map(proj => {
+        const totalSteps = taskTotalStepsMap[proj.taskId] ?? proj.steps.length
+        const completedSteps = taskCompletedStepsMap[proj.taskId] ?? proj.steps.filter(s => s.stepStatus === 'completed').length
+        const progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
+        // เรียง steps: active ก่อน completed ท้าย
+        proj.steps.sort((a, b) => (statusOrder[a.stepStatus] ?? 5) - (statusOrder[b.stepStatus] ?? 5))
+        return { ...proj, progress, totalSteps, completedSteps }
+      })
+      // filter โครงการที่ user's steps ทุก step เสร็จแล้วออก
+      .filter(proj => proj.steps.some(s => s.stepStatus !== 'completed'))
+      .sort((a, b) => (statusOrder[a.steps[0]?.stepStatus] ?? 5) - (statusOrder[b.steps[0]?.stepStatus] ?? 5))
+      
+      return { userId: data.userId, year: data.year, userName: data.userName, nickname: data.nickname || '', department: data.department, totalHours: data.totalHours, expectedHours, percentage: expectedHours > 0 ? Math.round(data.totalHours / expectedHours * 100) : 0, taskCount: data.taskCount, taskDetails, workload }
     }).sort((a, b) => b.totalHours - a.totalHours)
 
     // ปิด loading ก่อน renderCharts เพื่อให้ canvas แสดง
     loading.value = false
+    await nextTick()
     await nextTick()
     renderCharts(leaves, tasks)
   } catch (error) {
@@ -1508,6 +1633,22 @@ const renderCharts = (leaves, tasks) => {
   font-size: 0.75rem;
 }
 
+.step-tag-link {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.step-tag-link:hover {
+  background: #dbeafe;
+  text-decoration: underline;
+}
+
+.step-status-completed { border-left-color: #10b981 !important; background: #f0fdf4; color: #065f46; }
+.step-status-working   { border-left-color: #f59e0b !important; background: #fefce8; color: #92400e; }
+.step-status-overdue   { border-left-color: #ef4444 !important; background: #fef2f2; color: #991b1b; }
+.step-status-in_progress { border-left-color: #3b82f6 !important; background: #eff6ff; color: #1e40af; }
+.step-status-pending   { border-left-color: #9ca3af !important; background: #f9fafb; color: #374151; }
+
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -1642,10 +1783,15 @@ canvas {
   /* Hide table columns on mobile */
   :deep(.p-datatable-wrapper) {
     overflow-x: auto;
+    overflow-y: visible;
   }
 
   :deep(.p-datatable) {
     font-size: 0.85rem;
+  }
+
+  :deep(.p-datatable-tbody > tr) {
+    overflow: visible;
   }
 }
 
@@ -1662,6 +1808,40 @@ canvas {
     padding: 0.4rem !important;
   }
 }
+
+.stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.stats-header h3 { margin: 0; }
+
+.workload-dropdown-wrap { position: relative; }
+.wl-toggle { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 0.8rem; width: 100%; text-align: left; color: #374151; font-weight: 500; }
+.wl-toggle:hover { background: #f1f5f9; border-color: #cbd5e1; }
+.wl-badges { display: flex; gap: 3px; flex-wrap: wrap; }
+.wl-badge { padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+.wl-dropdown { position: absolute; top: calc(100% + 4px); left: 0; z-index: 9999; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 260px; max-height: 320px; overflow-y: auto; padding: 4px; }
+.workload-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: opacity 0.2s; margin-bottom: 2px; }
+.workload-item:hover { opacity: 0.8; filter: brightness(0.96); }
+.wl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: currentColor; margin-top: 3px; }
+.wl-info { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+.wl-task { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl-step { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl-working    { background: #fefce8; color: #92400e; }
+.wl-in_progress { background: #eff6ff; color: #1e40af; }
+.wl-overdue    { background: #fef2f2; color: #991b1b; }
+.wl-pending    { background: #f9fafb; color: #6b7280; }
+.wl-completed  { background: #f0fdf4; color: #065f46; }
+
+
+.project-group { margin-bottom: 6px; border: 1px solid #e5e7eb; border-radius: 6px; overflow: hidden; }
+.project-header { padding: 8px 10px; background: #f9fafb; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
+.project-header:hover { background: #f3f4f6; }
+.project-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.project-name { font-weight: 600; font-size: 0.8rem; color: #1f2937; }
+.project-progress { font-size: 0.7rem; color: #6b7280; }
+.progress-bar { flex: 0 0 80px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.3s; }
+.steps-list { padding: 4px; background: white; }
+.wl-status-badges { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
+.status-mini { padding: 1px 5px; border-radius: 8px; font-size: 0.65rem; color: white; font-weight: 500; }
 
 .task-breakdown {
   padding: 1rem;

@@ -15,22 +15,30 @@
         <Button @click="showWorkForm" class="work-btn" icon="pi pi-clock" raised>
           <span class="btn-text">ลงตารางงาน</span>
         </Button>
-        <div class="filter-buttons">
-          <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
-            <i class="pi pi-list"></i>
-            <span>ทั้งหมด</span>
-            <span class="filter-count">{{ workRecords.length }}</span>
-          </button>
-          <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
-            <i class="pi pi-sun"></i>
-            <span>วันนี้</span>
-            <span class="filter-count">{{ todayCount }}</span>
-          </button>
-          <button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]">
-            <i class="pi pi-calendar-plus"></i>
-            <span>งานล่วงหน้า</span>
-            <span class="filter-count">{{ futureCount }}</span>
-          </button>
+        <div class="right-filters">
+          <div class="filter-buttons">
+            <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
+              <i class="pi pi-list"></i>
+              <span>ทั้งหมด</span>
+              <span class="filter-count">{{ workRecords.length }}</span>
+            </button>
+            <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
+              <i class="pi pi-sun"></i>
+              <span>วันนี้</span>
+              <span class="filter-count">{{ todayCount }}</span>
+            </button>
+            <button @click="setFilter('future')" :class="['filter-btn', 'filter-future', { active: activeFilter === 'future' }]">
+              <i class="pi pi-calendar-plus"></i>
+              <span>งานล่วงหน้า</span>
+              <span class="filter-count">{{ futureCount }}</span>
+            </button>
+          </div>
+          <div class="proj-filter-row">
+            <Dropdown v-model="filterTask" :options="taskOptions" optionLabel="label" optionValue="value"
+              placeholder="🔍 กรองโครงการ" showClear filter filterPlaceholder="ค้นหา..." class="proj-dropdown" />
+            <Dropdown v-model="filterStep" :options="stepOptions" optionLabel="label" optionValue="value"
+              placeholder="🔍 กรองขั้นตอน" showClear filter filterPlaceholder="ค้นหา..." class="step-dropdown" :disabled="!filterTask" />
+          </div>
         </div>
       </div>
       <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" />
@@ -38,7 +46,7 @@
 
     <!-- Work Form Dialog -->
     <Dialog v-model:visible="showWorkDialog" modal header="ลงตารางงาน" :style="{ width: '95vw', height: '90vh' }" :draggable="false">
-      <DailyWorkForm ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
+      <DailyWorkForm :key="dialogKey" ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
     </Dialog>
   </div>
 </template>
@@ -74,7 +82,10 @@ export default {
       workRecords: [],
       loading: false,
       showWorkDialog: false,
-      activeFilter: 'all'
+      dialogKey: 0,
+      activeFilter: 'all',
+      filterTask: null,
+      filterStep: null
     }
   },
   computed: {
@@ -88,14 +99,29 @@ export default {
     futureCount() {
       return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr).length
     },
+    taskOptions() {
+      const map = {}
+      this.workRecords.forEach(r => {
+        if (r.task_id && r.task_name) map[r.task_id] = r.task_name
+      })
+      return Object.entries(map).map(([v, l]) => ({ value: v, label: r => r, _v: v, _l: l }))
+        .map(x => ({ value: x._v, label: x._l }))
+    },
+    stepOptions() {
+      if (!this.filterTask) return []
+      const map = {}
+      this.workRecords.filter(r => String(r.task_id) === String(this.filterTask)).forEach(r => {
+        if (r.step_id && r.step_name) map[r.step_id] = r.step_name
+      })
+      return Object.entries(map).map(([v, l]) => ({ value: v, label: l }))
+    },
     filteredRecords() {
-      if (this.activeFilter === 'today') {
-        return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr)
-      }
-      if (this.activeFilter === 'future') {
-        return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr)
-      }
-      return this.workRecords
+      let records = this.workRecords
+      if (this.activeFilter === 'today') records = records.filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr)
+      else if (this.activeFilter === 'future') records = records.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr)
+      if (this.filterTask) records = records.filter(r => String(r.task_id) === String(this.filterTask))
+      if (this.filterStep) records = records.filter(r => String(r.step_id) === String(this.filterStep))
+      return records
     },
     currentDateTime() {
       return this.currentTime.toLocaleString('th-TH', {
@@ -108,8 +134,12 @@ export default {
       })
     }
   },
+  watch: {
+    filterTask() { this.filterStep = null }
+  },
   methods: {
     showWorkForm() {
+      this.dialogKey++
       this.showWorkDialog = true
     },
 
@@ -182,6 +212,29 @@ export default {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.right-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.proj-filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.proj-dropdown, .step-dropdown {
+  min-width: 200px;
+  border-radius: 10px;
+}
+
+.step-dropdown {
+  min-width: 180px;
 }
 
 .filter-buttons {

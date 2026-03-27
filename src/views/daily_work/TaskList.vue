@@ -20,38 +20,44 @@
 
         <Column field="task_name" header="ชื่อโครงการ" :sortable="true" style="min-width: 250px;">
           <template #body="slotProps">
-            <div class="task-name">{{ slotProps.data.task_name }}</div>
+            <div class="task-name"><i class="pi pi-briefcase" style="color:#4A90E2;margin-right:6px;font-size:0.85rem"></i>{{ slotProps.data.task_name }}</div>
           </template>
         </Column>
 
         <Column field="so_number" header="เลข SO">
           <template #body="slotProps">
-            <div v-if="slotProps.data.so_number" class="so-number">
-              {{ slotProps.data.so_number }}
-            </div>
+            <div v-if="slotProps.data.so_number" class="so-number">{{ slotProps.data.so_number }}</div>
             <span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="contract_number" header="เลขที่สัญญา" style="min-width: 150px;">
           <template #body="slotProps">
-            {{ slotProps.data.contract_number || '-' }}
+            <span v-if="slotProps.data.contract_number" style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #bbf7d0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ slotProps.data.contract_number }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="customer_info" header="ข้อมูลลูกค้า" style="min-width: 150px;">
           <template #body="slotProps">
-            {{ slotProps.data.customer_info || '-' }}
+            <span v-if="slotProps.data.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:0.85rem"></i>{{ slotProps.data.customer_info }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="sale_owner" header="Sale เจ้าของงาน" style="min-width: 150px;">
           <template #body="slotProps">
-            <div v-if="slotProps.data.sale_owner" class="sale-info">
+            <div v-if="slotProps.data.sale_owner" class="person-badge sale-badge" @click="showSaleUserInfo(slotProps.data.sale_owner)">
               <i class="pi pi-user"></i>
-              <span class="clickable-name" @click="showSaleUserInfo(slotProps.data.sale_owner)">
-                {{ slotProps.data.sale_owner }}
-              </span>
+              {{ slotProps.data.sale_owner }}
+            </div>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </Column>
+
+        <Column field="project_manager" header="Project Manager" style="min-width: 150px;">
+          <template #body="slotProps">
+            <div v-if="slotProps.data.project_manager" class="person-badge pm-badge" @click="showSaleUserInfo(slotProps.data.project_manager)">
+              <i class="pi pi-briefcase"></i>
+              {{ slotProps.data.project_manager }}
             </div>
             <span v-else class="text-muted">-</span>
           </template>
@@ -70,13 +76,13 @@
 
         <Column field="project_start_date" header="วันเริ่มโครงการ" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.project_start_date ? formatDate(slotProps.data.project_start_date) : '-' }}
+            <span v-if="slotProps.data.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0891b2;font-size:0.85rem"></i>{{ formatDate(slotProps.data.project_start_date) }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="project_end_date" header="วันสิ้นสุดโครงการ" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.project_end_date ? formatDate(slotProps.data.project_end_date) : '-' }}
+            <span v-if="slotProps.data.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:0.85rem"></i>{{ formatDate(slotProps.data.project_end_date) }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
@@ -374,6 +380,21 @@
         </div>
 
         <div class="input-group">
+          <label class="input-label">Project Manager</label>
+          <Dropdown v-model="editFormData.project_manager" :options="allUsers"
+            optionLabel="label" optionValue="value" placeholder="เลือก Project Manager"
+            :filter="true" filterPlaceholder="ค้นหา..." :showClear="true"
+            class="corporate-input w-full">
+            <template #option="{ option }">
+              <div style="line-height:1.4">
+                <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
+                <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+
+        <div class="input-group">
           <label class="input-label">วันเริ่มโครงการ</label>
           <Calendar v-model="editFormData.project_start_date" dateFormat="dd/mm/yy" class="corporate-input" />
         </div>
@@ -527,6 +548,7 @@ export default {
         so_number: '',
         contract_number: '',
         sale_owner: '',
+        project_manager: '',
         customer_info: '',
         description: '',
         category: [],
@@ -548,7 +570,8 @@ export default {
       categories: [],
       workStatuses: [],
       saleUsers: [],
-      allUsers: []
+      allUsers: [],
+      allUsersRaw: []
     }
   },
   computed: {
@@ -988,6 +1011,7 @@ export default {
         so_number: task.so_number || '',
         contract_number: task.contract_number || '',
         sale_owner: task.sale_owner || '',
+        project_manager: task.project_manager || '',
         customer_info: task.customer_info || '',
         description: task.description || '',
         category: this.parseCategoryArray(task.category),
@@ -1055,6 +1079,7 @@ export default {
           so_number: this.editFormData.so_number,
           contract_number: this.editFormData.contract_number,
           sale_owner: this.editFormData.sale_owner,
+          project_manager: this.editFormData.project_manager,
           customer_info: this.editFormData.customer_info,
           description: this.editFormData.description,
           category: Array.isArray(this.editFormData.category) ? this.editFormData.category.join(',') : this.editFormData.category,
@@ -1217,7 +1242,8 @@ export default {
       return `${hrs} ชม. ${mins} นาที`
     },
     showSaleUserInfo(saleName) {
-      const user = this.allUsers.find(u => `${u.firstname} ${u.lastname}` === saleName)
+      const raw = this.allUsersRaw || []
+      const user = raw.find(u => `${u.firstname} ${u.lastname}` === saleName)
       if (user) {
         this.selectedUserName = saleName
         this.selectedUserId = user.id
@@ -1227,7 +1253,15 @@ export default {
     async loadSaleUsers() {
       try {
         const response = await this.$http.get('/api/users')
+        this.allUsersRaw = response.data
         this.allUsers = response.data
+          .filter(u => u.is_active)
+          .map(u => ({
+            label: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`,
+            value: `${u.firstname} ${u.lastname}`,
+            position: u.position || '',
+            department: u.department || ''
+          }))
         this.saleUsers = response.data
           .filter(u => u.is_active && u.role && u.role.toLowerCase().includes('sale'))
           .map(u => ({ 
@@ -1321,13 +1355,16 @@ export default {
 }
 
 .so-number {
-  font-size: 0.9rem;
-  color: #6c757d;
-  background: #e3f2fd;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
   display: inline-block;
   width: fit-content;
+  border: 1px solid #bfdbfe;
+  letter-spacing: 0.3px;
 }
 
 .sale-info {
@@ -1913,5 +1950,60 @@ export default {
 
 .clickable-name:hover {
   color: #1d4ed8;
+}
+
+.task-name {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.history-table :deep(.p-datatable-thead > tr > th) {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #cbd5e1 !important;
+  font-size: 0.82rem !important;
+  letter-spacing: 0.4px !important;
+  text-transform: uppercase !important;
+}
+
+.history-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
+  background: #fafbfc !important;
+}
+
+.history-table :deep(.p-datatable-tbody > tr:hover) {
+  background: #eff6ff !important;
+  transition: background 0.15s;
+}
+
+.person-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sale-badge {
+  background: linear-gradient(135deg, #fdf4ff, #fae8ff);
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+  cursor: pointer;
+}
+
+.sale-badge:hover {
+  background: linear-gradient(135deg, #fae8ff, #f3e8ff);
+  box-shadow: 0 2px 8px rgba(126,34,206,0.2);
+}
+
+.pm-badge {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #c2410c;
+  border: 1px solid #fed7aa;
 }
 </style>

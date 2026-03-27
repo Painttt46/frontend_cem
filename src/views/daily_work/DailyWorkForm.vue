@@ -4,282 +4,167 @@
     <Card class="form-card">
       <template #content>
         <form @submit.prevent="submitForm" class="daily-work-form">
-          <div class="form-grid">
-            <div class="input-group">
-              <label for="taskId" class="input-label">เลือกโครงการ *</label>
-              <Dropdown id="taskId" v-model="formData.taskId" :options="tasks" optionLabel="display" optionValue="id"
-                class="corporate-dropdown task-dropdown" required placeholder="เลือกโครงการที่ต้องการลงเวลา" @change="onTaskChange"
-                filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
-                :filterFields="['task_name', 'so_number', 'display']">
-                <template #value="slotProps">
-                  <div v-if="slotProps.value" class="task-selected">
-                    <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
-                    <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
-                  </div>
-                  <span v-else>เลือกโครงการที่ต้องการลงเวลา</span>
-                </template>
-                <template #option="slotProps">
-                  <div class="task-option">
-                    <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
-                    <span class="task-name-text">{{ slotProps.option.task_name }}</span>
-                  </div>
-                </template>
-              </Dropdown>
-            </div>
-
-            <div class="input-group" v-if="workflowSteps.length > 0">
-              <label for="stepId" class="input-label">
-                <i class="pi pi-sitemap"></i> เลือก Workflow Step (เลือกได้หลายรายการ)
-              </label>
-              <MultiSelect id="stepId" v-model="formData.stepIds" :options="workflowSteps" optionLabel="step_name"
-                optionValue="id" :optionDisabled="isStepCompleted" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
-                filter filterPlaceholder="ค้นหาชื่อ step...">
-                <template #value="slotProps">
-                  <div v-if="slotProps.value && slotProps.value.length > 0" class="selected-chips">
-                    <div v-for="stepId in slotProps.value" :key="stepId" class="step-chip" 
-                      :style="{ borderLeftColor: getStepStatusColor(getStepById(stepId)), background: getStepStatusColor(getStepById(stepId)) + '15' }">
-                      <div class="chip-main">
-                        <span class="chip-badge" :style="{ background: getStepStatusColor(getStepById(stepId)) }">{{ getStepNumber(stepId) }}</span>
-                        <span class="chip-name">{{ getStepById(stepId)?.step_name }}</span>
-                        <span class="chip-status" :style="{ color: getStepStatusColor(getStepById(stepId)) }">{{ getStepStatusLabel(getStepById(stepId)) }}</span>
-                        <i class="pi pi-times chip-remove" @click.stop="removeStep(stepId)"></i>
-                      </div>
-                      <div v-if="getStepById(stepId)?.description" class="chip-desc">{{ getStepById(stepId).description }}</div>
-                      <div class="chip-details">
-                        <span v-if="getStepById(stepId)?.project_statuses?.length > 0" class="chip-meta">
-                          <span v-for="ps in getStepById(stepId).project_statuses" :key="ps" class="project-badge-mini"
-                            :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
-                            {{ getProjectStatusLabel(ps) }}
-                          </span>
-                        </span>
-                        <span v-if="getStepById(stepId)?.start_date || getStepById(stepId)?.end_date" class="chip-meta">
-                          <i class="pi pi-calendar"></i> {{ formatDateRange(getStepById(stepId)?.start_date, getStepById(stepId)?.end_date) }}
-                        </span>
-                        <span v-if="getStepById(stepId)?.assigned_users?.length > 0" class="chip-meta">
-                          <i class="pi pi-users"></i>
-                          <span v-for="user in getStepById(stepId).assigned_users" :key="user.id || user" class="user-badge-mini">
-                            {{ typeof user === 'object' ? user.name : user }}
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <span v-else class="placeholder-text">เลือก step (ถ้ามี)</span>
-                </template>
-                <template #option="slotProps">
-                  <div class="step-option" :style="{ borderLeftColor: getStepStatusColor(slotProps.option) }">
-                    <div class="step-header-option">
-                      <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(slotProps.option) }">{{ slotProps.index + 1 }}</span>
-                      <strong>{{ slotProps.option.step_name }}</strong>
-                      <span class="step-status-inline" :style="{ color: getStepStatusColor(slotProps.option) }">
-                        <i class="pi pi-circle-fill"></i> {{ getStepStatusLabel(slotProps.option) }}
-                      </span>
-                    </div>
-                    <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
-                    <div class="step-meta">
-                      <span v-if="slotProps.option.project_statuses && slotProps.option.project_statuses.length > 0" class="meta-item">
-                        <span v-for="ps in slotProps.option.project_statuses" :key="ps" class="project-badge" 
-                              :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
-                          <i class="pi pi-folder"></i> {{ getProjectStatusLabel(ps) }}
-                        </span>
-                      </span>
-                      <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">
-                        <i class="pi pi-calendar"></i>
-                        {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
-                      </span>
-                      <span v-if="slotProps.option.assigned_users && slotProps.option.assigned_users.length > 0" class="meta-item">
-                        <i class="pi pi-users"></i>
-                        <span v-for="user in slotProps.option.assigned_users" :key="user.id || user" class="user-badge">
-                          {{ typeof user === 'object' ? user.name : user }}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                </template>
-              </MultiSelect>
-            </div>
-
+          <!-- วันที่ (shared) -->
+          <div class="form-grid shared-grid">
             <div class="input-group">
               <label for="workDate" class="input-label">วันที่ลงงาน *</label>
               <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="corporate-input"
                 :minDate="minDate" required />
             </div>
-
-            <div class="input-group time-range-group">
-              <label class="input-label">ระยะเวลา *</label>
-              <div class="time-range-inputs">
-                <InputText id="startTime" v-model="formData.startTimeText" class="corporate-input time-input"
-                  placeholder="เริ่ม" maxlength="5" inputmode="numeric"
-                  @input="formatTimeInput('startTimeText')" @blur="parseStartTime" required />
-                <span class="time-separator">-</span>
-                <InputText id="endTime" v-model="formData.endTimeText" class="corporate-input time-input"
-                  placeholder="สิ้นสุด" maxlength="5" inputmode="numeric"
-                  @input="formatTimeInput('endTimeText')" @blur="parseEndTime" required />
-                <span class="time-total">({{ calculateHours }})</span>
-              </div>
-            </div>
-
-            <div class="input-group full-width">
-              <label for="location" class="input-label">สถานที่ *</label>
-              <InputText id="location" v-model="formData.location" required class="corporate-input"
-                placeholder="ระบุสถานที่หรือที่อยู่" />
-            </div>
-
-            <div class="input-group full-width">
-              <label for="workDescription" class="input-label">รายละเอียดงานที่ทำวันนี้ *</label>
-              <Textarea id="workDescription" v-model="formData.workDescription" rows="4" required
-                class="corporate-input" />
-            </div>
-
-            <div class="input-group full-width">
-              <label class="input-label">แนบไฟล์ (รูปภาพ, เอกสาร)</label>
-              <div class="file-upload-wrapper">
-                <input ref="fileInput" @change="handleFileUpload" type="file"
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple class="file-input" id="fileUpload">
-                <Button type="button"
-                  :label="formData.files?.length > 0 ? `เลือกแล้ว ${formData.files.length} ไฟล์` : 'เลือกไฟล์'"
-                  icon="pi pi-upload" severity="secondary" outlined @click="$refs.fileInput.click()" />
-              </div>
-              <div v-if="formData.files?.length > 0" class="file-list">
-                <div v-for="(file, index) in formData.files" :key="index" class="file-item">
-                  <i class="pi pi-file"></i>
-                  <span class="file-name">{{ file.name }}</span>
-                  <Button icon="pi pi-times" size="small" severity="danger" text @click="removeFile(index)" />
-                </div>
-              </div>
-            </div>
           </div>
 
-          <Divider />
-          <div class="calendar-options">
-            <div class="options-header">
-              <label for="createCalendar" class="calendar-main-label">
-                <i class="pi pi-calendar-plus"></i>
-                สร้าง Calendar Event ใน Microsoft Teams
-              </label>
-            </div>
+          <Divider style="margin:12px 0 8px" />
 
+          <!-- Task Entries -->
+          <div class="form-grid">
             <div class="input-group full-width">
-              <label for="eventTitle" class="input-label">
-                <i class="pi pi-bookmark"></i>
-                หัวข้อ Calendar Event *
-              </label>
-              <InputText id="eventTitle" v-model="formData.eventTitle" class="corporate-input"
-                placeholder="หัวข้อ calendar event" required />
-            </div>
-
-            <div class="input-group attendees-section">
-              <label for="attendees" class="input-label">
-                <i class="pi pi-users"></i>
-                เชิญผู้เข้าร่วม
-              </label>
-
-              <!-- AutoComplete สำหรับเลือก attendees -->
-              <div class="colleague-search">
-                <AutoComplete ref="attendeeAutocomplete" v-model="selectedAttendee" :suggestions="filteredAttendees" @complete="searchAttendees"
-                  @item-select="onAttendeeSelect" @dropdown-click="showAllAttendees" optionLabel="name"
-                  placeholder="ค้นหาและเลือกผู้ใช้..." class="corporate-input attendee-autocomplete" :dropdown="true" :forceSelection="false"
-                  scrollHeight="200px">
-                  <template #option="slotProps">
-                    <div class="user-option">
-                      <div class="user-name">{{ slotProps.option.name }}</div>
-                      <div class="user-role">{{ slotProps.option.position }} - {{ slotProps.option.department }}</div>
-                    </div>
-                  </template>
-                </AutoComplete>
+              <div class="entries-header">
+                <label class="input-label" style="margin:0;font-size:0.95rem">โครงการที่ทำวันนี้ *</label>
+                <Button type="button" icon="pi pi-plus" label="เพิ่มโครงการ" size="small" severity="secondary" outlined @click="addTaskEntry" />
               </div>
-
-              <!-- Input สำหรับพิมพ์ email เพิ่มเอง -->
-              <div class="email-input-section mt-2">
-                <div class="input-with-button">
-                  <input v-model="newEmail" type="email" placeholder="พิมพ์ email เพิ่มเติม..." class="corporate-input"
-                    @keyup.enter="addNewEmail" />
-                  <Button type="button" icon="pi pi-plus" @click="addNewEmail" :disabled="!isValidEmail(newEmail)"
-                    class="add-email-btn" />
+              <div v-for="(entry, idx) in taskEntries" :key="idx" class="task-entry-block">
+                <div class="entry-header-row">
+                  <span class="entry-num">{{ idx + 1 }}</span>
+                  <Dropdown v-model="entry.taskId" :options="tasks" optionLabel="display" optionValue="id"
+                    class="corporate-dropdown task-dropdown" placeholder="เลือกโครงการ"
+                    @change="onTaskEntryChange(entry)"
+                    filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
+                    :filterFields="['task_name', 'so_number', 'display']" style="flex:1;min-width:0">
+                    <template #value="slotProps">
+                      <div v-if="slotProps.value" class="task-selected">
+                        <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
+                        <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
+                      </div>
+                      <span v-else>เลือกโครงการ</span>
+                    </template>
+                    <template #option="slotProps">
+                      <div class="task-option" :class="{ 'task-option-assigned': slotProps.option._assigned }">
+                        <span v-if="slotProps.option._assigned" class="assigned-badge">
+                          <i class="pi pi-star-fill" style="font-size:0.65rem"></i> งานของฉัน
+                        </span>
+                        <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
+                        <span class="task-name-text">{{ slotProps.option.task_name }}</span>
+                      </div>
+                    </template>
+                  </Dropdown>
+                  <div class="entry-time-inline">
+                    <InputText v-model="entry.startTimeText" class="corporate-input time-input"
+                      :class="{ 'p-invalid': entry.startTimeError }"
+                      placeholder="เริ่ม" maxlength="5" inputmode="numeric"
+                      @input="formatEntryTime(entry, 'startTimeText'); entry.startTimeError = false"
+                      @blur="parseEntryStartTime(entry)" required />
+                    <span class="time-separator">-</span>
+                    <InputText v-model="entry.endTimeText" class="corporate-input time-input"
+                      :class="{ 'p-invalid': entry.endTimeError }"
+                      placeholder="สิ้นสุด" maxlength="5" inputmode="numeric"
+                      @input="formatEntryTime(entry, 'endTimeText'); entry.endTimeError = false"
+                      @blur="parseEntryEndTime(entry)" required />
+                    <span class="time-total">{{ calcEntryHours(entry) }}</span>
+                  </div>
+                  <Button v-if="taskEntries.length > 1" type="button" icon="pi pi-times" severity="danger" text rounded size="small" @click="removeTaskEntry(idx)" />
                 </div>
-              </div>
-
-              <!-- แสดงรายชื่อที่เลือกแล้ว -->
-              <div v-if="formData.attendees && formData.attendees.length > 0" class="selected-attendees">
-                <h6 class="attendees-title">ผู้เข้าร่วมที่เลือก:</h6>
-                <div class="attendees-list">
-                  <div v-for="(attendee, index) in formData.attendees" :key="index" class="attendee-card">
-                    <div class="attendee-details">
-                      <div class="attendee-name">{{ attendee.name || attendee }}</div>
-                      <div v-if="attendee.position" class="attendee-position">
-                        <i class="pi pi-briefcase"></i>
-                        {{ attendee.position }}
+                <div v-if="entry.taskId && getStepsForTask(entry.taskId).length > 0">
+                  <MultiSelect v-model="entry.stepIds" :options="getStepsForTask(entry.taskId)" optionLabel="step_name"
+                    optionValue="id" :optionDisabled="isStepCompleted" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
+                    filter filterPlaceholder="ค้นหาชื่อ step..." style="width:100%">
+                    <template #value="slotProps">
+                      <div v-if="slotProps.value && slotProps.value.length > 0" class="selected-chips">
+                        <div v-for="stepId in slotProps.value" :key="stepId" class="step-chip"
+                          :style="{ borderLeftColor: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)), background: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)) + '15' }">
+                          <div class="chip-main">
+                            <span class="chip-badge" :style="{ background: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)) }">{{ getStepNumberFromTask(stepId, entry.taskId) }}</span>
+                            <span class="chip-name">{{ getStepByIdFromTask(stepId, entry.taskId)?.step_name }}</span>
+                            <span class="chip-status" :style="{ color: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)) }">{{ getStepStatusLabel(getStepByIdFromTask(stepId, entry.taskId)) }}</span>
+                            <i class="pi pi-times chip-remove" @click.stop="entry.stepIds = entry.stepIds.filter(id => id !== stepId)"></i>
+                          </div>
+                        </div>
                       </div>
-                      <div v-if="attendee.department" class="attendee-department">
-                        <i class="pi pi-building"></i>
-                        {{ attendee.department }}
+                      <span v-else class="placeholder-text">เลือก step (ถ้ามี)</span>
+                    </template>
+                    <template #option="slotProps">
+                      <div class="step-option" :style="{ borderLeftColor: getStepStatusColor(slotProps.option) }">
+                        <div class="step-header-option">
+                          <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(slotProps.option) }">{{ slotProps.index + 1 }}</span>
+                          <strong>{{ slotProps.option.step_name }}</strong>
+                          <span class="step-status-inline" :style="{ color: getStepStatusColor(slotProps.option) }">
+                            <i class="pi pi-circle-fill"></i> {{ getStepStatusLabel(slotProps.option) }}
+                          </span>
+                        </div>
+                        <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
+                        <div class="step-meta">
+                          <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">
+                            <i class="pi pi-calendar"></i>
+                            {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
+                          </span>
+                        </div>
                       </div>
+                    </template>
+                  </MultiSelect>
+                </div>
+                <!-- Per-entry: สถานที่ รายละเอียด ไฟล์ Calendar -->
+                <div class="input-group full-width" style="margin-top:8px">
+                  <label class="input-label">สถานที่ *</label>
+                  <InputText v-model="entry.location" required class="corporate-input" placeholder="ระบุสถานที่หรือที่อยู่" />
+                </div>
+                <div class="input-group full-width">
+                  <label class="input-label">รายละเอียดงานที่ทำ *</label>
+                  <Textarea v-model="entry.workDescription" rows="3" required class="corporate-input" />
+                </div>
+                <div class="input-group full-width">
+                  <label class="input-label">แนบไฟล์</label>
+                  <div class="file-upload-wrapper">
+                    <input :ref="'fileInput_' + idx" @change="e => handleFileUploadEntry(e, entry)" type="file"
+                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple class="file-input">
+                    <Button type="button"
+                      :label="entry.files?.length > 0 ? `เลือกแล้ว ${entry.files.length} ไฟล์` : 'เลือกไฟล์'"
+                      icon="pi pi-upload" severity="secondary" outlined size="small"
+                      @click="$refs['fileInput_' + idx][0].click()" />
+                  </div>
+                  <div v-if="entry.files?.length > 0" class="file-list">
+                    <div v-for="(file, fi) in entry.files" :key="fi" class="file-item">
+                      <i class="pi pi-file"></i>
+                      <span class="file-name">{{ file.name }}</span>
+                      <Button icon="pi pi-times" size="small" severity="danger" text @click="entry.files.splice(fi,1)" />
                     </div>
-                    <Button type="button" icon="pi pi-times" severity="danger" text rounded size="small"
-                      @click="removeAttendee(index)" class="remove-btn" />
                   </div>
                 </div>
-              </div>
-
-              <div v-else class="no-attendees">
-                <i class="pi pi-users"></i>
-                <span>ยังไม่มีผู้เข้าร่วม</span>
-              </div>
-            </div>
-
-            <div class="input-group full-width event-details-group">
-              <label for="eventDetails" class="input-label">
-                <i class="pi pi-file-edit"></i>
-                รายละเอียดเพิ่มเติมสำหรับ Calendar Event
-              </label>
-              <textarea id="eventDetails" v-model="formData.eventDetails"
-                placeholder="ระบุรายละเอียดเพิ่มเติมที่ต้องการแสดงใน calendar event..." rows="4"
-                class="corporate-textarea" />
-            </div>
-
-            <div class="input-group full-width">
-              <div class="teams-meeting-section">
-                <div class="checkbox-group">
-                  <Checkbox v-model="formData.createTeamsMeeting" inputId="createTeams" :binary="true" />
-                  <label for="createTeams" class="checkbox-label">
-                    <i class="pi pi-video"></i>
-                    สร้าง MS Teams Meeting
-                  </label>
+                <Divider style="margin:8px 0" />
+                <div class="entry-calendar-section">
+                  <div class="options-header">
+                    <label class="calendar-main-label" style="font-size:0.85rem;color:#3b82f6">
+                      <i class="pi pi-calendar-plus"></i> Calendar Event / MS Teams
+                    </label>
+                  </div>
+                  <div class="input-group full-width">
+                    <label class="input-label">หัวข้อ Calendar Event</label>
+                    <InputText v-model="entry.eventTitle" class="corporate-input" placeholder="หัวข้อ calendar event" />
+                  </div>
+                  <div class="input-group full-width event-details-group">
+                    <label class="input-label">รายละเอียดเพิ่มเติม</label>
+                    <textarea v-model="entry.eventDetails" rows="2" class="corporate-textarea"
+                      placeholder="รายละเอียดสำหรับ calendar event..." />
+                  </div>
+                  <div class="input-group full-width">
+                    <div class="teams-meeting-section">
+                      <div class="checkbox-group">
+                        <Checkbox v-model="entry.createTeamsMeeting" :inputId="'createTeams_' + idx" :binary="true" />
+                        <label :for="'createTeams_' + idx" class="checkbox-label">
+                          <i class="pi pi-video"></i> สร้าง MS Teams Meeting
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="entry.createTeamsMeeting" class="input-group-row">
+                    <div class="input-group">
+                      <label class="input-label"><i class="pi pi-clock"></i> เวลาเริ่ม Meeting</label>
+                      <Calendar v-model="entry.meetingStartTime" timeOnly hourFormat="24" class="corporate-input" :manualInput="true" />
+                    </div>
+                    <div class="input-group">
+                      <label class="input-label"><i class="pi pi-clock"></i> เวลาสิ้นสุด Meeting</label>
+                      <Calendar v-model="entry.meetingEndTime" timeOnly hourFormat="24" class="corporate-input" :manualInput="true" />
+                    </div>
+                  </div>
                 </div>
-                <small class="teams-hint">
-                  <i class="pi pi-info-circle"></i>
-                  จะสร้าง Teams Meeting อัตโนมัติและส่งลิงก์ให้ผู้เข้าร่วมทุกคน
-                </small>
-              </div>
-            </div>
-
-            <div v-if="formData.createTeamsMeeting" class="input-group-row">
-              <div class="input-group">
-                <label for="meetingStartTime" class="input-label">
-                  <i class="pi pi-clock"></i>
-                  เวลาเริ่ม Meeting
-                </label>
-
-                <Calendar id="meetingStartTime" ref="meetingStartTimeCal" v-model="formData.meetingStartTime" timeOnly
-                  hourFormat="24" class="corporate-input" :manualInput="true" :pt="{
-                    input: {
-                      autocomplete: 'off'
-                    }
-                  }" @update:modelValue="onMeetingTimeChange" />
-              </div>
-
-              <div class="input-group">
-                <label for="meetingEndTime" class="input-label">
-                  <i class="pi pi-clock"></i>
-                  เวลาสิ้นสุด Meeting
-                </label>
-
-                <Calendar id="meetingEndTime" ref="meetingEndTimeCal" v-model="formData.meetingEndTime" timeOnly
-                  hourFormat="24" class="corporate-input" :manualInput="true" :pt="{
-                    input: {
-                      autocomplete: 'off'
-                    }
-                  }" @update:modelValue="onMeetingTimeChange" />
               </div>
             </div>
 
@@ -297,20 +182,19 @@
 </template>
 
 <script>
+/* eslint-disable no-unused-vars */
 import axios from '@/utils/axiosConfig'
 import Checkbox from 'primevue/checkbox'
-import AutoComplete from 'primevue/autocomplete'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
 
-import { isRequired, isValidTimeRange, getValidationMessage } from '@/utils/validation'
+import { isValidTimeRange, getValidationMessage } from '@/utils/validation'
 import { isActive } from '@/utils/statusHelper'
 
 export default {
   name: 'DailyWorkForm',
   components: {
     Checkbox,
-    AutoComplete,
     Button,
     MultiSelect
   },
@@ -323,6 +207,8 @@ export default {
     return {
       tasks: [],
       workflowSteps: [],
+      workflowStepsMap: {},
+      taskEntries: [{ taskId: null, stepIds: [], location: '', workDescription: '', files: [], eventTitle: '', eventDetails: '', attendees: [], createTeamsMeeting: false, meetingStartTime: null, meetingEndTime: null, startTimeText: '', endTimeText: '', startTime: null, endTime: null }],
       minDate: new Date(),
       formData: {
         taskId: null,
@@ -411,6 +297,11 @@ export default {
     const now = new Date()
     this.formData.startTimeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
     this.parseStartTime()
+    // set initial time on first entry
+    if (this.taskEntries[0]) {
+      this.taskEntries[0].startTimeText = this.formData.startTimeText
+      this.taskEntries[0].startTime = new Date(now)
+    }
 
     // Listen for status updates
     window.addEventListener('statusesUpdated', this.handleStatusesUpdate)
@@ -431,6 +322,40 @@ export default {
       
     },
 
+    formatEntryTime(entry, field) {
+      let value = (entry[field] || '').replace(/\D/g, '')
+      if (value.length >= 2) value = value.slice(0, 2) + ':' + value.slice(2, 4)
+      entry[field] = value.slice(0, 5)
+    },
+    parseEntryTime(text) {
+      if (!text || text.length < 5) return null
+      const [h, m] = text.split(':').map(Number)
+      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+        const d = new Date(); d.setHours(h, m, 0, 0); return d
+      }
+      return null
+    },
+    parseEntryStartTime(entry) {
+      const t = this.parseEntryTime(entry.startTimeText)
+      if (t) { entry.startTime = t; entry.meetingStartTime = new Date(t); entry.startTimeError = false }
+      else if (entry.startTimeText) entry.startTimeError = true
+    },
+    parseEntryEndTime(entry) {
+      const t = this.parseEntryTime(entry.endTimeText)
+      if (t) { entry.endTime = t; entry.meetingEndTime = new Date(t); entry.endTimeError = false }
+      else if (entry.endTimeText) entry.endTimeError = true
+    },
+    calcEntryHours(entry) {
+      if (!entry.startTime || !entry.endTime) return '0 ชั่วโมง'
+      const start = new Date(entry.startTime)
+      let end = new Date(entry.endTime)
+      if (end <= start) end.setDate(end.getDate() + 1)
+      let diff = (end - start) / 3600000
+      const sh = start.getHours() + start.getMinutes() / 60
+      const eh = end.getHours() + end.getMinutes() / 60
+      if (sh < 13 && eh > 12) diff -= (Math.min(eh, 13) - Math.max(sh, 12))
+      return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
+    },
     parseStartTime() {
       const time = this.parseTimeText(this.formData.startTimeText)
       if (time) {
@@ -665,111 +590,150 @@ export default {
     },
     async loadTasks() {
       try {
-        const response = await this.$http.get('/api/tasks')
-        // กรองเฉพาะ task ที่ไม่ complete
-        const availableTasks = response.data.filter(task => isActive(task.status))
-
-        this.tasks = availableTasks.map(task => ({
+        const userId = localStorage.getItem('soc_user_id')
+        const [tasksRes, stepsRes] = await Promise.all([
+          this.$http.get('/api/tasks'),
+          this.$http.get('/api/task-steps/all')
+        ])
+        const availableTasks = tasksRes.data.filter(task => isActive(task.status))
+        const assignedTaskIds = new Set(
+          stepsRes.data
+            .filter(s => {
+              if (!s.assigned_users) return false
+              const users = typeof s.assigned_users === 'string' ? JSON.parse(s.assigned_users) : s.assigned_users
+              return users.some(u => String(u.id || u) === String(userId))
+            })
+            .map(s => s.task_id)
+        )
+        const mapped = availableTasks.map(task => ({
           ...task,
+          _assigned: assignedTaskIds.has(task.id),
           display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
         }))
+        this.tasks = mapped.sort((a, b) => (b._assigned ? 1 : 0) - (a._assigned ? 1 : 0))
       } catch { // ignore
-
       }
     },
     handleFileUpload(event) {
       const files = Array.from(event.target.files)
       this.formData.files = [...this.formData.files, ...files]
     },
+    handleFileUploadEntry(event, entry) {
+      const files = Array.from(event.target.files)
+      entry.files = [...(entry.files || []), ...files]
+    },
     removeFile(index) {
       this.formData.files.splice(index, 1)
     },
     async uploadFiles() {
       if (this.formData.files.length === 0) return []
-
       const formData = new FormData()
-      this.formData.files.forEach(file => {
-        formData.append('files', file)
-      })
-
+      this.formData.files.forEach(file => { formData.append('files', file) })
       try {
-        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
+        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
         return response.data.files || []
-      } catch { // ignore
-        return []
-      }
+      } catch { return [] }
+    },
+    async uploadFilesForEntry(entry) {
+      if (!entry.files || entry.files.length === 0) return []
+      const formData = new FormData()
+      entry.files.forEach(file => { formData.append('files', file) })
+      try {
+        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        return response.data.files || []
+      } catch { return [] }
     },
     async onTaskChange() {
-      this.workflowSteps = []
-      this.formData.stepIds = []
-      if (this.formData.taskId) {
+      // legacy - kept for compatibility
+    },
+    async onTaskEntryChange(entry) {
+      entry.stepIds = []
+      if (entry.taskId && !this.workflowStepsMap[entry.taskId]) {
         try {
-          const response = await axios.get(`/api/task-steps/task/${this.formData.taskId}`)
-          this.workflowSteps = response.data || []
+          const response = await axios.get(`/api/task-steps/task/${entry.taskId}`)
+          this.workflowStepsMap[entry.taskId] = response.data || []
         } catch (error) {
           console.error('Error loading workflow steps:', error)
         }
       }
     },
+    getStepsForTask(taskId) {
+      return this.workflowStepsMap[taskId] || []
+    },
+    getStepByIdFromTask(stepId, taskId) {
+      return (this.workflowStepsMap[taskId] || []).find(s => s.id === stepId)
+    },
+    getStepNumberFromTask(stepId, taskId) {
+      const idx = (this.workflowStepsMap[taskId] || []).findIndex(s => s.id === stepId)
+      return idx >= 0 ? idx + 1 : ''
+    },
+    addTaskEntry() {
+      this.taskEntries.push({ taskId: null, stepIds: [], location: '', workDescription: '', files: [], eventTitle: '', eventDetails: '', attendees: [], createTeamsMeeting: false, meetingStartTime: null, meetingEndTime: null, startTimeText: '', endTimeText: '', startTime: null, endTime: null })
+    },
+    removeTaskEntry(idx) {
+      this.taskEntries.splice(idx, 1)
+    },
     async submitForm() {
-      if (!isRequired(this.formData.taskId)) {
-        this.$toast.add({
-          severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: getValidationMessage('งาน', 'required'),
-          life: 3000
-        })
-        return
+      const validEntries2 = this.taskEntries.filter(e => e.taskId)
+      for (const e of validEntries2) {
+        if (!e.startTimeText || e.startTimeText.length < 5) { e.startTimeError = true }
+        if (!e.endTimeText || e.endTimeText.length < 5) { e.endTimeError = true }
       }
-
-      if (!isValidTimeRange(this.formData.startTime, this.formData.endTime)) {
+      const invalidEntry = validEntries2.find(e => e.startTimeError || e.endTimeError || !isValidTimeRange(e.startTime, e.endTime))
+      if (invalidEntry) {
         this.$toast.add({
           severity: 'error',
           summary: 'ข้อผิดพลาด',
-          detail: getValidationMessage('เวลา', 'timeRange'),
+          detail: 'กรุณากรอกเวลาเริ่มและสิ้นสุดให้ครบทุกโครงการ',
           life: 3000
         })
         return
       }
 
       try {
-        const uploadedFiles = await this.uploadFiles()
-        const stepIds = this.formData.stepIds && this.formData.stepIds.length > 0 
-          ? this.formData.stepIds 
-          : []
-
-        const workData = {
-          task_id: this.formData.taskId,
-          step_ids: stepIds,
-          work_date: this.formatDate(this.formData.workDate),
-          start_time: this.formatTime(this.formData.startTime),
-          end_time: this.formatTime(this.formData.endTime),
-          total_hours: this.calculateTotalHours(),
-          location: this.formData.location,
-          work_description: this.formData.workDescription,
-          files: uploadedFiles,
-          user_id: localStorage.getItem('soc_user_id'),
-          submitted_at: new Date().toISOString(),
-          create_calendar_event: this.formData.createCalendarEvent,
-          event_title: this.formData.eventTitle,
-          meeting_start_time: this.formatTime(this.formData.meetingStartTime),
-          meeting_end_time: this.formatTime(this.formData.meetingEndTime),
-          attendees: this.formData.attendees,
-          create_teams_meeting: this.formData.createTeamsMeeting,
-          event_details: this.formData.eventDetails
+        const validEntries = this.taskEntries.filter(e => e.taskId)
+        if (validEntries.length === 0) {
+          this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกโครงการอย่างน้อย 1 รายการ', life: 3000 })
+          return
         }
-        await this.$http.post('/api/daily-work', workData)
+        const submittedAt = new Date().toISOString()
+        await Promise.all(validEntries.map(async entry => {
+          const uploadedFiles = await this.uploadFilesForEntry(entry)
+          // Auto-build event_details จาก steps ที่เลือก + รายละเอียดที่ user พิมพ์
+          const steps = (entry.stepIds || []).map(id => this.getStepByIdFromTask(id, entry.taskId)).filter(Boolean)
+          const stepDetails = steps.length > 0
+            ? 'Steps:\n' + steps.map((s, i) => `${i + 1}. ${s.step_name}${s.description ? ' - ' + s.description : ''}`).join('\n')
+            : ''
+          const eventDetails = [stepDetails, entry.eventDetails].filter(Boolean).join('\n\n')
+          return this.$http.post('/api/daily-work', {
+            task_id: entry.taskId,
+            step_ids: entry.stepIds || [],
+            work_date: this.formatDate(this.formData.workDate),
+            start_time: this.formatTime(entry.startTime || this.formData.startTime),
+            end_time: this.formatTime(entry.endTime || this.formData.endTime),
+            total_hours: (() => { const s = entry.startTime || this.formData.startTime; const e = entry.endTime || this.formData.endTime; if (!s || !e) return 0; let d = (new Date(e) - new Date(s)) / 3600000; const sh = new Date(s).getHours() + new Date(s).getMinutes()/60; const eh = new Date(e).getHours() + new Date(e).getMinutes()/60; if (sh < 13 && eh > 12) d -= (Math.min(eh,13) - Math.max(sh,12)); return Math.max(0, d) })(),
+            location: entry.location,
+            work_description: entry.workDescription,
+            files: uploadedFiles,
+            user_id: localStorage.getItem('soc_user_id'),
+            submitted_at: submittedAt,
+            create_calendar_event: !!entry.eventTitle,
+            event_title: entry.eventTitle,
+            meeting_start_time: this.formatTime(entry.meetingStartTime),
+            meeting_end_time: this.formatTime(entry.meetingEndTime),
+            attendees: entry.attendees || [],
+            create_teams_meeting: entry.createTeamsMeeting,
+            event_details: eventDetails
+          })
+        }))
 
         this.$toast.add({
           severity: 'success',
           summary: 'สำเร็จ',
-          detail: 'บันทึกงานรายวันเรียบร้อยแล้ว',
+          detail: `บันทึกงานรายวัน ${validEntries.length} โครงการเรียบร้อยแล้ว`,
           life: 3000
         })
 
-        // Dispatch event for realtime update
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))
 
@@ -847,6 +811,10 @@ export default {
         eventDetails: ''
       }
       this.workflowSteps = []
+      this.workflowStepsMap = {}
+      const nowR = new Date()
+      const nowTimeText = nowR.getHours().toString().padStart(2,'0')+':'+nowR.getMinutes().toString().padStart(2,'0')
+      this.taskEntries = [{ taskId: null, stepIds: [], location: '', workDescription: '', files: [], eventTitle: '', eventDetails: '', attendees: [], createTeamsMeeting: false, meetingStartTime: null, meetingEndTime: null, startTimeText: nowTimeText, endTimeText: '', startTime: nowR, endTime: null }]
       const fileInput = document.getElementById('fileUpload')
       if (fileInput) fileInput.value = ''
     },
@@ -900,7 +868,60 @@ export default {
   border: 1px solid #e9ecef;
 }
 
-/* Task Dropdown Styling */
+/* Shared date/time grid */
+.shared-grid {
+  background: #f0f7ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 4px;
+}
+
+/* Entries header */
+.entries-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+/* Task Entry Block */
+.task-entry-block {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 3px solid #4A90E2;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.task-entry-block .input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 8px;
+}
+.entry-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4A90E2;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.entry-calendar-section {
+  background: #f8f9ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-top: 4px;
+}
+
 .task-dropdown {
   width: 100%;
   max-width: 100%;
@@ -944,6 +965,24 @@ export default {
   gap: 0.5rem;
   max-width: 100%;
   width: 100%;
+  flex-wrap: wrap;
+}
+.task-option-assigned {
+  background: #fefce8;
+  border-left: 3px solid #f59e0b;
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin: -4px -6px;
+}
+.assigned-badge {
+  background: #f59e0b;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .so-badge {
@@ -1303,26 +1342,83 @@ export default {
   gap: 0.5rem;
 }
 
-.time-range-group .time-range-inputs {
+.time-range-group .time-range-inputs,
+.entry-time-group .time-range-inputs {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.time-range-group .time-input {
-  width: 80px;
+.time-range-group .time-input,
+.entry-time-group .time-input,
+.entry-time-inline .time-input {
+  width: 72px;
   text-align: center;
 }
 
-.time-range-group .time-separator {
+.time-range-group .time-separator,
+.entry-time-group .time-separator,
+.entry-time-inline .time-separator {
   font-weight: bold;
   color: #6c757d;
 }
 
-.time-range-group .time-total {
+.time-range-group .time-total,
+.entry-time-group .time-total,
+.entry-time-inline .time-total {
+  font-size: 0.85rem;
+  color: #3b82f6;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.entry-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.entry-header-row .task-dropdown {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-time-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 10px;
+  flex-shrink: 0;
+}
+
+.entry-time-inline .time-input {
+  width: 72px !important;
+  text-align: center;
+  padding: 0.35rem 0.5rem !important;
   font-size: 0.9rem;
-  color: #6c757d;
-  margin-left: 0.5rem;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.entry-time-inline .time-separator {
+  font-weight: 600;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.entry-time-inline .time-total {
+  font-size: 0.8rem;
+  color: #3b82f6;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 60px;
+  padding-left: 4px;
+  border-left: 1px solid #e2e8f0;
 }
 
 .checkbox-group {

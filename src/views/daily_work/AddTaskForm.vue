@@ -12,8 +12,6 @@
             <InputText id="taskName" v-model="formData.taskName" required class="corporate-input" />
           </div>
 
-
-
           <div class="input-group">
             <label for="contractNumber" class="input-label">เลขที่สัญญา</label>
             <InputText id="contractNumber" v-model="formData.contractNumber" class="corporate-input" />
@@ -21,8 +19,23 @@
 
           <div class="input-group">
             <label for="saleOwner" class="input-label">Sale เจ้าของงาน</label>
-            <Dropdown id="saleOwner" v-model="formData.saleOwner" :options="saleUsers" 
-              optionLabel="label" optionValue="value" placeholder="เลือก Sale" 
+            <Dropdown id="saleOwner" v-model="formData.saleOwner" :options="saleUsers"
+              optionLabel="label" optionValue="value" placeholder="เลือก Sale"
+              :filter="true" filterPlaceholder="ค้นหา..." :showClear="true"
+              class="corporate-input w-full">
+              <template #option="{ option }">
+                <div style="line-height:1.4">
+                  <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
+                  <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+                </div>
+              </template>
+            </Dropdown>
+          </div>
+
+          <div class="input-group">
+            <label for="projectManager" class="input-label">Project Manager</label>
+            <Dropdown id="projectManager" v-model="formData.projectManager" :options="allUsers"
+              optionLabel="label" optionValue="value" placeholder="เลือก Project Manager"
               :filter="true" filterPlaceholder="ค้นหา..." :showClear="true"
               class="corporate-input w-full">
               <template #option="{ option }">
@@ -119,6 +132,7 @@ export default {
         soNumber: '',
         contractNumber: '',
         saleOwner: '',
+        projectManager: '',
         customerInfo: '',
         projectStartDate: null,
         projectEndDate: null,
@@ -128,57 +142,35 @@ export default {
         steps: []
       },
       categoryOptions: [],
-      saleUsers: []
+      saleUsers: [],
+      allUsers: []
     }
   },
   mounted() {
     this.loadCategories()
-    this.loadSaleUsers()
+    this.loadUsers()
   },
   methods: {
-    async loadSaleUsers() {
+    async loadUsers() {
       try {
         const response = await this.$http.get('/api/users')
-        this.saleUsers = response.data
-          .filter(u => u.is_active && u.role && u.role.toLowerCase().includes('sale'))
-          .map(u => ({ 
-            label: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`, 
-            value: `${u.firstname} ${u.lastname}`,
-            position: u.position || '',
-            department: u.department || '',
-            email: u.email || '',
-            phone: u.phone || ''
-          }))
+        const active = response.data.filter(u => u.is_active)
+        const toOption = u => ({
+          label: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`,
+          value: `${u.firstname} ${u.lastname}`,
+          position: u.position || '',
+          department: u.department || ''
+        })
+        this.saleUsers = active
+          .filter(u => u.role && u.role.toLowerCase().includes('sale'))
+          .map(toOption)
+        this.allUsers = active.map(toOption)
       } catch { /* ignore */ }
     },
     loadCategories() {
       this.$http.get('/api/settings/categories')
-        .then(response => {
-          this.categoryOptions = response.data
-        })
-        .catch(() => {
-        })
-    },
-    getDefaultIcon(value) {
-      const iconMap = {
-        'งานทั่วไป': 'pi pi-briefcase',
-        'งานพัฒนาระบบ': 'pi pi-code',
-        'งานบำรุงรักษา': 'pi pi-wrench',
-        'งานประชุม': 'pi pi-users',
-        'งานฝึกอบรม': 'pi pi-book',
-        'งานวิจัย': 'pi pi-search',
-        'งานเอกสาร': 'pi pi-file-edit',
-        'งานลูกค้า': 'pi pi-user-plus'
-      }
-      return iconMap[value] || 'pi pi-briefcase'
-    },
-    getCategoryIcon(value) {
-      const category = this.categoryOptions.find(cat => cat.value === value)
-      return category ? category.icon : 'pi pi-briefcase'
-    },
-    getCategoryLabel(value) {
-      const category = this.categoryOptions.find(cat => cat.value === value)
-      return category ? category.label : value
+        .then(response => { this.categoryOptions = response.data })
+        .catch(() => {})
     },
     handleFileUpload(event) {
       const files = Array.from(event.target.files)
@@ -189,48 +181,32 @@ export default {
     },
     async uploadFiles() {
       if (this.formData.files.length === 0) return []
-
       const formData = new FormData()
-      this.formData.files.forEach(file => {
-        formData.append('files', file)
-      })
-
+      this.formData.files.forEach(file => { formData.append('files', file) })
       try {
         const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-        console.log('Upload response:', response.data)
         return response.data.files || []
       } catch (error) {
-        console.error('Upload error:', error)
-        this.$toast.add({
-          severity: 'error',
-          summary: 'อัปโหลดไฟล์ไม่สำเร็จ',
-          detail: error.response?.data?.error || error.message,
-          life: 5000
-        })
+        this.$toast.add({ severity: 'error', summary: 'อัปโหลดไฟล์ไม่สำเร็จ', detail: error.response?.data?.error || error.message, life: 5000 })
         return []
       }
     },
     async submitForm() {
       try {
         const uploadedFiles = await this.uploadFiles()
-
-        // Format dates to YYYY-MM-DD (local date only, no time)
         const formatDate = (date) => {
           if (!date) return null
           const d = new Date(date)
-          const year = d.getFullYear()
-          const month = String(d.getMonth() + 1).padStart(2, '0')
-          const day = String(d.getDate()).padStart(2, '0')
-          return `${year}-${month}-${day}`
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
         }
-
         const taskData = {
           task_name: this.formData.taskName,
           so_number: this.formData.soNumber,
           contract_number: this.formData.contractNumber,
           sale_owner: this.formData.saleOwner,
+          project_manager: this.formData.projectManager,
           customer_info: this.formData.customerInfo,
           project_start_date: formatDate(this.formData.projectStartDate),
           project_end_date: formatDate(this.formData.projectEndDate),
@@ -238,58 +214,26 @@ export default {
           category: this.formData.category.join(','),
           files: uploadedFiles
         }
-
         const response = await this.$http.post('/api/tasks', taskData)
         const taskId = response.data.id
-
-        // Save workflow steps if any
         if (this.formData.steps && this.formData.steps.length > 0) {
           for (const step of this.formData.steps) {
-            await this.$http.post('/api/task-steps', {
-              ...step,
-              task_id: taskId
-            })
+            await this.$http.post('/api/task-steps', { ...step, task_id: taskId })
           }
         }
-
-        this.$toast.add({
-          severity: 'success',
-          summary: 'สำเร็จ',
-          detail: 'เพิ่มงานใหม่เรียบร้อยแล้ว',
-          life: 3000
-        })
-
-        // Emit to parent component
+        this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'เพิ่มงานใหม่เรียบร้อยแล้ว', life: 3000 })
         this.$emit('task-added')
-
-        // Dispatch global event for real-time update
         window.dispatchEvent(new CustomEvent('taskUpdated'))
-
         this.resetForm()
       } catch (err) {
-        const errorMessage = err.response?.data?.error || err.message || 'ไม่สามารถเพิ่มงานได้'
-
-        this.$toast.add({
-          severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: errorMessage,
-          life: 5000
-        })
+        this.$toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: err.response?.data?.error || err.message || 'ไม่สามารถเพิ่มงานได้', life: 5000 })
       }
     },
     resetForm() {
       this.formData = {
-        taskName: '',
-        soNumber: '',
-        contractNumber: '',
-        saleOwner: '',
-        customerInfo: '',
-        projectStartDate: null,
-        projectEndDate: null,
-        description: '',
-        category: [],
-        files: [],
-        steps: []
+        taskName: '', soNumber: '', contractNumber: '', saleOwner: '', projectManager: '',
+        customerInfo: '', projectStartDate: null, projectEndDate: null,
+        description: '', category: [], files: [], steps: []
       }
       const fileInput = document.getElementById('fileUpload')
       if (fileInput) fileInput.value = ''
@@ -300,24 +244,13 @@ export default {
 
 <style scoped>
 :deep(.p-dropdown-clear-icon) { margin-right: 1.2rem; }
-.category-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.emoji {
-  font-size: 1.2rem;
-}
 
 .form-card {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
 }
 
-.add-task-form {
-  padding: 1rem;
-}
+.add-task-form { padding: 1rem; }
 
 .form-grid {
   display: grid;
@@ -326,25 +259,10 @@ export default {
   margin-bottom: 1.5rem;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
+.input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.full-width { grid-column: 1 / -1; }
 
-.full-width {
-  grid-column: 1 / -1;
-}
-
-.half-width {
-  grid-column: span 1;
-}
-
-.input-label {
-  font-weight: 500;
-  color: #495057;
-  font-size: 0.9rem;
-}
+.input-label { font-weight: 500; color: #495057; font-size: 0.9rem; }
 
 .corporate-input {
   border: 2px solid #e9ecef;
@@ -368,21 +286,10 @@ export default {
   border-top: 2px solid #e9ecef;
 }
 
-.form-actions .p-button {
-  min-width: 120px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-}
+.form-actions .p-button { min-width: 120px; padding: 0.75rem 1.5rem; font-weight: 500; }
 
-.file-upload-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.file-input {
-  display: none;
-}
+.file-upload-wrapper { display: flex; flex-direction: column; gap: 0.5rem; }
+.file-input { display: none; }
 
 .file-list {
   display: flex;
@@ -405,54 +312,19 @@ export default {
   border: 1px solid #e9ecef;
 }
 
-.file-item i {
-  color: #6c757d;
-  font-size: 1rem;
-}
-
-.file-name {
-  flex: 1;
-  font-size: 0.9rem;
-  color: #495057;
-  word-break: break-all;
-}
+.file-item i { color: #6c757d; font-size: 1rem; }
+.file-name { flex: 1; font-size: 0.9rem; color: #495057; word-break: break-all; }
 
 @media (max-width: 768px) {
-  .add-task-form {
-    padding: 0.75rem;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .p-button {
-    width: 100%;
-  }
+  .add-task-form { padding: 0.75rem; }
+  .form-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .form-actions { flex-direction: column; }
+  .form-actions .p-button { width: 100%; }
 }
 
 .category-dropdown :deep(.p-dropdown-panel) {
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-}
-
-.category-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-}
-
-.category-item i {
-  font-size: 1rem;
-  width: 20px;
-  text-align: center;
-  color: #495057;
 }
 
 .category-dropdown :deep(.p-dropdown-item) {
@@ -461,7 +333,5 @@ export default {
   margin: 2px;
 }
 
-.category-dropdown :deep(.p-dropdown-item:hover) {
-  background: #f8f9fa;
-}
+.category-dropdown :deep(.p-dropdown-item:hover) { background: #f8f9fa; }
 </style>

@@ -6,12 +6,23 @@
         <p>ยังไม่มีข้อมูลการลงงาน</p>
       </div>
 
-      <EnhancedDataTable v-else :data="records"  :paginator="true" :rows="10" 
-        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows>
+      <EnhancedDataTable v-else :data="groupedRecords" :paginator="true" :rows="10" 
+        :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows
+        v-model:expandedRows="expandedRows" dataKey="_key">
 
-        <Column field="id" header="ID" :sortable="true" style="width: 80px; text-align: center;">
+        <Column style="width: 3rem;">
           <template #body="slotProps">
-            <Badge :value="slotProps.data.id" severity="info" />
+            <button v-if="slotProps.data.projects.length > 1"
+              class="p-row-toggler p-link"
+              @click="toggleRow(slotProps.data)">
+              <i :class="expandedRows[slotProps.data._key] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+            </button>
+          </template>
+        </Column>
+
+        <Column header="#" style="width: 50px; text-align: center;">
+          <template #body="slotProps">
+            <span style="font-size:0.8rem;color:#6b7280;font-weight:600">{{ slotProps.index + 1 }}</span>
           </template>
         </Column>
 
@@ -23,7 +34,10 @@
 
         <Column field="start_time" header="เวลา" style="min-width: 120px;">
           <template #body="slotProps">
-            {{ formatTime(slotProps.data.start_time) }} - {{ formatTime(slotProps.data.end_time) }}
+            <template v-if="slotProps.data.projects.length === 1">
+              {{ formatTime(slotProps.data.projects[0].start_time) }} - {{ formatTime(slotProps.data.projects[0].end_time) }}
+            </template>
+            <span v-else class="text-muted"></span>
           </template>
         </Column>
 
@@ -43,126 +57,198 @@
           </template>
         </Column>
 
-        <!-- <Column field="employee_department" header="แผนก" :sortable="true" class="hide-mobile">
+        <Column header="โครงการ" style="min-width: 280px;">
           <template #body="slotProps">
-            <span class="department-text">{{ slotProps.data.employee_department || 'ไม่ระบุ' }}</span>
-          </template>
-        </Column> -->
-
-        <Column field="task_name" header="โครงการ" :sortable="true" style="min-width: 280px;">
-          <template #body="slotProps">
-            <div class="task-info">
-              <div class="task-name">{{ slotProps.data.task_name || 'ไม่ระบุชื่องาน' }}</div>
-              <span v-if="slotProps.data.so_number" class="so-badge">{{ slotProps.data.so_number }}</span>
-              <span v-if="slotProps.data.customer_info" class="customer-badge">{{ slotProps.data.customer_info }}</span>
-            </div>
+            <template v-if="slotProps.data.projects.length === 1">
+              <div class="task-info">
+                <div class="task-name">{{ slotProps.data.projects[0].task_name || 'ไม่ระบุชื่องาน' }}</div>
+                <span v-if="slotProps.data.projects[0].so_number" class="so-badge">{{ slotProps.data.projects[0].so_number }}</span>
+                <span v-if="slotProps.data.projects[0].customer_info" class="customer-badge">{{ slotProps.data.projects[0].customer_info }}</span>
+              </div>
+            </template>
+            <template v-else>
+              <div class="multi-proj-summary" @click="toggleRow(slotProps.data)">
+                <div class="multi-proj-header">
+                  <i :class="expandedRows[slotProps.data._key] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="multi-proj-icon"></i>
+                  <span class="multi-proj-count">{{ slotProps.data.projects.length }} โครงการ</span>
+                </div>
+                <div class="multi-proj-list">
+                  <div v-for="(proj, idx) in slotProps.data.projects" :key="proj.id" class="multi-proj-item">
+                    <span class="multi-proj-num">{{ idx + 1 }}.</span>
+                    <span v-if="proj.so_number" class="so-badge">{{ proj.so_number }}</span>
+                    <span class="multi-proj-name">{{ proj.task_name }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
           </template>
         </Column>
 
         <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
-            <!-- Multiple steps -->
-            <div v-if="slotProps.data.steps_data && slotProps.data.steps_data.length > 0" class="steps-container">
-              <div v-for="step in slotProps.data.steps_data" :key="step.id" class="step-card-mini clickable-step"
-                :style="{ borderLeftColor: getStepColorFromData(step) }"
-                @click="goToProjectProgress(slotProps.data.task_id, step.id)">
-                <div class="step-header-mini">
-                  <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">
-                    {{ (step.step_order || 0) + 1 }}
-                  </span>
-                  <span class="step-name-mini">{{ step.step_name }}</span>
-                  <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">
-                    {{ getStepLabelFromData(step) }}
-                  </span>
+            <template v-if="slotProps.data.projects.length === 1">
+              <div v-if="slotProps.data.projects[0].steps_data && slotProps.data.projects[0].steps_data.length > 0" class="steps-container">
+                <div v-for="step in slotProps.data.projects[0].steps_data" :key="step.id" class="step-card-mini clickable-step"
+                  :style="{ borderLeftColor: getStepColorFromData(step) }"
+                  @click="goToProjectProgress(slotProps.data.projects[0].task_id, step.id)">
+                  <div class="step-header-mini">
+                    <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">{{ (step.step_order || 0) + 1 }}</span>
+                    <span class="step-name-mini">{{ step.step_name }}</span>
+                    <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">{{ getStepLabelFromData(step) }}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <!-- Single step (backward compatible) -->
-            <div v-else-if="slotProps.data.step_name" class="step-card-mini clickable-step" 
-              :style="{ borderLeftColor: getStepColor(slotProps.data) }">
-              <div class="step-header-mini">
-                <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data) }">
-                  {{ (slotProps.data.step_order || 0) + 1 }}
-                </span>
-                <span class="step-name-mini">{{ slotProps.data.step_name }}</span>
-                <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data) + '20', color: getStepColor(slotProps.data) }">
-                  {{ getStepLabel(slotProps.data) }}
-                </span>
+              <div v-else-if="slotProps.data.projects[0].step_name" class="step-card-mini clickable-step"
+                :style="{ borderLeftColor: getStepColor(slotProps.data.projects[0]) }">
+                <div class="step-header-mini">
+                  <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data.projects[0]) }">{{ (slotProps.data.projects[0].step_order || 0) + 1 }}</span>
+                  <span class="step-name-mini">{{ slotProps.data.projects[0].step_name }}</span>
+                  <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data.projects[0]) + '20', color: getStepColor(slotProps.data.projects[0]) }">{{ getStepLabel(slotProps.data.projects[0]) }}</span>
+                </div>
               </div>
-            </div>
-            <span v-else class="text-muted">-</span>
+              <span v-else class="text-muted"></span>
+            </template>
+            <span v-else class="text-muted"></span>
           </template>
         </Column>
 
         <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="status-badges-column">
-              <!-- ถ้ามี workflow step ให้แสดง project_statuses จาก step -->
-              <template v-if="getWorkflowStatuses(slotProps.data).length > 0">
-                <Badge v-for="ps in getWorkflowStatuses(slotProps.data)" :key="ps"
-                  :value="getStatusLabel(ps)"
-                  :style="{ backgroundColor: getStatusColor(ps), color: '#fff' }" />
+              <template v-if="slotProps.data.projects.length === 1">
+                <template v-if="getWorkflowStatuses(slotProps.data.projects[0]).length > 0">
+                  <Badge v-for="ps in getWorkflowStatuses(slotProps.data.projects[0])" :key="ps" :value="getStatusLabel(ps)"
+                    :style="{ backgroundColor: getStatusColor(ps), color: '#fff' }" />
+                </template>
+                <span v-else-if="hasWorkflowStep(slotProps.data.projects[0])" class="text-muted"></span>
+                <Badge v-else-if="slotProps.data.projects[0].work_status" :value="getStatusLabel(slotProps.data.projects[0].work_status)"
+                  :style="{ backgroundColor: getStatusColor(slotProps.data.projects[0].work_status), color: '#fff' }" />
+                <span v-else class="text-muted"></span>
               </template>
-              <!-- ถ้ามี workflow แต่ไม่มี project_statuses ให้แสดง - -->
-              <span v-else-if="hasWorkflowStep(slotProps.data)" class="text-muted">-</span>
-              <!-- ถ้าไม่มี workflow ให้แสดง work_status ปกติ -->
-              <Badge v-else-if="slotProps.data.work_status" :value="getStatusLabel(slotProps.data.work_status)"
-                :style="{ backgroundColor: getStatusColor(slotProps.data.work_status), color: '#fff' }" />
-              <span v-else class="text-muted">-</span>
+              <span v-else class="text-muted"></span>
             </div>
           </template>
         </Column>
 
-        <Column field="location" header="สถานที่" style="min-width: 100px;" />
+        <Column field="location" header="สถานที่" style="min-width: 100px;">
+          <template #body="slotProps">
+            <span v-if="slotProps.data.projects.length === 1">{{ slotProps.data.projects[0]?.location || '-' }}</span>
+            <span v-else class="text-muted"></span>
+          </template>
+        </Column>
 
         <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
           <template #body="slotProps">
-            <div class="badge-container category-badges">
-              <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
-                     :value="getCategoryLabel(cat)" 
-                     :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '2px' }" />
-            </div>
+            <template v-if="slotProps.data.projects.length === 1">
+              <div class="badge-container category-badges">
+                <Badge v-for="cat in parseCategoryArray(slotProps.data.projects[0].category)" :key="cat"
+                  :value="getCategoryLabel(cat)"
+                  :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '2px' }" />
+              </div>
+            </template>
+            <span v-else class="text-muted"></span>
           </template>
         </Column>
 
-        <!-- <Column header="Sale เจ้าของงาน" class="hide-mobile">
-          <template #body="slotProps">
-            <div v-if="slotProps.data.sale_owner" class="sale-info">
-              <i class="pi pi-user"></i>
-              {{ slotProps.data.sale_owner }}
-            </div>
-            <span v-else class="text-muted">-</span>
-          </template>
-        </Column> -->
-
         <Column header="รายละเอียดงาน">
           <template #body="slotProps">
-            <Button label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined
-              @click="showDetails(slotProps.data)" />
+            <Button v-if="slotProps.data.projects.length === 1" label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined
+              @click="showDetails(slotProps.data.projects[0])" />
+            <span v-else class="text-muted"></span>
           </template>
         </Column>
 
         <Column header="จัดการ" style="width: 120px; text-align: center;">
           <template #body="slotProps">
-            <div class="action-buttons" v-if="slotProps.data && (isAdmin() || (isOwner(slotProps.data) && !isEditDisabled(slotProps.data))) && slotProps.data.work_status !== 'cancelled'">
-              <Button icon="pi pi-pencil" size="small" severity="warning"
-                outlined @click="editRecord(slotProps.data)" v-tooltip="'แก้ไข'" />
-              <Button icon="pi pi-times" size="small" severity="danger"
-                outlined @click="confirmCancel(slotProps.data)" v-tooltip="'ยกเลิก'" />
-            </div>
-            <span v-else style="display: block; text-align: center;">-</span>
+            <template v-if="slotProps.data.projects.length === 1">
+              <div class="action-buttons" v-if="slotProps.data.projects[0] && (isAdmin() || (isOwner(slotProps.data.projects[0]) && !isEditDisabled(slotProps.data.projects[0]))) && slotProps.data.projects[0].work_status !== 'cancelled'">
+                <Button icon="pi pi-pencil" size="small" severity="warning" outlined @click="editRecord(slotProps.data.projects[0])" v-tooltip="'แก้ไข'" />
+                <Button icon="pi pi-times" size="small" severity="danger" outlined @click="confirmCancel(slotProps.data.projects[0])" v-tooltip="'ยกเลิก'" />
+              </div>
+              <span v-else style="display:block;text-align:center"></span>
+            </template>
+            <span v-else style="display:block;text-align:center"></span>
           </template>
         </Column>
 
         <Column header="ไฟล์แนบ" style="width: 80px;">
           <template #body="slotProps">
-            <div v-if="hasFiles(slotProps.data)" class="attachments-info">
-              <Button icon="pi pi-paperclip" size="small" severity="info" outlined
-                @click="downloadFiles(slotProps.data)" v-tooltip="`${getFilesCount(slotProps.data)} ไฟล์`" />
-            </div>
-            <span v-else class="no-files">-</span>
+            <template v-if="slotProps.data.projects.length === 1">
+              <div v-if="hasFiles(slotProps.data.projects[0])" class="attachments-info">
+                <Button icon="pi pi-paperclip" size="small" severity="info" outlined
+                  @click="downloadFiles(slotProps.data.projects[0])" v-tooltip="`${getFilesCount(slotProps.data.projects[0])} ไฟล์`" />
+              </div>
+              <span v-else class="no-files"></span>
+            </template>
+            <span v-else class="no-files"></span>
           </template>
         </Column>
+
+        <!-- Expansion row: แสดงโครงการทั้งหมดเมื่อมีหลายโครงการ -->
+        <template #expansion="slotProps">
+          <div v-if="slotProps.data.projects.length > 1" class="expansion-projects">
+            <!-- Header -->
+            <div class="expansion-proj-row expansion-header">
+              <div class="exp-cell">เวลา</div>
+              <div class="exp-cell">โครงการ</div>
+              <div class="exp-cell">ขั้นตอน</div>
+              <div class="exp-cell">สถานะงาน</div>
+              <div class="exp-cell">สถานที่</div>
+              <div class="exp-cell">หมวดหมู่</div>
+              <div class="exp-cell">รายละเอียด</div>
+              <div class="exp-cell">จัดการ</div>
+            </div>
+            <!-- Data rows -->
+            <div v-for="proj in slotProps.data.projects" :key="proj.id" class="expansion-proj-row">
+              <div class="exp-cell exp-cell-time">
+                {{ formatTime(proj.start_time) }} - {{ formatTime(proj.end_time) }}
+              </div>
+              <div class="exp-cell exp-cell-project">
+                <div class="task-name">{{ proj.task_name || 'ไม่ระบุ' }}</div>
+                <span v-if="proj.so_number" class="so-badge">{{ proj.so_number }}</span>
+                <span v-if="proj.customer_info" class="customer-badge">{{ proj.customer_info }}</span>
+              </div>
+              <div class="exp-cell exp-cell-steps">
+                <div v-if="proj.steps_data && proj.steps_data.length > 0" class="steps-container">
+                  <div v-for="step in proj.steps_data" :key="step.id" class="step-card-mini clickable-step"
+                    :style="{ borderLeftColor: getStepColorFromData(step) }"
+                    @click="goToProjectProgress(proj.task_id, step.id)">
+                    <div class="step-header-mini">
+                      <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">{{ (step.step_order || 0) + 1 }}</span>
+                      <span class="step-name-mini">{{ step.step_name }}</span>
+                      <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">{{ getStepLabelFromData(step) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="exp-cell">
+                <template v-if="getWorkflowStatuses(proj).length > 0">
+                  <Badge v-for="ps in getWorkflowStatuses(proj)" :key="ps" :value="getStatusLabel(ps)"
+                    :style="{ backgroundColor: getStatusColor(ps), color: '#fff', margin: '1px' }" />
+                </template>
+                <Badge v-else-if="proj.work_status" :value="getStatusLabel(proj.work_status)"
+                  :style="{ backgroundColor: getStatusColor(proj.work_status), color: '#fff' }" />
+              </div>
+              <div class="exp-cell">{{ proj.location || '' }}</div>
+              <div class="exp-cell">
+                <template v-if="parseCategoryArray(proj.category).length > 0">
+                  <Badge v-for="cat in parseCategoryArray(proj.category)" :key="cat"
+                    :value="getCategoryLabel(cat)"
+                    :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '1px' }" />
+                </template>
+              </div>
+              <div class="exp-cell exp-cell-actions">
+                <Button icon="pi pi-info-circle" size="small" severity="info" text @click="showDetails(proj)" v-tooltip="'รายละเอียด'" />
+                <Button v-if="hasFiles(proj)" icon="pi pi-paperclip" size="small" severity="secondary" text @click="downloadFiles(proj)" v-tooltip="`${getFilesCount(proj)} ไฟล์`" />
+              </div>
+              <div class="exp-cell exp-cell-actions">
+                <Button v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))" icon="pi pi-pencil" size="small" severity="warning" text @click="editRecord(proj)" v-tooltip="'แก้ไข'" />
+                <Button v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))" icon="pi pi-times" size="small" severity="danger" text @click="confirmCancel(proj)" v-tooltip="'ยกเลิก'" />
+              </div>
+            </div>
+          </div>
+        </template>
+
       </EnhancedDataTable>
     </template>
   </Card>
@@ -342,7 +428,6 @@ export default {
     // Update current time every second for realtime button state
     setInterval(() => {
       this.currentTime = new Date()
-      this.$forceUpdate() // Force component to re-render
     }, 1000)
     
     // Listen for task updates
@@ -360,7 +445,6 @@ export default {
       this.loadCategoryOptions()
     })
   },
-  
   beforeUnmount() {
     window.removeEventListener('taskUpdated', () => {
       this.$emit('refresh-data')
@@ -369,6 +453,32 @@ export default {
   computed: {
     workRecords() {
       return this.records && this.records.length > 0 ? this.records : this.localRecords
+    },
+    groupedRecords() {
+      const all = this.workRecords
+      const groups = {}
+      all.forEach(r => {
+        // group ด้วย work_date + user_id + submitted_at (ตัดเหลือแค่นาที เพื่อรวม entries ที่ส่งพร้อมกัน)
+        const submittedMinute = r.submitted_at ? r.submitted_at.slice(0, 16) : r.id
+        const key = `${r.work_date}_${r.user_id}_${submittedMinute}`
+        if (!groups[key]) {
+          groups[key] = {
+            _key: key,
+            work_date: r.work_date,
+            start_time: r.start_time,
+            end_time: r.end_time,
+            user_id: r.user_id,
+            employee_name: r.employee_name,
+            employee_position: r.employee_position,
+            employee_department: r.employee_department,
+            location: r.location,
+            work_status: r.work_status,
+            projects: []
+          }
+        }
+        groups[key].projects.push(r)
+      })
+      return Object.values(groups).sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
     },
     calculateEditHours() {
       if (!this.editFormData.start_time_text || !this.editFormData.end_time_text) return '0.00 ชม.'
@@ -413,7 +523,11 @@ export default {
       statusOptions: [],
       categoryOptions: [],
       showUserDialog: false,
-      selectedUserId: null
+      selectedUserId: null,
+      currentTime: new Date(),
+      selectedProjMap: {},  // key = group._key, value = proj object
+      openMap: {},           // key = group._key, value = boolean
+      expandedRows: {}
     }
   },
   methods: {
@@ -497,7 +611,7 @@ export default {
       cutoff.setHours(EDIT_CUTOFF_HOUR, 0, 0, 0)
 
       // เวลาปัจจุบัน
-      const now = new Date()
+      const now = this.currentTime
 
       // ปิดการแก้ไขหลัง EDIT_CUTOFF_HOUR ของวันถัดไป
       return now > cutoff
@@ -544,7 +658,8 @@ export default {
       try {
         await this.$http.put(`/api/daily-work/${record.id}`, {
           task_id: record.task_id,
-          step_id: record.step_id,
+        step_id: record.step_id,
+        step_ids: record.step_ids || (record.step_id ? [record.step_id] : []),
           work_date: record.work_date,
           start_time: record.start_time,
           end_time: record.end_time,
@@ -639,30 +754,34 @@ export default {
     },
     getStepColor(data) {
       if (data?.step_status === 'completed') return '#10b981'
-      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      // เกินกำหนด - เช็คก่อนเสมอ
       if (data?.step_end_date) {
         const endDate = new Date(data.step_end_date)
         endDate.setHours(0, 0, 0, 0)
         if (today > endDate) return '#ef4444'
       }
-      if (data?.step_has_work_logged) return '#f59e0b'
+      if (data?.step_has_work_logged && data?.step_latest_work_date) {
+        const wDate = new Date(data.step_latest_work_date)
+        wDate.setHours(0, 0, 0, 0)
+        if (wDate <= today) return '#f59e0b'
+      }
       return '#9ca3af'
     },
     getStepLabel(data) {
       if (data?.step_status === 'completed') return 'เสร็จสิ้น'
-      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      // เกินกำหนด - เช็คก่อนเสมอ
       if (data?.step_end_date) {
         const endDate = new Date(data.step_end_date)
         endDate.setHours(0, 0, 0, 0)
         if (today > endDate) return 'เกินกำหนด'
       }
-      if (data?.step_has_work_logged) return 'กำลังดำเนินการ'
+      if (data?.step_has_work_logged && data?.step_latest_work_date) {
+        const wDate = new Date(data.step_latest_work_date)
+        wDate.setHours(0, 0, 0, 0)
+        if (wDate <= today) return 'กำลังดำเนินการ'
+      }
       return 'รอดำเนินการ'
     },
     goToProjectProgress(taskId, stepId) {
@@ -686,27 +805,18 @@ export default {
     },
     getStepColorFromData(step) {
       if (step?.status === 'completed') return '#10b981'
-      
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      
-      // เกินกำหนด - เช็คก่อนเสมอ
       if (step?.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
         if (today > endDate) return '#ef4444'
       }
-      
-      if (step?.has_work_logged) {
-        if (step.latest_work_date) {
-          const wDate = new Date(step.latest_work_date)
-          wDate.setHours(0, 0, 0, 0)
-          if (wDate <= today) return '#f59e0b'
-        } else {
-          return '#f59e0b'
-        }
+      if (step?.has_work_logged && step.latest_work_date) {
+        const wDate = new Date(step.latest_work_date)
+        wDate.setHours(0, 0, 0, 0)
+        if (wDate <= today) return '#f59e0b'
       }
-      
       return '#9ca3af'
     },
     getStepLabelFromData(step) {
@@ -722,16 +832,11 @@ export default {
         if (today > endDate) return 'เกินกำหนด'
       }
       
-      if (step?.has_work_logged) {
-        if (step.latest_work_date) {
-          const wDate = new Date(step.latest_work_date)
-          wDate.setHours(0, 0, 0, 0)
-          if (wDate <= today) return 'กำลังดำเนินการ'
-        } else {
-          return 'กำลังดำเนินการ'
-        }
+      if (step?.has_work_logged && step.latest_work_date) {
+        const wDate = new Date(step.latest_work_date)
+        wDate.setHours(0, 0, 0, 0)
+        if (wDate <= today) return 'กำลังดำเนินการ'
       }
-      
       return 'รอดำเนินการ'
     },
     getProjectStatusLabel(status) {
@@ -937,6 +1042,7 @@ export default {
         const updateData = {
           task_id: this.editFormData.task_id,
           step_id: this.editFormData.step_id,
+          step_ids: this.editFormData.step_ids || [],
           work_date: formattedDate,
           start_time: this.editFormData.start_time_text + ':00',
           end_time: this.editFormData.end_time_text + ':00',
@@ -995,17 +1101,136 @@ export default {
     validateRecord(record) {
       const required = ['id', 'work_date', 'work_status']
       const missing = required.filter(field => !record[field])
-
-      if (missing.length > 0) {
-        return false
-      }
+      if (missing.length > 0) return false
       return true
+    },
+    selectProj(key, proj) {
+      const current = this.selectedProjMap[key]
+      this.selectedProjMap = {
+        ...this.selectedProjMap,
+        [key]: current?.id === proj.id ? null : proj
+      }
+    },
+    toggleRow(data) {
+      const key = data._key
+      const newRows = { ...this.expandedRows }
+      if (newRows[key]) {
+        delete newRows[key]
+      } else {
+        newRows[key] = data
+      }
+      this.expandedRows = newRows
     }
   }
 }
 </script>
 
 <style scoped>
+.group-projects-wrap { position: relative; }
+
+/* Multi-project summary ในปุ่ม expander */
+.multi-proj-summary {
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  transition: background 0.15s;
+}
+.multi-proj-summary:hover { background: #eff6ff; border-color: #bfdbfe; }
+.multi-proj-header {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 6px;
+}
+.multi-proj-icon { color: #3b82f6; font-size: 0.75rem; }
+.multi-proj-count { font-weight: 700; font-size: 0.82rem; color: #1e40af; }
+.multi-proj-list { display: flex; flex-direction: column; gap: 4px; }
+.multi-proj-item {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 6px;
+  background: white;
+  border-radius: 5px;
+  border: 1px solid #e5e7eb;
+}
+.multi-proj-num { font-size: 0.72rem; color: #9ca3af; font-weight: 600; min-width: 14px; }
+.multi-proj-name { font-size: 0.78rem; color: #374151; font-weight: 500; }
+
+/* Expansion row */
+.expansion-projects {
+  padding: 12px 16px 8px;
+  background: #f8fafc;
+  border-top: 2px solid #e2e8f0;
+}
+.expansion-proj-row {
+  display: grid;
+  grid-template-columns: 100px 2fr 2fr 1.2fr 0.8fr 1fr 0.7fr 0.6fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 6px;
+  margin-bottom: 5px;
+}
+.expansion-proj-row:last-child { margin-bottom: 0; border-bottom: none; }
+.expansion-header {
+  background: #e8f0fe !important;
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: #1e40af;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  padding: 8px 12px;
+  border: 1px solid #bfdbfe;
+}
+.exp-cell { font-size: 0.82rem; }
+.exp-cell-time { font-size: 0.82rem; font-weight: 600; color: #374151; white-space: nowrap; }
+.exp-cell-project { display: flex; flex-direction: column; gap: 3px; }
+.exp-cell-steps { display: flex; flex-direction: column; gap: 4px; }
+.exp-cell-actions { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
+.proj-preview-name {
+  font-weight: 500;
+  white-space: normal;
+  word-break: break-word;
+  flex: 1;
+}
+.proj-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+.proj-detail-label {
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+/* Multi-project row: JS จัดการ colspan และซ่อน td ผ่าน applyColspan() */
+.history-table :deep(.col-project) {
+  min-width: 280px;
+}.group-proj-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 9999;
+  background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 280px;
+  max-height: 360px; overflow-y: auto; padding: 6px;
+}
+.group-proj-item {
+  border: 1px solid #e5e7eb; border-radius: 6px;
+  padding: 8px 10px; margin-bottom: 6px; background: #fafafa;
+}
+.group-proj-item:last-child { margin-bottom: 0; }
+.proj-item-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+.proj-steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+.step-tag-mini {
+  font-size: 0.7rem; padding: 2px 6px; border-radius: 10px;
+  border: 1px solid; cursor: pointer; white-space: nowrap;
+}
+.step-tag-mini:hover { opacity: 0.8; }
+.proj-item-actions { display: flex; gap: 2px; justify-content: flex-end; }
+
 .history-card {
   width: 100%;
   margin: 0;

@@ -47,21 +47,49 @@
             </template>
           </Column>
 
-          <Column header="ความคืบหน้า" style="min-width: 180px;">
+          <Column header="ความคืบหน้า" style="min-width: 240px; max-width: 280px;">
             <template #body="slotProps">
               <div class="progress-info">
                 <ProgressBar :value="getProjectProgress(slotProps.data)" :showValue="false" style="height: 8px;" />
                 <span class="progress-text">{{ getProgressText(slotProps.data) }}</span>
+              <template v-if="getLatestWorkStep(slotProps.data)">
+                <div class="latest-step-chip" :class="getStepClass(getLatestWorkStep(slotProps.data))">
+                  <span class="step-idx-badge">{{ getLatestWorkStep(slotProps.data)._index }}</span>
+                  <span class="step-name-text">{{ getLatestWorkStep(slotProps.data).step_name }}</span>
+                  <span class="step-status-mini">{{ getStepStatusLabel(getLatestWorkStep(slotProps.data)) }}</span>
+                </div>
+                <div v-if="getLatestWorkStep(slotProps.data).latest_work_date" class="latest-work-date">
+                  <i class="pi pi-clock"></i> ลงงานล่าสุด: {{ formatLatestWorkDate(getLatestWorkStep(slotProps.data).latest_work_date) }}
+                </div>
+                <div v-if="getLatestWorkStep(slotProps.data).status === 'completed' && getLatestWorkStep(slotProps.data).completed_by_name" class="latest-work-date latest-completed-info">
+                  <i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ getLatestWorkStep(slotProps.data).completed_by_name }}
+                  <span v-if="getLatestWorkStep(slotProps.data).completed_at">เมื่อ {{ formatCompletedDate(getLatestWorkStep(slotProps.data).completed_at) }}</span>
+                </div>
+                <div v-if="getLatestWorkStep(slotProps.data).assigned_users && getLatestWorkStep(slotProps.data).assigned_users.length" class="assigned-chips">
+                  <span v-for="(u, i) in getLatestWorkStep(slotProps.data).assigned_users" :key="i" class="assigned-chip">
+                    <i class="pi pi-user"></i> {{ typeof u === 'object' ? u.name : u }}
+                  </span>
+                </div>
+              </template>
               </div>
             </template>
           </Column>
 
-          <Column field="sale_owner" header="เจ้าของโครงการ" :sortable="true" style="min-width: 120px;">
+          <Column field="sale_owner" header="Sale เจ้าของงาน" :sortable="true" style="min-width: 140px;">
             <template #body="slotProps">
-              <span v-if="slotProps.data.sale_owner" class="clickable-name" @click="showSaleUserInfo(slotProps.data.sale_owner)">
-                {{ slotProps.data.sale_owner }}
-              </span>
-              <span v-else>-</span>
+              <div v-if="slotProps.data.sale_owner" class="person-badge sale-badge" @click.stop="showSaleUserInfo(slotProps.data.sale_owner)">
+                <i class="pi pi-user"></i>{{ slotProps.data.sale_owner }}
+              </div>
+              <span v-else class="text-muted">-</span>
+            </template>
+          </Column>
+
+          <Column field="project_manager" header="Project Manager" :sortable="true" style="min-width: 140px;">
+            <template #body="slotProps">
+              <div v-if="slotProps.data.project_manager" class="person-badge pm-teal-badge" @click.stop="showSaleUserInfo(slotProps.data.project_manager)">
+                <i class="pi pi-briefcase"></i>{{ slotProps.data.project_manager }}
+              </div>
+              <span v-else class="text-muted">-</span>
             </template>
           </Column>
 
@@ -71,14 +99,14 @@
               
               <div v-if="slotProps.data.steps && slotProps.data.steps.length > 0" class="workflow-timeline">
                 <div v-for="(step, index) in slotProps.data.steps" :key="step.id" class="workflow-step">
-                  <div class="step-card" :class="getStepClass(step)" @click="openStepDetail(step, index)" style="cursor: pointer;" :title="'คลิกเพื่อดูรายละเอียด: ' + step.step_name">
+                  <div class="step-card" :class="getStepClass(step)" :data-step-id="step.id" @click="openStepDetail(step, index, slotProps.data)" style="cursor: pointer;" :title="'คลิกเพื่อดูรายละเอียด: ' + step.step_name">
                     <div class="step-header">
                       <div class="step-number">{{ index + 1 }}</div>
                       <div class="step-status-badge" :class="getStepClass(step)">
                         <i :class="getStepIcon(step)"></i>
                         {{ getStepStatusLabel(step) }}
                       </div>
-                      <button v-if="canCompleteStep(step)" class="complete-btn"
+                      <button v-if="canCompleteStep(step, slotProps.data)" class="complete-btn"
                         @click.stop="confirmCompleteStep(step)" :disabled="completingStepId === step.id">
                         <i :class="completingStepId === step.id ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
                         {{ completingStepId === step.id ? 'กำลังบันทึก...' : 'เสร็จสิ้น' }}
@@ -97,6 +125,12 @@
                           </span>
                         </div>
 
+                        <div class="info-item" v-if="slotProps.data.project_manager">
+                          <div class="person-badge pm-teal-badge" style="font-size:0.78rem;padding:3px 10px" @click.stop="showSaleUserInfo(slotProps.data.project_manager)">
+                            <i class="pi pi-briefcase"></i> {{ slotProps.data.project_manager }}
+                          </div>
+                        </div>
+
                         <div class="info-item" v-if="step.start_date || step.end_date">
                           <i class="pi pi-calendar"></i>
                           <span>{{ formatDateRange(step.start_date, step.end_date) }}</span>
@@ -106,6 +140,12 @@
                           <span v-if="step.created_by_name"><i class="pi pi-user-plus"></i> สร้างโดย: {{ step.created_by_name }}</span>
                           <span v-if="step.created_by_name && step.status === 'completed' && step.completed_by_name"> | </span>
                           <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}{{ step.completed_at ? ` (${formatCompletedDate(step.completed_at)})` : '' }}</span>
+                        </div>
+                        <div v-if="step.status === 'completed' && isCompletedLate(step)" class="info-item">
+                          <span class="late-badge" @click.stop="showLateReasonPopup(step)">
+                            <i class="pi pi-clock"></i> เสร็จสิ้นล่าช้า
+                            <span v-if="step.late_reason" class="late-reason-hint">(ดูเหตุผล)</span>
+                          </span>
                         </div>
                         
                         <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
@@ -174,6 +214,14 @@
             <div class="dlg-label"><i class="pi pi-calendar"></i> ระยะเวลา</div>
             <div class="dlg-value">{{ formatDateRange(selectedStep.start_date, selectedStep.end_date) }}</div>
           </div>
+          <div v-if="selectedStep._task && selectedStep._task.project_manager" class="dlg-grid-item">
+            <div class="dlg-label"><i class="pi pi-briefcase"></i> Project Manager</div>
+            <div class="dlg-value">
+              <span class="person-badge pm-teal-badge" style="font-size:0.78rem;padding:3px 10px;cursor:pointer" @click="showSaleUserInfo(selectedStep._task.project_manager)">
+                <i class="pi pi-briefcase"></i> {{ selectedStep._task.project_manager }}
+              </span>
+            </div>
+          </div>
           <div v-if="selectedStep.created_by_name" class="dlg-grid-item">
             <div class="dlg-label"><i class="pi pi-user-plus"></i> สร้างโดย</div>
             <div class="dlg-value">{{ selectedStep.created_by_name }}</div>
@@ -181,6 +229,14 @@
           <div v-if="selectedStep.status === 'completed' && selectedStep.completed_by_name" class="dlg-grid-item">
             <div class="dlg-label"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย</div>
             <div class="dlg-value">{{ selectedStep.completed_by_name }}{{ selectedStep.completed_at ? ` (${formatCompletedDate(selectedStep.completed_at)})` : '' }}</div>
+          </div>
+          <div v-if="selectedStep.status === 'completed' && isCompletedLate(selectedStep)" class="dlg-grid-item dlg-grid-item--late">
+            <div class="dlg-label"><i class="pi pi-clock"></i> สถานะการส่งมอบ</div>
+            <div class="dlg-value">
+              <span class="late-badge">เสร็จสิ้นล่าช้า</span>
+              <div v-if="selectedStep.late_reason" class="dlg-late-reason">{{ selectedStep.late_reason }}</div>
+              <div v-else class="dlg-late-reason dlg-late-reason--none">ไม่ได้ระบุเหตุผล</div>
+            </div>
           </div>
         </div>
 
@@ -214,6 +270,43 @@
       </div>
     </div>
   </Dialog>
+
+  <!-- View Late Reason Dialog -->
+  <Dialog v-model:visible="showLateReasonView" :modal="true" :draggable="false" :closable="true"
+    :style="{ width: '420px' }" header="สาเหตุการส่งมอบล่าช้า">
+    <div class="late-reason-body" v-if="viewingLateStep">
+      <div class="late-warning">
+        <i class="pi pi-clock"></i>
+        <span>ขั้นตอน <strong>{{ viewingLateStep.step_name }}</strong> เสร็จสิ้นเมื่อ {{ formatCompletedDate(viewingLateStep.completed_at) }} (เกินกำหนด)</span>
+      </div>
+      <div class="late-reason-field">
+        <label>เหตุผล</label>
+        <div class="late-reason-text">{{ viewingLateStep.late_reason || 'ไม่ได้ระบุเหตุผล' }}</div>
+      </div>
+    </div>
+    <template #footer>
+      <Button label="ปิด" icon="pi pi-times" class="p-button-text" @click="showLateReasonView = false" />
+    </template>
+  </Dialog>
+
+  <!-- Late Completion Dialog -->
+  <Dialog v-model:visible="showLateReasonDialog" :modal="true" :draggable="false" :closable="true"
+    :style="{ width: '480px' }" header="เสร็จสิ้นล่าช้า" class="late-reason-dlg">
+    <div class="late-reason-body">
+      <div class="late-warning">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>ขั้นตอน <strong>{{ lateReasonStep?.step_name }}</strong> เกินวันสิ้นสุดที่กำหนดแล้ว</span>
+      </div>
+      <div class="late-reason-field">
+        <label>เหตุผลที่ล่าช้า <span class="optional">(ไม่บังคับ)</span></label>
+        <Textarea v-model="lateReason" rows="3" placeholder="ระบุเหตุผล..." style="width:100%" />
+      </div>
+    </div>
+    <template #footer>
+      <Button label="ยกเลิก" icon="pi pi-times" class="p-button-text" @click="showLateReasonDialog = false" />
+      <Button label="ยืนยันเสร็จสิ้น" icon="pi pi-check" class="p-button-warning" @click="submitLateComplete" />
+    </template>
+  </Dialog>
   </div>
 </template>
 
@@ -242,7 +335,12 @@ export default {
       selectedUserName: '',
       allUsers: [],
       showStepDetail: false,
-      selectedStep: null
+      selectedStep: null,
+      showLateReasonDialog: false,
+      lateReasonStep: null,
+      lateReason: '',
+      showLateReasonView: false,
+      viewingLateStep: null
     }
   },
   computed: {
@@ -290,8 +388,8 @@ export default {
         this.allUsers = response.data
       } catch { /* ignore */ }
     },
-    openStepDetail(step, index) {
-      this.selectedStep = { ...step, _index: index + 1 }
+    openStepDetail(step, index, task) {
+      this.selectedStep = { ...step, _index: index + 1, _task: task }
       this.showStepDetail = true
     },
     showSaleUserInfo(saleName) {
@@ -308,6 +406,19 @@ export default {
         const project = this.projects.find(p => p.id === taskId)
         if (project) {
           this.expandedRows = { [taskId]: true }
+          const stepId = parseInt(this.$route.query.stepId)
+          if (stepId) {
+            this.$nextTick(() => {
+              this.$nextTick(() => {
+                const el = document.querySelector(`[data-step-id="${stepId}"]`)
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  el.classList.add('step-highlight')
+                  setTimeout(() => el.classList.remove('step-highlight'), 2000)
+                }
+              })
+            })
+          }
         }
       }
     },
@@ -392,10 +503,10 @@ export default {
     async loadProjects() {
       try {
         const response = await this.$http.get('/api/tasks')
-        this.projects = response.data
+        const tasks = response.data
         
-        // Load steps for each project (silent to prevent loading flicker)
-        for (const project of this.projects) {
+        // Load all steps in parallel, then assign projects once to trigger computed correctly
+        await Promise.all(tasks.map(async (project) => {
           try {
             const stepsResponse = await this.$http.get(`/api/task-steps/task/${project.id}`, { silent: true })
             project.steps = (stepsResponse.data || []).map(step => ({
@@ -407,7 +518,8 @@ export default {
           } catch {
             project.steps = []
           }
-        }
+        }))
+        this.projects = tasks
       } catch (error) {
         console.error('Error loading projects:', error)
       }
@@ -443,6 +555,16 @@ export default {
       if (!project.steps || project.steps.length === 0) return 0
       const completed = project.steps.filter(s => s.status === 'completed').length
       return Math.round((completed / project.steps.length) * 100)
+    },
+    getLatestWorkStep(project) {
+      if (!project.steps || project.steps.length === 0) return null
+      const active = project.steps
+        .filter(s => s.latest_work_date)
+        .sort((a, b) => new Date(b.latest_work_date) - new Date(a.latest_work_date))
+      if (!active.length) return null
+      const step = active[0]
+      const idx = project.steps.findIndex(s => s.id === step.id)
+      return { ...step, _index: idx + 1 }
     },
     getProgressText(project) {
       if (!project.steps || project.steps.length === 0) return 'ไม่มีขั้นตอน'
@@ -541,22 +663,34 @@ export default {
     getRowClass(data) {
       return this.hasMyAssignment(data) ? 'my-project-row' : ''
     },
-    canCompleteStep(step) {
+    canCompleteStep(step, task) {
       if (step.status === 'completed') return false
+      if (task && task.project_manager) {
+        const pmUser = this.allUsers.find(u => `${u.firstname} ${u.lastname}` === task.project_manager)
+        if (pmUser && pmUser.id === this.currentUserId) return true
+      }
       if (!step.assigned_users || step.assigned_users.length === 0) return false
       return step.assigned_users.some(u => u.id === this.currentUserId)
     },
     confirmCompleteStep(step) {
-      this.$confirm.require({
-        message: `ยืนยันว่าขั้นตอน "${step.step_name}" เสร็จสิ้นแล้ว?`,
-        header: 'ยืนยันการดำเนินการ',
-        icon: 'pi pi-check-circle',
-        acceptLabel: 'ยืนยัน',
-        rejectLabel: 'ยกเลิก',
-        accept: () => this.completeStep(step)
-      })
+      const today = new Date(); today.setHours(0,0,0,0)
+      const isLate = step.end_date && (() => { const e = new Date(step.end_date); e.setHours(0,0,0,0); return today > e })()
+      if (isLate) {
+        this.lateReasonStep = step
+        this.lateReason = ''
+        this.showLateReasonDialog = true
+      } else {
+        this.$confirm.require({
+          message: `ยืนยันว่าขั้นตอน "${step.step_name}" เสร็จสิ้นแล้ว?`,
+          header: 'ยืนยันการดำเนินการ',
+          icon: 'pi pi-check-circle',
+          acceptLabel: 'ยืนยัน',
+          rejectLabel: 'ยกเลิก',
+          accept: () => this.completeStep(step)
+        })
+      }
     },
-    async completeStep(step) {
+    async completeStep(step, lateReason) {
       this.completingStepId = step.id
       try {
         await this.$http.put(`/api/task-steps/${step.id}`, {
@@ -567,7 +701,8 @@ export default {
           assigned_users: step.assigned_users,
           description: step.description,
           project_statuses: step.project_statuses,
-          status: 'completed'
+          status: 'completed',
+          late_reason: lateReason || null
         })
         step.status = 'completed'
         // อัปเดต selectedStep ใน dialog ด้วย
@@ -587,6 +722,20 @@ export default {
       }
       this.completingStepId = null
     },
+    async submitLateComplete() {
+      const step = this.lateReasonStep
+      this.showLateReasonDialog = false
+      await this.completeStep(step, this.lateReason || null)
+    },
+    isCompletedLate(step) {
+      if (step.status !== 'completed' || !step.end_date || !step.completed_at) return false
+      const toLocalDate = d => { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
+      return toLocalDate(step.completed_at) > toLocalDate(step.end_date)
+    },
+    showLateReasonPopup(step) {
+      this.viewingLateStep = step
+      this.showLateReasonView = true
+    },
     getStepIcon(step) {
       if (step.status === 'completed') return 'pi pi-check-circle'
       if (step.status === 'in_progress') return 'pi pi-spin pi-spinner'
@@ -601,6 +750,10 @@ export default {
       if (start) return `เริ่ม ${formatDate(start)}`
       if (end) return `ถึง ${formatDate(end)}`
       return ''
+    },
+    formatLatestWorkDate(date) {
+      if (!date) return ''
+      return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
     },
     formatCompletedDate(date) {
       if (!date) return ''
@@ -903,6 +1056,12 @@ export default {
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   border-left: 3px solid #9ca3af;
   min-width: 180px;
+  transition: box-shadow 0.3s, background 0.3s;
+}
+
+.step-card.step-highlight {
+  box-shadow: 0 0 0 3px #f59e0b, 0 4px 16px rgba(245,158,11,0.4);
+  background: #fffbeb;
 }
 
 .step-card.status-completed {
@@ -1336,5 +1495,165 @@ export default {
   .dlg-grid { grid-template-columns: 1fr; gap: 0.75rem; }
   .dlg-desc { font-size: 0.9rem; padding: 0.75rem; }
   .dlg-complete-btn { padding: 0.8rem 1rem; font-size: 0.95rem; border-radius: 12px; }
+}
+
+.person-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.sale-badge {
+  background: linear-gradient(135deg, #fdf4ff, #fae8ff);
+  color: #7e22ce;
+  border: 1px solid #e9d5ff;
+}
+.sale-badge:hover { background: linear-gradient(135deg, #fae8ff, #f3e8ff); box-shadow: 0 2px 8px rgba(126,34,206,0.2); }
+.pm-badge {
+  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+.pm-badge:hover { background: linear-gradient(135deg, #ffedd5, #fed7aa); box-shadow: 0 2px 8px rgba(194,65,12,0.2); }
+.text-muted { color: #9ca3af; }
+
+.pm-teal-badge {
+  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  color: #0f766e;
+  border: 1px solid #5eead4;
+  cursor: pointer;
+}
+.pm-teal-badge:hover {
+  background: linear-gradient(135deg, #99f6e4, #5eead4);
+  box-shadow: 0 2px 8px rgba(15,118,110,0.2);
+}
+
+
+
+.late-reason-body { display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0; }
+.late-warning { display: flex; align-items: flex-start; gap: 0.6rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 0.75rem 1rem; color: #c2410c; font-size: 0.9rem; }
+.late-warning i { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+.late-reason-field { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.9rem; color: #374151; }
+.late-reason-field label { font-weight: 600; }
+.late-reason-field .optional { color: #9ca3af; font-size: 0.8rem; }
+.late-reason-text { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.6rem 0.85rem; font-size: 0.9rem; color: #374151; min-height: 2.5rem; white-space: pre-wrap; }
+.late-badge { display: inline-flex; align-items: center; gap: 4px; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; border-radius: 20px; padding: 2px 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+.late-badge:hover { background: #ffedd5; }
+.late-reason-hint { font-size: 0.68rem; text-decoration: underline; }
+.dlg-grid-item--late { background: #fff7ed; border-color: #fed7aa; }
+.dlg-late-reason { margin-top: 0.4rem; font-size: 0.85rem; color: #374151; background: #f9fafb; border-radius: 6px; padding: 0.4rem 0.6rem; white-space: pre-wrap; }
+.dlg-late-reason--none { color: #9ca3af; font-style: italic; }
+.latest-work-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 3px;
+}
+.latest-work-date i { font-size: 0.68rem; color: #9ca3af; }
+.latest-completed-info { color: #16a34a; }
+.latest-completed-info i { color: #16a34a; }
+.assigned-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  margin-top: 3px;
+}
+.assigned-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.latest-step-chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+.step-idx-badge {
+  flex-shrink: 0;
+  background: #1d4ed8;
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-top: 1px;
+}
+.step-name-text {
+  font-weight: 600;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.latest-step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  max-width: 100%;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+.latest-step-chip.status-completed { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color:#166534; border-color:#86efac; }
+.latest-step-chip.status-overdue   { background: linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; border-color:#fca5a5; }
+.latest-step-chip.status-working   { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#b45309; border-color:#fcd34d; }
+.step-idx-badge {
+  flex-shrink: 0;
+  background: #1e40af;
+  color: #fff !important;
+  border-radius: 50%;
+  min-width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.step-name-text {
+  font-weight: 600;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.step-status-mini {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  opacity: 0.8;
+  white-space: nowrap;
 }
 </style>
