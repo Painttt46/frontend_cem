@@ -52,7 +52,7 @@
               <div class="progress-info">
                 <ProgressBar :value="getProjectProgress(slotProps.data)" :showValue="false" style="height: 8px;" />
                 <span class="progress-text">{{ getProgressText(slotProps.data) }}</span>
-              <template v-if="getLatestWorkStep(slotProps.data)">
+              <div v-if="getLatestWorkStep(slotProps.data)" class="latest-step-card" :class="getStepClass(getLatestWorkStep(slotProps.data))">
                 <div class="latest-step-chip" :class="getStepClass(getLatestWorkStep(slotProps.data))">
                   <span class="step-idx-badge">{{ getLatestWorkStep(slotProps.data)._index }}</span>
                   <span class="step-name-text">{{ getLatestWorkStep(slotProps.data).step_name }}</span>
@@ -70,7 +70,7 @@
                     <i class="pi pi-user"></i> {{ typeof u === 'object' ? u.name : u }}
                   </span>
                 </div>
-              </template>
+              </div>
               </div>
             </template>
           </Column>
@@ -536,12 +536,6 @@ export default {
         this.statuses = response.data
       } catch { /* ignore */ }
     },
-    onSearch() {
-      // Search is handled by computed property
-    },
-    onRowExpand() {
-      // Optional: Load steps on expand if not already loaded
-    },
     onRowClick(event) {
       const row = event.data
       if (this.expandedRows[row.id]) {
@@ -574,35 +568,6 @@ export default {
     getCategoryColor(category) {
       const cat = this.categories.find(c => c.label === category || c.value === category)
       return cat?.color || '#6c757d'
-    },
-    getStatusColor(status) {
-      const st = this.statuses.find(s => s.value === status || s.label === status)
-      return st?.color || '#6c757d'
-    },
-    getLatestWorkingStep(project) {
-      if (!project.steps || project.steps.length === 0) return []
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      // หา step ที่มีการลงงานจริง และวันที่ลงงานไม่เกินวันนี้
-      const workingSteps = project.steps.filter(s => {
-        if (!s.has_work_logged || !s.project_statuses || s.project_statuses.length === 0) return false
-        // เช็คว่า latest_work_date ไม่เกินวันนี้
-        if (s.latest_work_date) {
-          const workDate = new Date(s.latest_work_date)
-          workDate.setHours(0, 0, 0, 0)
-          return workDate <= today
-        }
-        return true
-      })
-      
-      if (workingSteps.length === 0) return []
-      // เรียงตามเวลาที่อัปเดตล่าสุด
-      const latestStep = workingSteps.sort((a, b) => 
-        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
-      )[0]
-      return latestStep.project_statuses || []
     },
     getStepStatusLabel(step) {
       if (step.status === 'completed') return 'เสร็จสิ้น'
@@ -1656,4 +1621,19 @@ export default {
   opacity: 0.8;
   white-space: nowrap;
 }
+
+.latest-step-card {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.latest-step-card.status-completed { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-color: #86efac; }
+.latest-step-card.status-overdue   { background: linear-gradient(135deg,#fef2f2,#fee2e2); border-color: #fca5a5; }
+.latest-step-card.status-working   { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-color: #fcd34d; }
+.latest-step-card .latest-step-chip { margin-top: 0; }
 </style>
