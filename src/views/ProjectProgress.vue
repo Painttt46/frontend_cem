@@ -23,7 +23,7 @@
 
     <Card class="content-card">
       <template #content>
-        <DataTable :value="sortedProjects" v-model:expandedRows="expandedRows" @rowExpand="onRowExpand"
+        <DataTable :value="sortedProjects" v-model:expandedRows="expandedRows"
           dataKey="id" responsiveLayout="scroll"
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
           @row-click="onRowClick" class="clickable-rows" :rowClass="getRowClass">
@@ -49,7 +49,7 @@
 
           <Column header="ความคืบหน้า" style="min-width: 240px; max-width: 280px;">
             <template #body="slotProps">
-              <div class="progress-info">
+              <div class="progress-info" v-memo="[slotProps.data.steps]">
                 <ProgressBar :value="getProjectProgress(slotProps.data)" :showValue="false" style="height: 8px;" />
                 <span class="progress-text">{{ getProgressText(slotProps.data) }}</span>
               <div v-if="getLatestWorkStep(slotProps.data)" class="latest-step-card" :class="getStepClass(getLatestWorkStep(slotProps.data))">
@@ -66,7 +66,7 @@
                   <span v-if="getLatestWorkStep(slotProps.data).completed_at">เมื่อ {{ formatCompletedDate(getLatestWorkStep(slotProps.data).completed_at) }}</span>
                 </div>
                 <div v-if="getLatestWorkStep(slotProps.data).assigned_users && getLatestWorkStep(slotProps.data).assigned_users.length" class="assigned-chips">
-                  <span v-for="(u, i) in getLatestWorkStep(slotProps.data).assigned_users" :key="i" class="assigned-chip">
+                  <span v-for="(u, i) in getLatestWorkStep(slotProps.data).assigned_users" :key="i" class="assigned-chip" :title="typeof u === 'object' ? u.name : u">
                     <i class="pi pi-user"></i> {{ typeof u === 'object' ? u.name : u }}
                   </span>
                 </div>
@@ -313,7 +313,6 @@
 <script>
 import { useConfirm } from 'primevue/useconfirm'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
-import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'ProjectProgress',
@@ -368,6 +367,13 @@ export default {
       })
     }
   },
+  beforeUnmount() {
+    if (this._dragHandlers) {
+      document.removeEventListener('mousedown', this._dragHandlers.down)
+      document.removeEventListener('mousemove', this._dragHandlers.move)
+      document.removeEventListener('mouseup', this._dragHandlers.up)
+    }
+  },
   mounted() {
     this.setupDragScroll()
     this.loadProjects()
@@ -384,7 +390,7 @@ export default {
   methods: {
     async loadUsers() {
       try {
-        const response = await axios.get('/api/users')
+        const response = await this.$http.get('/api/users', { silent: true })
         this.allUsers = response.data
       } catch { /* ignore */ }
     },
@@ -485,6 +491,7 @@ export default {
         isDragging = false
       }
 
+      this._dragHandlers = { down: handleMouseDown, move: handleMouseMove, up: handleMouseUp }
       document.addEventListener('mousedown', handleMouseDown)
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
@@ -723,10 +730,6 @@ export default {
     formatCompletedDate(date) {
       if (!date) return ''
       return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
-    },
-    formatAssignedUsers(users) {
-      if (!users || users.length === 0) return ''
-      return users.map(u => u.name || u).join(', ')
     },
     getProjectStatusLabel(status) {
       const found = this.statuses.find(s => s.value === status)
@@ -1541,6 +1544,11 @@ export default {
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 500;
+  width: calc(50% - 2px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .latest-step-chip {

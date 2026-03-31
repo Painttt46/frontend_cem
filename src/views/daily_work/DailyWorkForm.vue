@@ -1,490 +1,443 @@
 <template>
-  <div>
+  <div class="form-wrap">
     <Toast />
-    <Card class="form-card">
-      <template #content>
-        <form @submit.prevent="submitForm" class="daily-work-form">
-          <!-- วันที่ (shared) -->
-          <div class="form-grid shared-grid">
-            <div class="input-group">
-              <label for="workDate" class="input-label">วันที่ลงงาน *</label>
-              <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="corporate-input"
-                :minDate="minDate" required />
+    <form @submit.prevent="submitForm" class="dwf">
+
+      <!-- วันที่ -->
+      <div class="section date-section">
+        <label class="field-label"><i class="pi pi-calendar"></i> วันที่ลงงาน <span class="req">*</span></label>
+        <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="w-full" :minDate="minDate" required />
+      </div>
+
+      <!-- โครงการ -->
+      <div class="section">
+        <div class="section-header">
+          <span class="section-title"><i class="pi pi-briefcase"></i> โครงการที่ทำวันนี้ <span class="req">*</span></span>
+          <Button type="button" icon="pi pi-plus" label="เพิ่มโครงการ" size="small" severity="secondary" outlined @click="addTaskEntry" />
+        </div>
+
+        <div v-for="(entry, idx) in taskEntries" :key="idx" class="entry-card">
+          <!-- Header: เลข + dropdown + ลบ -->
+          <div class="entry-top">
+            <span class="entry-badge">{{ idx + 1 }}</span>
+            <div class="entry-dropdown-wrap">
+              <Dropdown
+                v-model="entry.taskId" :options="tasks" optionLabel="display" optionValue="id"
+                class="w-full" placeholder="เลือกโครงการ"
+                @change="onTaskEntryChange(entry)"
+                filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
+                :filterFields="['task_name','so_number','display']"
+                scrollHeight="300px" appendTo="body">
+                <template #value="{ value }">
+                  <div v-if="value" class="val-row">
+                    <span v-if="getTaskSO(value)" class="so-tag">{{ getTaskSO(value) }}</span>
+                    <span class="task-txt">{{ getTaskName(value) }}</span>
+                  </div>
+                  <span v-else class="ph">เลือกโครงการ</span>
+                </template>
+                <template #option="{ option }">
+                  <div class="opt-row" :class="{ 'opt-mine': option._assigned }">
+                    <span v-if="option._assigned" class="mine-tag"><i class="pi pi-star-fill"></i> งานของฉัน</span>
+                    <span v-if="option.so_number" class="so-tag">{{ option.so_number }}</span>
+                    <span class="task-txt">{{ option.task_name }}</span>
+                  </div>
+                </template>
+              </Dropdown>
+            </div>
+            <Button v-if="taskEntries.length > 1" type="button" icon="pi pi-times" severity="danger" text rounded size="small" @click="removeTaskEntry(idx)" />
+          </div>
+
+          <!-- เวลา -->
+          <div class="time-row">
+            <div class="time-fields">
+              <div class="time-field">
+                <label class="field-label-sm">เริ่ม</label>
+                <InputText v-model="entry.startTimeText" class="time-input" :class="{ 'p-invalid': entry.startTimeError }"
+                  maxlength="5" inputmode="numeric"
+                  @input="formatEntryTime(entry, 'startTimeText'); entry.startTimeError = false"
+                  @blur="parseEntryStartTime(entry)" required />
+              </div>
+              <span class="time-sep">—</span>
+              <div class="time-field">
+                <label class="field-label-sm">สิ้นสุด</label>
+                <InputText v-model="entry.endTimeText" class="time-input" :class="{ 'p-invalid': entry.endTimeError }"
+                  maxlength="5" inputmode="numeric"
+                  @input="formatEntryTime(entry, 'endTimeText'); entry.endTimeError = false"
+                  @blur="parseEntryEndTime(entry)" required />
+              </div>
+            </div>
+            <div class="time-total-pill">
+              <i class="pi pi-clock"></i> {{ calcEntryHours(entry) }}
             </div>
           </div>
 
-          <Divider style="margin:12px 0 8px" />
+          <!-- Steps -->
+          <div v-if="entry.taskId && getStepsForTask(entry.taskId).length > 0" class="field-row">
+            <label class="field-label"><i class="pi pi-list-check"></i> ขั้นตอน</label>
+            <MultiSelect v-model="entry.stepIds" :options="getStepsForTask(entry.taskId)"
+              optionLabel="step_name" optionValue="id" :optionDisabled="isStepCompleted"
+              class="w-full" placeholder="เลือก step (ถ้ามี)"
+              filter filterPlaceholder="ค้นหา step..." scrollHeight="300px" appendTo="body">
+              <template #value="{ value }">
+                <div v-if="value && value.length" class="chips-wrap">
+                  <div v-for="sid in value" :key="sid" class="step-chip"
+                    :style="{ borderColor: getStepStatusColor(getStepByIdFromTask(sid, entry.taskId)) }">
+                    <span class="chip-num" :style="{ background: getStepStatusColor(getStepByIdFromTask(sid, entry.taskId)) }">{{ getStepNumberFromTask(sid, entry.taskId) }}</span>
+                    <span class="chip-name">{{ getStepByIdFromTask(sid, entry.taskId)?.step_name }}</span>
+                    <i class="pi pi-times chip-x" @click.stop="entry.stepIds = entry.stepIds.filter(i => i !== sid)"></i>
+                  </div>
+                </div>
+                <span v-else class="ph">เลือก step (ถ้ามี)</span>
+              </template>
+              <template #option="{ option, index }">
+                <div class="step-opt" :style="{ borderLeftColor: getStepStatusColor(option) }">
+                  <span class="step-num-badge" :style="{ background: getStepStatusColor(option) }">{{ index + 1 }}</span>
+                  <div class="step-opt-body">
+                    <div class="step-opt-top">
+                      <span class="step-opt-name">{{ option.step_name }}</span>
+                      <span class="step-status-tag" :style="{ color: getStepStatusColor(option), borderColor: getStepStatusColor(option) + '40', background: getStepStatusColor(option) + '15' }">
+                        <i class="pi pi-circle-fill" style="font-size:0.45rem"></i> {{ getStepStatusLabel(option) }}
+                      </span>
+                    </div>
+                    <div v-if="option.start_date || option.end_date" class="step-opt-dates">
+                      <i class="pi pi-calendar"></i>
+                      <span v-if="option.start_date">{{ new Date(option.start_date).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' }) }}</span>
+                      <span v-if="option.start_date && option.end_date"> – </span>
+                      <span v-if="option.end_date">{{ new Date(option.end_date).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' }) }}</span>
+                    </div>
+                    <div v-if="option.description" class="step-opt-desc">{{ option.description }}</div>
+                  </div>
+                </div>
+              </template>
+            </MultiSelect>
+          </div>
 
-          <!-- Task Entries -->
-          <div class="form-grid">
-            <div class="input-group full-width">
-              <div class="entries-header">
-                <label class="input-label" style="margin:0;font-size:0.95rem">โครงการที่ทำวันนี้ *</label>
-                <Button type="button" icon="pi pi-plus" label="เพิ่มโครงการ" size="small" severity="secondary" outlined @click="addTaskEntry" />
+          <!-- สถานที่ -->
+          <div class="field-row">
+            <label class="field-label"><i class="pi pi-map-marker"></i> สถานที่ <span class="req">*</span></label>
+            <InputText v-model="entry.location" required class="w-full" placeholder="ระบุสถานที่หรือที่อยู่" />
+          </div>
+
+          <!-- รายละเอียด -->
+          <div class="field-row">
+            <label class="field-label"><i class="pi pi-align-left"></i> รายละเอียดงานที่ทำ <span class="req">*</span></label>
+            <Textarea v-model="entry.workDescription" rows="3" required class="w-full" />
+          </div>
+
+          <!-- แนบไฟล์ -->
+          <div class="field-row">
+            <label class="field-label"><i class="pi pi-paperclip"></i> แนบไฟล์</label>
+            <input :ref="'fileInput_' + idx" @change="e => handleFileUploadEntry(e, entry)" type="file"
+              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple style="display:none">
+            <Button type="button"
+              :label="entry.files?.length > 0 ? `${entry.files.length} ไฟล์ที่เลือก` : 'เลือกไฟล์'"
+              icon="pi pi-upload" severity="secondary" outlined size="small"
+              @click="$refs['fileInput_' + idx][0].click()" />
+            <div v-if="entry.files?.length > 0" class="file-list">
+              <div v-for="(file, fi) in entry.files" :key="fi" class="file-item">
+                <i class="pi pi-file-pdf" v-if="file.name.endsWith('.pdf')"></i>
+                <i class="pi pi-image" v-else-if="/\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)"></i>
+                <i class="pi pi-file" v-else></i>
+                <span class="file-name">{{ file.name }}</span>
+                <Button icon="pi pi-times" size="small" severity="danger" text @click="entry.files.splice(fi,1)" />
               </div>
-              <div v-for="(entry, idx) in taskEntries" :key="idx" class="task-entry-block">
-                <div class="entry-header-row">
-                  <span class="entry-num">{{ idx + 1 }}</span>
-                  <Dropdown v-model="entry.taskId" :options="tasks" optionLabel="display" optionValue="id"
-                    class="corporate-dropdown task-dropdown" placeholder="เลือกโครงการ"
-                    @change="onTaskEntryChange(entry)"
-                    filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
-                    :filterFields="['task_name', 'so_number', 'display']" style="flex:1;min-width:0">
-                    <template #value="slotProps">
-                      <div v-if="slotProps.value" class="task-selected">
-                        <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
-                        <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
-                      </div>
-                      <span v-else>เลือกโครงการ</span>
-                    </template>
-                    <template #option="slotProps">
-                      <div class="task-option" :class="{ 'task-option-assigned': slotProps.option._assigned }">
-                        <span v-if="slotProps.option._assigned" class="assigned-badge">
-                          <i class="pi pi-star-fill" style="font-size:0.65rem"></i> งานของฉัน
-                        </span>
-                        <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
-                        <span class="task-name-text">{{ slotProps.option.task_name }}</span>
-                      </div>
-                    </template>
-                  </Dropdown>
-                  <div class="entry-time-inline">
-                    <InputText v-model="entry.startTimeText" class="corporate-input time-input"
-                      :class="{ 'p-invalid': entry.startTimeError }"
-                      placeholder="เริ่ม" maxlength="5" inputmode="numeric"
-                      @input="formatEntryTime(entry, 'startTimeText'); entry.startTimeError = false"
-                      @blur="parseEntryStartTime(entry)" required />
-                    <span class="time-separator">-</span>
-                    <InputText v-model="entry.endTimeText" class="corporate-input time-input"
-                      :class="{ 'p-invalid': entry.endTimeError }"
-                      placeholder="สิ้นสุด" maxlength="5" inputmode="numeric"
-                      @input="formatEntryTime(entry, 'endTimeText'); entry.endTimeError = false"
-                      @blur="parseEntryEndTime(entry)" required />
-                    <span class="time-total">{{ calcEntryHours(entry) }}</span>
+            </div>
+          </div>
+
+          <!-- Calendar / Teams -->
+          <div class="cal-section">
+            <div class="cal-header"><i class="pi pi-calendar-plus"></i> Calendar / MS Teams</div>
+            <div class="field-row">
+              <InputText v-model="entry.eventTitle" class="w-full" placeholder="หัวข้อ Calendar Event" />
+            </div>
+            <div class="field-row">
+              <textarea v-model="entry.eventDetails" rows="2" class="cal-textarea" placeholder="รายละเอียดเพิ่มเติม..." />
+            </div>
+            <div class="teams-toggle">
+              <Checkbox v-model="entry.createTeamsMeeting" :inputId="'teams_' + idx" :binary="true" />
+              <label :for="'teams_' + idx" class="teams-label"><i class="pi pi-video"></i> สร้าง MS Teams Meeting</label>
+            </div>
+            <div v-if="entry.createTeamsMeeting" class="meeting-time-grid">
+              <div class="meeting-time-field">
+                <label class="field-label-sm"><i class="pi pi-clock"></i> เวลาเริ่ม</label>
+                <InputText 
+                  v-model="entry.meetingStartTimeText" 
+                  class="meeting-time-input"
+                  :class="{ 'p-invalid': entry.meetingStartTimeError }"
+                  maxlength="5" 
+                  inputmode="numeric"
+                  @input="formatMeetingTime(entry, 'meetingStartTimeText'); entry.meetingStartTimeError = false"
+                  @blur="parseMeetingStartTime(entry)" />
+              </div>
+              <span class="meeting-time-separator">—</span>
+              <div class="meeting-time-field">
+                <label class="field-label-sm"><i class="pi pi-clock"></i> เวลาสิ้นสุด</label>
+                <InputText 
+                  v-model="entry.meetingEndTimeText" 
+                  class="meeting-time-input"
+                  :class="{ 'p-invalid': entry.meetingEndTimeError }"
+                  maxlength="5" 
+                  inputmode="numeric"
+                  @input="formatMeetingTime(entry, 'meetingEndTimeText'); entry.meetingEndTimeError = false"
+                  @blur="parseMeetingEndTime(entry)" />
+              </div>
+            </div>
+            <div v-if="entry.createTeamsMeeting" class="attendees-section">
+              <label class="field-label-sm" style="margin-bottom: 0.5rem; display: block;">
+                <i class="pi pi-users"></i> เชิญผู้เข้าร่วม
+              </label>
+              <AutoComplete 
+                v-model="entry.selectedAttendee" 
+                :suggestions="filteredAttendees"
+                @complete="searchAttendees"
+                @item-select="(e) => onAttendeeSelect(e, entry)"
+                optionLabel="name"
+                placeholder="ค้นหาชื่อ หรือ อีเมล..."
+                class="w-full"
+                forceSelection
+                :dropdown="true"
+                @dropdown-click="showAllAttendees">
+                <template #option="slotProps">
+                  <div class="attendee-option">
+                    <div class="attendee-name">{{ slotProps.option.name }}</div>
+                    <div class="attendee-email">{{ slotProps.option.email }}</div>
                   </div>
-                  <Button v-if="taskEntries.length > 1" type="button" icon="pi pi-times" severity="danger" text rounded size="small" @click="removeTaskEntry(idx)" />
-                </div>
-                <div v-if="entry.taskId && getStepsForTask(entry.taskId).length > 0">
-                  <MultiSelect v-model="entry.stepIds" :options="getStepsForTask(entry.taskId)" optionLabel="step_name"
-                    optionValue="id" :optionDisabled="isStepCompleted" class="corporate-dropdown workflow-dropdown" placeholder="เลือก step (ถ้ามี)"
-                    filter filterPlaceholder="ค้นหาชื่อ step..." style="width:100%">
-                    <template #value="slotProps">
-                      <div v-if="slotProps.value && slotProps.value.length > 0" class="selected-chips">
-                        <div v-for="stepId in slotProps.value" :key="stepId" class="step-chip"
-                          :style="{ borderLeftColor: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)), background: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)) + '15' }">
-                          <div class="chip-main">
-                            <span class="chip-badge" :style="{ background: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)) }">{{ getStepNumberFromTask(stepId, entry.taskId) }}</span>
-                            <span class="chip-name">{{ getStepByIdFromTask(stepId, entry.taskId)?.step_name }}</span>
-                            <span class="chip-status" :style="{ color: getStepStatusColor(getStepByIdFromTask(stepId, entry.taskId)) }">{{ getStepStatusLabel(getStepByIdFromTask(stepId, entry.taskId)) }}</span>
-                            <i class="pi pi-times chip-remove" @click.stop="entry.stepIds = entry.stepIds.filter(id => id !== stepId)"></i>
-                          </div>
-                        </div>
-                      </div>
-                      <span v-else class="placeholder-text">เลือก step (ถ้ามี)</span>
-                    </template>
-                    <template #option="slotProps">
-                      <div class="step-option" :style="{ borderLeftColor: getStepStatusColor(slotProps.option) }">
-                        <div class="step-header-option">
-                          <span class="step-badge" :style="{ backgroundColor: getStepStatusColor(slotProps.option) }">{{ slotProps.index + 1 }}</span>
-                          <strong>{{ slotProps.option.step_name }}</strong>
-                          <span class="step-status-inline" :style="{ color: getStepStatusColor(slotProps.option) }">
-                            <i class="pi pi-circle-fill"></i> {{ getStepStatusLabel(slotProps.option) }}
-                          </span>
-                        </div>
-                        <div v-if="slotProps.option.description" class="step-desc">{{ slotProps.option.description }}</div>
-                        <div class="step-meta">
-                          <span v-if="slotProps.option.start_date || slotProps.option.end_date" class="meta-item">
-                            <i class="pi pi-calendar"></i>
-                            {{ formatDateRange(slotProps.option.start_date, slotProps.option.end_date) }}
-                          </span>
-                        </div>
-                      </div>
-                    </template>
-                  </MultiSelect>
-                </div>
-                <!-- Per-entry: สถานที่ รายละเอียด ไฟล์ Calendar -->
-                <div class="input-group full-width" style="margin-top:8px">
-                  <label class="input-label">สถานที่ *</label>
-                  <InputText v-model="entry.location" required class="corporate-input" placeholder="ระบุสถานที่หรือที่อยู่" />
-                </div>
-                <div class="input-group full-width">
-                  <label class="input-label">รายละเอียดงานที่ทำ *</label>
-                  <Textarea v-model="entry.workDescription" rows="3" required class="corporate-input" />
-                </div>
-                <div class="input-group full-width">
-                  <label class="input-label">แนบไฟล์</label>
-                  <div class="file-upload-wrapper">
-                    <input :ref="'fileInput_' + idx" @change="e => handleFileUploadEntry(e, entry)" type="file"
-                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple class="file-input">
-                    <Button type="button"
-                      :label="entry.files?.length > 0 ? `เลือกแล้ว ${entry.files.length} ไฟล์` : 'เลือกไฟล์'"
-                      icon="pi pi-upload" severity="secondary" outlined size="small"
-                      @click="$refs['fileInput_' + idx][0].click()" />
-                  </div>
-                  <div v-if="entry.files?.length > 0" class="file-list">
-                    <div v-for="(file, fi) in entry.files" :key="fi" class="file-item">
-                      <i class="pi pi-file"></i>
-                      <span class="file-name">{{ file.name }}</span>
-                      <Button icon="pi pi-times" size="small" severity="danger" text @click="entry.files.splice(fi,1)" />
-                    </div>
-                  </div>
-                </div>
-                <Divider style="margin:8px 0" />
-                <div class="entry-calendar-section">
-                  <div class="options-header">
-                    <label class="calendar-main-label" style="font-size:0.85rem;color:#3b82f6">
-                      <i class="pi pi-calendar-plus"></i> Calendar Event / MS Teams
-                    </label>
-                  </div>
-                  <div class="input-group full-width">
-                    <label class="input-label">หัวข้อ Calendar Event</label>
-                    <InputText v-model="entry.eventTitle" class="corporate-input" placeholder="หัวข้อ calendar event" />
-                  </div>
-                  <div class="input-group full-width event-details-group">
-                    <label class="input-label">รายละเอียดเพิ่มเติม</label>
-                    <textarea v-model="entry.eventDetails" rows="2" class="corporate-textarea"
-                      placeholder="รายละเอียดสำหรับ calendar event..." />
-                  </div>
-                  <div class="input-group full-width">
-                    <div class="teams-meeting-section">
-                      <div class="checkbox-group">
-                        <Checkbox v-model="entry.createTeamsMeeting" :inputId="'createTeams_' + idx" :binary="true" />
-                        <label :for="'createTeams_' + idx" class="checkbox-label">
-                          <i class="pi pi-video"></i> สร้าง MS Teams Meeting
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  <div v-if="entry.createTeamsMeeting" class="input-group-row">
-                    <div class="input-group">
-                      <label class="input-label"><i class="pi pi-clock"></i> เวลาเริ่ม Meeting</label>
-                      <Calendar v-model="entry.meetingStartTime" timeOnly hourFormat="24" class="corporate-input" :manualInput="true" />
-                    </div>
-                    <div class="input-group">
-                      <label class="input-label"><i class="pi pi-clock"></i> เวลาสิ้นสุด Meeting</label>
-                      <Calendar v-model="entry.meetingEndTime" timeOnly hourFormat="24" class="corporate-input" :manualInput="true" />
-                    </div>
-                  </div>
+                </template>
+              </AutoComplete>
+              <div v-if="entry.attendees && entry.attendees.length > 0" class="attendees-list">
+                <div v-for="(att, ai) in entry.attendees" :key="ai" class="attendee-chip">
+                  <i class="pi pi-user"></i>
+                  <span class="attendee-chip-name">{{ att.name }}</span>
+                  <i class="pi pi-times attendee-chip-remove" @click="entry.attendees.splice(ai, 1)"></i>
                 </div>
               </div>
             </div>
-
           </div>
+        </div>
+      </div>
 
-          <div class="form-actions">
-            <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined
-              @click="resetForm" />
-            <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" />
-          </div>
-        </form>
-      </template>
-    </Card>
+      <!-- Actions -->
+      <div class="form-actions">
+        <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined @click="resetForm" />
+        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" />
+      </div>
+    </form>
   </div>
 </template>
-
 <script>
 /* eslint-disable no-unused-vars */
 import axios from '@/utils/axiosConfig'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
 import MultiSelect from 'primevue/multiselect'
+import AutoComplete from 'primevue/autocomplete'
 
-import { isValidTimeRange, getValidationMessage } from '@/utils/validation'
+import { isValidTimeRange } from '@/utils/validation'
 import { isActive } from '@/utils/statusHelper'
 
 export default {
   name: 'DailyWorkForm',
-  components: {
-    Checkbox,
-    Button,
-    MultiSelect
-  },
+  components: { Checkbox, Button, MultiSelect, AutoComplete },
+  inject: ['$toast'],
   created() {
     this.$http = axios
-    this.loadTasks()
-    this.loadUsers()
   },
   data() {
     return {
       tasks: [],
-      workflowSteps: [],
       workflowStepsMap: {},
-      taskEntries: [{ taskId: null, stepIds: [], location: '', workDescription: '', files: [], eventTitle: '', eventDetails: '', attendees: [], createTeamsMeeting: false, meetingStartTime: null, meetingEndTime: null, startTimeText: '', endTimeText: '', startTime: null, endTime: null }],
+      taskEntries: [{ 
+        taskId: null, stepIds: [], location: '', workDescription: '', files: [], 
+        eventTitle: '', eventDetails: '', createTeamsMeeting: false, 
+        meetingStartTime: null, meetingEndTime: null, 
+        meetingStartTimeText: '', meetingEndTimeText: '',
+        meetingStartTimeError: false, meetingEndTimeError: false,
+        startTimeText: '', endTimeText: '', 
+        startTime: null, endTime: null, attendees: [], selectedAttendee: null
+      }],
       minDate: new Date(),
-      formData: {
-        taskId: null,
-        stepIds: [],
-        workDate: new Date(),
-        startTime: new Date(),
-        endTime: null,
-        startTimeText: '',
-        endTimeText: '',
-        workStatus: null,
-        location: '',
-        workDescription: '',
-        files: [],
-        createCalendarEvent: true,
-        eventTitle: '',
-        meetingStartTime: new Date(),
-        meetingEndTime: null,
-        attendees: [],
-        createTeamsMeeting: false,
-        eventDetails: ''
-      },
-      selectedAttendee: null,
-      filteredAttendees: [],
+      formData: { workDate: new Date() },
+      statusOptions: [],
       users: [],
-      attendeeOptions: [],
-      newEmail: '',
-      statusOptions: []
-    }
-  },
-  watch: {
-    'formData.taskId'(newVal) {
-      if (newVal) {
-        const task = this.tasks.find(t => t.id === newVal)
-        if (task) {
-          this.formData.eventTitle = task.task_name
-        }
-      }
-    },
-    'formData.startTime'(newVal) {
-      if (newVal) {
-        this.formData.meetingStartTime = new Date(newVal)
-      }
-    },
-    'formData.endTime'(newVal) {
-      if (newVal) {
-        this.formData.meetingEndTime = new Date(newVal)
-      }
-    }
-  },
-  computed: {
-    selectedSteps() {
-      if (!this.formData.stepIds || this.formData.stepIds.length === 0) return []
-      return this.formData.stepIds.map(id => this.workflowSteps.find(s => s.id === id)).filter(Boolean)
-    },
-    calculateHours() {
-      if (this.formData.startTime && this.formData.endTime) {
-        const start = new Date(this.formData.startTime)
-        let end = new Date(this.formData.endTime)
-
-        // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
-        if (end <= start) {
-          end.setDate(end.getDate() + 1)
-        }
-
-        let diff = (end - start) / (1000 * 60 * 60)
-        
-        // หักเวลาพัก 12:00-13:00 (1 ชั่วโมง) ถ้าช่วงเวลาครอบคลุม
-        const startHour = start.getHours() + start.getMinutes() / 60
-        const endHour = end.getHours() + end.getMinutes() / 60
-        if (startHour < 13 && endHour > 12) {
-          const breakStart = Math.max(startHour, 12)
-          const breakEnd = Math.min(endHour, 13)
-          diff -= (breakEnd - breakStart)
-        }
-        
-        return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
-      }
-      return '0 ชั่วโมง'
+      filteredAttendees: []
     }
   },
   async mounted() {
     await this.loadTasks()
+    await this.loadUsers()
     this.loadStatusOptions()
-
-    // ตั้งค่าเริ่มต้นเวลา
+    // ตั้งค่าเริ่มต้นเวลาปัจจุบัน
     const now = new Date()
-    this.formData.startTimeText = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
-    this.parseStartTime()
-    // set initial time on first entry
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
     if (this.taskEntries[0]) {
-      this.taskEntries[0].startTimeText = this.formData.startTimeText
+      this.taskEntries[0].startTimeText = timeStr
       this.taskEntries[0].startTime = new Date(now)
     }
-
-    // Listen for status updates
-    window.addEventListener('statusesUpdated', this.handleStatusesUpdate)
-  },
-  beforeUnmount() {
-    window.removeEventListener('statusesUpdated', this.handleStatusesUpdate)
   },
   methods: {
-    focusCalendarInput(refName) {
-      this.$nextTick(() => {
-        const root = this.$refs[refName]?.$el
-        const input = root?.querySelector('input')
-        if (input && document.activeElement !== input) input.focus()
-      })
+    async loadTasks() {
+      try {
+        const userId = localStorage.getItem('soc_user_id')
+        const [tasksRes, stepsRes] = await Promise.all([
+          axios.get('/api/tasks'),
+          axios.get('/api/task-steps/all')
+        ])
+        const availableTasks = tasksRes.data.filter(task => isActive(task.status))
+        const assignedTaskIds = new Set(
+          stepsRes.data.filter(s => {
+            const users = typeof s.assigned_users === 'string' ? JSON.parse(s.assigned_users) : s.assigned_users
+            return users?.some(u => String(u.id || u) === String(userId))
+          }).map(s => s.task_id)
+        )
+        this.tasks = availableTasks.map(task => ({
+          ...task,
+          _assigned: assignedTaskIds.has(task.id),
+          display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
+        })).sort((a, b) => (b._assigned ? 1 : 0) - (a._assigned ? 1 : 0))
+      } catch (e) { console.error(e) }
     },
-    onMeetingTimeChange() {
-      // Force reactivity when meeting time changes via Calendar picker
-      
-    },
-
-    formatEntryTime(entry, field) {
-      let value = (entry[field] || '').replace(/\D/g, '')
-      if (value.length >= 2) value = value.slice(0, 2) + ':' + value.slice(2, 4)
-      entry[field] = value.slice(0, 5)
-    },
-    parseEntryTime(text) {
-      if (!text || text.length < 5) return null
-      const [h, m] = text.split(':').map(Number)
-      if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-        const d = new Date(); d.setHours(h, m, 0, 0); return d
+    async onTaskEntryChange(entry) {
+      entry.stepIds = []
+      if (entry.taskId && !this.workflowStepsMap[entry.taskId]) {
+        try {
+          const res = await axios.get(`/api/task-steps/task/${entry.taskId}`)
+          this.workflowStepsMap[entry.taskId] = res.data || []
+        } catch (e) { console.error(e) }
       }
-      return null
+    },
+    formatEntryTime(entry, field) {
+      let digits = (entry[field] || '').replace(/\D/g, '')
+      // clamp hours ≤ 23
+      if (digits.length >= 2) {
+        let h = parseInt(digits.slice(0, 2), 10)
+        if (h > 23) { h = 23; digits = '23' + digits.slice(2) }
+      }
+      // clamp minutes ≤ 59
+      if (digits.length >= 4) {
+        let m = parseInt(digits.slice(2, 4), 10)
+        if (m > 59) { digits = digits.slice(0, 2) + '59' }
+      }
+      if (digits.length >= 2) digits = digits.slice(0, 2) + ':' + digits.slice(2, 4)
+      entry[field] = digits.slice(0, 5)
     },
     parseEntryStartTime(entry) {
-      const t = this.parseEntryTime(entry.startTimeText)
-      if (t) { entry.startTime = t; entry.meetingStartTime = new Date(t); entry.startTimeError = false }
-      else if (entry.startTimeText) entry.startTimeError = true
+      const parts = entry.startTimeText.split(':')
+      if (parts.length === 2) {
+        const [h, m] = parts.map(Number)
+        if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+          const d = new Date(); d.setHours(h, m, 0, 0)
+          entry.startTime = d
+          // Auto-fill meeting start time if empty
+          if (!entry.meetingStartTimeText && entry.createTeamsMeeting) {
+            entry.meetingStartTimeText = entry.startTimeText
+            entry.meetingStartTime = new Date(d)
+          }
+        }
+      }
     },
     parseEntryEndTime(entry) {
-      const t = this.parseEntryTime(entry.endTimeText)
-      if (t) { entry.endTime = t; entry.meetingEndTime = new Date(t); entry.endTimeError = false }
-      else if (entry.endTimeText) entry.endTimeError = true
+      const parts = entry.endTimeText.split(':')
+      if (parts.length === 2) {
+        const [h, m] = parts.map(Number)
+        if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+          const d = new Date(); d.setHours(h, m, 0, 0)
+          entry.endTime = d
+          // Auto-fill meeting end time if empty
+          if (!entry.meetingEndTimeText && entry.createTeamsMeeting) {
+            entry.meetingEndTimeText = entry.endTimeText
+            entry.meetingEndTime = new Date(d)
+          }
+        }
+      }
+    },
+    formatMeetingTime(entry, field) {
+      let digits = (entry[field] || '').replace(/\D/g, '')
+      // clamp hours ≤ 23
+      if (digits.length >= 2) {
+        let h = parseInt(digits.slice(0, 2), 10)
+        if (h > 23) { h = 23; digits = '23' + digits.slice(2) }
+      }
+      // clamp minutes ≤ 59
+      if (digits.length >= 4) {
+        let m = parseInt(digits.slice(2, 4), 10)
+        if (m > 59) { digits = digits.slice(0, 2) + '59' }
+      }
+      if (digits.length >= 2) digits = digits.slice(0, 2) + ':' + digits.slice(2, 4)
+      entry[field] = digits.slice(0, 5)
+    },
+    parseMeetingStartTime(entry) {
+      const parts = entry.meetingStartTimeText.split(':')
+      if (parts.length === 2) {
+        const [h, m] = parts.map(Number)
+        if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+          const d = new Date(); d.setHours(h, m, 0, 0)
+          entry.meetingStartTime = d
+          entry.meetingStartTimeError = false
+        } else {
+          entry.meetingStartTimeError = true
+        }
+      } else if (entry.meetingStartTimeText) {
+        entry.meetingStartTimeError = true
+      }
+    },
+    parseMeetingEndTime(entry) {
+      const parts = entry.meetingEndTimeText.split(':')
+      if (parts.length === 2) {
+        const [h, m] = parts.map(Number)
+        if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+          const d = new Date(); d.setHours(h, m, 0, 0)
+          entry.meetingEndTime = d
+          entry.meetingEndTimeError = false
+        } else {
+          entry.meetingEndTimeError = true
+        }
+      } else if (entry.meetingEndTimeText) {
+        entry.meetingEndTimeError = true
+      }
     },
     calcEntryHours(entry) {
       if (!entry.startTime || !entry.endTime) return '0 ชั่วโมง'
-      const start = new Date(entry.startTime)
-      let end = new Date(entry.endTime)
-      if (end <= start) end.setDate(end.getDate() + 1)
-      let diff = (end - start) / 3600000
-      const sh = start.getHours() + start.getMinutes() / 60
-      const eh = end.getHours() + end.getMinutes() / 60
+      let diff = (entry.endTime - entry.startTime) / 3600000
+      if (diff < 0) diff += 24
+      const sh = entry.startTime.getHours() + entry.startTime.getMinutes()/60
+      const eh = entry.endTime.getHours() + entry.endTime.getMinutes()/60
       if (sh < 13 && eh > 12) diff -= (Math.min(eh, 13) - Math.max(sh, 12))
-      return diff > 0 ? `${diff.toFixed(1)} ชั่วโมง` : '0 ชั่วโมง'
+      return `${Math.max(0, diff).toFixed(1)} ชม.`
     },
-    parseStartTime() {
-      const time = this.parseTimeText(this.formData.startTimeText)
-      if (time) {
-        this.formData.startTime = time
-        this.formData.meetingStartTime = new Date(time)
-      }
+    addTaskEntry() {
+      this.taskEntries.push({ 
+        taskId: null, stepIds: [], location: '', workDescription: '', files: [], 
+        eventTitle: '', eventDetails: '', createTeamsMeeting: false, 
+        meetingStartTime: null, meetingEndTime: null,
+        meetingStartTimeText: '', meetingEndTimeText: '',
+        meetingStartTimeError: false, meetingEndTimeError: false,
+        startTimeText: '', endTimeText: '', attendees: [], selectedAttendee: null
+      })
     },
-    parseEndTime() {
-      const time = this.parseTimeText(this.formData.endTimeText)
-      if (time) {
-        this.formData.endTime = time
-        this.formData.meetingEndTime = new Date(time)
-      }
-    },
-    parseTimeText(text) {
-      if (!text || text.length < 5) return null
-      const [hours, minutes] = text.split(':').map(Number)
-      if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-        const date = new Date()
-        date.setHours(hours, minutes, 0, 0)
-        return date
-      }
-      return null
-    },
-    formatTimeInput(field) {
-      let value = this.formData[field].replace(/\D/g, '')
-      if (value.length >= 2) {
-        value = value.slice(0, 2) + ':' + value.slice(2, 4)
-      }
-      this.formData[field] = value.slice(0, 5)
-    },
-    getStepNumber(stepId) {
-      const index = this.workflowSteps.findIndex(s => s.id === stepId)
-      return index >= 0 ? index + 1 : ''
-    },
-    getStepById(stepId) {
-      return this.workflowSteps.find(s => s.id === stepId)
-    },
-    isStepCompleted(step) {
-      return step?.status === 'completed'
-    },
-    getStepName(stepId) {
-      const step = this.workflowSteps.find(s => s.id === stepId)
-      return step ? step.step_name : ''
+    removeTaskEntry(idx) { this.taskEntries.splice(idx, 1) },
+    getStepsForTask(id) { return this.workflowStepsMap[id] || [] },
+    getStepByIdFromTask(sid, tid) { return this.getStepsForTask(tid).find(s => s.id === sid) },
+    getStepNumberFromTask(sid, tid) { return this.getStepsForTask(tid).findIndex(s => s.id === sid) + 1 },
+    getStepStatusColor(step) {
+      if (!step) return '#9ca3af'
+      if (step.status === 'completed') return '#10b981'
+      const today = new Date(); today.setHours(0,0,0,0)
+      if (step.end_date && today > new Date(step.end_date).setHours(0,0,0,0)) return '#ef4444'
+      if (step.has_work_logged) return '#f59e0b'
+      return '#9ca3af'
     },
     getStepStatusLabel(step) {
       if (!step) return 'รอดำเนินการ'
       if (step.status === 'completed') return 'เสร็จสิ้น'
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      // เกินกำหนด - เช็คก่อนเสมอ
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return 'เกินกำหนด'
-      }
-      
-      if (step.has_work_logged) {
-        if (step.latest_work_date) {
-          const wDate = new Date(step.latest_work_date)
-          wDate.setHours(0, 0, 0, 0)
-          if (wDate <= today) return 'กำลังดำเนินการ'
-        } else {
-          return 'กำลังดำเนินการ'
-        }
-      }
-      
+      const today = new Date(); today.setHours(0,0,0,0)
+      if (step.end_date && today > new Date(step.end_date).setHours(0,0,0,0)) return 'เกินกำหนด'
+      if (step.has_work_logged) return 'กำลังดำเนินการ'
       return 'รอดำเนินการ'
     },
-    getStepStatusColor(step) {
-      if (!step) return '#9ca3af'
-      if (step.status === 'completed') return '#10b981'
-      
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      // เกินกำหนด - เช็คก่อนเสมอ
-      if (step.end_date) {
-        const endDate = new Date(step.end_date)
-        endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return '#ef4444'
-      }
-      
-      if (step.has_work_logged) {
-        if (step.latest_work_date) {
-          const wDate = new Date(step.latest_work_date)
-          wDate.setHours(0, 0, 0, 0)
-          if (wDate <= today) return '#f59e0b'
-        } else {
-          return '#f59e0b'
-        }
-      }
-      
-      return '#9ca3af'
-    },
-    removeStep(stepId) {
-      this.formData.stepIds = this.formData.stepIds.filter(id => id !== stepId)
-    },
-    formatAssignedUsers(users) {
-      if (!users || users.length === 0) return ''
-      return users.map(u => u.name || u).join(', ')
-    },
-    formatDateRange(start, end) {
-      if (!start && !end) return ''
-      const formatDate = (date) => {
-        if (!date) return ''
-        return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
-      }
-      if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
-      return formatDate(start || end)
-    },
-    getProjectStatusLabel(status) {
-      const found = this.statusOptions.find(s => s.value === status)
-      return found ? found.label : status
-    },
-    getProjectStatusColor(status) {
-      const found = this.statusOptions.find(s => s.value === status)
-      return found?.color || '#6b7280'
-    },
-    getTaskSO(taskId) {
-      const task = this.tasks.find(t => t.id === taskId)
-      return task?.so_number || ''
-    },
-    getTaskName(taskId) {
-      const task = this.tasks.find(t => t.id === taskId)
-      return task?.task_name || ''
-    },
+    isStepCompleted(step) { return step?.status === 'completed' },
+    getTaskSO(id) { return this.tasks.find(t => t.id === id)?.so_number },
+    getTaskName(id) { return this.tasks.find(t => t.id === id)?.task_name },
+    handleFileUploadEntry(event, entry) { entry.files = [...(entry.files || []), ...Array.from(event.target.files)] },
     async loadUsers() {
       try {
         const response = await this.$http.get('/api/users')
@@ -493,24 +446,19 @@ export default {
           name: `${user.firstname} ${user.lastname}${user.nickname ? ` (${user.nickname})` : ''}`.trim(),
           email: user.email
         }))
-        // เพิ่ม hardcoded group email
         this.users.unshift({
           name: 'Engineers Group',
           email: 'engineers@gent-s.com',
           position: 'Group Email',
           department: 'Engineer'
         })
-        this.attendeeOptions = this.users
-      } catch { // ignore
-
+      } catch (err) {
+        console.error('Load users error:', err)
       }
     },
-
     searchAttendees(event) {
       const query = event.query.toLowerCase().trim()
-
       if (query) {
-        // ค้นหาจาก users ที่โหลดมา
         this.filteredAttendees = this.users.filter(user =>
           user.name.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query) ||
@@ -521,18 +469,15 @@ export default {
         this.filteredAttendees = this.users.slice()
       }
     },
-
     showAllAttendees() {
       this.filteredAttendees = this.users.slice()
     },
-
-    onAttendeeSelect(event) {
+    onAttendeeSelect(event, entry) {
       const attendee = event.value
       if (attendee && attendee.email) {
-        // ตรวจสอบว่าไม่ได้เลือกซ้ำ
-        const exists = this.formData.attendees.some(a => a.email === attendee.email)
+        const exists = entry.attendees.some(a => a.email === attendee.email)
         if (!exists) {
-          this.formData.attendees.push({
+          entry.attendees.push({
             email: attendee.email,
             name: attendee.name,
             position: attendee.position || '',
@@ -540,190 +485,107 @@ export default {
           })
         }
       }
-      // Clear selection
       this.$nextTick(() => {
-        this.selectedAttendee = null
+        entry.selectedAttendee = null
       })
     },
-
-    removeAttendee(index) {
-      this.formData.attendees.splice(index, 1)
-    },
-
-    addEmailDirectly() {
-      if (this.selectedAttendee && typeof this.selectedAttendee === 'string') {
-        const email = this.selectedAttendee.trim()
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        const exists = this.formData.attendees.some(a => a.email === email)
-        if (emailRegex.test(email) && !exists) {
-          this.formData.attendees.push({ email, name: email, position: '', department: '' })
-          this.selectedAttendee = null
-        }
-      }
-    },
-
-    isValidEmail(email) {
-      if (!email) return false
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailRegex.test(email.trim())
-    },
-
-    addNewEmail() {
-      const email = this.newEmail.trim()
-      const exists = this.formData.attendees.some(a => a.email === email)
-      if (this.isValidEmail(email) && !exists) {
-        this.formData.attendees.push({ email, name: email, position: '', department: '' })
-        this.newEmail = ''
-      }
-    },
-
-    addSelectedAttendees() {
-      // เพิ่ม attendees ที่เลือกจาก dropdown เข้าไปใน chips
-      this.selectedAttendees.forEach(email => {
-        const exists = this.formData.attendees.some(a => a.email === email)
-        if (!exists) {
-          this.formData.attendees.push({ email, name: email, position: '', department: '' })
-        }
-      })
-      // Clear selection หลังจากเพิ่มแล้ว
-      this.selectedAttendees = []
-    },
-    async loadTasks() {
-      try {
-        const userId = localStorage.getItem('soc_user_id')
-        const [tasksRes, stepsRes] = await Promise.all([
-          this.$http.get('/api/tasks'),
-          this.$http.get('/api/task-steps/all')
-        ])
-        const availableTasks = tasksRes.data.filter(task => isActive(task.status))
-        const assignedTaskIds = new Set(
-          stepsRes.data
-            .filter(s => {
-              if (!s.assigned_users) return false
-              const users = typeof s.assigned_users === 'string' ? JSON.parse(s.assigned_users) : s.assigned_users
-              return users.some(u => String(u.id || u) === String(userId))
-            })
-            .map(s => s.task_id)
-        )
-        const mapped = availableTasks.map(task => ({
-          ...task,
-          _assigned: assignedTaskIds.has(task.id),
-          display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
-        }))
-        this.tasks = mapped.sort((a, b) => (b._assigned ? 1 : 0) - (a._assigned ? 1 : 0))
-      } catch { // ignore
-      }
-    },
-    handleFileUpload(event) {
-      const files = Array.from(event.target.files)
-      this.formData.files = [...this.formData.files, ...files]
-    },
-    handleFileUploadEntry(event, entry) {
-      const files = Array.from(event.target.files)
-      entry.files = [...(entry.files || []), ...files]
-    },
-    removeFile(index) {
-      this.formData.files.splice(index, 1)
-    },
-    async uploadFiles() {
-      if (this.formData.files.length === 0) return []
-      const formData = new FormData()
-      this.formData.files.forEach(file => { formData.append('files', file) })
-      try {
-        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-        return response.data.files || []
-      } catch { return [] }
+    loadStatusOptions() {
+      const saved = localStorage.getItem('work_statuses')
+      this.statusOptions = saved ? JSON.parse(saved) : []
     },
     async uploadFilesForEntry(entry) {
       if (!entry.files || entry.files.length === 0) return []
-      const formData = new FormData()
-      entry.files.forEach(file => { formData.append('files', file) })
+      
       try {
-        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+        const formData = new FormData()
+        entry.files.forEach(file => formData.append('files', file))
+        
+        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
         return response.data.files || []
-      } catch { return [] }
-    },
-    async onTaskChange() {
-      // legacy - kept for compatibility
-    },
-    async onTaskEntryChange(entry) {
-      entry.stepIds = []
-      if (entry.taskId && !this.workflowStepsMap[entry.taskId]) {
-        try {
-          const response = await axios.get(`/api/task-steps/task/${entry.taskId}`)
-          this.workflowStepsMap[entry.taskId] = response.data || []
-        } catch (error) {
-          console.error('Error loading workflow steps:', error)
-        }
+      } catch (error) {
+        console.error('File upload error:', error)
+        this.$toast.add({ 
+          severity: 'error', 
+          summary: 'อัปโหลดไฟล์ไม่สำเร็จ', 
+          detail: error.response?.data?.error || error.message, 
+          life: 5000 
+        })
+        return []
       }
-    },
-    getStepsForTask(taskId) {
-      return this.workflowStepsMap[taskId] || []
-    },
-    getStepByIdFromTask(stepId, taskId) {
-      return (this.workflowStepsMap[taskId] || []).find(s => s.id === stepId)
-    },
-    getStepNumberFromTask(stepId, taskId) {
-      const idx = (this.workflowStepsMap[taskId] || []).findIndex(s => s.id === stepId)
-      return idx >= 0 ? idx + 1 : ''
-    },
-    addTaskEntry() {
-      this.taskEntries.push({ taskId: null, stepIds: [], location: '', workDescription: '', files: [], eventTitle: '', eventDetails: '', attendees: [], createTeamsMeeting: false, meetingStartTime: null, meetingEndTime: null, startTimeText: '', endTimeText: '', startTime: null, endTime: null })
-    },
-    removeTaskEntry(idx) {
-      this.taskEntries.splice(idx, 1)
     },
     async submitForm() {
-      const validEntries2 = this.taskEntries.filter(e => e.taskId)
-      for (const e of validEntries2) {
-        if (!e.startTimeText || e.startTimeText.length < 5) { e.startTimeError = true }
-        if (!e.endTimeText || e.endTimeText.length < 5) { e.endTimeError = true }
-      }
-      const invalidEntry = validEntries2.find(e => e.startTimeError || e.endTimeError || !isValidTimeRange(e.startTime, e.endTime))
-      if (invalidEntry) {
-        this.$toast.add({
-          severity: 'error',
-          summary: 'ข้อผิดพลาด',
-          detail: 'กรุณากรอกเวลาเริ่มและสิ้นสุดให้ครบทุกโครงการ',
-          life: 3000
-        })
+      // Validate
+      if (!this.formData.workDate) {
+        this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกวันที่', life: 3000 })
         return
       }
 
-      try {
-        const validEntries = this.taskEntries.filter(e => e.taskId)
-        if (validEntries.length === 0) {
-          this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกโครงการอย่างน้อย 1 รายการ', life: 3000 })
+      const validEntries = this.taskEntries.filter(e => e.taskId)
+      if (validEntries.length === 0) {
+        this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกโครงการอย่างน้อย 1 รายการ', life: 3000 })
+        return
+      }
+
+      // Validate time and required fields
+      for (const e of validEntries) {
+        if (!e.startTime || !e.endTime) {
+          this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณากรอกเวลาเริ่มและสิ้นสุดให้ครบทุกโครงการ', life: 3000 })
           return
         }
+        if (!e.location || !e.workDescription) {
+          this.$toast.add({ severity: 'warn', summary: 'กรุณากรอกข้อมูลให้ครบ', detail: 'สถานที่และรายละเอียดงานเป็นข้อมูลที่จำเป็น', life: 3000 })
+          return
+        }
+      }
+
+      try {
+        const userId = localStorage.getItem('soc_user_id')
         const submittedAt = new Date().toISOString()
+
         await Promise.all(validEntries.map(async entry => {
           const uploadedFiles = await this.uploadFilesForEntry(entry)
-          // Auto-build event_details จาก steps ที่เลือก + รายละเอียดที่ user พิมพ์
+          
+          // Auto-build event_details from selected steps
           const steps = (entry.stepIds || []).map(id => this.getStepByIdFromTask(id, entry.taskId)).filter(Boolean)
           const stepDetails = steps.length > 0
             ? 'Steps:\n' + steps.map((s, i) => `${i + 1}. ${s.step_name}${s.description ? ' - ' + s.description : ''}`).join('\n')
             : ''
           const eventDetails = [stepDetails, entry.eventDetails].filter(Boolean).join('\n\n')
+
+          // Calculate total hours
+          let totalHours = 0
+          if (entry.startTime && entry.endTime) {
+            const start = new Date(entry.startTime)
+            let end = new Date(entry.endTime)
+            if (end <= start) end.setDate(end.getDate() + 1)
+            let diff = (end - start) / 3600000
+            const sh = start.getHours() + start.getMinutes() / 60
+            const eh = end.getHours() + end.getMinutes() / 60
+            if (sh < 13 && eh > 12) diff -= (Math.min(eh, 13) - Math.max(sh, 12))
+            totalHours = Math.max(0, diff)
+          }
+
           return this.$http.post('/api/daily-work', {
             task_id: entry.taskId,
-            step_ids: entry.stepIds || [],
+            step_ids: entry.stepIds.length > 0 ? entry.stepIds : [null],
             work_date: this.formatDate(this.formData.workDate),
-            start_time: this.formatTime(entry.startTime || this.formData.startTime),
-            end_time: this.formatTime(entry.endTime || this.formData.endTime),
-            total_hours: (() => { const s = entry.startTime || this.formData.startTime; const e = entry.endTime || this.formData.endTime; if (!s || !e) return 0; let d = (new Date(e) - new Date(s)) / 3600000; const sh = new Date(s).getHours() + new Date(s).getMinutes()/60; const eh = new Date(e).getHours() + new Date(e).getMinutes()/60; if (sh < 13 && eh > 12) d -= (Math.min(eh,13) - Math.max(sh,12)); return Math.max(0, d) })(),
+            start_time: this.formatTime(entry.startTime),
+            end_time: this.formatTime(entry.endTime),
+            total_hours: totalHours,
             location: entry.location,
             work_description: entry.workDescription,
             files: uploadedFiles,
-            user_id: localStorage.getItem('soc_user_id'),
+            user_id: userId,
             submitted_at: submittedAt,
-            create_calendar_event: !!entry.eventTitle,
-            event_title: entry.eventTitle,
-            meeting_start_time: this.formatTime(entry.meetingStartTime),
-            meeting_end_time: this.formatTime(entry.meetingEndTime),
-            attendees: entry.attendees || [],
-            create_teams_meeting: entry.createTeamsMeeting,
-            event_details: eventDetails
+            create_calendar_event: !!(entry.eventTitle && entry.createTeamsMeeting),
+            event_title: entry.eventTitle || '',
+            event_details: eventDetails,
+            create_teams_meeting: entry.createTeamsMeeting || false,
+            meeting_start_time: entry.createTeamsMeeting ? this.formatTime(entry.meetingStartTime || entry.startTime) : null,
+            meeting_end_time: entry.createTeamsMeeting ? this.formatTime(entry.meetingEndTime || entry.endTime) : null,
+            attendees: entry.attendees || []
           })
         }))
 
@@ -736,1041 +598,309 @@ export default {
 
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))
-
         this.$emit('submit-work')
         this.resetForm()
       } catch (err) {
+        console.error('Submit error:', err)
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: err.response?.data?.error || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
+          detail: err.response?.data?.error || err.userMessage || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
           life: 5000
         })
       }
     },
-    formatDate(date) {
-      if (!date) return null
-      const d = new Date(date)
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
-    },
-    formatTime(date) {
-      if (!date) return null
-      const d = new Date(date)
-      const hours = String(d.getHours()).padStart(2, '0')
-      const minutes = String(d.getMinutes()).padStart(2, '0')
-      return `${hours}:${minutes}`
-    },
-    calculateTotalHours() {
-      if (this.formData.startTime && this.formData.endTime) {
-        const start = new Date(this.formData.startTime)
-        let end = new Date(this.formData.endTime)
-
-        // ถ้าเวลาสิ้นสุดน้อยกว่าเวลาเริ่ม แสดงว่าข้ามวัน
-        if (end <= start) {
-          end.setDate(end.getDate() + 1)
-        }
-
-        let diff = (end - start) / (1000 * 60 * 60)
-        
-        // หักเวลาพัก 12:00-13:00 (1 ชั่วโมง) ถ้าช่วงเวลาครอบคลุม
-        const startHour = start.getHours() + start.getMinutes() / 60
-        const endHour = end.getHours() + end.getMinutes() / 60
-        if (startHour < 13 && endHour > 12) {
-          const breakStart = Math.max(startHour, 12)
-          const breakEnd = Math.min(endHour, 13)
-          diff -= (breakEnd - breakStart)
-        }
-        
-        return Math.max(0, diff)
-      }
-      return 0
-    },
-    resetForm() {
-      const now = new Date()
-      this.formData = {
-        taskId: null,
-        stepIds: [],
-        workDate: new Date(),
-        startTime: new Date(),
-        endTime: null,
-        startTimeText: now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0'),
-        endTimeText: '',
-        workStatus: null,
-        location: '',
-        workDescription: '',
-        files: [],
-        createCalendarEvent: true,
-        eventTitle: '',
-        meetingStartTime: new Date(),
-        meetingEndTime: null,
-        attendees: [],
-        createTeamsMeeting: false,
-        eventDetails: ''
-      }
-      this.workflowSteps = []
-      this.workflowStepsMap = {}
-      const nowR = new Date()
-      const nowTimeText = nowR.getHours().toString().padStart(2,'0')+':'+nowR.getMinutes().toString().padStart(2,'0')
-      this.taskEntries = [{ taskId: null, stepIds: [], location: '', workDescription: '', files: [], eventTitle: '', eventDetails: '', attendees: [], createTeamsMeeting: false, meetingStartTime: null, meetingEndTime: null, startTimeText: nowTimeText, endTimeText: '', startTime: nowR, endTime: null }]
-      const fileInput = document.getElementById('fileUpload')
-      if (fileInput) fileInput.value = ''
-    },
-
-    loadStatusOptions() {
-      this.$http.get('/api/settings/statuses')
-        .then(response => {
-          this.statusOptions = response.data
-        })
-        .catch(() => {
-          // Fallback to default
-          this.statusOptions = [
-            { label: '✅ เสร็จสมบูรณ์', value: 'completed', icon: 'emoji:✅' },
-            { label: '🔄 อยู่ระหว่างดำเนินการ', value: 'in_progress', icon: 'emoji:🔄' },
-            { label: '⏳ รอข้อมูล / อนุมัติ / อุปกรณ์', value: 'pending', icon: 'emoji:⏳' }
-          ]
-        })
-    },
-
-    getStatusIcon(value) {
-      const status = this.statusOptions.find(s => s.value === value)
-      return status ? status.icon : null
-    },
-
-    getStatusLabel(value) {
-      const status = this.statusOptions.find(s => s.value === value)
-      return status ? status.label : value
-    },
-
-    getStatusLabelOnly(value) {
-      const status = this.statusOptions.find(s => s.value === value)
-      return status ? status.label : value
-    },
-
-    getStatusColor(value) {
-      const status = this.statusOptions.find(s => s.value === value)
-      return status?.color || '#6c757d'
-    },
-
-    handleStatusesUpdate() {
-      // อัพเดทสถานะเมื่อมีการเปลี่ยนแปลงจาก Management > จัดการสถานะงาน
-      this.loadStatusOptions()
-    }
+    resetForm() { location.reload() }
   }
 }
 </script>
 
 <style scoped>
-.form-card {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e9ecef;
+/* ── Layout ── */
+.form-wrap { 
+  background: transparent; 
+  min-height: 100%; 
 }
 
-/* Shared date/time grid */
-.shared-grid {
-  background: #f0f7ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 4px;
+.dwf { 
+  padding: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0; 
+  max-width: 100%; 
 }
 
-/* Entries header */
-.entries-header {
+/* ── Section ── */
+.section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  transition: all 0.2s;
+}
+
+.section:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.date-section { 
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #bfdbfe;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
 }
 
-/* Task Entry Block */
-.task-entry-block {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 3px solid #4A90E2;
-  border-radius: 8px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+.section-title { 
+  font-weight: 700; 
+  color: #1e3a8a; 
+  font-size: 1rem; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
 }
-.task-entry-block .input-group {
+
+.section-title i { 
+  color: #3b82f6; 
+  font-size: 1.1rem;
+}
+
+/* ── Entry Card ── */
+.entry-card {
+  border: 2px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.2s;
+}
+
+.entry-card:hover {
+  border-left-color: #2563eb;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.entry-card:last-child { 
+  margin-bottom: 0; 
+}
+
+/* ── Entry Top ── */
+.entry-top { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin-bottom: 1rem; 
+}
+
+.entry-badge {
+  width: 32px; 
+  height: 32px; 
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff; 
+  font-size: 0.85rem; 
+  font-weight: 700;
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.entry-dropdown-wrap { 
+  flex: 1; 
+  min-width: 0; 
+}
+
+/* ── Time Row ── */
+.time-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 0.6rem 0.9rem; margin-bottom: 0.75rem; gap: 0.75rem; flex-wrap: wrap;
+}
+.time-fields { display: flex; align-items: flex-end; gap: 0.5rem; }
+.time-field { display: flex; flex-direction: column; gap: 2px; }
+.time-sep { font-weight: 600; color: #94a3b8; padding-bottom: 4px; }
+.time-input { width: 72px !important; text-align: center; font-size: 1rem; padding: 0.4rem 0.3rem !important; }
+.time-total-pill {
+  background: #dbeafe; color: #1d4ed8; border-radius: 20px;
+  padding: 4px 12px; font-size: 0.82rem; font-weight: 600;
+  display: flex; align-items: center; gap: 4px; white-space: nowrap;
+}
+
+/* ── Fields ── */
+.field-row { margin-bottom: 0.75rem; }
+.field-row:last-child { margin-bottom: 0; }
+.field-label { font-weight: 600; color: #374151; font-size: 0.875rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 5px; }
+.field-label i { color: #6b7280; font-size: 0.8rem; }
+.field-label-sm { font-size: 0.78rem; color: #6b7280; font-weight: 500; margin-bottom: 2px; display: block; }
+.req { color: #ef4444; }
+
+/* ── Dropdown / Input ── */
+.w-full { width: 100% !important; }
+:deep(.p-dropdown), :deep(.p-multiselect), :deep(.p-calendar), :deep(.p-inputtext):not(.time-input) { width: 100% !important; }
+:deep(.p-textarea) { width: 100% !important; resize: vertical; }
+
+/* ── Dropdown options ── */
+.val-row, .opt-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; overflow: hidden; }
+.opt-mine { background: #fefce8; border-left: 3px solid #f59e0b; padding: 3px 6px; border-radius: 4px; width: 100%; box-sizing: border-box; }
+.so-tag { background: #3b82f6; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+.mine-tag { background: #f59e0b; color: #fff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
+.task-txt { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; overflow-wrap: anywhere; }
+.ph { color: #9ca3af; }
+
+/* ── Step chips ── */
+.chips-wrap { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.step-chip { display: flex; align-items: center; gap: 6px; border-left: 3px solid; border-radius: 4px; padding: 4px 8px; background: #f8fafc; }
+.chip-num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chip-name { flex: 1; font-size: 0.82rem; color: #334155; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-x { cursor: pointer; color: #94a3b8; font-size: 0.7rem; }
+.chip-x:hover { color: #ef4444; }
+
+/* ── Step option ── */
+.step-opt { display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid; padding: 6px 8px; border-radius: 0 6px 6px 0; background: #f8fafc; }
+.step-num-badge { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.step-opt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.step-opt-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.step-opt-name { flex: 1; font-weight: 600; font-size: 0.875rem; color: #1e293b; }
+.step-status-tag { font-size: 0.7rem; font-weight: 600; white-space: nowrap; padding: 1px 7px; border-radius: 10px; border: 1px solid; display: flex; align-items: center; gap: 3px; }
+.step-opt-dates { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #64748b; }
+.step-opt-dates i { font-size: 0.7rem; }
+.step-opt-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+
+/* ── File list ── */
+.file-list { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
+.file-item { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; }
+.file-item i { color: #6b7280; }
+.file-name { flex: 1; font-size: 0.82rem; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+/* ── Calendar section ── */
+.cal-section { 
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #bae6fd; 
+  border-radius: 12px; 
+  padding: 1rem; 
+  margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.1);
+  transition: all 0.2s;
+}
+
+.cal-section:hover {
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+}
+
+.cal-header { 
+  color: #0369a1; 
+  font-weight: 700; 
+  font-size: 0.95rem; 
+  margin-bottom: 0.75rem; 
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+}
+
+.cal-textarea { 
+  width: 100%; 
+  border: 2px solid #bae6fd; 
+  border-radius: 8px; 
+  padding: 0.75rem; 
+  font-family: inherit; 
+  font-size: 0.9rem; 
+  resize: vertical; 
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.cal-textarea:focus { 
+  outline: none; 
+  border-color: #38bdf8; 
+  box-shadow: 0 0 0 3px rgba(56,189,248,0.15); 
+}
+
+.teams-toggle { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+}
+
+.teams-label { 
+  font-size: 0.9rem; 
+  font-weight: 600; 
+  color: #1d4ed8; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px;
+  transition: color 0.2s;
+}
+
+.teams-label:hover {
+  color: #1e40af;
+}
+
+.meeting-time-grid { 
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(254, 252, 232, 0.5), rgba(253, 246, 178, 0.3));
+  border: 2px dashed #fbbf24;
+  border-radius: 8px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.meeting-time-field {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-bottom: 8px;
 }
-.entry-num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #4A90E2;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 700;
+
+.meeting-time-separator {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #f59e0b;
+  padding-bottom: 0.25rem;
   flex-shrink: 0;
 }
-.entry-calendar-section {
-  background: #f8f9ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin-top: 4px;
-}
 
-.task-dropdown {
-  width: 100%;
-  max-width: 100%;
-}
-
-.task-dropdown :deep(.p-dropdown) {
+.meeting-time-input {
   width: 100% !important;
-  max-width: 100% !important;
-}
-
-.task-dropdown :deep(.p-dropdown-label) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.task-dropdown :deep(.p-dropdown-panel) {
-  position: fixed !important;
-  max-width: calc(100vw - 2rem) !important;
-  left: 1rem !important;
-  right: 1rem !important;
-  width: calc(100vw - 2rem) !important;
-}
-
-.task-dropdown :deep(.p-dropdown-items-wrapper) {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-.task-dropdown :deep(.p-dropdown-item) {
-  white-space: normal;
-  word-break: break-word;
-  max-width: 100%;
-}
-
-.task-selected,
-.task-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  max-width: 100%;
-  width: 100%;
-  flex-wrap: wrap;
-}
-.task-option-assigned {
-  background: #fefce8;
-  border-left: 3px solid #f59e0b;
-  padding: 4px 6px;
-  border-radius: 4px;
-  margin: -4px -6px;
-}
-.assigned-badge {
-  background: #f59e0b;
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.so-badge {
-  flex-shrink: 0;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.task-name-text {
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-  white-space: normal;
-  line-height: 1.4;
-}
-
-.selected-step {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding-right: 2rem;
-}
-
-.workflow-dropdown :deep(.p-dropdown-clear-icon) {
-  right: 2.5rem;
-}
-
-.step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
-.step-option {
-  padding: 0.5rem 0.75rem;
-  border-left: 4px solid #9ca3af;
-  margin: 0.25rem 0;
-  border-radius: 0 4px 4px 0;
-  background: #f8fafc;
-}
-
-.step-header-option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.step-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #9ca3af;
-  color: white;
-  border-radius: 50%;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-
-.step-desc {
-  color: #64748b;
-  font-size: 0.85rem;
-  margin: 0.25rem 0 0.25rem 2rem;
-  line-height: 1.4;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.step-meta {
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.25rem;
-  margin-left: 2rem;
-  font-size: 0.8rem;
-  flex-wrap: wrap;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #64748b;
-}
-
-.meta-item i {
-  font-size: 0.7rem;
-}
-
-.meta-item.status {
-  color: #10b981;
-}
-
-.selected-steps-detail {
-  margin-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.selected-step-item {
-  padding: 0.75rem;
-  border-left: 4px solid #9ca3af;
-  border-radius: 0 6px 6px 0;
-  background: #f8fafc;
-}
-
-.step-status-tag {
-  font-size: 0.7rem;
-  padding: 0.15rem 0.5rem;
-  border-radius: 10px;
-  color: white;
-  margin-left: auto;
-}
-
-.selected-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  width: 100%;
-}
-
-.step-chip {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem 0.6rem;
-  border-left: 3px solid;
-  border-radius: 0 6px 6px 0;
-  font-size: 0.85rem;
-}
-
-.chip-main {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.chip-badge {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 0.7rem;
-  font-weight: bold;
-  flex-shrink: 0;
-}
-
-.chip-name {
-  font-weight: 500;
-  color: #334155;
-}
-
-.chip-status {
-  font-size: 0.75rem;
-  margin-left: auto;
-}
-
-.chip-remove {
-  cursor: pointer;
-  color: #94a3b8;
-  padding: 0.2rem;
-  margin-left: 0.25rem;
-}
-
-.chip-remove:hover {
-  color: #ef4444;
-}
-
-.chip-details {
-  display: flex;
-  gap: 1rem;
-  margin-left: 1.75rem;
-  font-size: 0.75rem;
-}
-
-.chip-desc {
-  margin-left: 1.75rem;
-  font-size: 0.8rem;
-  color: #64748b;
-  line-height: 1.3;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.chip-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #64748b;
-  flex-wrap: wrap;
-}
-
-.chip-meta i {
-  font-size: 0.65rem;
-}
-
-.user-badge, .user-badge-mini {
-  background: #e0e7ff;
-  color: #4338ca;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 500;
-}
-
-.user-badge-mini {
-  font-size: 0.65rem;
-  padding: 0.1rem 0.3rem;
-}
-
-.project-badge-mini {
-  padding: 0.1rem 0.35rem;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 500;
-}
-
-.step-status-inline {
-  margin-left: auto;
-  font-size: 0.75rem;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.step-status-inline i {
-  font-size: 0.5rem;
-}
-
-.placeholder-text {
-  color: #94a3b8;
-}
-
-.workflow-preview {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f8fafc;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
-
-.workflow-steps-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.workflow-step-item {
-  display: flex;
-  gap: 1rem;
-  padding: 0.75rem;
-  transition: all 0.2s;
-  border-radius: 6px;
-}
-
-.workflow-step-item.active {
-  background: #e0f2fe;
-  border-left: 3px solid #0284c7;
-}
-
-.step-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.step-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
-  z-index: 1;
-}
-
-.workflow-step-item.active .step-circle {
-  background: linear-gradient(135deg, #0284c7, #0369a1);
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
-  transform: scale(1.1);
-}
-
-.step-line {
-  width: 3px;
-  flex: 1;
-  background: linear-gradient(to bottom, #3b82f6, #93c5fd);
-  margin-top: 0.25rem;
-  min-height: 30px;
-}
-
-.step-content-preview {
-  flex: 1;
-  padding-top: 0.25rem;
-}
-
-.step-title {
-  font-weight: 600;
-  color: #1e293b;
-  font-size: 0.95rem;
-  margin-bottom: 0.25rem;
-}
-
-.step-subtitle {
-  color: #64748b;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-.daily-work-form {
-  padding: 1rem;
-}
-
-.input-group-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-@media (max-width: 768px) {
-  .input-group-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.time-range-group .time-range-inputs,
-.entry-time-group .time-range-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.time-range-group .time-input,
-.entry-time-group .time-input,
-.entry-time-inline .time-input {
-  width: 72px;
   text-align: center;
-}
-
-.time-range-group .time-separator,
-.entry-time-group .time-separator,
-.entry-time-inline .time-separator {
-  font-weight: bold;
-  color: #6c757d;
-}
-
-.time-range-group .time-total,
-.entry-time-group .time-total,
-.entry-time-inline .time-total {
-  font-size: 0.85rem;
-  color: #3b82f6;
+  font-size: 1.1rem;
   font-weight: 600;
-  white-space: nowrap;
-}
-
-.entry-header-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-
-.entry-header-row .task-dropdown {
-  flex: 1;
-  min-width: 0;
-}
-
-.entry-time-inline {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  padding: 0.75rem !important;
+  border: 2px solid #fbbf24 !important;
   border-radius: 8px;
-  padding: 4px 10px;
-  flex-shrink: 0;
-}
-
-.entry-time-inline .time-input {
-  width: 72px !important;
-  text-align: center;
-  padding: 0.35rem 0.5rem !important;
-  font-size: 0.9rem;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.entry-time-inline .time-separator {
-  font-weight: 600;
-  color: #94a3b8;
-  font-size: 0.9rem;
-}
-
-.entry-time-inline .time-total {
-  font-size: 0.8rem;
-  color: #3b82f6;
-  font-weight: 600;
-  white-space: nowrap;
-  min-width: 60px;
-  padding-left: 4px;
-  border-left: 1px solid #e2e8f0;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* Attendees Section Styling */
-.colleague-search {
-  margin-bottom: 1rem;
-  width: 100%;
-}
-
-.colleague-search :deep(.p-autocomplete) {
-  width: 100%;
-}
-
-.colleague-search :deep(.p-autocomplete-input) {
-  width: 100%;
-}
-
-.email-input-section {
-  margin-bottom: 1.5rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.input-with-button {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  width: 100%;
-}
-
-.input-with-button input {
-  flex: 1;
-  min-width: 0;
-}
-
-.add-email-btn {
-  min-width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  background: #007bff;
-  border: none;
-  color: white;
-  transition: all 0.2s ease;
-}
-
-.add-email-btn:hover:not(:disabled) {
-  background: #0056b3;
-  transform: translateY(-1px);
-}
-
-.add-email-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-}
-
-.selected-attendees {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.attendees-title {
-  margin: 0 0 0.75rem 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #495057;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.attendees-title::before {
-  content: '👥';
-  font-size: 1rem;
-}
-
-.attendees-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.attendee-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.attendee-card:hover {
-  border-color: #007bff;
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
-}
-
-.attendee-details {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.attendee-name {
-  font-weight: 500;
-  color: #212529;
-  font-size: 0.9rem;
-  word-break: break-all;
-  overflow-wrap: break-word;
-}
-
-.attendee-position,
-.attendee-department {
-  font-size: 0.8rem;
-  color: #6c757d;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.attendee-position i,
-.attendee-department i {
-  font-size: 0.7rem;
-}
-
-.remove-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #dc3545;
-  border: none;
-  color: white;
-  transition: all 0.2s ease;
-}
-
-.remove-btn:hover {
-  background: #c82333;
-  transform: scale(1.1);
-}
-
-.no-attendees {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 2rem;
-  color: #6c757d;
-  font-style: italic;
-  background: #f8f9fa;
-  border: 2px dashed #dee2e6;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.no-attendees i {
-  font-size: 1.2rem;
-  opacity: 0.7;
-}
-
-/* User Option Styling */
-.user-option {
-  padding: 0.5rem 0;
-}
-
-.user-name {
-  font-weight: 500;
-  color: #212529;
-  font-size: 0.9rem;
-}
-
-.user-role {
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-/* Input Styling */
-.corporate-input {
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.corporate-input:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  outline: none;
-}
-
-.field-hint {
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-}
-
-/* Event Details Section */
-.event-details-section {
-  margin-top: 0.5rem;
-}
-
-.corporate-textarea {
-  width: 100%;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 100px;
-  transition: all 0.2s ease;
   background: #fff;
+  transition: all 0.2s;
 }
 
-.corporate-textarea:focus {
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-  outline: none;
+.meeting-time-input:focus {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2) !important;
 }
 
-.corporate-textarea::placeholder {
-  color: #6c757d;
-  font-style: italic;
-}
-
-.field-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin-top: 0.5rem;
-  padding: 0.5rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border-left: 3px solid #ffc107;
-}
-
-.field-hint i {
-  color: #ffc107;
-  font-size: 0.9rem;
-}
-
-/* Teams Meeting Section */
-.event-details-group {
-  margin-top: 1.5rem;
-}
-
-.teams-meeting-section {
-  padding: 1rem;
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  border: 1px solid #bbdefb;
-  border-radius: 8px;
-  margin-top: 1rem;
-}
-
-.teams-meeting-section .checkbox-group {
-  margin-bottom: 0.5rem;
-}
-
-.teams-meeting-section .checkbox-label {
-  font-weight: 500;
-  color: #1976d2;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.teams-meeting-section .checkbox-label i {
-  color: #1976d2;
-  font-size: 1.1rem;
-}
-
-.teams-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #666;
-  font-size: 0.8rem;
-  font-style: italic;
-  margin-top: 0.5rem;
-}
-
-.teams-hint i {
-  color: #1976d2;
-  font-size: 0.9rem;
-}
-
-.calendar-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px solid #dee2e6;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  transition: all 0.3s ease;
-}
-
-.calendar-section:hover {
-  border-color: #007bff;
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
-}
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 0.75rem;
-}
-
-.calendar-main-label {
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #495057;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: color 0.2s ease;
-}
-
-.calendar-main-label i {
-  font-size: 1.2rem;
-  color: #007bff;
-}
-
-.calendar-description {
-  font-size: 0.9rem;
-  color: #6c757d;
-  line-height: 1.4;
-  margin-left: 2.5rem;
-}
-
-.calendar-options {
-  margin: 1.5rem 0;
-  padding: 2rem;
-  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
-  border: 2px solid #3b82f6;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
-  animation: slideDown 0.3s ease-out;
+.meeting-time-input.p-invalid {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 
 @keyframes slideDown {
@@ -1778,464 +908,206 @@ export default {
     opacity: 0;
     transform: translateY(-10px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.options-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e0e7ff;
+/* ── Actions ── */
+.form-actions { 
+  display: flex; 
+  gap: 1rem; 
+  justify-content: flex-end; 
+  padding: 1.5rem 0 0.5rem; 
+  margin-top: 1rem;
+  border-top: 2px solid #e2e8f0; 
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(to top, #ffffff 80%, transparent);
+  z-index: 10;
 }
 
-.calendar-main-label {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+.form-actions :deep(.p-button) {
+  min-width: 140px;
   font-weight: 600;
-  color: #1e40af;
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-.calendar-main-label i {
-  font-size: 1.3rem;
-  color: #3b82f6;
-}
-
-.input-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-.input-label i {
-  color: #3b82f6;
-  font-size: 1rem;
-}
-
-.teams-meeting-section {
-  background: #f0f9ff;
-  padding: 1.25rem;
-  border-radius: 12px;
-  border: 2px solid #bfdbfe;
-}
-
-.checkbox-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-  color: #1e40af;
-  font-size: 1rem;
-  cursor: pointer;
-  margin: 0;
-}
-
-.checkbox-label i {
-  color: #3b82f6;
-  font-size: 1.1rem;
-}
-
-.teams-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #64748b;
-  font-size: 0.85rem;
-  margin-left: 2rem;
-}
-
-.teams-hint i {
-  color: #3b82f6;
-}
-
-.event-details-group {
-  margin: 1.5rem 0;
-}
-
-.event-details-group textarea {
-  border: 2px solid #e0e7ff;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  padding: 0.75rem;
-  font-size: 0.95rem;
   transition: all 0.2s;
 }
 
-.event-details-group textarea:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  outline: none;
+.form-actions :deep(.p-button-success) {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.attendees-section {
-  margin-top: 2rem;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  box-sizing: border-box;
+.form-actions :deep(.p-button-success:hover) {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  transform: translateY(-2px);
 }
 
-.attendees-section :deep(.p-autocomplete) {
-  width: 100% !important;
-  max-width: 100% !important;
+.form-actions :deep(.p-button-secondary) {
+  background: #f1f5f9;
+  color: #475569;
+  border: 2px solid #e2e8f0;
 }
 
-.attendees-section :deep(.p-autocomplete-input) {
-  width: 100% !important;
-  text-overflow: ellipsis;
+.form-actions :deep(.p-button-secondary:hover) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
 }
 
-.attendees-section :deep(.p-autocomplete-panel) {
-  position: fixed !important;
+/* ── Dropdown panel fix ── */
+:deep(.p-dropdown-panel), :deep(.p-multiselect-panel) {
   max-width: calc(100vw - 2rem) !important;
-  left: 1rem !important;
-  right: 1rem !important;
-  width: calc(100vw - 2rem) !important;
 }
 
-.attendees-section :deep(.p-autocomplete-items) {
-  max-width: 100%;
-}
-
-.attendees-section :deep(.p-autocomplete-item) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.attendees-section .user-option {
-  max-width: 100%;
-  overflow: hidden;
-}
-
-.attendees-section .user-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.input-group-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+/* ── Attendees Section ── */
+.attendees-section {
   margin-top: 1rem;
   padding: 1rem;
-  background: #fefce8;
+  background: rgba(255, 255, 255, 0.7);
   border-radius: 8px;
-  border: 2px dashed #fbbf24;
+  border: 2px dashed #bae6fd;
+  animation: slideDown 0.3s ease-out;
 }
 
-.input-group-row .input-label {
-  color: #92400e;
+.attendee-option {
+  padding: 0.5rem;
 }
 
-.input-group-row .input-label i {
-  color: #f59e0b;
+.attendee-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9rem;
 }
 
-.field-hint {
-  color: #6c757d;
-  font-style: italic;
-  margin-top: 0.25rem;
-  display: block;
+.attendee-email {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.15rem;
 }
 
-.full-width {
-  grid-column: 1 / -1;
-}
-
-.corporate-input,
-.corporate-dropdown {
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.corporate-input:focus,
-.corporate-dropdown:focus {
-  border-color: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
-  outline: none;
-}
-
-.status-display,
-.status-option {
+.attendees-list {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.emoji {
-  font-size: 1.2rem;
-}
-
-.readonly-field {
-  background: #f8f9fa;
-  color: #6c757d;
-}
-
-.form-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  padding-top: 1rem;
-  border-top: 2px solid #e9ecef;
-}
-
-.form-actions .p-button {
-  min-width: 120px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 500;
-}
-
-.file-upload-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.file-input {
-  display: none;
-}
-
-.file-list {
-  display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.75rem;
-  padding: 0.75rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
 }
 
-.file-item {
+.attendee-chip {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  background: white;
-  border-radius: 4px;
-  border: 1px solid #e9ecef;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border: 1px solid #93c5fd;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #1e40af;
+  transition: all 0.2s;
 }
 
-.file-item i {
-  color: #6c757d;
-  font-size: 1rem;
+.attendee-chip:hover {
+  background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
-.file-name {
-  flex: 1;
-  font-size: 0.9rem;
-  color: #495057;
-  word-break: break-all;
-}
-
-:deep(.p-dropdown) {
-  width: 100%;
-}
-
-:deep(.p-calendar) {
-  width: 100%;
-}
-
-:deep(.p-inputtext) {
-  width: 100%;
-}
-
-:deep(.p-textarea) {
-  width: 100%;
-  resize: vertical;
-}
-
-:deep(.p-divider) {
-  margin: 1.5rem 0;
-}
-
-.status-display,
-.status-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-display .emoji,
-.status-option .emoji {
-  font-size: 16px;
-}
-
-.status-display i,
-.status-option i {
-  color: #4A90E2;
-  font-size: 14px;
-}
-
-@media (max-width: 768px) {
-  .daily-work-form {
-    padding: 0.75rem;
-  }
-
-  .form-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .p-button {
-    width: 100%;
-  }
-
-  .corporate-input,
-  .corporate-dropdown {
-    font-size: 16px !important;
-  }
-
-  .attendees-section {
-    width: 100%;
-    overflow: hidden;
-  }
-
-  .colleague-search :deep(.p-autocomplete) {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .colleague-search :deep(.p-autocomplete-input) {
-    width: 100% !important;
-  }
-
-  .attendee-name {
-    word-break: break-all;
-    font-size: 0.85rem;
-  }
-
-  .input-with-button input {
-    min-width: 0;
-  }
-
-  .selected-attendees {
-    padding: 0.75rem;
-  }
-
-  .attendee-card {
-    padding: 0.5rem;
-  }
-
-  .colleague-search :deep(.p-autocomplete-dropdown) {
-    width: 40px !important;
-  }
-
-  /* Step chips responsive */
-  .selected-chips {
-    gap: 0.35rem;
-  }
-
-  .step-chip {
-    padding: 0.4rem 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .chip-name {
-    font-size: 0.8rem;
-    word-break: break-word;
-  }
-
-  .chip-details {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-left: 1.5rem;
-    font-size: 0.7rem;
-  }
-
-  .chip-badge {
-    width: 18px;
-    height: 18px;
-    font-size: 0.65rem;
-  }
-
-  /* Dropdown options responsive */
-  .step-option {
-    padding: 0.4rem 0.5rem;
-  }
-
-  .step-badge {
-    width: 20px;
-    height: 20px;
-    font-size: 0.65rem;
-  }
-
-  .step-desc {
-    font-size: 0.75rem;
-    margin-left: 1.5rem;
-  }
-
-  .step-meta {
-    margin-left: 1.5rem;
-    font-size: 0.7rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .daily-work-form {
-    padding: 0.5rem;
-  }
-
-  .input-label {
-    font-size: 0.8rem;
-  }
-
-  .form-grid {
-    gap: 0.75rem;
-  }
-
-  .chip-main {
-    flex-wrap: wrap;
-    gap: 0.3rem;
-  }
-
-  .chip-status {
-    margin-left: 0;
-    font-size: 0.65rem;
-  }
-
-  .chip-details {
-    margin-left: 0;
-  }
-}
-
-.project-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 10px;
+.attendee-chip i.pi-user {
   font-size: 0.75rem;
+}
+
+.attendee-chip-name {
   font-weight: 500;
+}
+
+.attendee-chip-remove {
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.2rem;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.attendee-chip-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .dwf { padding: 0; }
+  .section { 
+    padding: 1rem; 
+    margin-bottom: 1rem;
+    border-radius: 8px;
+  }
+  .entry-card { 
+    padding: 1rem; 
+    border-radius: 8px;
+  }
+
+  .entry-top { flex-wrap: wrap; gap: 8px; }
+  .entry-dropdown-wrap { order: 3; width: 100%; }
+  .entry-badge { order: 1; width: 28px; height: 28px; font-size: 0.8rem; }
+  .entry-top .p-button { order: 2; margin-left: auto; }
+
+  .time-row { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; }
+  .time-fields { flex: 1; min-width: 0; gap: 0.5rem; }
+  .time-field { flex: 1; min-width: 0; }
+  .time-input { width: 100% !important; min-width: 0; font-size: 1rem; padding: 0.5rem !important; }
+  .time-sep { flex-shrink: 0; }
+  .time-total-pill { width: 100%; justify-content: center; font-size: 0.85rem; padding: 6px 12px; }
+
+  .meeting-time-grid { 
+    flex-direction: column; 
+    gap: 0.75rem;
+    align-items: stretch;
+  }
+  
+  .meeting-time-separator {
+    display: none;
+  }
+  
+  .meeting-time-input {
+    font-size: 1rem;
+    padding: 0.65rem !important;
+  }
+  
+  .form-actions { 
+    flex-direction: column; 
+    gap: 0.75rem;
+    padding: 1rem 0;
+    position: relative;
+  }
+  .form-actions :deep(.p-button) { 
+    width: 100%; 
+    min-width: auto;
+  }
+
+  .section-title {
+    font-size: 0.95rem;
+  }
+
+  .cal-section {
+    padding: 0.75rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .dwf { padding: 0; }
+  .section { padding: 1.25rem; }
+  .entry-card { padding: 1.25rem; }
+  .time-input { width: 85px !important; }
+}
+
+@media (min-width: 1025px) {
+  .dwf { padding: 0; }
+  .section { padding: 1.5rem; }
+  .entry-card { padding: 1.5rem; }
+  .time-input { width: 90px !important; }
 }
 </style>

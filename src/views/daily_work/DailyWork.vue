@@ -35,7 +35,21 @@
           </div>
           <div class="proj-filter-row">
             <Dropdown v-model="filterTask" :options="taskOptions" optionLabel="label" optionValue="value"
-              placeholder="🔍 กรองโครงการ" showClear filter filterPlaceholder="ค้นหา..." class="proj-dropdown" />
+              placeholder="🔍 กรองโครงการ" showClear filter filterPlaceholder="ค้นหา..." class="proj-dropdown">
+              <template #value="{ value }">
+                <div v-if="value" class="filter-val">
+                  <span v-if="taskOptions.find(t=>t.value===value)?.so" class="filter-so-tag">{{ taskOptions.find(t=>t.value===value).so }}</span>
+                  <span>{{ taskOptions.find(t=>t.value===value)?.name }}</span>
+                </div>
+                <span v-else>🔍 กรองโครงการ</span>
+              </template>
+              <template #option="{ option }">
+                <div class="filter-opt">
+                  <span v-if="option.so" class="filter-so-tag">{{ option.so }}</span>
+                  <span>{{ option.name }}</span>
+                </div>
+              </template>
+            </Dropdown>
             <Dropdown v-model="filterStep" :options="stepOptions" optionLabel="label" optionValue="value"
               placeholder="🔍 กรองขั้นตอน" showClear filter filterPlaceholder="ค้นหา..." class="step-dropdown" :disabled="!filterTask" />
           </div>
@@ -45,8 +59,22 @@
     </div>
 
     <!-- Work Form Dialog -->
-    <Dialog v-model:visible="showWorkDialog" modal header="ลงตารางงาน" :style="{ width: '95vw', height: '90vh' }" :draggable="false">
-      <DailyWorkForm :key="dialogKey" ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
+    <Dialog v-model:visible="showWorkDialog" modal 
+      class="work-dialog"
+      :style="{ width: 'min(1400px, 95vw)', maxHeight: '95vh' }"
+      :contentStyle="{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '85vh' }"
+      :breakpoints="{ '960px': '90vw', '640px': '100vw' }"
+      :draggable="false"
+      :dismissableMask="false">
+      <template #header>
+        <div class="dialog-header-custom">
+          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #3b82f6;"></i>
+          <span class="dialog-title">ลงตารางงานรายวัน</span>
+        </div>
+      </template>
+      <div style="flex: 1; overflow-y: auto; padding: 1.5rem;">
+        <DailyWorkForm :key="dialogKey" ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
+      </div>
     </Dialog>
   </div>
 </template>
@@ -102,10 +130,14 @@ export default {
     taskOptions() {
       const map = {}
       this.workRecords.forEach(r => {
-        if (r.task_id && r.task_name) map[r.task_id] = r.task_name
+        if (r.task_id && r.task_name) map[r.task_id] = { name: r.task_name, so: r.so_number || '' }
       })
-      return Object.entries(map).map(([v, l]) => ({ value: v, label: r => r, _v: v, _l: l }))
-        .map(x => ({ value: x._v, label: x._l }))
+      return Object.entries(map).map(([v, d]) => ({
+        value: v,
+        label: d.so ? `[${d.so}] ${d.name}` : d.name,
+        so: d.so,
+        name: d.name
+      }))
     },
     stepOptions() {
       if (!this.filterTask) return []
@@ -226,6 +258,7 @@ export default {
   gap: 8px;
   align-items: center;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .proj-dropdown, .step-dropdown {
@@ -235,6 +268,24 @@ export default {
 
 .step-dropdown {
   min-width: 180px;
+}
+
+.filter-opt, .filter-val {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-so-tag {
+  background: #3b82f6;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filter-buttons {
@@ -498,6 +549,20 @@ export default {
     flex-direction: column;
   }
 
+  .right-filters {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .proj-filter-row {
+    flex-direction: column;
+  }
+
+  .proj-dropdown, .step-dropdown {
+    min-width: 0;
+    width: 100% !important;
+  }
+
   .work-btn, .task-btn {
     width: 100% !important;
     min-width: auto !important;
@@ -542,5 +607,127 @@ export default {
     padding: 0.5rem 0.75rem;
     font-size: 0.85rem;
   }
+}
+
+/* Dialog Header Custom */
+.dialog-header-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.dialog-title {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+:deep(.work-dialog) {
+  max-width: 95vw;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.work-dialog .p-dialog-header) {
+  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+  border-bottom: 2px solid #bfdbfe;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px 16px 0 0;
+}
+
+:deep(.work-dialog .p-dialog-header-icon) {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: #3b82f6;
+  transition: all 0.2s;
+}
+
+:deep(.work-dialog .p-dialog-header-icon:hover) {
+  background: #dbeafe;
+  color: #1d4ed8;
+  transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+  :deep(.work-dialog) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    top: 0 !important;
+    left: 0 !important;
+    border-radius: 0 !important;
+    transform: none !important;
+  }
+
+  :deep(.work-dialog .p-dialog-header) {
+    border-radius: 0;
+    padding: 1rem;
+  }
+
+  :deep(.work-dialog .p-dialog-content) {
+    height: calc(100dvh - 56px) !important;
+    max-height: calc(100dvh - 56px) !important;
+  }
+
+  .dialog-header-custom {
+    font-size: 1.1rem;
+  }
+}
+
+</style>
+
+<style>
+/* global: fix dropdown/multiselect panel — PrimeVue teleports to body */
+@media (max-width: 640px) {
+  .p-dropdown-panel,
+  .p-multiselect-panel {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    left: 0.5rem !important;
+    max-height: 50vh !important;
+    z-index: 9999 !important;
+    box-sizing: border-box !important;
+  }
+  .p-dropdown-panel .p-dropdown-items-wrapper,
+  .p-multiselect-panel .p-multiselect-items-wrapper {
+    max-height: 44vh !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .p-dropdown-panel,
+  .p-multiselect-panel {
+    max-width: min(600px, 90vw) !important;
+    z-index: 9999 !important;
+  }
+}
+
+/* dropdown items responsive */
+.p-dropdown-panel .p-dropdown-item,
+.p-multiselect-panel .p-multiselect-item {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  padding: 0.6rem 0.75rem !important;
+}
+
+.p-dropdown-panel .p-dropdown-item:last-child,
+.p-multiselect-panel .p-multiselect-item:last-child {
+  border-bottom: none !important;
+}
+
+.p-dropdown-panel .p-dropdown-items,
+.p-multiselect-panel .p-multiselect-items {
+  overflow-x: hidden !important;
+  padding: 0 !important;
 }
 </style>

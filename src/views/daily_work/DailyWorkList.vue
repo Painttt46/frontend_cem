@@ -167,7 +167,10 @@
               </div>
               <span v-else style="display:block;text-align:center"></span>
             </template>
-            <span v-else style="display:block;text-align:center"></span>
+            <template v-else>
+              <Button icon="pi pi-list-check" size="small" severity="info" outlined
+                @click="openManageGroup(slotProps.data)" v-tooltip="'จัดการโครงการ'" />
+            </template>
           </template>
         </Column>
 
@@ -289,6 +292,40 @@
   <!-- Full Image Dialog -->
   <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
     <img :src="fullImageUrl" class="full-image" />
+  </Dialog>
+
+  <!-- Manage Group Dialog -->
+  <Dialog v-model:visible="manageGroupDialog" modal header="จัดการโครงการในกลุ่ม" :style="{ width: '90vw', maxWidth: '700px' }" :draggable="false">
+    <div v-if="manageGroupData" class="manage-group-wrap">
+      <div class="manage-group-date">
+        <i class="pi pi-calendar"></i> {{ formatDate(manageGroupData.work_date) }}
+        <span class="manage-group-count">{{ manageGroupData.projects.length }} โครงการ</span>
+      </div>
+      <div class="manage-proj-list">
+        <div v-for="proj in manageGroupData.projects" :key="proj.id" class="manage-proj-item">
+          <div class="manage-proj-info">
+            <span class="manage-proj-num">{{ manageGroupData.projects.indexOf(proj) + 1 }}</span>
+            <div class="manage-proj-detail">
+              <div class="manage-proj-name">
+                <span v-if="proj.so_number" class="so-badge-sm">{{ proj.so_number }}</span>
+                {{ proj.task_name }}
+              </div>
+              <div class="manage-proj-time">
+                <i class="pi pi-clock"></i> {{ formatTime(proj.start_time) }} – {{ formatTime(proj.end_time) }}
+              </div>
+            </div>
+          </div>
+          <div class="manage-proj-actions">
+            <Button icon="pi pi-pencil" size="small" severity="warning" text
+              v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))"
+              @click="editRecord(proj)" v-tooltip="'แก้ไข'" />
+            <Button icon="pi pi-trash" size="small" severity="danger" text
+              v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))"
+              @click="confirmCancel(proj); manageGroupDialog = false" v-tooltip="'ลบ'" />
+          </div>
+        </div>
+      </div>
+    </div>
   </Dialog>
 
   <!-- Edit Record Dialog -->
@@ -502,6 +539,8 @@ export default {
       selectedRecordFiles: [],
       fullImageDialog: false,
       fullImageUrl: '',
+      manageGroupDialog: false,
+      manageGroupData: null,
       editDialog: false,
       cancelDialog: false,
       cancelDeletePermanently: false,
@@ -898,6 +937,10 @@ export default {
         try { files = JSON.parse(files) } catch { files = [] }
       }
       return files && Array.isArray(files) && files.length > 0
+    },
+    openManageGroup(group) {
+      this.manageGroupData = group
+      this.manageGroupDialog = true
     },
     getFilesCount(record) {
       let files = record.files
@@ -2054,4 +2097,23 @@ export default {
   font-size: 0.65rem;
   font-weight: 500;
 }
+
+/* ── Manage Group Dialog ── */
+.manage-group-wrap { display: flex; flex-direction: column; gap: 1rem; }
+.manage-group-date { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #374151; font-size: 0.95rem; }
+.manage-group-count { background: #dbeafe; color: #1d4ed8; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 700; margin-left: 4px; }
+.manage-proj-list { display: flex; flex-direction: column; gap: 8px; }
+.manage-proj-item {
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6;
+  border-radius: 8px; padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+.manage-proj-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; color: #fff; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.manage-proj-detail { flex: 1; min-width: 0; }
+.manage-proj-name { font-weight: 600; color: #1e293b; font-size: 0.875rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.manage-proj-time { font-size: 0.78rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.manage-proj-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.so-badge-sm { background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
 </style>
