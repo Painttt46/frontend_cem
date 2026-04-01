@@ -57,6 +57,7 @@
             <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
+                :key="'start-' + formData.leaveType"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" placeholder="เลือกวันที่"
                 :viewDate="formData.startDate || calendarViewDate"
@@ -77,6 +78,7 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
+                :key="'end-' + formData.leaveType"
                 :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่"
                 :viewDate="formData.endDate || formData.startDate || calendarViewDate"
@@ -313,7 +315,7 @@ export default {
       return this.currentUserPosition
     },
     selectedLeaveTypeAdvanceDays() {
-      if (!this.formData.leaveType) return 0
+      if (!this.formData.leaveType || this.formData.leaveType === 'sick' || this.formData.leaveType === 'ลาป่วย') return 0
       const type = this.leaveTypes.find(t => t.value === this.formData.leaveType)
       return type?.advance_days || 0
     },
@@ -323,6 +325,13 @@ export default {
         const pastDate = new Date()
         pastDate.setFullYear(pastDate.getFullYear() - 1) // ย้อนหลังได้ 1 ปี
         pastDate.setHours(0, 0, 0, 0)
+        return pastDate
+      }
+
+      // ลาป่วย ย้อนหลังได้ 2 วัน
+      if (this.formData.leaveType === 'sick' || this.formData.leaveType === 'ลาป่วย') {
+        const now = new Date()
+        const pastDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2)
         return pastDate
       }
       
@@ -453,7 +462,7 @@ export default {
     },
     // Check if date is in advance days period (working days)
     isAdvanceDay(dateObj) {
-      if (!this.selectedLeaveTypeAdvanceDays || this.isLevel2Approver) return false
+      if (!this.selectedLeaveTypeAdvanceDays || this.isLevel2Approver || this.formData.leaveType === 'sick' || this.formData.leaveType === 'ลาป่วย') return false
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       const checkDate = new Date(dateObj.year, dateObj.month, dateObj.day)
@@ -669,9 +678,10 @@ export default {
       } else {
         this.selectedQuota = null;
       }
-      
+
       // Clear dates if they're before the new minStartDate
       const minDate = this.minStartDate
+      this.calendarViewDate = new Date(minDate)
       if (this.formData.startDate && new Date(this.formData.startDate) < minDate) {
         this.formData.startDate = null
         this.formData.startTime = null
@@ -766,7 +776,7 @@ export default {
       }
 
       // Check advance days requirement (skip for level 2 approver - can submit retroactive leave)
-      if (!this.isLevel2Approver) {
+      if (!this.isLevel2Approver && this.formData.leaveType !== 'sick' && this.formData.leaveType !== 'ลาป่วย') {
         const selectedLeaveType = this.leaveTypes.find(t => t.value === this.formData.leaveType)
         if (selectedLeaveType && selectedLeaveType.advance_days > 0 && this.formData.startDateTime) {
           const today = new Date()
