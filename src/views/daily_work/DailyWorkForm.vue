@@ -610,6 +610,17 @@ export default {
         })
       }
     },
+    formatDate(date) {
+      if (!date) return null
+      const d = new Date(date)
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    },
+    formatTime(date) {
+      if (!date) return null
+      if (typeof date === 'string' && /^\d{2}:\d{2}/.test(date)) return date.slice(0, 5)
+      const d = new Date(date)
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    },
     resetForm() { location.reload() }
   }
 }
