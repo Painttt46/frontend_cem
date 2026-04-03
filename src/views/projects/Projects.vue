@@ -36,11 +36,15 @@
           </div>
           <div v-if="h.createdList && h.createdList.length" style="margin-bottom:0.75rem">
             <div style="font-size:0.78rem;color:#16a34a;font-weight:600;margin-bottom:4px"><i class="pi pi-plus-circle"></i> โครงการใหม่ ({{ h.createdList.length }})</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:100px;overflow-y:auto">
-              <span v-for="item in h.createdList" :key="item.so || item"
-                style="background:#dcfce7;color:#15803d;border-radius:20px;padding:2px 8px;font-size:0.75rem">
-                <b>{{ item.so || item }}</b>{{ item.name && item.name !== item.so ? ' — ' + item.name : '' }}
-              </span>
+            <div style="display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto">
+              <div v-for="item in h.createdList" :key="item.so || item">
+                <span style="background:#dcfce7;color:#15803d;border-radius:20px;padding:2px 8px;font-size:0.75rem">
+                  <b>{{ item.so || item }}</b>{{ item.name && item.name !== item.so ? ' — ' + item.name : '' }}
+                </span>
+                <div v-if="item.files?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;padding-left:8px">
+                  <span v-for="f in item.files" :key="f" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:1px 6px;font-size:0.7rem">📎 {{ f }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div v-if="h.updatedList && h.updatedList.length">
@@ -58,6 +62,16 @@
                       <span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 6px;font-weight:600">{{ item.changes[key].new || '-' }}</span>
                     </div>
                   </template>
+                  <div v-if="item.changes.files" style="font-size:0.75rem;margin-top:2px">
+                    <div v-if="item.changes.files.added?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:2px">
+                      <span style="color:#64748b;min-width:50px">ไฟล์ใหม่:</span>
+                      <span v-for="f in item.changes.files.added" :key="f" style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 6px;font-weight:600">+ {{ f }}</span>
+                    </div>
+                    <div v-if="item.changes.files.removed?.length" style="display:flex;flex-wrap:wrap;gap:3px">
+                      <span style="color:#64748b;min-width:50px">ลบออก:</span>
+                      <span v-for="f in item.changes.files.removed" :key="f" style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 6px;text-decoration:line-through">- {{ f }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -88,11 +102,15 @@
           <div style="font-weight:600;color:#16a34a;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
             <i class="pi pi-plus-circle"></i> โครงการใหม่ ({{ syncData.createdList.length }})
           </div>
-          <div style="max-height:160px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px;padding:4px">
-            <span v-for="item in syncData.createdList" :key="item.so"
-              style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:0.8rem">
-              <b>{{ item.so }}</b> {{ item.name !== item.so ? '— ' + item.name : '' }}
-            </span>
+          <div style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
+            <div v-for="item in syncData.createdList" :key="item.so">
+              <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:0.8rem">
+                <b>{{ item.so }}</b> {{ item.name !== item.so ? '— ' + item.name : '' }}
+              </span>
+              <div v-if="item.files?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;padding-left:8px">
+                <span v-for="f in item.files" :key="f" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:1px 7px;font-size:0.75rem">📎 {{ f }}</span>
+              </div>
+            </div>
           </div>
         </div>
         <!-- Updated List -->
@@ -113,6 +131,16 @@
                     <span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">{{ item.changes[key].new || '-' }}</span>
                   </div>
                 </template>
+                <div v-if="item.changes.files" style="font-size:0.78rem;margin-top:2px">
+                  <div v-if="item.changes.files.added?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:2px">
+                    <span style="color:#64748b;min-width:50px">ไฟล์ใหม่:</span>
+                    <span v-for="f in item.changes.files.added" :key="f" style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">+ {{ f }}</span>
+                  </div>
+                  <div v-if="item.changes.files.removed?.length" style="display:flex;flex-wrap:wrap;gap:3px">
+                    <span style="color:#64748b;min-width:50px">ลบออก:</span>
+                    <span v-for="f in item.changes.files.removed" :key="f" style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 7px;text-decoration:line-through">- {{ f }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

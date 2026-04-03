@@ -181,9 +181,9 @@
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
-          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+          <img v-if="isImageFile(typeof file === 'object' ? file.name : file)" :src="getFileUrl(typeof file === 'object' ? file.name : file)" class="file-preview" @click="viewFullImage(typeof file === 'object' ? file.name : file)" />
           <i v-else class="pi pi-file file-icon"></i>
-          <span class="file-name">{{ file }}</span>
+          <span class="file-name">{{ typeof file === 'object' ? file.name : file.split('-').slice(2).join('-') || file }}</span>
         </div>
         <Button 
           icon="pi pi-download" 
@@ -980,21 +980,24 @@ export default {
         this.filesDialog = true
       }
     },
-    async downloadFile(fileName) {
+    async downloadFile(file) {
       try {
-        const response = await this.$http.get(`/api/files/download/${fileName}`, {
-          responseType: 'blob'
-        })
-        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const isErp = file && typeof file === 'object' && file.erp
+        const url = isErp
+          ? `/api/erp-sync/file?path=${encodeURIComponent(file.url)}`
+          : `/api/files/download/${file}`
+        const displayName = isErp ? file.name : (file.split('-').slice(2).join('-') || file)
+
+        const response = await this.$http.get(url, { responseType: 'blob' })
+        const blobUrl = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
-        link.href = url
-        link.download = fileName.split('-').slice(2).join('-') || fileName
+        link.href = blobUrl
+        link.download = displayName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
+        window.URL.revokeObjectURL(blobUrl)
       } catch (error) {
-        
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
