@@ -7,7 +7,7 @@
       </div>
 
       <EnhancedDataTable v-else-if="categories.length > 0" :data="enrichedTasks" 
-        :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]" 
+        :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50, 100]" 
         responsiveLayout="scroll" class="history-table" stripedRows>
         
         <Column field="id" header="รหัสงาน" :sortable="true">
