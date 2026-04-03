@@ -265,7 +265,7 @@ const reloadTab = () => {
   showSessionDialog.value = true;
 };
 const locationLogout = () => {
-  localStorage.clear();
+  ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
   sessionStorage.clear();
   window.location.href = "/login";
 };
@@ -278,7 +278,7 @@ const logout = async () => {
     // ignore
   } finally {
     // Clear localStorage และ sessionStorage
-    localStorage.clear();
+    ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
     sessionStorage.clear();
     
     // Clear all cookies

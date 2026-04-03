@@ -15,9 +15,110 @@
         <Button @click="showTaskDialog = true" class="task-btn" icon="pi pi-plus-circle" raised>
           <span class="btn-text">เพิ่มโครงการ</span>
         </Button>
+        <Button @click="syncERP" :loading="syncing" icon="pi pi-refresh" label="Sync ERP" class="sync-btn" raised />
+        <Button @click="showHistory = true" icon="pi pi-history" label="ประวัติ Sync" class="history-btn" raised />
       </div>
       <TaskList ref="taskList" />
     </div>
+
+    <!-- History Dialog -->
+    <Dialog v-model:visible="showHistory" header="ประวัติ Sync ERP" :style="{width:'500px'}" modal :draggable="false">
+      <div v-if="syncHistory.length === 0" style="text-align:center;color:#94a3b8;padding:2rem">ยังไม่มีประวัติ</div>
+      <div v-else>
+        <div v-for="(h, i) in syncHistory" :key="i"
+          style="border:1px solid #e2e8f0;border-radius:10px;padding:1rem;margin-bottom:0.75rem;background:#f8fafc">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <span style="font-weight:600;color:#334155;font-size:0.9rem">{{ h.syncedAt }}</span>
+            <div style="display:flex;gap:0.5rem">
+              <span style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;border-radius:20px;padding:2px 10px;font-size:0.8rem;font-weight:600">+{{ h.created }} ใหม่</span>
+              <span style="background:#dbeafe;color:#2563eb;border:1px solid #93c5fd;border-radius:20px;padding:2px 10px;font-size:0.8rem;font-weight:600">↑{{ h.updated }} อัปเดต</span>
+            </div>
+          </div>
+          <div v-if="h.createdList && h.createdList.length" style="margin-bottom:0.75rem">
+            <div style="font-size:0.78rem;color:#16a34a;font-weight:600;margin-bottom:4px"><i class="pi pi-plus-circle"></i> โครงการใหม่ ({{ h.createdList.length }})</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:100px;overflow-y:auto">
+              <span v-for="item in h.createdList" :key="item.so || item"
+                style="background:#dcfce7;color:#15803d;border-radius:20px;padding:2px 8px;font-size:0.75rem">
+                <b>{{ item.so || item }}</b>{{ item.name && item.name !== item.so ? ' — ' + item.name : '' }}
+              </span>
+            </div>
+          </div>
+          <div v-if="h.updatedList && h.updatedList.length">
+            <div style="font-size:0.78rem;color:#2563eb;font-weight:600;margin-bottom:4px"><i class="pi pi-refresh"></i> อัปเดต ({{ h.updatedList.length }})</div>
+            <div style="display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto">
+              <div v-for="item in h.updatedList" :key="item.so || item"
+                style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:0.8rem">
+                <div style="font-weight:600;color:#1d4ed8"><b>{{ item.so || item }}</b>{{ item.name ? ' — ' + item.name : '' }}</div>
+                <div v-if="item.changes" style="margin-top:4px;display:flex;flex-direction:column;gap:3px">
+                  <template v-for="(label, key) in {task_name:'ชื่อ',sale_owner:'Sales',customer_info:'ลูกค้า',status:'สถานะ'}" :key="key">
+                    <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:6px;font-size:0.75rem">
+                      <span style="color:#64748b;min-width:50px">{{ label }}:</span>
+                      <span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 6px;text-decoration:line-through">{{ item.changes[key].old || '-' }}</span>
+                      <i class="pi pi-arrow-right" style="color:#94a3b8;font-size:0.6rem"></i>
+                      <span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 6px;font-weight:600">{{ item.changes[key].new || '-' }}</span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Dialog>
+
+    <Dialog v-model:visible="showSyncResult" header="ผลการ Sync ERP" :style="{width:'560px'}" modal :draggable="false">
+      <div v-if="syncData" style="padding:0.5rem 0">
+        <!-- Summary -->
+        <div style="display:flex;gap:1rem;margin-bottom:1.25rem">
+          <div style="flex:1;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:1rem;text-align:center">
+            <div style="font-size:1.8rem;font-weight:700;color:#16a34a">{{ syncData.created }}</div>
+            <div style="font-size:0.85rem;color:#15803d;margin-top:2px">โครงการใหม่</div>
+          </div>
+          <div style="flex:1;background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:1rem;text-align:center">
+            <div style="font-size:1.8rem;font-weight:700;color:#2563eb">{{ syncData.updated }}</div>
+            <div style="font-size:0.85rem;color:#1d4ed8;margin-top:2px">อัปเดต</div>
+          </div>
+          <div style="flex:1;background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:1rem;text-align:center">
+            <div style="font-size:1.8rem;font-weight:700;color:#ca8a04">{{ syncData.total }}</div>
+            <div style="font-size:0.85rem;color:#a16207;margin-top:2px">ทั้งหมด</div>
+          </div>
+        </div>
+        <!-- Created List -->
+        <div v-if="syncData.createdList.length" style="margin-bottom:1rem">
+          <div style="font-weight:600;color:#16a34a;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
+            <i class="pi pi-plus-circle"></i> โครงการใหม่ ({{ syncData.createdList.length }})
+          </div>
+          <div style="max-height:160px;overflow-y:auto;display:flex;flex-wrap:wrap;gap:6px;padding:4px">
+            <span v-for="item in syncData.createdList" :key="item.so"
+              style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:0.8rem">
+              <b>{{ item.so }}</b> {{ item.name !== item.so ? '— ' + item.name : '' }}
+            </span>
+          </div>
+        </div>
+        <!-- Updated List -->
+        <div v-if="syncData.updatedList.length">
+          <div style="font-weight:600;color:#2563eb;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
+            <i class="pi pi-refresh"></i> อัปเดต ({{ syncData.updatedList.length }})
+          </div>
+          <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
+            <div v-for="item in syncData.updatedList" :key="item.so"
+              style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:0.82rem">
+              <div style="font-weight:600;color:#1d4ed8"><b>{{ item.so }}</b> — {{ item.name }}</div>
+              <div v-if="item.changes" style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
+                <template v-for="(label, key) in {task_name:'ชื่อ',sale_owner:'Sales',customer_info:'ลูกค้า',status:'สถานะ'}" :key="key">
+                  <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:6px;font-size:0.78rem">
+                    <span style="color:#64748b;min-width:50px">{{ label }}:</span>
+                    <span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 7px;text-decoration:line-through">{{ item.changes[key].old || '-' }}</span>
+                    <i class="pi pi-arrow-right" style="color:#94a3b8;font-size:0.65rem"></i>
+                    <span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">{{ item.changes[key].new || '-' }}</span>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Dialog>
 
     <Dialog v-model:visible="showTaskDialog" modal header="เพิ่มโครงการ" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
       <AddTaskForm @task-added="handleTaskAdded" @close-form="showTaskDialog = false" />
@@ -26,21 +127,59 @@
 </template>
 
 <script>
+import axios from '@/utils/axiosConfig'
+import Dialog from 'primevue/dialog'
 import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
 import TaskList from '@/views/daily_work/TaskList.vue'
 
 export default {
   name: 'ProjectsView',
   components: {
+    Dialog,
     AddTaskForm,
     TaskList
   },
+  async created() {
+    await this.loadSyncHistory()
+  },
   data() {
     return {
-      showTaskDialog: false
+      showTaskDialog: false,
+      syncing: false,
+      syncData: null,
+      showSyncResult: false,
+      syncHistory: [],
+      showHistory: false
     }
   },
   methods: {
+    async loadSyncHistory() {
+      try {
+        const res = await axios.get('/api/erp-sync/history', { silent: true })
+        this.syncHistory = res.data.map(h => ({
+          ...h,
+          createdList: h.created_list || [],
+          updatedList: h.updated_list || [],
+          syncedAt: new Date(h.synced_at).toLocaleString('th-TH')
+        }))
+      } catch (e) { console.error(e) }
+    },
+    async syncERP() {
+      if (this.syncing) return
+      this.syncing = true
+      try {
+        const res = await axios.post('/api/erp-sync/projects', {}, { timeout: 300000, silent: true })
+        console.log('[syncERP] response:', res.data)
+        this.syncData = { ...res.data, syncedAt: new Date().toLocaleString('th-TH') }
+        this.showSyncResult = true
+        await this.loadSyncHistory()
+        if (this.$refs.taskList) this.$refs.taskList.loadTasks()
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.syncing = false
+      }
+    },
     handleTaskAdded() {
       this.showTaskDialog = false
       if (this.$refs.taskList) {
@@ -120,8 +259,42 @@ export default {
   gap: 1rem;
   margin-bottom: 1.5rem;
   margin-top: 0rem;
-  justify-content: flex-start;
+  justify-content: space-between;
+  align-items: center;
   flex-wrap: wrap;
+}
+
+.sync-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  border: none !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+  transition: all 0.3s ease !important;
+  margin-left: auto !important;
+}
+
+.sync-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6) !important;
+}
+
+.history-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+  border: none !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4) !important;
+  transition: all 0.3s ease !important;
+}
+
+.history-btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.6) !important;
 }
 
 .task-btn {

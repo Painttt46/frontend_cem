@@ -68,7 +68,7 @@ axios.interceptors.response.use(
       switch (status) {
         case 401:
           // Unauthorized - clear all auth data and redirect to login
-          localStorage.clear()
+          ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k))
           sessionStorage.clear()
           document.cookie.split(";").forEach((c) => {
             document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")

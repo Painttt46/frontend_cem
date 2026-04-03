@@ -146,9 +146,26 @@ export default {
       allUsers: []
     }
   },
+  watch: {
+    formData: {
+      deep: true,
+      handler(val) {
+        localStorage.setItem('add_task_draft', JSON.stringify(val))
+      }
+    }
+  },
   mounted() {
     this.loadCategories()
     this.loadUsers()
+    const draft = localStorage.getItem('add_task_draft')
+    if (draft) {
+      try {
+        const d = JSON.parse(draft)
+        if (d.taskName || d.soNumber || (d.steps && d.steps.length)) {
+          this.formData = { ...this.formData, ...d }
+        }
+      } catch (e) { localStorage.removeItem('add_task_draft') }
+    }
   },
   methods: {
     async loadUsers() {
@@ -222,6 +239,8 @@ export default {
           }
         }
         this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'เพิ่มงานใหม่เรียบร้อยแล้ว', life: 3000 })
+        localStorage.removeItem('workflow_steps_draft')
+        localStorage.removeItem('workflow_step_draft')
         this.$emit('task-added')
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         this.resetForm()
@@ -230,6 +249,8 @@ export default {
       }
     },
     resetForm() {
+      localStorage.removeItem('add_task_draft')
+      localStorage.removeItem('add_task_draft')
       this.formData = {
         taskName: '', soNumber: '', contractNumber: '', saleOwner: '', projectManager: '',
         customerInfo: '', projectStartDate: null, projectEndDate: null,

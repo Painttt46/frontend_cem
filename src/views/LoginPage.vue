@@ -113,7 +113,7 @@ var loginStatus = ref("");
 onMounted(() => {
   // ถ้า back มาหน้า login (มี token อยู่) ให้ clear ข้อมูลทั้งหมด
   if (localStorage.getItem('soc_token')) {
-    localStorage.clear();
+    ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
     sessionStorage.clear();
     document.cookie.split(";").forEach((c) => {
       document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");

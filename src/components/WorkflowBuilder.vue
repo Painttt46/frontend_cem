@@ -142,7 +142,7 @@
       </div>
 
       <template #footer>
-        <Button label="ยกเลิก" @click="showStepDialog = false" text />
+        <Button label="ยกเลิก" @click="() => { localStorage.removeItem('workflow_step_draft'); showStepDialog = false }" text />
         <Button label="บันทึก" @click="saveStep" :disabled="!currentStep.step_name" />
       </template>
     </Dialog>
@@ -239,6 +239,22 @@ export default {
     }
   },
   watch: {
+    steps: {
+      deep: true,
+      handler(val) {
+        if (!this.taskId) {
+          localStorage.setItem('workflow_steps_draft', JSON.stringify(val))
+        }
+      }
+    },
+    currentStep: {
+      deep: true,
+      handler(val) {
+        if (this.showStepDialog) {
+          localStorage.setItem('workflow_step_draft', JSON.stringify(val))
+        }
+      }
+    },
     modelValue: {
       immediate: true,
       handler(val) {
@@ -257,6 +273,15 @@ export default {
   mounted() {
     this.loadUsers()
     this.loadStatusOptions()
+    if (!this.taskId) {
+      const draft = localStorage.getItem('workflow_steps_draft')
+      if (draft) {
+        try {
+          const d = JSON.parse(draft)
+          if (d && d.length) { this.steps = d; this.$emit('update:modelValue', d) }
+        } catch (e) { localStorage.removeItem('workflow_steps_draft') }
+      }
+    }
   },
   methods: {
     async loadStatusOptions() {
@@ -302,7 +327,8 @@ export default {
       }
     },
     addStep() {
-      this.currentStep = this.getEmptyStep()
+      const draft = localStorage.getItem('workflow_step_draft')
+      this.currentStep = draft ? JSON.parse(draft) : this.getEmptyStep()
       this.editingIndex = null
       this.showStepDialog = true
     },
@@ -327,6 +353,10 @@ export default {
       this.editingIndex = index
       this.showStepDialog = true
     },
+    clearDraft() {
+      localStorage.removeItem('workflow_steps_draft')
+      localStorage.removeItem('workflow_step_draft')
+    },
     saveStep() {
       const existingStep = this.editingIndex !== null ? this.steps[this.editingIndex] : {}
       const stepData = {
@@ -344,6 +374,7 @@ export default {
       }
 
       this.$emit('update:modelValue', this.steps)
+      localStorage.removeItem('workflow_step_draft')
       this.showStepDialog = false
     },
     onDragStart(event, index) {

@@ -178,7 +178,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.meta.requiresAuth) {
     if (!userId || !token) {
-      localStorage.clear();
+      ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
       sessionStorage.clear();
       next("/login");
       return;
@@ -190,14 +190,14 @@ router.beforeEach(async (to, from, next) => {
       if (tokenParts.length === 3) {
         const payload = JSON.parse(atob(tokenParts[1]));
         if (Date.now() >= payload.exp * 1000) {
-          localStorage.clear();
+          ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
           sessionStorage.clear();
           next("/login");
           return;
         }
       }
     } catch (e) {
-      localStorage.clear();
+      ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
       sessionStorage.clear();
       next("/login");
       return;

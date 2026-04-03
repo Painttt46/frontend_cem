@@ -65,7 +65,7 @@ function fetchAndExport(url, fileName) {
             if (response.status === 401) {
                 const data = await response.json();
                 if (data.expired) {
-                    localStorage.clear();
+                    ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k));
                     window.location.href = '/login';
                     throw new Error('Token expired');
                 }

@@ -466,7 +466,7 @@
       </div>
       
       <div class="form-actions">
-        <Button type="button" label="ยกเลิก" severity="secondary" outlined @click="editDialog = false" />
+        <Button type="button" label="ยกเลิก" severity="secondary" outlined @click="() => { localStorage.removeItem('edit_task_draft_' + editFormData.id); editDialog = false }" />
         <Button type="submit" label="บันทึก" severity="success" />
       </div>
     </form>
@@ -492,6 +492,16 @@ export default {
     EnhancedDataTable,
     UserInfoDialog,
     WorkflowBuilder
+  },
+  watch: {
+    editFormData: {
+      deep: true,
+      handler(val) {
+        if (this.editDialog && val.id) {
+          localStorage.setItem('edit_task_draft_' + val.id, JSON.stringify(val))
+        }
+      }
+    }
   },
   created() {
     this.$http = axios
@@ -1005,15 +1015,17 @@ export default {
         return new Date(dateStr)
       }
       
+      const savedDraft = localStorage.getItem('edit_task_draft_' + task.id)
+      const draft = savedDraft ? JSON.parse(savedDraft) : null
       this.editFormData = {
         id: task.id,
-        task_name: task.task_name,
-        so_number: task.so_number || '',
-        contract_number: task.contract_number || '',
-        sale_owner: task.sale_owner || '',
-        project_manager: task.project_manager || '',
-        customer_info: task.customer_info || '',
-        description: task.description || '',
+        task_name: draft ? draft.task_name : task.task_name,
+        so_number: draft ? (draft.so_number ?? task.so_number ?? '') : task.so_number || '',
+        contract_number: draft ? (draft.contract_number ?? task.contract_number ?? '') : task.contract_number || '',
+        sale_owner: draft ? (draft.sale_owner ?? task.sale_owner ?? '') : task.sale_owner || '',
+        project_manager: draft ? (draft.project_manager ?? task.project_manager ?? '') : task.project_manager || '',
+        customer_info: draft ? (draft.customer_info ?? task.customer_info ?? '') : task.customer_info || '',
+        description: draft ? (draft.description ?? task.description ?? '') : task.description || '',
         category: this.parseCategoryArray(task.category),
         status: task.status || null,
         project_start_date: parseDate(task.project_start_date),
@@ -1129,6 +1141,7 @@ export default {
           life: 3000
         })
         
+        localStorage.removeItem('edit_task_draft_' + this.editFormData.id)
         this.editDialog = false
         
         // Auto-refresh data
