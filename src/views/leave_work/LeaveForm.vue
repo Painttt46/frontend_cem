@@ -531,8 +531,6 @@ export default {
       const [le, lem = 0] = this.workHours.lunch_end.split(':').map(Number)
       
       const wsMin = ws * 60 + wsm, weMin = we * 60 + wem, lsMin = ls * 60 + lsm, leMin = le * 60 + lem
-      const fullDayMinutes = (lsMin - wsMin) + (weMin - leMin)
-
       let minutes = 0
       // ช่วงเช้า
       const morningStart = Math.max(startMinutes, wsMin)
@@ -546,8 +544,6 @@ export default {
       if (afternoonEnd > afternoonStart) {
         minutes += afternoonEnd - afternoonStart
       }
-      // ถ้าทำงาน >= 90% ของ full day ให้นับเป็น full day
-      if (minutes >= fullDayMinutes * 0.9) return fullDayMinutes / 60
       return Math.max(0, minutes / 60)
     },
     
