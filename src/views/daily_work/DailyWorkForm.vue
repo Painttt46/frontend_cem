@@ -599,7 +599,6 @@ export default {
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))
         this.$emit('submit-work')
-        this.resetForm()
       } catch (err) {
         console.error('Submit error:', err)
         this.$toast.add({
@@ -621,7 +620,10 @@ export default {
       const d = new Date(date)
       return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
     },
-    resetForm() { location.reload() }
+    resetForm() {
+      if (!confirm('ล้างข้อมูลทั้งหมด?')) return
+      location.reload()
+    }
   }
 }
 </script>

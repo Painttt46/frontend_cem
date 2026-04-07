@@ -5,7 +5,7 @@
         <div class="form-grid">
           <div class="input-group">
             <label for="soNumber" class="input-label">เลข SO (Project)</label>
-            <InputText id="soNumber" v-model="formData.soNumber" class="corporate-input" />
+            <InputText id="soNumber" v-model="formData.soNumber" class="corporate-input" disabled />
           </div>
           <div class="input-group">
             <label for="taskName" class="input-label">ชื่องาน / โครงการ *</label>
@@ -122,8 +122,12 @@ export default {
   components: {
     WorkflowBuilder
   },
+  props: {
+    prefillSO: { type: String, default: '' }
+  },
   created() {
     this.$http = axios
+    if (this.prefillSO) this.formData.soNumber = this.prefillSO
   },
   data() {
     return {
@@ -166,6 +170,8 @@ export default {
         }
       } catch (e) { localStorage.removeItem('add_task_draft') }
     }
+    // prefillSO always takes priority over draft
+    if (this.prefillSO) this.formData.soNumber = this.prefillSO
   },
   methods: {
     async loadUsers() {

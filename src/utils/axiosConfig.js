@@ -27,9 +27,9 @@ axios.interceptors.request.use(
       return Promise.reject(error)
     }
     
-    // Track loading
     if (!config.silent) {
       updateLoading(1)
+      config._tracked = true
     }
     
     // Add token to Authorization header
@@ -40,7 +40,7 @@ axios.interceptors.request.use(
     return config
   },
   (error) => {
-    if (!error.config?.silent) {
+    if (error.config?._tracked) {
       updateLoading(-1)
     }
     return Promise.reject(error)
@@ -50,14 +50,13 @@ axios.interceptors.request.use(
 // Response interceptor
 axios.interceptors.response.use(
   (response) => {
-    if (!response.config.silent) {
+    if (response.config._tracked) {
       updateLoading(-1)
     }
     return response
   },
   (error) => {
-    // Always decrement loading for non-silent requests
-    if (!error.config?.silent && error.config) {
+    if (error.config?._tracked) {
       updateLoading(-1)
     }
     
@@ -67,13 +66,10 @@ axios.interceptors.response.use(
       
       switch (status) {
         case 401:
-          // Unauthorized - clear all auth data and redirect to login
           ['soc_token','soc_user_id','soc_role','soc_firstname','soc_lastname','soc_position','soc_department','soc_nickname','soc_email'].forEach(k => localStorage.removeItem(k))
           sessionStorage.clear()
-          document.cookie.split(";").forEach((c) => {
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/")
-          })
-          
+          // Clear HttpOnly cookie via server logout endpoint
+          axios.post('/api/auth/logout').catch(() => {})
           if (router.currentRoute.value.path !== '/login') {
             router.push('/login')
           }

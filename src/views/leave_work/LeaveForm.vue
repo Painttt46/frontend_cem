@@ -409,9 +409,9 @@ export default {
         
         // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
         const rawDays = totalHours / hoursPerDay
-        const days = Math.round(rawDays * 2) / 2
-        const hoursDisplay = Number.isInteger(totalHours) ? totalHours : totalHours.toFixed(1)
-        const daysDisplay = Number.isInteger(days) ? days : days.toFixed(1)
+        const days = rawDays
+        const hoursDisplay = totalHours.toFixed(2)
+        const daysDisplay = days.toFixed(2)
         
         // ถ้าเป็น 0 วัน แสดงว่าเลือกวันหยุด
         if (days === 0 && startDate.getTime() === endDate.getTime()) {
@@ -938,7 +938,7 @@ export default {
         
         // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
         const rawDays = totalHours / hoursPerDay
-        return Math.round(rawDays * 2) / 2
+        return Math.round(rawDays * 10000) / 10000
       }
       return 0
     },

@@ -20,9 +20,10 @@
           </template>
         </Column>
 
-        <Column header="#" style="width: 50px; text-align: center;">
+        <Column header="#" style="width: 70px; text-align: center;">
           <template #body="slotProps">
-            <span style="font-size:0.8rem;color:#6b7280;font-weight:600">{{ slotProps.index + 1 }}</span>
+            <Badge :value="`#${slotProps.data.projects[0]?.id || slotProps.index + 1}`"
+              style="background:#e5e7eb;color:#374151;font-size:0.75rem;font-weight:600" />
           </template>
         </Column>
 
@@ -116,7 +117,11 @@
           <template #body="slotProps">
             <div class="status-badges-column">
               <template v-if="slotProps.data.projects.length === 1">
-                <template v-if="getWorkflowStatuses(slotProps.data.projects[0]).length > 0">
+                <template v-if="slotProps.data.projects[0].work_status === 'cancelled'">
+                <Badge :value="getStatusLabel('cancelled')"
+                  :style="{ backgroundColor: getStatusColor('cancelled'), color: '#fff' }" />
+              </template>
+              <template v-else-if="getWorkflowStatuses(slotProps.data.projects[0]).length > 0">
                   <Badge v-for="ps in getWorkflowStatuses(slotProps.data.projects[0])" :key="ps" :value="getStatusLabel(ps)"
                     :style="{ backgroundColor: getStatusColor(ps), color: '#fff' }" />
                 </template>
@@ -168,7 +173,7 @@
               <span v-else style="display:block;text-align:center"></span>
             </template>
             <template v-else>
-              <Button icon="pi pi-list-check" size="small" severity="info" outlined
+              <Button icon="pi pi-list" size="small" severity="info" outlined
                 @click="openManageGroup(slotProps.data)" v-tooltip="'จัดการโครงการ'" />
             </template>
           </template>
@@ -225,7 +230,11 @@
                 </div>
               </div>
               <div class="exp-cell">
-                <template v-if="getWorkflowStatuses(proj).length > 0">
+                <template v-if="proj.work_status === 'cancelled'">
+                  <Badge :value="getStatusLabel('cancelled')"
+                    :style="{ backgroundColor: getStatusColor('cancelled'), color: '#fff' }" />
+                </template>
+                <template v-else-if="getWorkflowStatuses(proj).length > 0">
                   <Badge v-for="ps in getWorkflowStatuses(proj)" :key="ps" :value="getStatusLabel(ps)"
                     :style="{ backgroundColor: getStatusColor(ps), color: '#fff', margin: '1px' }" />
                 </template>
@@ -300,6 +309,9 @@
       <div class="manage-group-date">
         <i class="pi pi-calendar"></i> {{ formatDate(manageGroupData.work_date) }}
         <span class="manage-group-count">{{ manageGroupData.projects.length }} โครงการ</span>
+        <Button icon="pi pi-plus" label="เพิ่มโครงการ" size="small" severity="success" outlined
+          style="margin-left:auto"
+          @click="$emit('add-to-group', manageGroupData.work_date); manageGroupDialog = false" />
       </div>
       <div class="manage-proj-list">
         <div v-for="proj in manageGroupData.projects" :key="proj.id" class="manage-proj-item">
@@ -404,6 +416,8 @@
 
       <div class="form-actions">
         <Button type="button" label="ยกเลิก" severity="secondary" outlined @click="editDialog = false" />
+        <Button type="button" icon="pi pi-plus" label="เพิ่มโครงการ" severity="info" outlined
+          @click="$emit('add-to-group', String(editFormData.work_date instanceof Date ? editFormData.work_date.toISOString() : editFormData.work_date).substring(0, 10)); editDialog = false" />
         <Button type="submit" label="บันทึก" severity="success" />
       </div>
     </form>
@@ -443,7 +457,7 @@ export default {
     Checkbox
   },
   inject: ['$confirm', '$toast'],
-  emits: ['refresh-data'],
+  emits: ['refresh-data', 'add-to-group'],
   props: {
     records: {
       type: Array,
@@ -462,30 +476,22 @@ export default {
     this.loadCategoryOptions()
     this.loadTasks()
 
-    // Update current time every second for realtime button state
-    setInterval(() => {
+    this._clockInterval = setInterval(() => {
       this.currentTime = new Date()
     }, 1000)
     
-    // Listen for task updates
-    window.addEventListener('taskUpdated', () => {
-      this.$emit('refresh-data')
-    })
-
-    // Listen for status updates from TaskManagement
-    window.addEventListener('statusesUpdated', () => {
-      this.loadStatusOptions()
-    })
-
-    // Listen for category updates
-    window.addEventListener('categoriesUpdated', () => {
-      this.loadCategoryOptions()
-    })
+    this._onTaskUpdated = () => this.$emit('refresh-data')
+    this._onStatusesUpdated = () => this.loadStatusOptions()
+    this._onCategoriesUpdated = () => this.loadCategoryOptions()
+    window.addEventListener('taskUpdated', this._onTaskUpdated)
+    window.addEventListener('statusesUpdated', this._onStatusesUpdated)
+    window.addEventListener('categoriesUpdated', this._onCategoriesUpdated)
   },
   beforeUnmount() {
-    window.removeEventListener('taskUpdated', () => {
-      this.$emit('refresh-data')
-    })
+    clearInterval(this._clockInterval)
+    window.removeEventListener('taskUpdated', this._onTaskUpdated)
+    window.removeEventListener('statusesUpdated', this._onStatusesUpdated)
+    window.removeEventListener('categoriesUpdated', this._onCategoriesUpdated)
   },
   computed: {
     workRecords() {
@@ -495,9 +501,7 @@ export default {
       const all = this.workRecords
       const groups = {}
       all.forEach(r => {
-        // group ด้วย work_date + user_id + submitted_at (ตัดเหลือแค่นาที เพื่อรวม entries ที่ส่งพร้อมกัน)
-        const submittedMinute = r.submitted_at ? r.submitted_at.slice(0, 16) : r.id
-        const key = `${r.work_date}_${r.user_id}_${submittedMinute}`
+        const key = `${String(r.work_date).substring(0, 10)}_${r.user_id}`
         if (!groups[key]) {
           groups[key] = {
             _key: key,
@@ -578,7 +582,8 @@ export default {
           display: task.so_number ? `[${task.so_number}] ${task.task_name}` : task.task_name
         }))
       } catch (error) {
-        console.error('Error loading tasks:', error)
+        // eslint-disable-next-line no-console
+        console.error('Failed to load tasks:', error)
       }
     },
     showUserInfo(userId) {

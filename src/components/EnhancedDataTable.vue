@@ -82,6 +82,7 @@
 import { ref, computed, useSlots } from 'vue'
 import { useDragScroll } from '@/composables/useDragScroll'
 
+defineOptions({ inheritAttrs: false })
 useDragScroll('.p-datatable-wrapper')
 
 const props = defineProps({

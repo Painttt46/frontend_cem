@@ -6,10 +6,83 @@
         <p>ยังไม่มีงานที่เพิ่มไว้</p>
       </div>
 
-      <EnhancedDataTable v-else-if="categories.length > 0" :data="enrichedTasks" 
+      <EnhancedDataTable v-else-if="categories.length > 0" :data="groupedTasks" 
         :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50, 100]" 
-        responsiveLayout="scroll" class="history-table" stripedRows>
+        responsiveLayout="scroll" class="history-table" stripedRows
+        v-model:expandedRows="expandedRows" dataKey="id"
+        @row-click="onRowClick">
+
+        <Column style="width: 3rem">
+          <template #body="slotProps">
+            <span v-if="slotProps.data.children && slotProps.data.children.length > 0"
+              style="cursor:pointer;display:flex;align-items:center;justify-content:center">
+              <i :class="expandedRows[slotProps.data.id] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                style="font-size:0.85rem;color:#64748b" />
+            </span>
+          </template>
+        </Column>
         
+        <template #expansion="slotProps">
+          <div v-if="slotProps.data.children && slotProps.data.children.length > 0"
+            style="background:#f8faff;border-top:2px solid #e0e7ff;overflow-x:auto">
+            <component :is="'table'" style="width:100%;border-collapse:collapse;font-size:0.875rem;table-layout:fixed">
+              <component :is="'thead'">
+                <component :is="'tr'" style="background:#e0e7ff;color:#3730a3;font-weight:600;font-size:0.82rem">
+                  <component :is="'th'" style="padding:8px 12px;width:3rem"></component>
+                  <component :is="'th'" style="padding:8px 12px;width:80px;text-align:center">รหัสงาน</component>
+                  <component :is="'th'" style="padding:8px 12px;width:250px">ชื่อโครงการ</component>
+                  <component :is="'th'" style="padding:8px 12px;width:100px">เลข SO</component>
+                  <component :is="'th'" style="padding:8px 12px;width:150px">เลขที่สัญญา</component>
+                  <component :is="'th'" style="padding:8px 12px;width:150px">ข้อมูลลูกค้า</component>
+                  <component :is="'th'" style="padding:8px 12px;width:150px">Sale เจ้าของงาน</component>
+                  <component :is="'th'" style="padding:8px 12px;width:150px">Project Manager</component>
+                  <component :is="'th'" style="padding:8px 12px;width:120px">หมวดหมู่</component>
+                  <component :is="'th'" style="padding:8px 12px;width:130px">วันเริ่มโครงการ</component>
+                  <component :is="'th'" style="padding:8px 12px;width:140px">วันสิ้นสุดโครงการ</component>
+                  <component :is="'th'" style="padding:8px 12px;width:120px">รายละเอียด</component>
+                  <component :is="'th'" style="padding:8px 12px;width:180px">สถานะ</component>
+                  <component :is="'th'" style="padding:8px 12px;width:200px">จัดการ</component>
+                  <component :is="'th'" style="padding:8px 12px;width:80px">ไฟล์แนบ</component>
+                </component>
+              </component>
+              <component :is="'tbody'">
+                <component :is="'tr'" v-for="child in slotProps.data.children" :key="child.id"
+                  style="border-bottom:1px solid #e2e8f0;background:#f0f4ff">
+                  <component :is="'td'" style="padding:8px 12px"></component>
+                  <component :is="'td'" style="padding:8px 12px;text-align:center"><Badge :value="child.id" class="custom-id-badge" /></component>
+                  <component :is="'td'" style="padding:8px 12px"><div class="task-name"><i class="pi pi-briefcase" style="color:#4A90E2;margin-right:6px;font-size:0.85rem"></i>{{ child.task_name }}</div></component>
+                  <component :is="'td'" style="padding:8px 12px"><div v-if="child.so_number" class="so-number">{{ child.so_number }}</div><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.contract_number" style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #bbf7d0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ child.contract_number }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:0.85rem"></i>{{ child.customer_info }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><div v-if="child.sale_owner" class="person-badge sale-badge" @click="showSaleUserInfo(child.sale_owner)"><i class="pi pi-user"></i> {{ child.sale_owner }}</div><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><div v-if="child.project_manager" class="person-badge pm-badge" @click="showSaleUserInfo(child.project_manager)"><i class="pi pi-briefcase"></i> {{ child.project_manager }}</div><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><div class="category-badges"><Badge v-for="cat in parseCategoryArray(child.category)" :key="cat" :value="getCategoryLabel(cat)" :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', fontWeight: 'bold', margin: '2px' }" /></div></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0891b2;font-size:0.85rem"></i>{{ formatDate(child.project_start_date) }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:0.85rem"></i>{{ formatDate(child.project_end_date) }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><Button label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined @click="showTaskDetails(child)" :disabled="!child.description" /></component>
+                  <component :is="'td'" style="padding:8px 12px">
+                    <div class="status-badges-column">
+                      <Badge v-if="child.status === 'completed'" value="เสร็จสิ้น" :style="{ backgroundColor: '#10b981', color: '#fff', fontWeight: 'bold' }" />
+                      <template v-else-if="getLatestProjectStatuses(child).length > 0">
+                        <Badge v-for="ps in getLatestProjectStatuses(child)" :key="ps" :value="getProjectStatusLabel(ps)" :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
+                      </template>
+                      <span v-else class="no-status">-</span>
+                    </div>
+                  </component>
+                  <component :is="'td'" style="padding:8px 12px">
+                    <div class="action-buttons">
+                      <Button icon="pi pi-eye" size="small" severity="info" outlined @click="viewTaskWorks(child)" v-tooltip="'ดูงานรายวัน'" />
+                      <Button icon="pi pi-pencil" size="small" severity="warning" outlined @click="editTask(child)" v-tooltip="'แก้ไข'" />
+                      <Button icon="pi pi-trash" size="small" severity="danger" outlined @click="confirmDeleteTask(child)" v-tooltip="'ลบ'" />
+                    </div>
+                  </component>
+                  <component :is="'td'" style="padding:8px 12px"><Button v-if="hasFiles(child)" icon="pi pi-paperclip" size="small" severity="info" outlined @click="downloadTaskFiles(child)" v-tooltip="`${child.files.length} ไฟล์`" /><span v-else class="no-files">-</span></component>
+                </component>
+              </component>
+            </component>
+          </div>
+        </template>
+
         <Column field="id" header="รหัสงาน" :sortable="true">
           <template #body="slotProps">
             <div style="text-align: center;">
@@ -181,7 +254,7 @@
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
-          <img v-if="isImageFile(typeof file === 'object' ? file.name : file)" :src="getFileUrl(typeof file === 'object' ? file.name : file)" class="file-preview" @click="viewFullImage(typeof file === 'object' ? file.name : file)" />
+          <img v-if="isImageFile(typeof file === 'object' ? file.name : file)" src="" class="file-preview" @click="viewFullImage(typeof file === 'object' ? file.name : file)" style="cursor:pointer" />
           <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ typeof file === 'object' ? file.name : file.split('-').slice(2).join('-') || file }}</span>
         </div>
@@ -335,7 +408,7 @@
     <div v-if="selectedWorkFiles && selectedWorkFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedWorkFiles" :key="index" class="file-item">
         <div class="file-info">
-          <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
+          <img v-if="isImageFile(file)" src="" class="file-preview" @click="viewFullImage(file)" style="cursor:pointer" />
           <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
@@ -467,6 +540,7 @@
       
       <div class="form-actions">
         <Button type="button" label="ยกเลิก" severity="secondary" outlined @click="() => { localStorage.removeItem('edit_task_draft_' + editFormData.id); editDialog = false }" />
+        <Button type="button" label="เพิ่มงานใน SO นี้" icon="pi pi-plus" severity="info" outlined @click="openAddTaskForSO" />
         <Button type="submit" label="บันทึก" severity="success" />
       </div>
     </form>
@@ -478,6 +552,11 @@
     :userId="selectedUserId"
     :userName="selectedUserName"
   />
+
+  <!-- Add task for same SO -->
+  <Dialog v-model:visible="addTaskForSODialog" modal header="เพิ่มงานใหม่" :style="{ width: '90vw', height: '80vh' }" :draggable="false">
+    <AddTaskForm :prefillSO="addTaskPrefillSO" @task-added="handleSOTaskAdded" @close-form="addTaskForSODialog = false" />
+  </Dialog>
 </template>
 
 <script>
@@ -485,13 +564,15 @@ import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
+import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
 
 export default {
   name: 'TaskList',
   components: {
     EnhancedDataTable,
     UserInfoDialog,
-    WorkflowBuilder
+    WorkflowBuilder,
+    AddTaskForm
   },
   watch: {
     editFormData: {
@@ -537,6 +618,9 @@ export default {
       fullImageDialog: false,
       fullImageUrl: '',
       editDialog: false,
+      addTaskForSODialog: false,
+      addTaskPrefillSO: '',
+      expandedRows: {},
       taskWorksDialog: false,
       taskWorks: [],
       loadingWorks: false,
@@ -623,12 +707,24 @@ export default {
       return options
     },
     enrichedTasks() {
-      // Add status and category labels to tasks for better search
       return this.tasks.map(task => ({
         ...task,
         statusLabel: this.getStatusLabel(task.status),
         categoryLabel: this.getCategoryLabel(task.category)
       }))
+    },
+    groupedTasks() {
+      // Group tasks by so_number: oldest task = parent, rest = children
+      const soMap = {}
+      const noSO = []
+      const sorted = [...this.tasks].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+      sorted.forEach(task => {
+        const so = task.so_number?.trim()
+        if (!so) { noSO.push({ ...task, children: [] }); return }
+        if (!soMap[so]) { soMap[so] = { ...task, children: [] } }
+        else soMap[so].children.push(task)
+      })
+      return [...Object.values(soMap), ...noSO].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     },
     filteredAndSortedWorks() {
       let works = [...this.taskWorks]
@@ -964,12 +1060,17 @@ export default {
       return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
     },
     getFileUrl(fileName) {
-      const token = localStorage.getItem('soc_token')
-      return `/api/files/download/${fileName}?token=${token}`
+      // ใช้ blob URL แทนการใส่ token ใน URL
+      return `/api/files/download/${fileName}`
     },
-    viewFullImage(fileName) {
-      this.fullImageUrl = this.getFileUrl(fileName)
-      this.fullImageDialog = true
+    async viewFullImage(fileName) {
+      try {
+        const response = await this.$http.get(`/api/files/download/${fileName}`, { responseType: 'blob' })
+        this.fullImageUrl = window.URL.createObjectURL(new Blob([response.data]))
+        this.fullImageDialog = true
+      } catch {
+        this.$toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: 'ไม่สามารถโหลดรูปภาพได้', life: 3000 })
+      }
     },
     hasFiles(task) {
       return task.files && Array.isArray(task.files) && task.files.length > 0
@@ -1004,6 +1105,31 @@ export default {
           detail: 'ไม่สามารถดาวน์โหลดไฟล์ได้',
           life: 3000
         })
+      }
+    },
+    onRowClick(e) {
+      const row = e.data
+      if (!row.children || row.children.length === 0) return
+      if (this.expandedRows[row.id]) {
+        const next = { ...this.expandedRows }
+        delete next[row.id]
+        this.expandedRows = next
+      } else {
+        this.expandedRows = { ...this.expandedRows, [row.id]: true }
+      }
+    },
+    openAddTaskForSO() {
+      this.addTaskPrefillSO = this.editFormData.so_number || ''
+      this.editDialog = false
+      this.addTaskForSODialog = true
+    },
+    async handleSOTaskAdded() {
+      const so = this.addTaskPrefillSO
+      this.addTaskForSODialog = false
+      await this.loadTasks()
+      if (so) {
+        const parent = this.groupedTasks.find(t => t.so_number?.trim() === so.trim())
+        if (parent) this.expandedRows = { [parent.id]: true }
       }
     },
     editTask(task) {
@@ -1041,9 +1167,7 @@ export default {
     },
     handleEditFileUpload(event) {
       const files = Array.from(event.target.files)
-      console.log('Files selected:', files.length, files.map(f => f.name))
       this.editFormData.newFiles = [...this.editFormData.newFiles, ...files]
-      console.log('Total new files:', this.editFormData.newFiles.length)
     },
     removeExistingFile(index) {
       this.editFormData.existingFiles.splice(index, 1)
@@ -1052,7 +1176,6 @@ export default {
       this.editFormData.newFiles.splice(index, 1)
     },
     async uploadNewFiles() {
-      console.log('uploadNewFiles called, files:', this.editFormData.newFiles?.length)
       if (!this.editFormData.newFiles || this.editFormData.newFiles.length === 0) return []
       
       const formData = new FormData()
@@ -1064,10 +1187,8 @@ export default {
         const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
-        console.log('Upload response:', response.data)
         return response.data.files || []
       } catch (error) {
-        console.error('Upload error:', error)
         return []
       }
     },

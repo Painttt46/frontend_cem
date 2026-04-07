@@ -1497,6 +1497,10 @@ export default {
   padding: 0.5rem 1rem !important;
   font-weight: 600 !important;
   border-radius: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
 }
 
 .delete-btn {

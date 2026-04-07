@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" />
+      <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" @add-to-group="openAddToGroup" />
     </div>
 
     <!-- Work Form Dialog -->
@@ -174,6 +174,14 @@ export default {
       this.dialogKey++
       this.showWorkDialog = true
     },
+    openAddToGroup(workDate) {
+      this.showWorkDialog = true
+      this.$nextTick(() => {
+        if (this.$refs.workForm) {
+          this.$refs.workForm.formData.workDate = new Date(workDate)
+        }
+      })
+    },
 
     async loadWorkRecords() {
       this.loading = true
@@ -208,7 +216,7 @@ export default {
     this.loadWorkRecords()
   },
   mounted() {
-    setInterval(() => {
+    this._clockInterval = setInterval(() => {
       this.currentTime = new Date()
     }, 1000)
     
@@ -217,6 +225,7 @@ export default {
     window.addEventListener('taskUpdated', this.handleWorkRecordUpdate)
   },
   beforeUnmount() {
+    clearInterval(this._clockInterval)
     window.removeEventListener('workRecordUpdated', this.handleWorkRecordUpdate)
     window.removeEventListener('taskUpdated', this.handleWorkRecordUpdate)
   },
