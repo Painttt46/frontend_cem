@@ -409,6 +409,7 @@ export default {
         
         // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
         const rawDays = totalHours / hoursPerDay
+        console.log('[calculateDays] totalHours:', totalHours, 'hoursPerDay:', hoursPerDay, 'rawDays:', rawDays, 'workHours:', JSON.stringify(this.workHours))
         const days = rawDays
         const hoursDisplay = totalHours.toFixed(2)
         const daysDisplay = days.toFixed(2)
@@ -699,7 +700,9 @@ export default {
       try {
         // โหลด work hours ของ user ที่เลือก
         const userRole = this.selectedLeaveUser.role || 'user'
+        console.log('[onLeaveUserChange] user:', this.selectedLeaveUser.displayName, 'role:', userRole)
         const workHoursResponse = await axios.get(`/api/settings/role-work-hours/${userRole}`)
+        console.log('[onLeaveUserChange] workHours response:', JSON.stringify(workHoursResponse.data))
         this.workHours = {
           start_time: workHoursResponse.data.start_time?.substring(0, 5) || '09:00',
           end_time: workHoursResponse.data.end_time?.substring(0, 5) || '18:00',
@@ -934,6 +937,7 @@ export default {
         
         // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
         const rawDays = totalHours / hoursPerDay
+        console.log('[calculateTotalDays] totalHours:', totalHours, 'hoursPerDay:', hoursPerDay, 'rawDays:', rawDays)
         return Math.round(rawDays * 10000) / 10000
       }
       return 0

@@ -5,7 +5,7 @@
         <div class="form-grid">
           <div class="input-group">
             <label for="soNumber" class="input-label">เลข SO (Project)</label>
-            <InputText id="soNumber" v-model="formData.soNumber" class="corporate-input" disabled />
+            <InputText id="soNumber" v-model="formData.soNumber" class="corporate-input" />
           </div>
           <div class="input-group">
             <label for="taskName" class="input-label">ชื่องาน / โครงการ *</label>
