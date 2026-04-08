@@ -1,0 +1,35 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install & Build
+        run: |
+          npm install
+          npm run build
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            echo "${{ secrets.ROOT_PASSWORD }}" | su -c "
+              cd /var/www/html/frontend_cem &&
+              git pull origin main &&
+              docker compose down &&
+              docker compose up -d --build
+            " root
