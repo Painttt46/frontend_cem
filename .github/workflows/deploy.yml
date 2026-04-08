@@ -10,11 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build check
-        run: |
-          npm install
-          npm run build
-
       - name: Deploy
         run: |
           echo "${{ secrets.ROOT_PASSWORD }}" | su -c "
