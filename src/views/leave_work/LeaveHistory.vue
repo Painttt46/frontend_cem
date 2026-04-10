@@ -836,23 +836,17 @@ export default {
       const currentUserId = localStorage.getItem('soc_user_id')
       const currentUserName = `${localStorage.getItem('soc_firstname')} ${localStorage.getItem('soc_lastname')}`.trim()
 
-      // ตรวจสอบว่าเป็นของตัวเอง
       const isOwner = (record.user_id == currentUserId) || (record.employee_name === currentUserName)
       if (!isOwner) return false
 
-      // กรณีอนุมัติขั้นที่ 1 แล้ว (รอ HR) ให้ขอยกเลิกได้เสมอ
-      if (record.status === 'pending_level2') {
-        return true
-      }
+      // pending_level2: approve 1 step → ขอยกเลิกได้เสมอ (เหมือนเดิม)
+      if (record.status === 'pending_level2') return true
 
-      // อนุมัติครบ 2 ขั้นแล้วเท่านั้นค่อยเช็ค "เวลาเริ่มลา" ต้องอยู่ในอนาคต
+      // approved: approve ครบ 2 step → ขอยกเลิกได้จนถึง 7 วันหลังวันเริ่มลา
       if (record.status !== 'approved') return false
-
-      const now = new Date()
-      const startDateTime = new Date(record.start_datetime)
-
-      // แสดงปุ่มเฉพาะกรณีที่เวลาเริ่มลา > เวลาปัจจุบัน (รวมเคสวันเดียวกันแต่ยังไม่ถึงเวลา)
-      return startDateTime > now
+      const deadline = new Date(record.start_datetime)
+      deadline.setDate(deadline.getDate() + 7)
+      return new Date() <= deadline
     },
 
     requestCancel(record) {
