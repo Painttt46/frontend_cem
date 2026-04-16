@@ -137,7 +137,7 @@
           </template>
         </Column>
 
-        <Column header="ผู้อนุมัติ" style="min-width: 280px;">
+        <Column header="ผู้อนุมัติ" style="min-width: 320px;">
           <template #body="slotProps">
             <div class="approver-container">
               <!-- Step 1: หัวหน้างาน -->
@@ -1546,6 +1546,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .approver-badge-wrapper i {
@@ -1557,6 +1559,11 @@ export default {
   font-size: 0.75rem !important;
   padding: 0.3rem 0.6rem !important;
   font-weight: 600 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
 }
 
 .approver-text {
