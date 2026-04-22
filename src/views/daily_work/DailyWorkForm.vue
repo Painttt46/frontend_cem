@@ -255,7 +255,7 @@ export default {
         startTimeText: '', endTimeText: '', 
         startTime: null, endTime: null, attendees: [], selectedAttendee: null
       }],
-      minDate: new Date(),
+      minDate: (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; })(),
       formData: { workDate: new Date() },
       statusOptions: [],
       users: [],

@@ -235,12 +235,6 @@ const parseTime = (timeStr) => {
   return h + (m || 0) / 60
 }
 
-const calcHours = (start, end) => {
-  const s = parseTime(start), e = parseTime(end)
-  let h = e - s
-  if (s < 13 && e > 12) h -= 1 // lunch break
-  return Math.max(0, h)
-}
 
 // Computed
 const filteredUsers = computed(() => {
@@ -274,11 +268,30 @@ const workloadStats = computed(() => {
   let totalHours = 0
   const userSet = new Set()
   const daySet = new Set()
-  
+  // Merge ranges per user+day to avoid double-counting same time slot across projects
+  const userDayRanges = {}
   filteredDailyWork.value.forEach(w => {
-    totalHours += calcHours(w.start_time, w.end_time)
     userSet.add(w.user_id)
     daySet.add(w.work_date)
+    if (w.start_time && w.end_time) {
+      const dk = `${w.user_id}_${w.work_date}`
+      if (!userDayRanges[dk]) userDayRanges[dk] = []
+      userDayRanges[dk].push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
+    }
+  })
+  Object.values(userDayRanges).forEach(ranges => {
+    ranges.sort((a, b) => a.start - b.start)
+    const merged = [ranges[0]]
+    for (let i = 1; i < ranges.length; i++) {
+      const last = merged[merged.length - 1]
+      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
+      else merged.push({ ...ranges[i] })
+    }
+    merged.forEach(({ start, end }) => {
+      let h = end - start
+      if (start < 13 && end > 12) h -= 1
+      totalHours += Math.max(0, h)
+    })
   })
   
   const avgHours = userSet.size > 0 ? (totalHours / userSet.size / 12).toFixed(1) : '0'
@@ -293,25 +306,59 @@ const workloadStats = computed(() => {
 
 // Workload chart data
 const workloadChartData = computed(() => {
-  const monthData = {}
+  const userDayRanges = {}
   filteredDailyWork.value.forEach(w => {
     const d = new Date(w.work_date)
     if (d.getMonth() !== workloadMonth.value) return
     const user = users.value.find(u => u.id === w.user_id)
-    if (!user) return
+    if (!user || !w.start_time || !w.end_time) return
     const name = `${user.firstname} ${user.lastname}`
-    monthData[name] = (monthData[name] || 0) + calcHours(w.start_time, w.end_time)
+    const dk = `${name}_${w.work_date}`
+    if (!userDayRanges[dk]) userDayRanges[dk] = { name, ranges: [] }
+    userDayRanges[dk].ranges.push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
+  })
+  const monthData = {}
+  Object.values(userDayRanges).forEach(({ name, ranges }) => {
+    ranges.sort((a, b) => a.start - b.start)
+    const merged = [ranges[0]]
+    for (let i = 1; i < ranges.length; i++) {
+      const last = merged[merged.length - 1]
+      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
+      else merged.push({ ...ranges[i] })
+    }
+    merged.forEach(({ start, end }) => {
+      let h = end - start
+      if (start < 13 && end > 12) h -= 1
+      monthData[name] = (monthData[name] || 0) + Math.max(0, h)
+    })
   })
   return Object.entries(monthData).sort((a, b) => b[1] - a[1]).slice(0, 15)
 })
 
 // Team workload data
 const teamWorkloadData = computed(() => {
-  const deptData = {}
+  const userDayRanges = {}
   filteredDailyWork.value.forEach(w => {
     const user = users.value.find(u => u.id === w.user_id)
-    if (!user?.department) return
-    deptData[user.department] = (deptData[user.department] || 0) + calcHours(w.start_time, w.end_time)
+    if (!user?.department || !w.start_time || !w.end_time) return
+    const dk = `${w.user_id}_${w.work_date}`
+    if (!userDayRanges[dk]) userDayRanges[dk] = { dept: user.department, ranges: [] }
+    userDayRanges[dk].ranges.push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
+  })
+  const deptData = {}
+  Object.values(userDayRanges).forEach(({ dept, ranges }) => {
+    ranges.sort((a, b) => a.start - b.start)
+    const merged = [ranges[0]]
+    for (let i = 1; i < ranges.length; i++) {
+      const last = merged[merged.length - 1]
+      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
+      else merged.push({ ...ranges[i] })
+    }
+    merged.forEach(({ start, end }) => {
+      let h = end - start
+      if (start < 13 && end > 12) h -= 1
+      deptData[dept] = (deptData[dept] || 0) + Math.max(0, h)
+    })
   })
   return Object.entries(deptData)
 })

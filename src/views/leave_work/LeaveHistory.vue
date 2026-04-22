@@ -40,19 +40,19 @@
           </template>
         </Column>
 
-        <Column header="วันเวลาเริ่มลา" :sortable="true">
+        <Column header="วันเวลาเริ่มลา" :sortable="false">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.start_datetime) }}
           </template>
         </Column>
 
-        <Column header="วันเวลาสิ้นสุด" :sortable="true">
+        <Column header="วันเวลาสิ้นสุด" :sortable="false">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.end_datetime) }}
           </template>
         </Column>
 
-        <Column header="จำนวน" :sortable="true">
+        <Column field="total_days" header="จำนวน" :sortable="true">
           <template #body="slotProps">
             {{ slotProps.data.total_days }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
@@ -211,7 +211,7 @@
           </template>
         </Column>
 
-        <Column header="วันที่ส่งคำขอ" :sortable="true">
+        <Column field="created_at" header="วันที่ส่งคำขอ" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.created_at) }}
           </template>
@@ -372,18 +372,26 @@ export default {
   },
   computed: {
     dateFilteredRecords() {
-      if (!this.dateSearchStart && !this.dateSearchEnd) return this.records
-      const toStr = (d) => {
-        const dt = new Date(d)
-        return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+      let result
+      if (!this.dateSearchStart && !this.dateSearchEnd) {
+        result = this.records
+      } else {
+        const toStr = (d) => {
+          const dt = new Date(d)
+          return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
+        }
+        const s = this.dateSearchStart ? toStr(this.dateSearchStart) : '0000-00-00'
+        const e = this.dateSearchEnd ? toStr(this.dateSearchEnd) : '9999-12-31'
+        result = (this.records || []).filter(r => {
+          if (!r.start_datetime) return false
+          const rStart = r.start_datetime.substring(0, 10)
+          const rEnd = (r.end_datetime || r.start_datetime).substring(0, 10)
+          return rStart <= e && rEnd >= s
+        })
       }
-      const s = this.dateSearchStart ? toStr(this.dateSearchStart) : '0000-00-00'
-      const e = this.dateSearchEnd ? toStr(this.dateSearchEnd) : '9999-12-31'
-      return (this.records || []).filter(r => {
-        if (!r.start_datetime) return false
-        const rStart = r.start_datetime.substring(0, 10)
-        const rEnd = (r.end_datetime || r.start_datetime).substring(0, 10)
-        return rStart <= e && rEnd >= s
+      return [...(result || [])].sort((a, b) => {
+        const av = a.start_datetime || '', bv = b.start_datetime || ''
+        return av < bv ? 1 : av > bv ? -1 : 0
       })
     },
     hoursPerDay() {

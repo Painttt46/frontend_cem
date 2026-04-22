@@ -32,13 +32,13 @@
           </template>
         </Column>
 
-        <Column header="วันเวลาเริ่มลา" :sortable="true">
+        <Column header="วันเวลาเริ่มลา" :sortable="false">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.start_datetime) }}
           </template>
         </Column>
 
-        <Column header="วันเวลาสิ้นสุด" :sortable="true">
+        <Column header="วันเวลาสิ้นสุด" :sortable="false">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.end_datetime) }}
           </template>

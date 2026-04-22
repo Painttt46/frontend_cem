@@ -12,8 +12,8 @@ services:
       - "3000:80"
     restart: unless-stopped
     networks:
-      - backend_cem_default
+      - cem_network
 
 networks:
-  backend_cem_default:
+  cem_network:
     external: true

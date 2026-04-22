@@ -715,16 +715,37 @@ const userTimesheetSummary = computed(() => {
   const projects = new Set()
   const workDays = new Set()
   const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
+  // Group by date to merge overlapping time ranges
+  const dayRanges = {}
 
   allDailyWork.value.forEach(w => {
     if (w.user_id !== selectedUser.value) return
     const workDate = new Date(w.work_date)
     if (workDate < startDate || workDate > endDate) return
 
-    totalHours += calcWorkHours(w.start_time, w.end_time, lunchBreak)
     taskCount++
     if (w.task_name) projects.add(w.task_name)
-    workDays.add(w.work_date?.split('T')[0])
+    const dateKey = w.work_date?.split('T')[0]
+    workDays.add(dateKey)
+    if (w.start_time && w.end_time) {
+      if (!dayRanges[dateKey]) dayRanges[dateKey] = []
+      dayRanges[dateKey].push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
+    }
+  })
+
+  Object.values(dayRanges).forEach(ranges => {
+    ranges.sort((a, b) => a.start - b.start)
+    const merged = [ranges[0]]
+    for (let i = 1; i < ranges.length; i++) {
+      const last = merged[merged.length - 1]
+      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
+      else merged.push({ ...ranges[i] })
+    }
+    merged.forEach(({ start, end }) => {
+      let h = end - start
+      if (start < 13 && end > 12) h -= lunchBreak
+      totalHours += Math.max(0, h)
+    })
   })
 
   // คำนวณชั่วโมงที่ควรทำตาม role
@@ -1173,24 +1194,54 @@ const loadData = async () => {
     })
 
     const userWorkData = {}
+    // Group records by user+year+date to merge overlapping time ranges per day
+    const userDayRecords = {}
     dailyWork.forEach(w => {
       const workYear = new Date(w.work_date).getFullYear()
       const userId = w.user_id
       if (!userId) return
       const key = `${userId}_${workYear}`
+      const dayKey = `${userId}_${w.work_date?.split('T')[0]}`
       if (!userWorkData[key]) {
         const user = activeUsers.find(u => u.id === userId)
         if (!user) return
         userWorkData[key] = { userId, year: workYear, userName: `${user.firstname} ${user.lastname}`, nickname: user.nickname || '', department: user.department || 'N/A', hoursPerDay: userRoleHours[userId] || 7, lunchBreak: userLunchBreak[userId] || 1, totalHours: 0, taskCount: 0, workDays: new Set(), taskHours: {} }
       }
       userWorkData[key].workDays.add(w.work_date?.split('T')[0])
-      const hours = calcWorkHours(w.start_time, w.end_time, userWorkData[key].lunchBreak)
-      if (hours > 0) {
-        userWorkData[key].totalHours += hours
-        const taskName = w.task_name || 'ไม่ระบุ'
-        userWorkData[key].taskHours[taskName] = (userWorkData[key].taskHours[taskName] || 0) + hours
-      }
       userWorkData[key].taskCount += 1
+      // Collect time ranges per day for merging
+      if (w.start_time && w.end_time) {
+        if (!userDayRecords[dayKey]) userDayRecords[dayKey] = { key, lunchBreak: userWorkData[key].lunchBreak, ranges: [], taskHoursMap: {} }
+        userDayRecords[dayKey].ranges.push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
+        const taskName = w.task_name || 'ไม่ระบุ'
+        userDayRecords[dayKey].taskHoursMap[taskName] = true
+      }
+    })
+    // Merge overlapping ranges per day and accumulate hours
+    Object.values(userDayRecords).forEach(({ key, lunchBreak, ranges, taskHoursMap }) => {
+      if (!userWorkData[key] || ranges.length === 0) return
+      // Sort and merge overlapping intervals
+      ranges.sort((a, b) => a.start - b.start)
+      const merged = [ranges[0]]
+      for (let i = 1; i < ranges.length; i++) {
+        const last = merged[merged.length - 1]
+        if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
+        else merged.push({ ...ranges[i] })
+      }
+      // Sum hours from merged intervals, deduct lunch break once if spans noon
+      let dayHours = 0
+      merged.forEach(({ start, end }) => {
+        let h = end - start
+        if (start < 13 && end > 12) h -= lunchBreak
+        dayHours += Math.max(0, h)
+      })
+      userWorkData[key].totalHours += dayHours
+      // Distribute hours equally among tasks for that day
+      const taskNames = Object.keys(taskHoursMap)
+      const perTask = taskNames.length > 0 ? dayHours / taskNames.length : 0
+      taskNames.forEach(taskName => {
+        userWorkData[key].taskHours[taskName] = (userWorkData[key].taskHours[taskName] || 0) + perTask
+      })
     })
 
     // เพิ่ม user ที่มี workload แต่ไม่มี dailyWork (เช่น pending steps)

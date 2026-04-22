@@ -85,6 +85,9 @@ import { useDragScroll } from '@/composables/useDragScroll'
 defineOptions({ inheritAttrs: false })
 useDragScroll('.p-datatable-wrapper')
 
+// Init from attrs once available
+
+
 const props = defineProps({
   data: {
     type: Array,
@@ -258,6 +261,7 @@ const filteredData = computed(() => {
 
   return result
 })
+
 
 const addFilter = () => {
   filters.value.push({ column: '', operator: 'contains', value: '' })
