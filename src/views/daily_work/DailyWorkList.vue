@@ -54,7 +54,10 @@
 
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true">
           <template #body="slotProps">
-            <span class="position-text">{{ slotProps.data.employee_position || 'ไม่ระบุ' }}</span>
+            <span v-if="slotProps.data.employee_position" style="display:inline-block;padding:2px 10px;border-radius:12px;background:#ede9fe;color:#6d28d9;font-size:0.75rem;font-weight:600;white-space:nowrap">
+              {{ slotProps.data.employee_position }}
+            </span>
+            <span v-else style="color:#9ca3af;font-size:0.8rem">ไม่ระบุ</span>
           </template>
         </Column>
 
@@ -173,7 +176,7 @@
               <span v-else style="display:block;text-align:center"></span>
             </template>
             <template v-else>
-              <Button icon="pi pi-list" size="small" severity="info" outlined
+              <Button v-if="isOwner(slotProps.data.projects[0]) || isAdmin()" icon="pi pi-list" size="small" severity="info" outlined
                 @click="openManageGroup(slotProps.data)" v-tooltip="'จัดการโครงการ'" />
             </template>
           </template>
@@ -530,6 +533,11 @@ export default {
       const endMin = parseInt(end[0]) * 60 + parseInt(end[1])
       let diff = endMin - startMin
       if (diff < 0) diff += 24 * 60
+      // หัก lunch break 12:00-13:00
+      const lunchStart = 12 * 60, lunchEnd = 13 * 60
+      const overlapStart = Math.max(startMin, lunchStart)
+      const overlapEnd = Math.min(endMin, lunchEnd)
+      if (overlapEnd > overlapStart) diff -= (overlapEnd - overlapStart)
       return (diff / 60).toFixed(2) + ' ชม.'
     }
   },
@@ -999,7 +1007,8 @@ export default {
       this.editFormData = {
         id: record.id,
         task_id: record.task_id,
-          step_id: record.step_id,
+        step_id: record.step_id,
+        step_ids: record.step_ids || (record.step_id ? [record.step_id] : []),
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
         end_time: this.parseTime(record.end_time),

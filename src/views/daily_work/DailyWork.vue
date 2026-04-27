@@ -20,7 +20,7 @@
             <button @click="setFilter('all')" :class="['filter-btn', { active: activeFilter === 'all' }]">
               <i class="pi pi-list"></i>
               <span>ทั้งหมด</span>
-              <span class="filter-count">{{ workRecords.length }}</span>
+              <span class="filter-count">{{ uniqueCount }}</span>
             </button>
             <button @click="setFilter('today')" :class="['filter-btn', 'filter-today', { active: activeFilter === 'today' }]">
               <i class="pi pi-sun"></i>
@@ -121,11 +121,22 @@ export default {
       const d = new Date()
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     },
+    uniqueCount() {
+      return new Set(this.workRecords.map(r => `${String(r.work_date).substring(0, 10)}_${r.user_id}`)).size
+    },
     todayCount() {
-      return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr).length
+      return new Set(
+        this.workRecords
+          .filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr)
+          .map(r => `${r.work_date.substring(0, 10)}_${r.user_id}`)
+      ).size
     },
     futureCount() {
-      return this.workRecords.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr).length
+      return new Set(
+        this.workRecords
+          .filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr)
+          .map(r => `${r.work_date.substring(0, 10)}_${r.user_id}`)
+      ).size
     },
     taskOptions() {
       const map = {}

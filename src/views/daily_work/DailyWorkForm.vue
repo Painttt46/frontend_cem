@@ -132,7 +132,7 @@
             <Button type="button"
               :label="entry.files?.length > 0 ? `${entry.files.length} ไฟล์ที่เลือก` : 'เลือกไฟล์'"
               icon="pi pi-upload" severity="secondary" outlined size="small"
-              @click="$refs['fileInput_' + idx][0].click()" />
+              @click="($refs['fileInput_' + idx][0] || $refs['fileInput_' + idx]).click()" />
             <div v-if="entry.files?.length > 0" class="file-list">
               <div v-for="(file, fi) in entry.files" :key="fi" class="file-item">
                 <i class="pi pi-file-pdf" v-if="file.name.endsWith('.pdf')"></i>
@@ -219,7 +219,7 @@
       <!-- Actions -->
       <div class="form-actions">
         <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined @click="resetForm" />
-        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" />
+        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" :disabled="isSubmitting" :loading="isSubmitting" />
       </div>
     </form>
   </div>
@@ -259,7 +259,8 @@ export default {
       formData: { workDate: new Date() },
       statusOptions: [],
       users: [],
-      filteredAttendees: []
+      filteredAttendees: [],
+      isSubmitting: false
     }
   },
   async mounted() {
@@ -516,6 +517,8 @@ export default {
       }
     },
     async submitForm() {
+      if (this.isSubmitting) return
+      this.isSubmitting = true
       // Validate
       if (!this.formData.workDate) {
         this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกวันที่', life: 3000 })
@@ -569,7 +572,7 @@ export default {
 
           return this.$http.post('/api/daily-work', {
             task_id: entry.taskId,
-            step_ids: entry.stepIds.length > 0 ? entry.stepIds : [null],
+            step_ids: entry.stepIds.length > 0 ? entry.stepIds : [],
             work_date: this.formatDate(this.formData.workDate),
             start_time: this.formatTime(entry.startTime),
             end_time: this.formatTime(entry.endTime),
@@ -607,6 +610,8 @@ export default {
           detail: err.response?.data?.error || err.userMessage || 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง',
           life: 5000
         })
+      } finally {
+        this.isSubmitting = false
       }
     },
     formatDate(date) {
