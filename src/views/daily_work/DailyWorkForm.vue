@@ -77,7 +77,8 @@
             <MultiSelect v-model="entry.stepIds" :options="getStepsForTask(entry.taskId)"
               optionLabel="step_name" optionValue="id" :optionDisabled="isStepCompleted"
               class="w-full" placeholder="เลือก step (ถ้ามี)"
-              filter filterPlaceholder="ค้นหา step..." scrollHeight="300px" appendTo="body">
+              filter filterPlaceholder="ค้นหา step..." scrollHeight="300px" appendTo="body"
+              @update:modelValue="onStepIdsChange(entry)">
               <template #value="{ value }">
                 <div v-if="value && value.length" class="chips-wrap">
                   <div v-for="sid in value" :key="sid" class="step-chip"
@@ -146,48 +147,23 @@
 
           <!-- Calendar / Teams -->
           <div class="cal-section">
-            <div class="cal-header"><i class="pi pi-calendar-plus"></i> Calendar / MS Teams</div>
+            <div class="cal-header">
+              <Checkbox v-model="entry.createCalendarEvent" :inputId="'cal_' + idx" :binary="true" />
+              <label :for="'cal_' + idx" class="cal-header-label"><i class="pi pi-calendar-plus"></i> สร้าง Calendar Event</label>
+            </div>
+            <template v-if="entry.createCalendarEvent">
             <div class="field-row">
               <InputText v-model="entry.eventTitle" class="w-full" placeholder="หัวข้อ Calendar Event" />
             </div>
             <div class="field-row">
               <textarea v-model="entry.eventDetails" rows="2" class="cal-textarea" placeholder="รายละเอียดเพิ่มเติม..." />
             </div>
-            <div class="teams-toggle">
-              <Checkbox v-model="entry.createTeamsMeeting" :inputId="'teams_' + idx" :binary="true" />
-              <label :for="'teams_' + idx" class="teams-label"><i class="pi pi-video"></i> สร้าง MS Teams Meeting</label>
-            </div>
-            <div v-if="entry.createTeamsMeeting" class="meeting-time-grid">
-              <div class="meeting-time-field">
-                <label class="field-label-sm"><i class="pi pi-clock"></i> เวลาเริ่ม</label>
-                <InputText 
-                  v-model="entry.meetingStartTimeText" 
-                  class="meeting-time-input"
-                  :class="{ 'p-invalid': entry.meetingStartTimeError }"
-                  maxlength="5" 
-                  inputmode="numeric"
-                  @input="formatMeetingTime(entry, 'meetingStartTimeText'); entry.meetingStartTimeError = false"
-                  @blur="parseMeetingStartTime(entry)" />
-              </div>
-              <span class="meeting-time-separator">—</span>
-              <div class="meeting-time-field">
-                <label class="field-label-sm"><i class="pi pi-clock"></i> เวลาสิ้นสุด</label>
-                <InputText 
-                  v-model="entry.meetingEndTimeText" 
-                  class="meeting-time-input"
-                  :class="{ 'p-invalid': entry.meetingEndTimeError }"
-                  maxlength="5" 
-                  inputmode="numeric"
-                  @input="formatMeetingTime(entry, 'meetingEndTimeText'); entry.meetingEndTimeError = false"
-                  @blur="parseMeetingEndTime(entry)" />
-              </div>
-            </div>
-            <div v-if="entry.createTeamsMeeting" class="attendees-section">
+            <div class="attendees-section">
               <label class="field-label-sm" style="margin-bottom: 0.5rem; display: block;">
                 <i class="pi pi-users"></i> เชิญผู้เข้าร่วม
               </label>
-              <AutoComplete 
-                v-model="entry.selectedAttendee" 
+              <AutoComplete
+                v-model="entry.selectedAttendee"
                 :suggestions="filteredAttendees"
                 @complete="searchAttendees"
                 @item-select="(e) => onAttendeeSelect(e, entry)"
@@ -212,6 +188,36 @@
                 </div>
               </div>
             </div>
+            <div class="teams-toggle">
+              <Checkbox v-model="entry.createTeamsMeeting" :inputId="'teams_' + idx" :binary="true" />
+              <label :for="'teams_' + idx" class="teams-label"><i class="pi pi-video"></i> สร้าง MS Teams Meeting</label>
+            </div>
+            <div v-if="entry.createTeamsMeeting" class="meeting-time-grid">
+              <div class="meeting-time-field">
+                <label class="field-label-sm"><i class="pi pi-clock"></i> เวลาเริ่ม</label>
+                <InputText
+                  v-model="entry.meetingStartTimeText"
+                  class="meeting-time-input"
+                  :class="{ 'p-invalid': entry.meetingStartTimeError }"
+                  maxlength="5"
+                  inputmode="numeric"
+                  @input="formatMeetingTime(entry, 'meetingStartTimeText'); entry.meetingStartTimeError = false"
+                  @blur="parseMeetingStartTime(entry)" />
+              </div>
+              <span class="meeting-time-separator">—</span>
+              <div class="meeting-time-field">
+                <label class="field-label-sm"><i class="pi pi-clock"></i> เวลาสิ้นสุด</label>
+                <InputText
+                  v-model="entry.meetingEndTimeText"
+                  class="meeting-time-input"
+                  :class="{ 'p-invalid': entry.meetingEndTimeError }"
+                  maxlength="5"
+                  inputmode="numeric"
+                  @input="formatMeetingTime(entry, 'meetingEndTimeText'); entry.meetingEndTimeError = false"
+                  @blur="parseMeetingEndTime(entry)" />
+              </div>
+            </div>
+            </template>
           </div>
         </div>
       </div>
@@ -248,7 +254,7 @@ export default {
       workflowStepsMap: {},
       taskEntries: [{ 
         taskId: null, stepIds: [], location: '', workDescription: '', files: [], 
-        eventTitle: '', eventDetails: '', createTeamsMeeting: false, 
+        eventTitle: '', eventDetails: '', createCalendarEvent: false, createTeamsMeeting: false, 
         meetingStartTime: null, meetingEndTime: null, 
         meetingStartTimeText: '', meetingEndTimeText: '',
         meetingStartTimeError: false, meetingEndTimeError: false,
@@ -299,12 +305,41 @@ export default {
     },
     async onTaskEntryChange(entry) {
       entry.stepIds = []
+      entry.eventDetails = ''
+      // Auto-fill eventTitle from SO + task name
+      const task = this.tasks.find(t => t.id === entry.taskId)
+      if (task) {
+        entry.eventTitle = task.so_number ? `[${task.so_number}] ${task.task_name}` : task.task_name
+      }
       if (entry.taskId && !this.workflowStepsMap[entry.taskId]) {
         try {
           const res = await axios.get(`/api/task-steps/task/${entry.taskId}`)
           this.workflowStepsMap[entry.taskId] = res.data || []
         } catch (e) { console.error(e) }
       }
+    },
+    onStepIdsChange(entry) {
+      if (!entry.stepIds || entry.stepIds.length === 0) {
+        entry.eventDetails = ''
+        return
+      }
+      const steps = entry.stepIds
+        .map(id => {
+          const step = this.getStepByIdFromTask(id, entry.taskId)
+          const num = this.getStepNumberFromTask(id, entry.taskId)
+          return step ? { ...step, _num: num } : null
+        })
+        .filter(Boolean)
+        .sort((a, b) => a._num - b._num)
+      entry.eventDetails = steps.map(s => {
+        const lines = [`${s._num}. ${s.step_name}`]
+        if (s.description) lines.push(`   📋 ${s.description}`)
+        if (s.start_date || s.end_date) {
+          const fmt = d => d ? new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' }) : '?'
+          lines.push(`   📅 ${fmt(s.start_date)} – ${fmt(s.end_date)}`)
+        }
+        return lines.join('\n')
+      }).join('\n\n')
     },
     formatEntryTime(entry, field) {
       let digits = (entry[field] || '').replace(/\D/g, '')
@@ -408,7 +443,7 @@ export default {
     addTaskEntry() {
       this.taskEntries.push({ 
         taskId: null, stepIds: [], location: '', workDescription: '', files: [], 
-        eventTitle: '', eventDetails: '', createTeamsMeeting: false, 
+        eventTitle: '', eventDetails: '', createCalendarEvent: false, createTeamsMeeting: false, 
         meetingStartTime: null, meetingEndTime: null,
         meetingStartTimeText: '', meetingEndTimeText: '',
         meetingStartTimeError: false, meetingEndTimeError: false,
@@ -549,13 +584,7 @@ export default {
 
         await Promise.all(validEntries.map(async entry => {
           const uploadedFiles = await this.uploadFilesForEntry(entry)
-          
-          // Auto-build event_details from selected steps
-          const steps = (entry.stepIds || []).map(id => this.getStepByIdFromTask(id, entry.taskId)).filter(Boolean)
-          const stepDetails = steps.length > 0
-            ? 'Steps:\n' + steps.map((s, i) => `${i + 1}. ${s.step_name}${s.description ? ' - ' + s.description : ''}`).join('\n')
-            : ''
-          const eventDetails = [stepDetails, entry.eventDetails].filter(Boolean).join('\n\n')
+          const eventDetails = entry.eventDetails || ''
 
           // Calculate total hours
           let totalHours = 0
@@ -582,12 +611,12 @@ export default {
             files: uploadedFiles,
             user_id: userId,
             submitted_at: submittedAt,
-            create_calendar_event: !!(entry.eventTitle && entry.createTeamsMeeting),
+            create_calendar_event: entry.createCalendarEvent && !!entry.eventTitle,
             event_title: entry.eventTitle || '',
             event_details: eventDetails,
             create_teams_meeting: entry.createTeamsMeeting || false,
-            meeting_start_time: entry.createTeamsMeeting ? this.formatTime(entry.meetingStartTime || entry.startTime) : null,
-            meeting_end_time: entry.createTeamsMeeting ? this.formatTime(entry.meetingEndTime || entry.endTime) : null,
+            meeting_start_time: this.formatTime(entry.createTeamsMeeting ? (entry.meetingStartTime || entry.startTime) : entry.startTime),
+            meeting_end_time: this.formatTime(entry.createTeamsMeeting ? (entry.meetingEndTime || entry.endTime) : entry.endTime),
             attendees: entry.attendees || []
           })
         }))
@@ -827,7 +856,9 @@ export default {
   display: flex; 
   align-items: center; 
   gap: 8px; 
+  cursor: pointer;
 }
+.cal-header-label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
 .cal-textarea { 
   width: 100%; 
