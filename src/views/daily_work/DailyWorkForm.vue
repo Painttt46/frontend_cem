@@ -151,7 +151,6 @@
               <Checkbox v-model="entry.createCalendarEvent" :inputId="'cal_' + idx" :binary="true" />
               <label :for="'cal_' + idx" class="cal-header-label"><i class="pi pi-calendar-plus"></i> สร้าง Calendar Event</label>
             </div>
-            <template v-if="entry.createCalendarEvent">
             <div class="field-row">
               <InputText v-model="entry.eventTitle" class="w-full" placeholder="หัวข้อ Calendar Event" />
             </div>
@@ -217,7 +216,6 @@
                   @blur="parseMeetingEndTime(entry)" />
               </div>
             </div>
-            </template>
           </div>
         </div>
       </div>
