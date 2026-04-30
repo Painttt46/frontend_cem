@@ -135,6 +135,7 @@ export default {
       approverLevel: 0,  // 0 = ไม่มีสิทธิ์, 1 = level 1, 2 = level 2, 3 = ทั้งสองขั้น
       approverDepartments: [],  // แผนกที่ดูแล
       approverPositions: [],    // ตำแหน่งที่ดูแล
+      isInApprovalList: false,
       activeFilter: 'all',
       // Reject dialog
       showRejectDialog: false,
@@ -491,7 +492,8 @@ export default {
         const myLevel1 = level1.find(a => a.user_id == userId)
         const myLevel2 = level2.find(a => a.user_id == userId)
 
-        this.isInApprovalList = !!(myLevel1 || myLevel2)
+        this.isInApprovalList = !!(myLevel1?.can_approve || myLevel2?.can_approve)
+        console.log("[LeaveWork] role:", localStorage.getItem("soc_role"), "myLevel1:", myLevel1, "myLevel2:", myLevel2, "isInApprovalList:", this.isInApprovalList)
 
         // can_approve ใช้สำหรับปุ่มอนุมัติเท่านั้น
         const myLevel1Approve = level1.find(a => a.user_id == userId && a.can_approve)
