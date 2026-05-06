@@ -159,7 +159,12 @@ export default {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     },
     todayCount() {
-      return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) === this.todayStr).length
+      return this.leaveRecords.filter(r => {
+        if (!r.start_datetime) return false
+        const start = r.start_datetime.substring(0, 10)
+        const end = r.end_datetime ? r.end_datetime.substring(0, 10) : start
+        return start <= this.todayStr && end >= this.todayStr
+      }).length
     },
     futureCount() {
       return this.leaveRecords.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) > this.todayStr).length
@@ -174,7 +179,12 @@ export default {
     filteredLeaveRecords() {
       let records = this.leaveRecords
       if (this.activeFilter === 'today') {
-        records = records.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) === this.todayStr)
+        records = records.filter(r => {
+          if (!r.start_datetime) return false
+          const start = r.start_datetime.substring(0, 10)
+          const end = r.end_datetime ? r.end_datetime.substring(0, 10) : start
+          return start <= this.todayStr && end >= this.todayStr
+        })
       } else if (this.activeFilter === 'future') {
         records = records.filter(r => r.start_datetime && r.start_datetime.substring(0, 10) > this.todayStr)
       }
