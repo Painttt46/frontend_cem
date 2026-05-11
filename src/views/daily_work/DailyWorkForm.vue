@@ -493,12 +493,19 @@ export default {
     searchAttendees(event) {
       const query = event.query.toLowerCase().trim()
       if (query) {
-        this.filteredAttendees = this.users.filter(user =>
+        const matched = this.users.filter(user =>
           user.name.toLowerCase().includes(query) ||
           user.email.toLowerCase().includes(query) ||
           (user.position && user.position.toLowerCase().includes(query)) ||
           (user.department && user.department.toLowerCase().includes(query))
         )
+        // ถ้าพิมพ์เป็น email format และไม่มีในระบบ → เพิ่ม option ภายนอก
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query)
+        const alreadyInList = matched.some(u => u.email.toLowerCase() === query)
+        if (isEmail && !alreadyInList) {
+          matched.push({ name: query, email: query, position: 'ภายนอก', department: '' })
+        }
+        this.filteredAttendees = matched
       } else {
         this.filteredAttendees = this.users.slice()
       }
