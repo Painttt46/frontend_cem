@@ -163,22 +163,26 @@
               </label>
               <AutoComplete
                 v-model="entry.selectedAttendee"
-                :suggestions="filteredAttendees"
-                @complete="searchAttendees"
+                :suggestions="entry.filteredAttendees"
+                @complete="(e) => searchAttendees(e, entry)"
                 @item-select="(e) => onAttendeeSelect(e, entry)"
+                @keydown.enter.prevent="onAttendeeEnter(entry)"
                 optionLabel="name"
-                placeholder="ค้นหาชื่อ หรือ อีเมล..."
+                placeholder="ค้นหาชื่อ หรือ พิมพ์ email แล้วกด Enter..."
                 class="w-full"
-                forceSelection
                 :dropdown="true"
-                @dropdown-click="showAllAttendees">
+                emptySearchMessage=" "
+                @dropdown-click="showAllAttendees(entry)">
                 <template #option="slotProps">
                   <div class="attendee-option">
                     <div class="attendee-name">{{ slotProps.option.name }}</div>
-                    <div class="attendee-email">{{ slotProps.option.email }}</div>
+                    <div class="attendee-email">{{ slotProps.option.email }}{{ slotProps.option.position === 'ภายนอก' ? ' · ภายนอก' : '' }}</div>
                   </div>
                 </template>
               </AutoComplete>
+              <small v-if="entry.selectedAttendee && typeof entry.selectedAttendee === 'string' && entry.selectedAttendee.includes('@')" class="hint-external">
+                <i class="pi pi-info-circle"></i> กด Enter เพื่อเพิ่ม "{{ entry.selectedAttendee }}" เป็นผู้เข้าร่วมภายนอก
+              </small>
               <div v-if="entry.attendees && entry.attendees.length > 0" class="attendees-list">
                 <div v-for="(att, ai) in entry.attendees" :key="ai" class="attendee-chip">
                   <i class="pi pi-user"></i>
@@ -257,13 +261,13 @@ export default {
         meetingStartTimeText: '', meetingEndTimeText: '',
         meetingStartTimeError: false, meetingEndTimeError: false,
         startTimeText: '', endTimeText: '', 
-        startTime: null, endTime: null, attendees: [], selectedAttendee: null
+        startTime: null, endTime: null, attendees: [], selectedAttendee: null,
+        filteredAttendees: []
       }],
       minDate: (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; })(),
       formData: { workDate: new Date() },
       statusOptions: [],
       users: [],
-      filteredAttendees: [],
       isSubmitting: false
     }
   },
@@ -445,7 +449,8 @@ export default {
         meetingStartTime: null, meetingEndTime: null,
         meetingStartTimeText: '', meetingEndTimeText: '',
         meetingStartTimeError: false, meetingEndTimeError: false,
-        startTimeText: '', endTimeText: '', attendees: [], selectedAttendee: null
+        startTimeText: '', endTimeText: '', attendees: [], selectedAttendee: null,
+        filteredAttendees: []
       })
     },
     removeTaskEntry(idx) { this.taskEntries.splice(idx, 1) },
@@ -490,7 +495,7 @@ export default {
         console.error('Load users error:', err)
       }
     },
-    searchAttendees(event) {
+    searchAttendees(event, entry) {
       const query = event.query.toLowerCase().trim()
       if (query) {
         const matched = this.users.filter(user =>
@@ -499,19 +504,37 @@ export default {
           (user.position && user.position.toLowerCase().includes(query)) ||
           (user.department && user.department.toLowerCase().includes(query))
         )
-        // ถ้าพิมพ์เป็น email format และไม่มีในระบบ → เพิ่ม option ภายนอก
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query)
         const alreadyInList = matched.some(u => u.email.toLowerCase() === query)
         if (isEmail && !alreadyInList) {
           matched.push({ name: query, email: query, position: 'ภายนอก', department: '' })
         }
-        this.filteredAttendees = matched
+        // ถ้าไม่มี match เลย → ส่ง null เพื่อไม่ให้ panel เปิด
+        entry.filteredAttendees = matched.length > 0 ? matched : null
       } else {
-        this.filteredAttendees = this.users.slice()
+        entry.filteredAttendees = this.users.slice()
       }
     },
-    showAllAttendees() {
-      this.filteredAttendees = this.users.slice()
+    showAllAttendees(entry) {
+      entry.filteredAttendees = this.users.slice()
+    },
+    onAttendeeEnter(entry) {
+      const val = entry.selectedAttendee
+      // ถ้าเลือกจาก suggestion แล้ว (เป็น object)
+      if (val && typeof val === 'object' && val.email) {
+        this.onAttendeeSelect({ value: val }, entry)
+        return
+      }
+      // ถ้าพิมพ์ email ภายนอก
+      const text = (typeof val === 'string' ? val : '').trim()
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)
+      if (isEmail) {
+        const exists = entry.attendees.some(a => a.email.toLowerCase() === text.toLowerCase())
+        if (!exists) {
+          entry.attendees.push({ email: text, name: text, position: 'ภายนอก', department: '' })
+        }
+        entry.selectedAttendee = null
+      }
     },
     onAttendeeSelect(event, entry) {
       const attendee = event.value
@@ -1029,6 +1052,20 @@ export default {
   animation: slideDown 0.3s ease-out;
 }
 
+.hint-external {
+  display: block;
+  margin-top: 0.5rem;
+  color: #0ea5e9;
+  font-size: 0.8rem;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.hint-external i {
+  font-size: 0.75rem;
+  margin-right: 0.25rem;
+}
+
 .attendee-option {
   padding: 0.5rem;
 }
@@ -1163,5 +1200,22 @@ export default {
   .section { padding: 1.5rem; }
   .entry-card { padding: 1.5rem; }
   .time-input { width: 90px !important; }
+}
+</style>
+
+<style>
+/* ซ่อน AutoComplete panel เมื่อไม่มี suggestion */
+.p-autocomplete-panel .p-autocomplete-items:empty {
+  display: none;
+}
+.p-autocomplete-panel:has(.p-autocomplete-items:empty) {
+  display: none;
+}
+/* fallback: ซ่อน empty message ที่เป็น whitespace */
+.p-autocomplete-empty-message:blank {
+  display: none;
+}
+.p-autocomplete-panel:has(.p-autocomplete-empty-message:blank) {
+  display: none;
 }
 </style>
