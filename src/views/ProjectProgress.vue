@@ -6,6 +6,10 @@
       <template #header>
         <div class="main-header">
           <h1><i class="pi pi-chart-line"></i> ขั้นตอนการดำเนินการโครงการ</h1>
+          <span class="stat-item">
+            <i class="pi pi-folder"></i>
+            {{ filteredProjects.length }} โครงการ
+          </span>
         </div>
       </template>
     </Card>
@@ -15,10 +19,17 @@
         <i class="pi pi-search" />
         <InputText v-model="searchQuery" placeholder="ค้นหาโครงการ..." />
       </span>
-      <span class="stat-item">
-        <i class="pi pi-folder"></i>
-        {{ filteredProjects.length }} โครงการ
-      </span>
+      <div class="filter-tabs">
+        <button :class="['filter-tab', { active: projectFilter === 'all' }]" @click="projectFilter = 'all'">
+          ทั้งหมด
+        </button>
+        <button :class="['filter-tab', { active: projectFilter === 'mine' }]" @click="projectFilter = 'mine'">
+          <i class="pi pi-user"></i> ของฉัน
+        </button>
+        <button :class="['filter-tab', { active: projectFilter === 'completed' }]" @click="projectFilter = 'completed'">
+          <i class="pi pi-check-circle"></i> เสร็จแล้ว
+        </button>
+      </div>
     </div>
 
     <Card class="content-card">
@@ -41,13 +52,15 @@
 
           <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px;">
             <template #body="slotProps">
-              <Badge v-if="slotProps.data.category" :value="slotProps.data.category"
-                :style="{ backgroundColor: getCategoryColor(slotProps.data.category), color: '#fff' }" />
+              <span v-if="slotProps.data.category" class="category-badge"
+                :style="{ backgroundColor: getCategoryColor(slotProps.data.category) }">
+                {{ slotProps.data.category }}
+              </span>
               <span v-else class="text-muted">-</span>
             </template>
           </Column>
 
-          <Column header="ความคืบหน้า" style="min-width: 240px; max-width: 280px;">
+          <Column header="ความคืบหน้า" style="min-width: 240px;">
             <template #body="slotProps">
               <div class="progress-info" v-memo="[slotProps.data.steps]">
                 <ProgressBar :value="getProjectProgress(slotProps.data)" :showValue="false" style="height: 8px;" />
@@ -327,6 +340,7 @@ export default {
       categories: [],
       statuses: [],
       searchQuery: '',
+      projectFilter: 'all',
       completingStepId: null,
       currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null,
       showUserInfoDialog: false,
@@ -344,12 +358,17 @@ export default {
   },
   computed: {
     filteredProjects() {
-      // แสดงเฉพาะโครงการที่มี workflow steps
       let projects = this.projects.filter(p => p.steps && p.steps.length > 0)
-      
+
+      if (this.projectFilter === 'mine') {
+        projects = projects.filter(p => this.hasMyAssignment(p))
+      } else if (this.projectFilter === 'completed') {
+        projects = projects.filter(p => p.steps.every(s => s.status === 'completed'))
+      }
+
       if (!this.searchQuery) return projects
       const query = this.searchQuery.toLowerCase()
-      return projects.filter(p => 
+      return projects.filter(p =>
         p.task_name?.toLowerCase().includes(query) ||
         p.so_number?.toLowerCase().includes(query) ||
         p.category?.toLowerCase().includes(query) ||
@@ -801,6 +820,37 @@ export default {
   gap: 1rem;
 }
 
+.filter-tabs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.filter-tab {
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  border: 1.5px solid #d1d5db;
+  background: white;
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
+}
+
+.filter-tab:hover {
+  border-color: #4A90E2;
+  color: #4A90E2;
+}
+
+.filter-tab.active {
+  background: #4A90E2;
+  border-color: #4A90E2;
+  color: white;
+  font-weight: 600;
+}
+
 .search-box {
   position: relative;
 }
@@ -828,6 +878,24 @@ export default {
   font-size: 0.95rem;
 }
 
+.main-header .stat-item {
+  color: rgba(255,255,255,0.9);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
 .content-card {
   width: 100%;
   border-radius: 12px;
@@ -850,6 +918,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .progress-text {
@@ -1528,8 +1598,8 @@ export default {
 .latest-completed-info { color: #16a34a; }
 .latest-completed-info i { color: #16a34a; }
 .assigned-chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 3px;
   margin-top: 3px;
 }
@@ -1544,10 +1614,6 @@ export default {
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 500;
-  width: calc(50% - 2px);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -1584,51 +1650,19 @@ export default {
   white-space: normal;
   word-break: break-word;
   line-height: 1.3;
+  flex: 1;
 }
 
-.latest-step-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 4px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  max-width: 100%;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
-}
-.latest-step-chip.status-completed { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color:#166534; border-color:#86efac; }
-.latest-step-chip.status-overdue   { background: linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; border-color:#fca5a5; }
-.latest-step-chip.status-working   { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#b45309; border-color:#fcd34d; }
-.step-idx-badge {
-  flex-shrink: 0;
-  background: #1e40af;
-  color: #fff !important;
-  border-radius: 50%;
-  min-width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 900;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-}
-.step-name-text {
-  font-weight: 600;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 .step-status-mini {
   flex-shrink: 0;
   font-size: 0.68rem;
   opacity: 0.8;
   white-space: nowrap;
 }
+
+.latest-step-chip.status-completed { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color:#166534; border-color:#86efac; }
+.latest-step-chip.status-overdue   { background: linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; border-color:#fca5a5; }
+.latest-step-chip.status-working   { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#b45309; border-color:#fcd34d; }
 
 .latest-step-card {
   margin-top: 6px;
