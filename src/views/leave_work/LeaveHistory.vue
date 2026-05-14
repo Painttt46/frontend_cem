@@ -445,14 +445,20 @@ export default {
     async loadWorkHours() {
       try {
         const role = localStorage.getItem('soc_role') || 'user'
-        const response = await this.$http.get(`/api/settings/role-work-hours/${role}`)
-        this.workHours = {
-          start_time: response.data.start_time?.substring(0, 5) || '09:00',
-          end_time: response.data.end_time?.substring(0, 5) || '18:00',
-          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
-          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
-        }
+        const userId = localStorage.getItem('soc_user_id')
+        this.workHours = await this.fetchWorkHoursForUser(userId, role)
       } catch { /* ignore */ }
+    },
+    async fetchWorkHoursForUser(userId, role) {
+      const fmt = t => t?.substring(0, 5)
+      if (userId) {
+        try {
+          const res = await this.$http.get('/api/settings/user-work-hours')
+          const found = res.data.find(u => u.user_id === parseInt(userId))
+          if (found) return { start_time: fmt(found.start_time), end_time: fmt(found.end_time), lunch_start: fmt(found.lunch_start), lunch_end: fmt(found.lunch_end) }
+        } catch { /* fallthrough */ }
+      }
+      return this.getWorkHoursForRole(role)
     },
     async getWorkHoursForRole(role) {
       if (!role) return this.workHours
@@ -471,6 +477,13 @@ export default {
       return this.workHours
     },
     async preloadWorkHoursForRecords(records) {
+      try {
+        const res = await this.$http.get('/api/settings/user-work-hours')
+        const fmt = t => t?.substring(0, 5)
+        res.data.forEach(u => {
+          this.workHoursCache[`user_${u.user_id}`] = { start_time: fmt(u.start_time), end_time: fmt(u.end_time), lunch_start: fmt(u.lunch_start), lunch_end: fmt(u.lunch_end) }
+        })
+      } catch { /* ignore */ }
       const roles = [...new Set(records.map(r => r.employee_role).filter(Boolean))]
       await Promise.all(roles.map(role => this.getWorkHoursForRole(role)))
     },
@@ -485,7 +498,7 @@ export default {
       }
     },
     calculateHours(data) {
-      const wh = this.workHoursCache[data.employee_role] || this.workHours
+      const wh = this.workHoursCache[`user_${data.user_id}`] || this.workHoursCache[data.employee_role] || this.workHours
       if (data.employee_role && !this.workHoursCache[data.employee_role]) {
         this.getWorkHoursForRole(data.employee_role)
       }

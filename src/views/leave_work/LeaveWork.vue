@@ -54,13 +54,13 @@
     <!-- Leave Form Dialog -->
     <Dialog v-model:visible="showLeaveDialog" modal header="แจ้งลางาน" :style="{ width: '95vw', maxWidth: '900px' }"
       class="leave-dialog" :draggable="false">
-      <LeaveForm @submit-leave="submitLeave" @close-form="showLeaveDialog = false" />
+      <LeaveForm v-if="showLeaveDialog" @submit-leave="submitLeave" @close-form="showLeaveDialog = false" />
     </Dialog>
 
     <!-- Approval Dialog -->
     <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา"
       :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
-      <LeaveApproval :records="pendingLeaveRecords" :approver-level="approverLevel" :disabled="approving"
+      <LeaveApproval v-if="showApprovalDialog" :records="pendingLeaveRecords" :approver-level="approverLevel" :disabled="approving"
         :is-admin="currentUserRole === 'admin'" @approve-leave="approveLeave" @reject-leave="openRejectDialog"
         @close-form="showApprovalDialog = false" />
     </Dialog>

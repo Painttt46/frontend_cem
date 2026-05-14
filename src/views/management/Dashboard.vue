@@ -1014,14 +1014,15 @@ const loadData = async () => {
 
   try {
     // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
-    const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours] = await Promise.all([
+    const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours, userWorkHours] = await Promise.all([
       userService.getActiveUsers(),
       axios.get('/api/leave').then(r => r.data),
       axios.get('/api/settings/dashboard-summary').then(r => r.data),
       axios.get('/api/tasks').then(r => r.data),
       axios.get('/api/daily-work/summary').then(r => r.data),
       axios.get('/api/task-steps/all').then(r => r.data),
-      axios.get('/api/settings/role-work-hours').then(r => r.data).catch(() => [])
+      axios.get('/api/settings/role-work-hours').then(r => r.data).catch(() => []),
+      axios.get('/api/settings/user-work-hours').then(r => r.data).catch(() => [])
     ])
 
     // สร้าง map ชั่วโมงทำงานต่อวันตาม role และ lunch break
@@ -1038,6 +1039,19 @@ const loadData = async () => {
       roleLunchMap[r.role] = lunchBreak
     })
 
+    // user-level override
+    const userHoursOverride = {}
+    const userLunchOverride = {}
+    userWorkHours.forEach(u => {
+      const start = parseTime(u.start_time)
+      const end = parseTime(u.end_time)
+      const lunchStart = parseTime(u.lunch_start)
+      const lunchEnd = parseTime(u.lunch_end)
+      const lunchBreak = (lunchStart && lunchEnd) ? (lunchEnd - lunchStart) : 1
+      userHoursOverride[u.user_id] = end - start - lunchBreak
+      userLunchOverride[u.user_id] = lunchBreak
+    })
+
     // จัดกลุ่ม steps ตาม task_id
     const stepsByTask = {}
     allSteps.forEach(step => {
@@ -1050,12 +1064,12 @@ const loadData = async () => {
       task.steps = stepsByTask[task.id] || []
     })
 
-    // สร้าง map user -> role hours per day และ lunch break
+    // สร้าง map user -> role hours per day และ lunch break (user-level override role-level)
     const userRoleHours = {}
     const userLunchBreak = {}
     activeUsers.forEach(u => {
-      userRoleHours[u.id] = roleHoursMap[u.role] || 7 // default 7 ชม. (8-1 พัก)
-      userLunchBreak[u.id] = roleLunchMap[u.role] || 1 // default พัก 1 ชม.
+      userRoleHours[u.id] = userHoursOverride[u.id] ?? roleHoursMap[u.role] ?? 7
+      userLunchBreak[u.id] = userLunchOverride[u.id] ?? roleLunchMap[u.role] ?? 1
     })
 
     // Store for user filter

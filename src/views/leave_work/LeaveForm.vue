@@ -620,25 +620,31 @@ export default {
     async loadWorkHours() {
       try {
         const role = localStorage.getItem('soc_role') || 'user';
-        const response = await axios.get(`/api/settings/role-work-hours/${role}`);
-        // แปลง format เวลาจาก HH:mm:ss เป็น HH:mm
-        this.workHours = {
-          start_time: response.data.start_time?.substring(0, 5) || '09:00',
-          end_time: response.data.end_time?.substring(0, 5) || '18:00',
-          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
-          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
-        };
+        const userId = localStorage.getItem('soc_user_id');
+        this.workHours = await this.fetchWorkHours(userId, role);
         this.generateAllowedTimes();
       } catch {
-        // Use default work hours
-        this.workHours = {
-          start_time: '09:00',
-          end_time: '18:00',
-          lunch_start: '12:00',
-          lunch_end: '13:00'
-        };
+        this.workHours = { start_time: '09:00', end_time: '18:00', lunch_start: '12:00', lunch_end: '13:00' };
         this.generateAllowedTimes();
       }
+    },
+
+    async fetchWorkHours(userId, role) {
+      const fmt = t => t?.substring(0, 5);
+      const defaults = { start_time: '09:00', end_time: '18:00', lunch_start: '12:00', lunch_end: '13:00' };
+      // เช็ค user-level ก่อน
+      if (userId) {
+        try {
+          const res = await axios.get(`/api/settings/user-work-hours`);
+          const found = res.data.find(u => u.user_id === parseInt(userId));
+          if (found) return { start_time: fmt(found.start_time), end_time: fmt(found.end_time), lunch_start: fmt(found.lunch_start), lunch_end: fmt(found.lunch_end) };
+        } catch { /* fallthrough */ }
+      }
+      // fallback role
+      try {
+        const res = await axios.get(`/api/settings/role-work-hours/${role}`);
+        return { start_time: fmt(res.data.start_time) || defaults.start_time, end_time: fmt(res.data.end_time) || defaults.end_time, lunch_start: fmt(res.data.lunch_start) || defaults.lunch_start, lunch_end: fmt(res.data.lunch_end) || defaults.lunch_end };
+      } catch { return defaults; }
     },
 
     generateAllowedTimes() {
@@ -700,15 +706,8 @@ export default {
       try {
         // โหลด work hours ของ user ที่เลือก
         const userRole = this.selectedLeaveUser.role || 'user'
-        console.log('[onLeaveUserChange] user:', this.selectedLeaveUser.displayName, 'role:', userRole)
-        const workHoursResponse = await axios.get(`/api/settings/role-work-hours/${userRole}`)
-        console.log('[onLeaveUserChange] workHours response:', JSON.stringify(workHoursResponse.data))
-        this.workHours = {
-          start_time: workHoursResponse.data.start_time?.substring(0, 5) || '09:00',
-          end_time: workHoursResponse.data.end_time?.substring(0, 5) || '18:00',
-          lunch_start: workHoursResponse.data.lunch_start?.substring(0, 5) || '12:00',
-          lunch_end: workHoursResponse.data.lunch_end?.substring(0, 5) || '13:00'
-        }
+        const userId = this.selectedLeaveUser.id
+        this.workHours = await this.fetchWorkHours(userId, userRole)
         this.generateAllowedTimes()
         
         // โหลด quota

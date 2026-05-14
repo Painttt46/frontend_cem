@@ -59,7 +59,7 @@
               <i class="pi pi-clock card-icon"></i>
               <Badge value="Active" severity="success" />
             </div>
-            <h3>ตั้งค่าเวลาทำงานตาม Role</h3>
+            <h3>ตั้งค่าเวลาการทำงาน</h3>
             <p>กำหนดเวลาเริ่ม-เลิกงาน และพักเที่ยงของแต่ละ Role</p>
             <div class="card-footer">
               <i class="pi pi-arrow-right"></i>
