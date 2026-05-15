@@ -255,7 +255,7 @@ export default {
       tasks: [],
       workflowStepsMap: {},
       taskEntries: [{ 
-        taskId: null, stepIds: [], location: '', workDescription: '', files: [], 
+        taskId: null, stepIds: [], location: 'GenT Office', workDescription: '', files: [], 
         eventTitle: '', eventDetails: '', createCalendarEvent: false, createTeamsMeeting: false, 
         meetingStartTime: null, meetingEndTime: null, 
         meetingStartTimeText: '', meetingEndTimeText: '',
@@ -444,7 +444,7 @@ export default {
     },
     addTaskEntry() {
       this.taskEntries.push({ 
-        taskId: null, stepIds: [], location: '', workDescription: '', files: [], 
+        taskId: null, stepIds: [], location: 'GenT Office', workDescription: '', files: [], 
         eventTitle: '', eventDetails: '', createCalendarEvent: false, createTeamsMeeting: false, 
         meetingStartTime: null, meetingEndTime: null,
         meetingStartTimeText: '', meetingEndTimeText: '',
