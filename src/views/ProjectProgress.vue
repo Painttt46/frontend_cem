@@ -37,6 +37,7 @@
         <DataTable :value="sortedProjects" v-model:expandedRows="expandedRows"
           dataKey="id" responsiveLayout="scroll"
           :paginator="true" :rows="10" :rowsPerPageOptions="[10, 25, 50]"
+          v-model:first="paginatorFirst"
           @row-click="onRowClick" class="clickable-rows" :rowClass="getRowClass">
           
           <Column :expander="true" style="width: 3rem" />
@@ -337,6 +338,7 @@ export default {
     return {
       projects: [],
       expandedRows: {},
+      paginatorFirst: 0,
       categories: [],
       statuses: [],
       searchQuery: '',
@@ -430,19 +432,25 @@ export default {
       if (taskId && this.projects.length > 0) {
         const project = this.projects.find(p => p.id === taskId)
         if (project) {
+          // Navigate to correct page if paginated
+          const idx = this.sortedProjects.findIndex(p => p.id === taskId)
+          if (idx >= 0) {
+            this.paginatorFirst = Math.floor(idx / 10) * 10
+          }
           this.expandedRows = { [taskId]: true }
           const stepId = parseInt(this.$route.query.stepId)
           if (stepId) {
-            this.$nextTick(() => {
-              this.$nextTick(() => {
-                const el = document.querySelector(`[data-step-id="${stepId}"]`)
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-                  el.classList.add('step-highlight')
-                  setTimeout(() => el.classList.remove('step-highlight'), 2000)
-                }
-              })
-            })
+            const tryScroll = (attempts = 0) => {
+              const el = document.querySelector(`[data-step-id="${stepId}"]`)
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                el.classList.add('step-highlight')
+                setTimeout(() => el.classList.remove('step-highlight'), 2000)
+              } else if (attempts < 10) {
+                setTimeout(() => tryScroll(attempts + 1), 150)
+              }
+            }
+            this.$nextTick(() => tryScroll())
           }
         }
       }
