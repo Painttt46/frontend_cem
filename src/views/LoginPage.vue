@@ -225,7 +225,12 @@ async function auth(username, password) {
   // ดึง public IP ก่อน login
   let clientIp = '';
   try {
-    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+    const ipResponse = await fetch('https://api.ipify.org?format=json', {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
     const ipData = await ipResponse.json();
     clientIp = ipData.ip;
   } catch (e) {
