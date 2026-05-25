@@ -42,9 +42,10 @@
                 <span v-else>เลือกโครงการ</span>
               </template>
               <template #option="slotProps">
-                <div class="task-option">
+                <div class="task-option" :class="{ 'my-project-option': slotProps.option.isMyProject }">
                   <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
                   <span class="task-name-text">{{ slotProps.option.task_name }}</span>
+                  <i v-if="slotProps.option.isMyProject" class="pi pi-user my-project-icon" title="โครงการที่คุณถูก assign"></i>
                 </div>
               </template>
             </Dropdown>
@@ -315,7 +316,9 @@ export default {
       fuelLevelBorrow: 50,
       fuelLevelReturn: 50,
       easyPassBorrow: 500,
-      easyPassReturn: 500
+      easyPassReturn: 500,
+      currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null,
+      allSteps: []
     }
   },
   async created() {
@@ -424,16 +427,47 @@ export default {
       try {
         const response = await this.$http.get('/api/tasks')
         if (response.data && Array.isArray(response.data)) {
-          this.projectOptions = response.data
-            .filter(task => isActive(task.status))
-            .map(task => ({
-              ...task,
-              display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`
-            }))
+          const tasks = response.data.filter(task => isActive(task.status))
+          
+          // Load steps for each task to check assignments
+          await Promise.all(tasks.map(async (task) => {
+            try {
+              const stepsResponse = await this.$http.get(`/api/task-steps/task/${task.id}`, { silent: true })
+              task.steps = (stepsResponse.data || []).map(step => ({
+                ...step,
+                assigned_users: typeof step.assigned_users === 'string' 
+                  ? JSON.parse(step.assigned_users) 
+                  : (step.assigned_users || [])
+              }))
+            } catch {
+              task.steps = []
+            }
+          }))
+          
+          // Sort: โครงการที่ assign ให้ตัวเองไว้บนสุด
+          const sortedTasks = tasks.sort((a, b) => {
+            const aHasMe = this.hasMyAssignment(a)
+            const bHasMe = this.hasMyAssignment(b)
+            if (aHasMe && !bHasMe) return -1
+            if (!aHasMe && bHasMe) return 1
+            return 0
+          })
+          
+          this.projectOptions = sortedTasks.map(task => ({
+            ...task,
+            display: `${task.task_name} ${task.so_number ? `(${task.so_number})` : ''}`,
+            isMyProject: this.hasMyAssignment(task)
+          }))
         }
       } catch { // ignore
         
       }
+    },
+    hasMyAssignment(project) {
+      if (!project.steps || project.steps.length === 0) return false
+      return project.steps.some(step => 
+        step.assigned_users && step.assigned_users.some(u => u.id === this.currentUserId)
+      )
     },
     async loadUsers() {
       try {
@@ -930,5 +964,28 @@ export default {
   word-break: break-word;
   white-space: normal;
   line-height: 1.4;
+}
+
+/* Highlight โครงการที่ถูก assign */
+.my-project-option {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe) !important;
+  border-left: 3px solid #3b82f6 !important;
+  padding-left: 0.75rem !important;
+}
+
+.my-project-option:hover {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
+}
+
+.my-project-icon {
+  margin-left: auto;
+  color: #3b82f6;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.task-option {
+  padding: 0.5rem;
+  transition: all 0.2s ease;
 }
 </style>
