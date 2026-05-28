@@ -5,8 +5,34 @@
 
       <!-- วันที่ -->
       <div class="section date-section">
-        <label class="field-label"><i class="pi pi-calendar"></i> วันที่ลงงาน <span class="req">*</span></label>
-        <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="w-full" :minDate="minDate" required />
+        <div class="date-header">
+          <label class="field-label"><i class="pi pi-calendar"></i> วันที่ลงงาน <span class="req">*</span></label>
+          <div class="date-range-toggle">
+            <Checkbox v-model="formData.useDateRange" inputId="useDateRange" :binary="true" />
+            <label for="useDateRange" class="toggle-label">ลงงานหลายวัน</label>
+          </div>
+        </div>
+        
+        <div v-if="!formData.useDateRange" class="single-date">
+          <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="w-full" :minDate="minDate" required />
+        </div>
+        
+        <div v-else class="date-range-inputs">
+          <div class="date-range-field">
+            <label class="field-label-sm">วันเริ่มต้น</label>
+            <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy" class="w-full" :minDate="minDate" required />
+          </div>
+          <span class="date-range-separator">ถึง</span>
+          <div class="date-range-field">
+            <label class="field-label-sm">วันสิ้นสุด</label>
+            <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy" class="w-full" :minDate="formData.startDate || minDate" required />
+          </div>
+        </div>
+        
+        <div v-if="formData.useDateRange && dateRangeDays > 0" class="date-range-info">
+          <i class="pi pi-info-circle"></i>
+          <span>จะลงงานทั้งหมด <strong>{{ dateRangeDays }} วัน</strong> ({{ formatDateRange }})</span>
+        </div>
       </div>
 
       <!-- โครงการ -->
@@ -265,10 +291,33 @@ export default {
         filteredAttendees: []
       }],
       minDate: (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; })(),
-      formData: { workDate: new Date() },
+      formData: { 
+        workDate: new Date(),
+        useDateRange: false,
+        startDate: new Date(),
+        endDate: new Date()
+      },
       statusOptions: [],
       users: [],
       isSubmitting: false
+    }
+  },
+  computed: {
+    dateRangeDays() {
+      if (!this.formData.useDateRange || !this.formData.startDate || !this.formData.endDate) return 0
+      const start = new Date(this.formData.startDate)
+      const end = new Date(this.formData.endDate)
+      start.setHours(0, 0, 0, 0)
+      end.setHours(0, 0, 0, 0)
+      const diffTime = end - start
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+      return diffDays > 0 ? diffDays : 0
+    },
+    formatDateRange() {
+      if (!this.formData.startDate || !this.formData.endDate) return ''
+      const start = new Date(this.formData.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+      const end = new Date(this.formData.endDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+      return `${start} - ${end}`
     }
   },
   async mounted() {
@@ -582,10 +631,25 @@ export default {
     async submitForm() {
       if (this.isSubmitting) return
       this.isSubmitting = true
-      // Validate
-      if (!this.formData.workDate) {
-        this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกวันที่', life: 3000 })
-        return
+      
+      // Validate date
+      if (this.formData.useDateRange) {
+        if (!this.formData.startDate || !this.formData.endDate) {
+          this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด', life: 3000 })
+          this.isSubmitting = false
+          return
+        }
+        if (this.formData.endDate < this.formData.startDate) {
+          this.$toast.add({ severity: 'warn', summary: 'วันสิ้นสุดต้องมากกว่าหรือเท่ากับวันเริ่มต้น', life: 3000 })
+          this.isSubmitting = false
+          return
+        }
+      } else {
+        if (!this.formData.workDate) {
+          this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกวันที่', life: 3000 })
+          this.isSubmitting = false
+          return
+        }
       }
 
       const validEntries = this.taskEntries.filter(e => e.taskId)
@@ -609,8 +673,28 @@ export default {
       try {
         const userId = localStorage.getItem('soc_user_id')
         const submittedAt = new Date().toISOString()
+        
+        // Generate date array
+        const datesToSubmit = []
+        if (this.formData.useDateRange) {
+          const start = new Date(this.formData.startDate)
+          const end = new Date(this.formData.endDate)
+          start.setHours(0, 0, 0, 0)
+          end.setHours(0, 0, 0, 0)
+          
+          for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            datesToSubmit.push(new Date(d))
+          }
+        } else {
+          datesToSubmit.push(new Date(this.formData.workDate))
+        }
+        
+        // Submit for each date and each entry
+        const totalSubmissions = datesToSubmit.length * validEntries.length
+        let completedSubmissions = 0
 
-        await Promise.all(validEntries.map(async entry => {
+        await Promise.all(datesToSubmit.map(async workDate => {
+          return Promise.all(validEntries.map(async entry => {
           const uploadedFiles = await this.uploadFilesForEntry(entry)
           const eventDetails = entry.eventDetails || ''
 
@@ -627,10 +711,10 @@ export default {
             totalHours = Math.max(0, diff)
           }
 
-          return this.$http.post('/api/daily-work', {
-            task_id: entry.taskId,
-            step_ids: entry.stepIds.length > 0 ? entry.stepIds : [],
-            work_date: this.formatDate(this.formData.workDate),
+            const result = await this.$http.post('/api/daily-work', {
+              task_id: entry.taskId,
+              step_ids: entry.stepIds.length > 0 ? entry.stepIds : [],
+              work_date: this.formatDate(workDate),
             start_time: this.formatTime(entry.startTime),
             end_time: this.formatTime(entry.endTime),
             total_hours: totalHours,
@@ -645,15 +729,22 @@ export default {
             create_teams_meeting: entry.createTeamsMeeting || false,
             meeting_start_time: this.formatTime(entry.createTeamsMeeting ? (entry.meetingStartTime || entry.startTime) : entry.startTime),
             meeting_end_time: this.formatTime(entry.createTeamsMeeting ? (entry.meetingEndTime || entry.endTime) : entry.endTime),
-            attendees: entry.attendees || []
-          })
+              attendees: entry.attendees || []
+            })
+            completedSubmissions++
+            return result
+          }))
         }))
 
+        const dateText = this.formData.useDateRange 
+          ? `${datesToSubmit.length} วัน` 
+          : '1 วัน'
+        
         this.$toast.add({
           severity: 'success',
           summary: 'สำเร็จ',
-          detail: `บันทึกงานรายวัน ${validEntries.length} โครงการเรียบร้อยแล้ว`,
-          life: 3000
+          detail: `บันทึกงานรายวัน ${validEntries.length} โครงการ × ${dateText} = ${totalSubmissions} รายการเรียบร้อยแล้ว`,
+          life: 5000
         })
 
         window.dispatchEvent(new CustomEvent('taskUpdated'))
@@ -703,6 +794,116 @@ export default {
   flex-direction: column; 
   gap: 0; 
   max-width: 100%; 
+}
+
+/* ── Date Section ── */
+.date-section {
+  margin-bottom: 1.5rem;
+}
+
+.date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.date-range-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0f9ff;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+  transition: all 0.2s ease;
+}
+
+.date-range-toggle:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.toggle-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e40af;
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
+}
+
+.single-date {
+  width: 100%;
+}
+
+.date-range-inputs {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+  align-items: end;
+  width: 100%;
+}
+
+.date-range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.date-range-separator {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  padding-bottom: 0.5rem;
+  white-space: nowrap;
+}
+
+.date-range-info {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.date-range-info i {
+  font-size: 1.1rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.date-range-info strong {
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .date-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .date-range-inputs {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .date-range-separator {
+    display: none;
+  }
+  
+  .date-range-field label {
+    font-size: 0.8rem;
+  }
 }
 
 /* ── Section ── */
