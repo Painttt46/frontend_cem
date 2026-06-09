@@ -226,7 +226,8 @@ router.beforeEach(async (to, from, next) => {
             return;
           }
         }
-        next("/login");
+        // ไม่มี permission เลย → ไป /profile (ไม่ต้องการ permission) เพื่อป้องกัน redirect loop
+        next("/profile");
         return;
       }
     }
