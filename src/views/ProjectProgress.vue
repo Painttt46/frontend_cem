@@ -39,6 +39,29 @@
           class="filter-dropdown"
           filter
         />
+        <Dropdown
+          v-model="filterProjectStatus"
+          :options="projectStatusOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="สถานะโครงการทั้งหมด"
+          :showClear="true"
+          class="filter-dropdown"
+        >
+          <template #value="slotProps">
+            <div v-if="slotProps.value" class="status-dropdown-value">
+              <span class="status-dot" :style="{ backgroundColor: getProjectStatusColor(slotProps.value) }"></span>
+              {{ getProjectStatusLabel(slotProps.value) }}
+            </div>
+            <span v-else>สถานะโครงการทั้งหมด</span>
+          </template>
+          <template #option="slotProps">
+            <div class="status-dropdown-option">
+              <span class="status-dot" :style="{ backgroundColor: slotProps.option.color || '#6b7280' }"></span>
+              {{ slotProps.option.label }}
+            </div>
+          </template>
+        </Dropdown>
         <button v-if="hasActiveFilters" class="clear-filters-btn" @click="clearAllFilters">
           <i class="pi pi-times"></i> ล้างตัวกรอง
         </button>
@@ -387,6 +410,7 @@ export default {
       projectFilter: 'all',
       filterCategory: null,
       filterProjectManager: null,
+      filterProjectStatus: null,
       completingStepId: null,
       currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null,
       showUserInfoDialog: false,
@@ -426,8 +450,31 @@ export default {
       }
       return opts.sort((a, b) => a.label.localeCompare(b.label, 'th'))
     },
+    projectStatusOptions() {
+      // ดึง statuses ที่มีการใช้งานจริงใน projects
+      const seen = new Set()
+      const opts = []
+      for (const p of this.projects) {
+        if (!p.steps) continue
+        for (const step of p.steps) {
+          const statuses = step.project_statuses || (step.project_status ? [step.project_status] : [])
+          for (const s of statuses) {
+            if (s && !seen.has(s)) {
+              seen.add(s)
+              const found = this.statuses.find(st => st.value === s)
+              opts.push({
+                label: found ? found.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim() : s,
+                value: s,
+                color: found?.color || '#6b7280'
+              })
+            }
+          }
+        }
+      }
+      return opts.sort((a, b) => a.label.localeCompare(b.label, 'th'))
+    },
     hasActiveFilters() {
-      return !!(this.searchQuery || this.filterCategory || this.filterProjectManager || this.projectFilter !== 'all')
+      return !!(this.searchQuery || this.filterCategory || this.filterProjectManager || this.filterProjectStatus || this.projectFilter !== 'all')
     },
     filteredProjects() {
       let projects = this.projects.filter(p => p.steps && p.steps.length > 0)
@@ -444,6 +491,16 @@ export default {
 
       if (this.filterProjectManager) {
         projects = projects.filter(p => p.project_manager === this.filterProjectManager)
+      }
+
+      if (this.filterProjectStatus) {
+        projects = projects.filter(p => {
+          const currentStatuses = this.getLatestProjectStatuses(p)
+          if (this.filterProjectStatus === '__completed__') {
+            return p.status === 'completed'
+          }
+          return currentStatuses.includes(this.filterProjectStatus)
+        })
       }
 
       if (!this.searchQuery) return projects
@@ -492,6 +549,7 @@ export default {
       this.searchQuery = ''
       this.filterCategory = null
       this.filterProjectManager = null
+      this.filterProjectStatus = null
       this.projectFilter = 'all'
     },
     getLatestProjectStatuses(project) {
@@ -1009,6 +1067,22 @@ export default {
 .filter-dropdown :deep(.p-dropdown-label) {
   padding: 0.4rem 0.75rem;
   font-size: 0.875rem;
+}
+
+.status-dropdown-value,
+.status-dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
 }
 
 .clear-filters-btn {
