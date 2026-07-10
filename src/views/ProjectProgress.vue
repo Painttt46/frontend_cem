@@ -113,14 +113,20 @@
             </template>
           </Column>
 
-          <Column header="สถานะโครงการ" style="min-width: 140px;">
+          <Column header="สถานะโครงการ" style="min-width: 150px;">
             <template #body="slotProps">
-              <span v-if="getTaskStatusLabel(slotProps.data)" class="task-status-badge"
-                :style="getTaskStatusStyle(slotProps.data)">
-                <i :class="getTaskStatusIcon(slotProps.data)"></i>
-                {{ getTaskStatusLabel(slotProps.data) }}
-              </span>
-              <span v-else class="text-muted">-</span>
+              <div class="status-badges-column">
+                <Badge v-if="slotProps.data.status === 'completed'"
+                  value="เสร็จสิ้น"
+                  :style="{ backgroundColor: '#10b981', color: '#fff', fontWeight: 'bold' }" />
+                <template v-else-if="getLatestProjectStatuses(slotProps.data).length > 0">
+                  <Badge
+                    v-for="ps in getLatestProjectStatuses(slotProps.data)" :key="ps"
+                    :value="getProjectStatusLabel(ps)"
+                    :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
+                </template>
+                <span v-else class="text-muted">-</span>
+              </div>
             </template>
           </Column>
 
@@ -488,48 +494,31 @@ export default {
       this.filterProjectManager = null
       this.projectFilter = 'all'
     },
-    getTaskStatusLabel(project) {
-      // ถ้า steps ทั้งหมด completed → เสร็จสิ้น
-      if (project.steps && project.steps.length > 0 && project.steps.every(s => s.status === 'completed')) {
-        return 'เสร็จสิ้น'
+    getLatestProjectStatuses(project) {
+      if (!project.steps || project.steps.length === 0) return []
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      const workingSteps = project.steps.filter(s => {
+        if (!s.has_work_logged) return false
+        const hasStatus = (s.project_statuses && s.project_statuses.length > 0) || s.project_status
+        if (!hasStatus) return false
+        if (s.latest_work_date) {
+          const workDate = new Date(s.latest_work_date)
+          workDate.setHours(0, 0, 0, 0)
+          return workDate <= today
+        }
+        return true
+      })
+
+      if (workingSteps.length === 0) return []
+      const latestStep = workingSteps.sort((a, b) =>
+        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
+      )[0]
+      if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
+        return latestStep.project_statuses
       }
-      // ถ้ามี step ที่ overdue
-      if (project.steps && project.steps.some(s => {
-        if (s.status === 'completed') return false
-        if (!s.end_date) return false
-        const today = new Date(); today.setHours(0,0,0,0)
-        const endDate = new Date(s.end_date); endDate.setHours(0,0,0,0)
-        return today > endDate
-      })) return 'เกินกำหนด'
-      // ถ้ามี step ที่กำลังดำเนินการ
-      if (project.steps && project.steps.some(s => s.status !== 'completed' && s.has_work_logged)) {
-        return 'กำลังดำเนินการ'
-      }
-      // ใช้ status จาก task โดยตรง (ถ้ามี)
-      if (project.status) {
-        const found = this.statuses.find(s => s.value === project.status)
-        return found ? found.label : project.status
-      }
-      return 'รอดำเนินการ'
-    },
-    getTaskStatusIcon(project) {
-      const label = this.getTaskStatusLabel(project)
-      if (label === 'เสร็จสิ้น') return 'pi pi-check-circle'
-      if (label === 'เกินกำหนด') return 'pi pi-exclamation-circle'
-      if (label === 'กำลังดำเนินการ') return 'pi pi-spin pi-spinner'
-      return 'pi pi-clock'
-    },
-    getTaskStatusStyle(project) {
-      const label = this.getTaskStatusLabel(project)
-      if (label === 'เสร็จสิ้น') return { background: '#d1fae5', color: '#047857', border: '1px solid #6ee7b7' }
-      if (label === 'เกินกำหนด') return { background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }
-      if (label === 'กำลังดำเนินการ') return { background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' }
-      // ถ้าตรงกับ project_status จาก settings
-      if (project.status) {
-        const found = this.statuses.find(s => s.value === project.status)
-        if (found?.color) return { background: found.color + '20', color: found.color, border: `1px solid ${found.color}50` }
-      }
-      return { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }
+      return []
     },
     async loadUsers() {
       try {
@@ -882,7 +871,10 @@ export default {
     },
     getProjectStatusLabel(status) {
       const found = this.statuses.find(s => s.value === status)
-      return found ? found.label : status
+      if (found && found.label) {
+        return found.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+      }
+      return status || '-'
     },
     getProjectStatusColor(status) {
       const found = this.statuses.find(s => s.value === status)
@@ -1046,6 +1038,13 @@ export default {
   font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.status-badges-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
 }
 
 .stat-item {
