@@ -15,10 +15,34 @@
     </Card>
 
     <div class="search-section">
-      <span class="p-input-icon-left search-box">
-        <i class="pi pi-search" />
-        <InputText v-model="searchQuery" placeholder="ค้นหาโครงการ..." />
-      </span>
+      <div class="search-filters">
+        <span class="p-input-icon-left search-box">
+          <i class="pi pi-search" />
+          <InputText v-model="searchQuery" placeholder="ค้นหาโครงการ..." />
+        </span>
+        <Dropdown
+          v-model="filterCategory"
+          :options="categoryOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="หมวดหมู่ทั้งหมด"
+          :showClear="true"
+          class="filter-dropdown"
+        />
+        <Dropdown
+          v-model="filterProjectManager"
+          :options="projectManagerOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Project Manager ทั้งหมด"
+          :showClear="true"
+          class="filter-dropdown"
+          filter
+        />
+        <button v-if="hasActiveFilters" class="clear-filters-btn" @click="clearAllFilters">
+          <i class="pi pi-times"></i> ล้างตัวกรอง
+        </button>
+      </div>
       <div class="filter-tabs">
         <button :class="['filter-tab', { active: projectFilter === 'all' }]" @click="projectFilter = 'all'">
           ทั้งหมด
@@ -86,6 +110,17 @@
                 </div>
               </div>
               </div>
+            </template>
+          </Column>
+
+          <Column header="สถานะโครงการ" style="min-width: 140px;">
+            <template #body="slotProps">
+              <span v-if="getTaskStatusLabel(slotProps.data)" class="task-status-badge"
+                :style="getTaskStatusStyle(slotProps.data)">
+                <i :class="getTaskStatusIcon(slotProps.data)"></i>
+                {{ getTaskStatusLabel(slotProps.data) }}
+              </span>
+              <span v-else class="text-muted">-</span>
             </template>
           </Column>
 
@@ -327,10 +362,11 @@
 <script>
 import { useConfirm } from 'primevue/useconfirm'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import Dropdown from 'primevue/dropdown'
 
 export default {
   name: 'ProjectProgress',
-  components: { UserInfoDialog },
+  components: { UserInfoDialog, Dropdown },
   setup() {
     return { $confirm: useConfirm() }
   },
@@ -343,6 +379,8 @@ export default {
       statuses: [],
       searchQuery: '',
       projectFilter: 'all',
+      filterCategory: null,
+      filterProjectManager: null,
       completingStepId: null,
       currentUserId: parseInt(localStorage.getItem('soc_user_id')) || null,
       showUserInfoDialog: false,
@@ -359,6 +397,32 @@ export default {
     }
   },
   computed: {
+    categoryOptions() {
+      const seen = new Set()
+      const opts = []
+      for (const p of this.projects) {
+        if (p.category && !seen.has(p.category)) {
+          seen.add(p.category)
+          const cat = this.categories.find(c => c.label === p.category || c.value === p.category)
+          opts.push({ label: p.category, value: p.category, color: cat?.color })
+        }
+      }
+      return opts.sort((a, b) => a.label.localeCompare(b.label, 'th'))
+    },
+    projectManagerOptions() {
+      const seen = new Set()
+      const opts = []
+      for (const p of this.projects) {
+        if (p.project_manager && !seen.has(p.project_manager)) {
+          seen.add(p.project_manager)
+          opts.push({ label: p.project_manager, value: p.project_manager })
+        }
+      }
+      return opts.sort((a, b) => a.label.localeCompare(b.label, 'th'))
+    },
+    hasActiveFilters() {
+      return !!(this.searchQuery || this.filterCategory || this.filterProjectManager || this.projectFilter !== 'all')
+    },
     filteredProjects() {
       let projects = this.projects.filter(p => p.steps && p.steps.length > 0)
 
@@ -368,13 +432,22 @@ export default {
         projects = projects.filter(p => p.steps.every(s => s.status === 'completed'))
       }
 
+      if (this.filterCategory) {
+        projects = projects.filter(p => p.category === this.filterCategory)
+      }
+
+      if (this.filterProjectManager) {
+        projects = projects.filter(p => p.project_manager === this.filterProjectManager)
+      }
+
       if (!this.searchQuery) return projects
       const query = this.searchQuery.toLowerCase()
       return projects.filter(p =>
         p.task_name?.toLowerCase().includes(query) ||
         p.so_number?.toLowerCase().includes(query) ||
         p.category?.toLowerCase().includes(query) ||
-        p.sale_owner?.toLowerCase().includes(query)
+        p.sale_owner?.toLowerCase().includes(query) ||
+        p.project_manager?.toLowerCase().includes(query)
       )
     },
     sortedProjects() {
@@ -409,6 +482,55 @@ export default {
     }
   },
   methods: {
+    clearAllFilters() {
+      this.searchQuery = ''
+      this.filterCategory = null
+      this.filterProjectManager = null
+      this.projectFilter = 'all'
+    },
+    getTaskStatusLabel(project) {
+      // ถ้า steps ทั้งหมด completed → เสร็จสิ้น
+      if (project.steps && project.steps.length > 0 && project.steps.every(s => s.status === 'completed')) {
+        return 'เสร็จสิ้น'
+      }
+      // ถ้ามี step ที่ overdue
+      if (project.steps && project.steps.some(s => {
+        if (s.status === 'completed') return false
+        if (!s.end_date) return false
+        const today = new Date(); today.setHours(0,0,0,0)
+        const endDate = new Date(s.end_date); endDate.setHours(0,0,0,0)
+        return today > endDate
+      })) return 'เกินกำหนด'
+      // ถ้ามี step ที่กำลังดำเนินการ
+      if (project.steps && project.steps.some(s => s.status !== 'completed' && s.has_work_logged)) {
+        return 'กำลังดำเนินการ'
+      }
+      // ใช้ status จาก task โดยตรง (ถ้ามี)
+      if (project.status) {
+        const found = this.statuses.find(s => s.value === project.status)
+        return found ? found.label : project.status
+      }
+      return 'รอดำเนินการ'
+    },
+    getTaskStatusIcon(project) {
+      const label = this.getTaskStatusLabel(project)
+      if (label === 'เสร็จสิ้น') return 'pi pi-check-circle'
+      if (label === 'เกินกำหนด') return 'pi pi-exclamation-circle'
+      if (label === 'กำลังดำเนินการ') return 'pi pi-spin pi-spinner'
+      return 'pi pi-clock'
+    },
+    getTaskStatusStyle(project) {
+      const label = this.getTaskStatusLabel(project)
+      if (label === 'เสร็จสิ้น') return { background: '#d1fae5', color: '#047857', border: '1px solid #6ee7b7' }
+      if (label === 'เกินกำหนด') return { background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }
+      if (label === 'กำลังดำเนินการ') return { background: '#fef3c7', color: '#b45309', border: '1px solid #fcd34d' }
+      // ถ้าตรงกับ project_status จาก settings
+      if (project.status) {
+        const found = this.statuses.find(s => s.value === project.status)
+        if (found?.color) return { background: found.color + '20', color: found.color, border: `1px solid ${found.color}50` }
+      }
+      return { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' }
+    },
     async loadUsers() {
       try {
         const response = await this.$http.get('/api/users', { silent: true })
@@ -828,6 +950,13 @@ export default {
   gap: 1rem;
 }
 
+.search-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .filter-tabs {
   display: flex;
   gap: 0.4rem;
@@ -876,6 +1005,47 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
+}
+
+.filter-dropdown {
+  border-radius: 8px;
+  height: 38px;
+  min-width: 170px;
+  font-size: 0.875rem;
+}
+
+.filter-dropdown :deep(.p-dropdown-label) {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  border: 1.5px solid #fca5a5;
+  background: #fff;
+  color: #dc2626;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.clear-filters-btn:hover {
+  background: #fee2e2;
+}
+
+.task-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .stat-item {
@@ -1013,7 +1183,16 @@ export default {
     align-items: stretch;
   }
 
+  .search-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .search-box input {
+    width: 100%;
+  }
+
+  .filter-dropdown {
     width: 100%;
   }
 }
