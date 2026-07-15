@@ -350,8 +350,34 @@
         <div class="edit-row">
           <div class="edit-field">
             <label class="edit-label"><i class="pi pi-briefcase"></i> โครงการ</label>
-            <Dropdown v-model="editFormData.task_id" :options="tasks" optionLabel="display" optionValue="id"
-              class="w-full" placeholder="เลือกโครงการ" filter filterPlaceholder="ค้นหาโครงการ" />
+            <Dropdown
+              v-model="editFormData.task_id"
+              :options="tasks"
+              optionLabel="display"
+              optionValue="id"
+              class="w-full"
+              placeholder="เลือกโครงการ"
+              filter
+              filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO"
+              :filterFields="['task_name','so_number','display']"
+              scrollHeight="300px"
+              appendTo="body"
+            >
+              <template #value="{ value }">
+                <div v-if="value" class="edit-val-row">
+                  <span v-if="getTaskSO(value)" class="edit-so-tag">{{ getTaskSO(value) }}</span>
+                  <span class="edit-task-txt">{{ getTaskName(value) }}</span>
+                </div>
+                <span v-else class="edit-ph">เลือกโครงการ</span>
+              </template>
+              <template #option="{ option }">
+                <div class="edit-opt-row" :class="{ 'edit-opt-mine': option._assigned }">
+                  <span v-if="option._assigned" class="edit-mine-tag"><i class="pi pi-star-fill"></i> งานของฉัน</span>
+                  <span v-if="option.so_number" class="edit-so-tag">{{ option.so_number }}</span>
+                  <span class="edit-task-txt">{{ option.task_name }}</span>
+                </div>
+              </template>
+            </Dropdown>
           </div>
         </div>
 
@@ -584,16 +610,31 @@ export default {
   methods: {
     async loadTasks() {
       try {
-        const response = await this.$http.get('/api/tasks')
-        this.tasks = (response.data || []).map(task => ({
+        const userId = localStorage.getItem('soc_user_id')
+        const [tasksRes, stepsRes] = await Promise.all([
+          this.$http.get('/api/tasks'),
+          this.$http.get('/api/task-steps/all').catch(() => ({ data: [] }))
+        ])
+        const assignedTaskIds = new Set(
+          (stepsRes.data || []).filter(s => {
+            const users = typeof s.assigned_users === 'string'
+              ? JSON.parse(s.assigned_users)
+              : (s.assigned_users || [])
+            return users.some(u => String(u.id || u) === String(userId))
+          }).map(s => s.task_id)
+        )
+        this.tasks = (tasksRes.data || []).map(task => ({
           ...task,
+          _assigned: assignedTaskIds.has(task.id),
           display: task.so_number ? `[${task.so_number}] ${task.task_name}` : task.task_name
-        }))
+        })).sort((a, b) => (b._assigned ? 1 : 0) - (a._assigned ? 1 : 0))
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Failed to load tasks:', error)
       }
     },
+    getTaskSO(id) { return this.tasks.find(t => t.id === id)?.so_number },
+    getTaskName(id) { return this.tasks.find(t => t.id === id)?.task_name },
     showUserInfo(userId) {
       if (userId) {
         this.selectedUserId = userId
@@ -2130,4 +2171,58 @@ export default {
 .manage-proj-time { font-size: 0.78rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 .manage-proj-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .so-badge-sm { background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+
+/* ── Edit Dialog Dropdown custom styles ── */
+.edit-val-row,
+.edit-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.edit-opt-mine {
+  background: #fefce8;
+  border-left: 3px solid #f59e0b;
+  padding: 3px 6px;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.edit-so-tag {
+  background: #3b82f6;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.edit-mine-tag {
+  background: #f59e0b;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.edit-task-txt {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.edit-ph {
+  color: #9ca3af;
+}
 </style>
