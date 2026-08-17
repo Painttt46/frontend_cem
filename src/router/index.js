@@ -10,6 +10,7 @@ const LeaveWork = () => import('../views/leave_work/LeaveWork.vue')
 const DailyWork = () => import('../views/daily_work/DailyWork.vue')
 const Projects = () => import('../views/projects/Projects.vue')
 const ProjectProgress = () => import('../views/ProjectProgress.vue')
+const Procurement = () => import('../views/procurement/Procurement.vue')
 const ManagementView = () => import('../views/ManagementView.vue')
 const UserManagement = () => import('../views/management/UserManagement.vue')
 const TaskManagement = () => import('../views/management/TaskManagement.vue')
@@ -76,6 +77,12 @@ const routes = [
     name: 'project-progress',
     component: ProjectProgress,
     meta: { requiresAuth: true, requiresPermission: '/project-progress', title: 'ขั้นตอนการดำเนินการโครงการ - Gent-CEM' },
+  },
+  {
+    path: '/procurement',
+    name: 'procurement',
+    component: Procurement,
+    meta: { requiresAuth: true, requiresPermission: '/procurement', title: 'จัดซื้อ - Gent-CEM' },
   },
   {
     path: '/management',

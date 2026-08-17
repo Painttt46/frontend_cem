@@ -41,6 +41,9 @@
 
             <div class="step-content">
               <h4>{{ step.step_name || 'ไม่มีชื่อ' }}</h4>
+              <span v-if="step.step_type === 'procurement'" class="step-type-badge procurement">
+                <i class="pi pi-shopping-cart"></i> จัดซื้อ
+              </span>
               <p v-if="step.description" class="step-description">{{ step.description }}</p>
               
               <div class="step-info">
@@ -139,6 +142,27 @@
             </template>
           </MultiSelect>
         </div>
+
+        <div class="field">
+          <label>ประเภท Step</label>
+          <Dropdown v-model="currentStep.step_type" :options="stepTypeOptions" 
+                    optionLabel="label" optionValue="value" 
+                    placeholder="เลือกประเภท" class="w-full">
+            <template #value="slotProps">
+              <div v-if="slotProps.value" class="step-type-value">
+                <span class="step-type-dot" :style="{ backgroundColor: getStepTypeColor(slotProps.value) }"></span>
+                {{ getStepTypeLabel(slotProps.value) }}
+              </div>
+              <span v-else>เลือกประเภท</span>
+            </template>
+            <template #option="slotProps">
+              <div class="step-type-option">
+                <span class="step-type-dot" :style="{ backgroundColor: slotProps.option.color }"></span>
+                {{ slotProps.option.label }}
+              </div>
+            </template>
+          </Dropdown>
+        </div>
       </div>
 
       <template #footer>
@@ -218,6 +242,10 @@ export default {
       steps: [],
       users: [],
       projectStatusOptions: [],
+      stepTypeOptions: [
+        { label: 'ทั่วไป', value: 'general', color: '#6b7280' },
+        { label: 'จัดซื้อ', value: 'procurement', color: '#8b5cf6' }
+      ],
       showStepDialog: false,
       editingIndex: null,
       dragIndex: null,
@@ -300,6 +328,7 @@ export default {
         end_date: null,
         assigned_users: [],
         project_statuses: [],
+        step_type: 'general',
         step_order: this.steps.length
       }
     },
@@ -525,6 +554,14 @@ export default {
       const found = this.projectStatusOptions.find(opt => opt.value === status)
       return found?.color || '#6b7280'
     },
+    getStepTypeLabel(type) {
+      const found = this.stepTypeOptions.find(opt => opt.value === type)
+      return found ? found.label : 'ทั่วไป'
+    },
+    getStepTypeColor(type) {
+      const found = this.stepTypeOptions.find(opt => opt.value === type)
+      return found?.color || '#6b7280'
+    },
     // Template methods
     async loadTemplates() {
       try {
@@ -545,7 +582,8 @@ export default {
       const cleanSteps = this.steps.map(s => ({
         step_name: s.step_name,
         description: s.description,
-        project_statuses: s.project_statuses
+        project_statuses: s.project_statuses,
+        step_type: s.step_type || 'general'
       }))
       try {
         await axios.post('/api/settings/workflow-templates', {
@@ -1031,5 +1069,32 @@ export default {
   .field-group {
     grid-template-columns: 1fr;
   }
+}
+
+.step-type-badge.procurement {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #ede9fe;
+  color: #7c3aed;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.step-type-value,
+.step-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.step-type-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
 }
 </style>

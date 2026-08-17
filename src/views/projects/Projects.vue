@@ -361,6 +361,9 @@ export default {
   async created() {
     await this.loadSyncHistory()
   },
+  mounted() {
+    this.handleQueryParams()
+  },
   data() {
     return {
       showTaskDialog: false,
@@ -448,6 +451,26 @@ export default {
       this.showTaskDialog = false
       if (this.$refs.taskList) {
         this.$refs.taskList.loadTasks()
+      }
+    },
+    async handleQueryParams() {
+      const taskId = parseInt(this.$route.query.taskId)
+      const editStepId = parseInt(this.$route.query.editStepId)
+      if (taskId && editStepId) {
+        // รอให้ TaskList โหลดเสร็จก่อน
+        const waitForTasks = (attempts = 0) => {
+          if (this.$refs.taskList && this.$refs.taskList.tasks && this.$refs.taskList.tasks.length > 0) {
+            const task = this.$refs.taskList.tasks.find(t => t.id === taskId)
+            if (task) {
+              this.$refs.taskList.editTask(task)
+              // Clear query params
+              this.$router.replace({ path: '/projects' })
+            }
+          } else if (attempts < 20) {
+            setTimeout(() => waitForTasks(attempts + 1), 300)
+          }
+        }
+        waitForTasks()
       }
     }
   }

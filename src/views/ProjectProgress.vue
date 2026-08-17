@@ -193,8 +193,11 @@
 
                     <div class="step-content">
                       <h4>{{ step.step_name }}</h4>
+                      <span v-if="step.step_type === 'procurement'" class="procurement-badge">
+                        <i class="pi pi-shopping-cart"></i> จัดซื้อ
+                      </span>
                       <p v-if="step.description" class="step-description">{{ step.description }}</p>
-                      
+
                       <div class="step-info">
                         <div class="info-item" v-if="step.project_statuses && step.project_statuses.length > 0">
                           <span v-for="ps in step.project_statuses" :key="ps" class="project-badge" 
@@ -338,6 +341,71 @@
           </div>
         </div>
 
+        <!-- Procurement Detail in Dialog -->
+        <div v-if="selectedStep.step_type === 'procurement'" class="dlg-section">
+          <div class="dlg-label"><i class="pi pi-shopping-cart"></i> รายการจัดซื้อ</div>
+          <div v-if="getProcurementItems(selectedStep.id).length > 0" class="procurement-detail">
+            <div class="procurement-summary">
+              <span class="procurement-summary-label"><i class="pi pi-truck"></i> {{ getProcurementItems(selectedStep.id).length }} Vendor</span>
+              <span class="procurement-progress">
+                {{ getProcurementItems(selectedStep.id).filter(i => i.status === 'completed').length }}/{{ getProcurementItems(selectedStep.id).length }} เสร็จ
+              </span>
+            </div>
+            <div class="procurement-items-list">
+              <div v-for="item in getProcurementItems(selectedStep.id)" :key="item.id" class="procurement-item" :class="'pi-status-' + item.status">
+                <!-- Collapsible Header -->
+                <div class="pi-header" @click="toggleProcurementItem(item.id)">
+                  <i class="pi-header-chevron" :class="expandedProcurementItems[item.id] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
+                  <span class="pi-vendor">{{ item.vendor_name }}</span>
+                  <span v-if="item.delivery_date" class="pi-header-date" :class="{ 'pi-meta-overdue': isProcurementOverdue(item) }">
+                    <i class="pi pi-calendar"></i> {{ formatProcurementDate(item.delivery_date) }}
+                  </span>
+                  <span class="pi-status-chip" :class="'chip-' + item.status">{{ getProcurementStatusLabel(item.status) }}</span>
+                </div>
+
+                <!-- Expandable Body -->
+                <div v-show="expandedProcurementItems[item.id]" class="pi-body">
+                  <div v-if="item.item_description" class="pi-desc">{{ item.item_description }}</div>
+                  <!-- Progress Bar -->
+                  <div class="pi-progress-row">
+                    <ProgressBar :value="getProcurementProgress(item.status)" :showValue="false" style="height: 5px; flex: 1;" />
+                    <span class="pi-progress-text">{{ getProcurementProgress(item.status) }}%</span>
+                  </div>
+                  <!-- Meta Info -->
+                  <div class="pi-meta">
+                    <span v-if="item.po_number" class="pi-meta-item"><i class="pi pi-file"></i> {{ item.po_number }}</span>
+                    <span v-if="item.amount" class="pi-meta-item"><i class="pi pi-money-bill"></i> {{ formatMoney(item.amount) }}</span>
+                    <span v-if="item.delivery_date" class="pi-meta-item" :class="{ 'pi-meta-overdue': isProcurementOverdue(item) }"><i class="pi pi-calendar"></i> กำหนดส่ง {{ formatProcurementDate(item.delivery_date) }}</span>
+                    <span v-if="item.assigned_user_name" class="pi-meta-item"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
+                    <span v-if="item.order_date" class="pi-meta-item"><i class="pi pi-send"></i> สั่งซื้อ {{ formatProcurementDate(item.order_date) }}</span>
+                  </div>
+                  <div v-if="item.notes" class="pi-notes"><i class="pi pi-comment"></i> {{ item.notes }}</div>
+                  <!-- Status History -->
+                  <div v-if="item.status_history && item.status_history.length > 0" class="pi-history">
+                    <div class="pi-history-title"><i class="pi pi-history"></i> ประวัติ</div>
+                    <div v-for="(h, idx) in item.status_history" :key="idx" class="pi-history-item">
+                      <span class="pi-history-dot" :class="'dot-' + h.to"></span>
+                      <span class="pi-history-text">{{ getProcurementStatusLabel(h.from) }} → {{ getProcurementStatusLabel(h.to) }}</span>
+                      <span v-if="h.remark" class="pi-history-remark">{{ h.remark }}</span>
+                      <span class="pi-history-time">{{ formatHistoryTime(h.changed_at) }} • {{ h.changed_by }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="procurement-detail-empty">
+            <i class="pi pi-inbox"></i> ยังไม่มีรายการจัดซื้อ
+          </div>
+        </div>
+
+        <!-- Edit Step Button -->
+        <div v-if="isProjectManager(selectedStep)" class="dlg-section dlg-edit-section">
+          <button class="dlg-edit-btn" @click="goToEditStep(selectedStep)">
+            <i class="pi pi-pencil"></i> แก้ไข Step
+          </button>
+        </div>
+
         <div v-if="canCompleteStep(selectedStep)" class="dlg-approve-section">
           <div class="dlg-action-divider"></div>
           <button class="dlg-complete-btn" @click="confirmCompleteStep(selectedStep)" :disabled="completingStepId === selectedStep.id">
@@ -423,7 +491,9 @@ export default {
       lateReasonStep: null,
       lateReason: '',
       showLateReasonView: false,
-      viewingLateStep: null
+      viewingLateStep: null,
+      procurementItems: [],
+      expandedProcurementItems: {}
     }
   },
   computed: {
@@ -537,6 +607,7 @@ export default {
     this.loadCategories()
     this.loadStatuses()
     this.loadUsers()
+    this.loadProcurementItems()
   },
   watch: {
     projects() {
@@ -584,9 +655,82 @@ export default {
         this.allUsers = response.data
       } catch { /* ignore */ }
     },
+    async loadProcurementItems() {
+      try {
+        const response = await this.$http.get('/api/procurement', { silent: true })
+        this.procurementItems = response.data
+      } catch { /* ignore */ }
+    },
+    getProcurementItems(stepId) {
+      return this.procurementItems.filter(i => i.step_id === stepId)
+    },
+    getProcurementStatusLabel(status) {
+      const map = {
+        pending: 'รอใบเสนอราคา',
+        approved: 'อนุมัติแล้ว',
+        ordered: 'สั่งซื้อแล้ว',
+        waiting: 'รอของ',
+        received: 'ของมาแล้ว',
+        completed: 'เสร็จสิ้น'
+      }
+      return map[status] || status
+    },
+    formatMoney(amount) {
+      return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount)
+    },
+    getProcurementProgress(status) {
+      const map = { pending: 0, approved: 20, ordered: 40, waiting: 60, received: 80, completed: 100 }
+      return map[status] || 0
+    },
+    isProcurementOverdue(item) {
+      if (!item.delivery_date || item.status === 'completed' || item.status === 'received') return false
+      const todayStr = this.getLocalDateStr(new Date())
+      return item.delivery_date.split('T')[0] < todayStr
+    },
+    getLocalDateStr(date) {
+      const d = new Date(date)
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+    },
+    formatProcurementDate(d) {
+      if (!d) return ''
+      const parts = d.split('T')[0].split('-')
+      const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]))
+      return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })
+    },
+    formatHistoryTime(dt) {
+      if (!dt) return ''
+      const d = new Date(dt)
+      return d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+    },
     openStepDetail(step, index, task) {
       this.selectedStep = { ...step, _index: index + 1, _task: task }
       this.showStepDetail = true
+      // เมื่อเปิด step ใหม่ ให้ auto-expand เฉพาะ vendor ที่ยังไม่เสร็จ/ต้องติดตาม (ไม่ expand ทั้งหมดเพื่อให้อ่านง่าย)
+      this.expandedProcurementItems = {}
+      if (step.step_type === 'procurement') {
+        const items = this.getProcurementItems(step.id)
+        if (items.length === 1) {
+          this.expandedProcurementItems[items[0].id] = true
+        }
+      }
+    },
+    toggleProcurementItem(itemId) {
+      this.expandedProcurementItems[itemId] = !this.expandedProcurementItems[itemId]
+    },
+    isProjectManager(step) {
+      if (!step || !step._task) return false
+      const currentUser = `${localStorage.getItem('soc_firstname') || ''} ${localStorage.getItem('soc_lastname') || ''}`.trim()
+      const role = localStorage.getItem('soc_role')
+      // superadmin/admin หรือ PM ของโครงการนั้น
+      if (role === 'superadmin' || role === 'admin') return true
+      return step._task.project_manager === currentUser
+    },
+    goToEditStep(step) {
+      this.showStepDetail = false
+      this.$router.push({ 
+        path: '/projects', 
+        query: { taskId: step._task.id, editStepId: step.id } 
+      })
     },
     showSaleUserInfo(saleName) {
       const user = this.allUsers.find(u => `${u.firstname} ${u.lastname}` === saleName)
@@ -944,9 +1088,14 @@ export default {
 
 <style scoped>
 .project-progress {
-  padding: 1.5rem;
-  width: 100%;
-  margin: 0;
+  padding: 1rem;
+  padding-bottom: 0;
+  max-width: 100%;
+  margin: 0 auto;
+  background: #e5e7eb;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: auto;
 }
 
 .header-card {
@@ -975,7 +1124,10 @@ export default {
   color: white;
   border-radius: 15px 15px 0 0;
   box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  overflow: hidden;
   min-height: 80px;
+  flex-wrap: wrap;
+  gap: 1.5rem;
 }
 
 .main-header h1 {
@@ -1147,6 +1299,269 @@ export default {
   line-height: 1.4;
 }
 
+.procurement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #ede9fe;
+  color: #7c3aed;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+/* Procurement Detail in Step Card */
+.procurement-detail {
+  margin-top: 0.75rem;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.procurement-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.procurement-summary-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #7c3aed;
+}
+
+.procurement-progress {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f3e8ff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+}
+
+.procurement-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.procurement-item {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  border-left: 3px solid #d1d5db;
+  transition: box-shadow 0.15s;
+}
+.procurement-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+.procurement-item.pi-status-approved { border-left-color: #f59e0b; }
+.procurement-item.pi-status-ordered { border-left-color: #3b82f6; }
+.procurement-item.pi-status-waiting { border-left-color: #8b5cf6; }
+.procurement-item.pi-status-received { border-left-color: #10b981; }
+.procurement-item.pi-status-completed { border-left-color: #16a34a; }
+.procurement-item.pi-status-completed .pi-header { background: #f0fdf4; }
+
+.pi-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+.pi-header:hover { background: #f8fafc; }
+
+.pi-header-chevron {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+  width: 14px;
+}
+
+.pi-vendor {
+  font-weight: 600;
+  font-size: 0.83rem;
+  color: #1e293b;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pi-header-date {
+  font-size: 0.7rem;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pi-body {
+  padding: 0 0.75rem 0.65rem 2.15rem;
+  border-top: 1px dashed #eef1f5;
+  padding-top: 0.6rem;
+  animation: pi-fade-in 0.15s ease-out;
+}
+@keyframes pi-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.pi-status-chip {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.pi-status-chip.chip-pending { background: #f1f5f9; color: #64748b; }
+.pi-status-chip.chip-approved { background: #fef3c7; color: #b45309; }
+.pi-status-chip.chip-ordered { background: #dbeafe; color: #1d4ed8; }
+.pi-status-chip.chip-waiting { background: #ede9fe; color: #6d28d9; }
+.pi-status-chip.chip-received { background: #d1fae5; color: #065f46; }
+.pi-status-chip.chip-completed { background: #dcfce7; color: #16a34a; }
+
+.pi-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.pi-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.pi-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  color: #6b7280;
+  background: #f8fafc;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.procurement-detail-empty {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: #94a3b8;
+  text-align: center;
+  padding: 0.5rem;
+  background: #faf5ff;
+  border-radius: 6px;
+}
+
+/* Procurement Detail in Dialog - Enhanced */
+.pi-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.4rem 0;
+}
+.pi-progress-text {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 600;
+  min-width: 30px;
+}
+.pi-notes {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 0.3rem;
+  background: #f8fafc;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+.pi-meta-overdue {
+  color: #dc2626 !important;
+  font-weight: 600;
+  background: #fee2e2 !important;
+}
+.pi-history {
+  margin-top: 0.5rem;
+  padding-top: 0.4rem;
+  border-top: 1px dashed #e2e8f0;
+}
+.pi-history-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 0.3rem;
+}
+.pi-history-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  padding: 0.2rem 0;
+  flex-wrap: wrap;
+}
+.pi-history-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.pi-history-dot.dot-pending { background: #94a3b8; }
+.pi-history-dot.dot-approved { background: #f59e0b; }
+.pi-history-dot.dot-ordered { background: #3b82f6; }
+.pi-history-dot.dot-waiting { background: #8b5cf6; }
+.pi-history-dot.dot-received { background: #06b6d4; }
+.pi-history-dot.dot-completed { background: #16a34a; }
+.pi-history-text {
+  color: #475569;
+  font-weight: 500;
+}
+.pi-history-remark {
+  color: #64748b;
+  font-style: italic;
+  background: #f1f5f9;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+}
+.pi-history-time {
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+.dlg-edit-section {
+  margin-top: 0;
+}
+
+.dlg-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  background: #fff;
+  border: 1.5px solid #4A90E2;
+  border-radius: 6px;
+  color: #4A90E2;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dlg-edit-btn:hover {
+  background: #4A90E2;
+  color: #fff;
+}
+
 .content-card {
   width: 100%;
   border-radius: 12px;
@@ -1241,14 +1656,16 @@ export default {
   }
 
   .main-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
     padding: 1.5rem;
+    min-height: 60px;
   }
 
   .main-header h1 {
     font-size: 1.5rem;
+  }
+
+  .main-header i {
+    font-size: 1.25rem;
   }
 
   .search-section {
@@ -1277,12 +1694,16 @@ export default {
 
   .main-header {
     padding: 1rem;
+    min-height: 50px;
   }
 
   .main-header h1 {
-    font-size: 1.3rem;
-    flex-direction: column;
+    font-size: 1.25rem;
     gap: 0.5rem;
+  }
+
+  .main-header i {
+    font-size: 1rem;
   }
 
   .stat-item {
