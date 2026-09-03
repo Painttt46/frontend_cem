@@ -107,6 +107,13 @@
                 </h5>
               </router-link>
             </li>
+            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/sales-activity')">
+              <router-link to="/sales-activity" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+                <h5 class="mt-2">
+                  <i class="pi pi-briefcase px-2" style="font-size: 1.5rem"></i>บันทึกการเข้าพบ
+                </h5>
+              </router-link>
+            </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/management')">
               <router-link to="/management" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
                 <h5 class="mt-2">

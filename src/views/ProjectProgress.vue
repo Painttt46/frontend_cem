@@ -346,17 +346,36 @@
           <div class="dlg-label"><i class="pi pi-shopping-cart"></i> รายการจัดซื้อ</div>
           <div v-if="getProcurementItems(selectedStep.id).length > 0" class="procurement-detail">
             <div class="procurement-summary">
-              <span class="procurement-summary-label"><i class="pi pi-truck"></i> {{ getProcurementItems(selectedStep.id).length }} Vendor</span>
+              <div class="proc-summary-stats">
+                <span class="proc-stat"><i class="pi pi-truck"></i> {{ getProcurementVendors(selectedStep.id).length }} Vendor</span>
+                <span class="proc-stat"><i class="pi pi-list"></i> {{ getProcurementItems(selectedStep.id).length }} รายการ</span>
+                <span v-if="getProcurementTotalAmount(selectedStep.id) !== null" class="proc-stat proc-stat-amount"><i class="pi pi-wallet"></i> {{ formatMoney(getProcurementTotalAmount(selectedStep.id)) }}</span>
+              </div>
               <span class="procurement-progress">
                 {{ getProcurementItems(selectedStep.id).filter(i => i.status === 'completed').length }}/{{ getProcurementItems(selectedStep.id).length }} เสร็จ
               </span>
             </div>
             <div class="procurement-items-list">
-              <div v-for="item in getProcurementItems(selectedStep.id)" :key="item.id" class="procurement-item" :class="'pi-status-' + item.status">
+              <template v-for="cluster in getProcurementClusters(selectedStep.id)" :key="clusterKey(selectedStep.id, cluster)">
+                <!-- vendor ซ้ำหลายรายการ: รวมเป็น dropdown ย่อย -->
+                <div v-if="cluster.repeated" class="proc-cluster-header" @click="toggleProcurementCluster(clusterKey(selectedStep.id, cluster))">
+                  <i :class="isClusterExpanded(clusterKey(selectedStep.id, cluster)) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="cluster-chevron"></i>
+                  <span class="proc-cluster-name">{{ cluster.vendor_name }}</span>
+                  <span class="cluster-count"><i class="pi pi-list"></i> {{ cluster.items.length }} รายการ</span>
+                  <span v-if="getProcurementTotalAmountForItems(cluster.items) !== null" class="pi-header-amount"><i class="pi pi-wallet"></i> {{ formatMoney(getProcurementTotalAmountForItems(cluster.items)) }}</span>
+                  <span class="proc-cluster-done"><i class="pi pi-check"></i> {{ getClusterDoneCount(cluster.items) }}/{{ cluster.items.length }} ได้ของ/เสร็จ</span>
+                </div>
+                <div v-show="!cluster.repeated || isClusterExpanded(clusterKey(selectedStep.id, cluster))" class="proc-cluster-body" :class="{ 'is-nested': cluster.repeated }">
+              <div v-for="item in cluster.items" :key="item.id" class="procurement-item" :class="['pi-status-' + item.status, { 'pi-overdue': isProcurementOverdue(item) }]">
                 <!-- Collapsible Header -->
                 <div class="pi-header" @click="toggleProcurementItem(item.id)">
                   <i class="pi-header-chevron" :class="expandedProcurementItems[item.id] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></i>
-                  <span class="pi-vendor">{{ item.vendor_name }}</span>
+                  <div class="pi-vendor-wrap">
+                    <span v-if="!cluster.repeated" class="pi-vendor">{{ item.vendor_name }}</span>
+                    <span v-if="item.item_description" class="pi-vendor-desc">{{ item.item_description }}</span>
+                  </div>
+                  <span v-if="item.po_number" class="pi-header-po"><i class="pi pi-file"></i> {{ item.po_number }}</span>
+                  <span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="pi-header-amount"><i class="pi pi-wallet"></i> {{ formatMoney(item.amount) }}</span>
                   <span v-if="item.delivery_date" class="pi-header-date" :class="{ 'pi-meta-overdue': isProcurementOverdue(item) }">
                     <i class="pi pi-calendar"></i> {{ formatProcurementDate(item.delivery_date) }}
                   </span>
@@ -371,13 +390,14 @@
                     <ProgressBar :value="getProcurementProgress(item.status)" :showValue="false" style="height: 5px; flex: 1;" />
                     <span class="pi-progress-text">{{ getProcurementProgress(item.status) }}%</span>
                   </div>
-                  <!-- Meta Info -->
+                  <!-- Meta Info (เรียงตาม flow: PO → ยอดเงิน → สั่งซื้อ → กำหนดส่ง → ผู้รับผิดชอบ) -->
                   <div class="pi-meta">
                     <span v-if="item.po_number" class="pi-meta-item"><i class="pi pi-file"></i> {{ item.po_number }}</span>
-                    <span v-if="item.amount" class="pi-meta-item"><i class="pi pi-money-bill"></i> {{ formatMoney(item.amount) }}</span>
+                    <span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="pi-meta-item pi-meta-amount"><i class="pi pi-money-bill"></i> {{ formatMoney(item.amount) }}</span>
+                    <span v-if="item.order_date" class="pi-meta-item"><i class="pi pi-send"></i> สั่งซื้อ {{ formatProcurementDate(item.order_date) }}</span>
+                    <span v-if="getProcurementLeadtime(item.notes)" class="pi-meta-item pi-meta-leadtime" v-tooltip.top="'Leadtime จากหมายเหตุ'"><i class="pi pi-clock"></i> {{ getProcurementLeadtime(item.notes) }}</span>
                     <span v-if="item.delivery_date" class="pi-meta-item" :class="{ 'pi-meta-overdue': isProcurementOverdue(item) }"><i class="pi pi-calendar"></i> กำหนดส่ง {{ formatProcurementDate(item.delivery_date) }}</span>
                     <span v-if="item.assigned_user_name" class="pi-meta-item"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
-                    <span v-if="item.order_date" class="pi-meta-item"><i class="pi pi-send"></i> สั่งซื้อ {{ formatProcurementDate(item.order_date) }}</span>
                   </div>
                   <div v-if="item.notes" class="pi-notes"><i class="pi pi-comment"></i> {{ item.notes }}</div>
                   <!-- Status History -->
@@ -392,6 +412,8 @@
                   </div>
                 </div>
               </div>
+                </div>
+              </template>
             </div>
           </div>
           <div v-else class="procurement-detail-empty">
@@ -493,7 +515,9 @@ export default {
       showLateReasonView: false,
       viewingLateStep: null,
       procurementItems: [],
-      expandedProcurementItems: {}
+      expandedProcurementItems: {},
+      // vendor ซ้ำใน step: state ขยาย/ย่อ dropdown
+      expandedProcurementClusters: {}
     }
   },
   computed: {
@@ -664,6 +688,54 @@ export default {
     getProcurementItems(stepId) {
       return this.procurementItems.filter(i => i.step_id === stepId)
     },
+    // จัดกลุ่ม item ใน step ตามชื่อ vendor (ชื่อซ้ำ = รวมเป็น dropdown เดียว)
+    getProcurementClusters(stepId) {
+      const map = {}, order = []
+      for (const item of this.getProcurementItems(stepId)) {
+        const name = item.vendor_name || '(ไม่ระบุชื่อ)'
+        if (!map[name]) { map[name] = { vendor_name: name, items: [] }; order.push(map[name]) }
+        map[name].items.push(item)
+      }
+      return order.map(c => ({ ...c, repeated: c.items.length > 1 }))
+    },
+    clusterKey(stepId, cluster) {
+      return stepId + '::' + cluster.vendor_name
+    },
+    isClusterExpanded(key) {
+      return !!this.expandedProcurementClusters[key]
+    },
+    toggleProcurementCluster(key) {
+      this.expandedProcurementClusters[key] = !this.expandedProcurementClusters[key]
+    },
+    // นับจำนวน item ที่ได้ของแล้ว (received/completed)
+    getClusterDoneCount(items) {
+      return items.filter(i => i.status === 'received' || i.status === 'completed').length
+    },
+    getProcurementTotalAmountForItems(items) {
+      let sum = 0, has = false
+      for (const i of items) {
+        if (i.amount === null || i.amount === undefined || i.amount === '') continue
+        const n = Number(i.amount)
+        if (!isNaN(n)) { sum += n; has = true }
+      }
+      return has ? Math.round(sum * 100) / 100 : null
+    },
+    // นับจำนวน vendor เฉพาะชื่อ (item หลายรายการอาจเป็น vendor เดียวกัน)
+    getProcurementVendors(stepId) {
+      const names = new Set()
+      for (const i of this.getProcurementItems(stepId)) names.add(i.vendor_name || '(ไม่ระบุชื่อ)')
+      return [...names]
+    },
+    // ผลรวมยอดเงินของ step (คืน null ถ้าไม่มีรายการใดมียอดเงินเลย)
+    getProcurementTotalAmount(stepId) {
+      let sum = 0, has = false
+      for (const i of this.getProcurementItems(stepId)) {
+        if (i.amount === null || i.amount === undefined || i.amount === '') continue
+        const n = Number(i.amount)
+        if (!isNaN(n)) { sum += n; has = true }
+      }
+      return has ? Math.round(sum * 100) / 100 : null
+    },
     getProcurementStatusLabel(status) {
       const map = {
         pending: 'รอใบเสนอราคา',
@@ -681,6 +753,12 @@ export default {
     getProcurementProgress(status) {
       const map = { pending: 0, approved: 20, ordered: 40, waiting: 60, received: 80, completed: 100 }
       return map[status] || 0
+    },
+    // ดึง leadtime จากหมายเหตุ เช่น "** leadtime 20 วัน" → "20 วัน" (เหมือนหน้า /procurement)
+    getProcurementLeadtime(notes) {
+      if (!notes) return null
+      const m = String(notes).match(/leadtime\s*:?\s*(\d+(?:\s*-\s*\d+)?)\s*วัน/i)
+      return m ? m[1].replace(/\s+/g, '') + ' วัน' : null
     },
     isProcurementOverdue(item) {
       if (!item.delivery_date || item.status === 'completed' || item.status === 'received') return false
@@ -1326,13 +1404,25 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
 }
 
-.procurement-summary-label {
-  font-size: 0.8rem;
+.proc-summary-stats { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.proc-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: #7c3aed;
+  background: #f3e8ff;
+  border: 1px solid #e9d5ff;
+  padding: 0.22rem 0.6rem;
+  border-radius: 12px;
 }
+.proc-stat i { font-size: 0.68rem; opacity: 0.85; }
+.proc-stat-amount { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
 
 .procurement-progress {
   font-size: 0.75rem;
@@ -1343,6 +1433,39 @@ export default {
 }
 
 .procurement-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ===== Vendor Cluster: รวม vendor ชื่อซ้ำเป็น dropdown ย่อย ===== */
+.proc-cluster-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  background: linear-gradient(90deg, #faf5ff 0%, #fff 100%);
+  border: 1px solid #e9d5ff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.proc-cluster-header:hover { background: #f3e8ff; }
+.proc-cluster-header .cluster-chevron { color: #94a3b8; font-size: 0.7rem; flex-shrink: 0; width: 14px; }
+.proc-cluster-name {
+  font-weight: 700;
+  font-size: 0.83rem;
+  color: #5b21b6;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.proc-cluster-done { margin-left: auto; font-size: 0.7rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
+.proc-cluster-body.is-nested {
+  padding: 0.3rem 0 0.3rem 0.9rem;
+  border-left: 2px solid #e9d5ff;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -1365,6 +1488,10 @@ export default {
 .procurement-item.pi-status-completed { border-left-color: #16a34a; }
 .procurement-item.pi-status-completed .pi-header { background: #f0fdf4; }
 
+/* item เกินกำหนดส่ง (ยังไม่เสร็จ) */
+.procurement-item.pi-overdue { border-left-color: #dc2626; background: #fffafa; }
+.procurement-item.pi-overdue .pi-header { background: #fff5f5; }
+
 .pi-header {
   display: flex;
   align-items: center;
@@ -1373,6 +1500,8 @@ export default {
   cursor: pointer;
   transition: background 0.15s;
   user-select: none;
+  flex-wrap: wrap;
+  row-gap: 0.3rem;
 }
 .pi-header:hover { background: #f8fafc; }
 
@@ -1383,16 +1512,38 @@ export default {
   width: 14px;
 }
 
+.pi-vendor-wrap { flex: 1; min-width: 140px; }
 .pi-vendor {
   font-weight: 600;
   font-size: 0.83rem;
   color: #1e293b;
-  flex: 1;
-  min-width: 0;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.pi-vendor-desc {
+  display: block;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pi-header-po, .pi-header-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  padding: 0.14rem 0.45rem;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pi-header-po { color: #0f766e; background: #f0fdfa; border: 1px solid #99f6e4; }
+.pi-header-amount { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; font-weight: 700; }
+.pi-header-po i, .pi-header-amount i { font-size: 0.62rem; opacity: 0.8; }
 
 .pi-header-date {
   font-size: 0.7rem;
@@ -1453,6 +1604,8 @@ export default {
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
 }
+.pi-meta-amount { color: #047857; background: #ecfdf5; font-weight: 700; }
+.pi-meta-leadtime { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; font-weight: 700; }
 
 .procurement-detail-empty {
   margin-top: 0.5rem;

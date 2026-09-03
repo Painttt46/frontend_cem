@@ -11,6 +11,7 @@ const DailyWork = () => import('../views/daily_work/DailyWork.vue')
 const Projects = () => import('../views/projects/Projects.vue')
 const ProjectProgress = () => import('../views/ProjectProgress.vue')
 const Procurement = () => import('../views/procurement/Procurement.vue')
+const SalesActivity = () => import('../views/sales_activity/SalesActivity.vue')
 const ManagementView = () => import('../views/ManagementView.vue')
 const UserManagement = () => import('../views/management/UserManagement.vue')
 const TaskManagement = () => import('../views/management/TaskManagement.vue')
@@ -83,6 +84,12 @@ const routes = [
     name: 'procurement',
     component: Procurement,
     meta: { requiresAuth: true, requiresPermission: '/procurement', title: 'จัดซื้อ - Gent-CEM' },
+  },
+  {
+    path: '/sales-activity',
+    name: 'sales-activity',
+    component: SalesActivity,
+    meta: { requiresAuth: true, requiresPermission: '/sales-activity', title: 'บันทึกการเข้าพบ - Gent-CEM' },
   },
   {
     path: '/management',

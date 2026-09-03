@@ -95,6 +95,8 @@
         </div>
         <div class="filter-right">
           <span class="result-count"><strong>{{ filteredItems.length }}</strong> รายการ</span>
+          <input ref="importFileInput" type="file" accept=".xlsx,.xls" style="display:none" @change="onImportFileChange" />
+          <Button icon="pi pi-upload" label="Import Excel" @click="$refs.importFileInput.click()" class="import-btn" outlined />
           <Button icon="pi pi-plus" label="เพิ่ม Vendor" @click="stepSearchQuery = ''; showSelectStepDialog = true" class="add-btn" />
         </div>
       </div>
@@ -163,7 +165,8 @@
                   <span class="group-step-badge"><i class="pi pi-shopping-cart"></i> {{ group.step_name }}</span>
                 </div>
                 <div class="group-meta">
-                  <span class="group-vendor-count"><i class="pi pi-users"></i> {{ group.items.length }} Vendor</span>
+                  <span class="group-vendor-count"><i class="pi pi-users"></i> {{ getVendorClusters(group).length }} Vendor</span>
+                  <span v-if="sumAmount(group.items) !== null" class="group-amount"><i class="pi pi-wallet"></i> ฿{{ formatMoney(sumAmount(group.items)) }}</span>
                   <span v-if="group.project_manager" class="group-pm"><i class="pi pi-briefcase"></i> {{ group.project_manager }}</span>
                   <span class="group-link" @click.stop="goToProject(group.items[0])"><i class="pi pi-external-link"></i> ดูโครงการ</span>
                 </div>
@@ -194,44 +197,100 @@
               <div class="vendor-row vendor-row-header">
                 <div class="vh-vendor">Vendor</div>
                 <div class="vh-po">PO</div>
+                <div class="vh-order">วันที่สั่ง</div>
                 <div class="vh-delivery">กำหนดส่ง</div>
+                <div class="vh-amount">ยอดเงิน</div>
+                <div class="vh-leadtime">Leadtime</div>
+                <div class="vh-notes">หมายเหตุ</div>
                 <div class="vh-assignee">ผู้รับผิดชอบ</div>
                 <div class="vh-status">สถานะ</div>
                 <div class="vh-actions"></div>
               </div>
-              <div v-for="item in group.items" :key="item.id" class="vendor-row" :class="{ 'vendor-overdue': isOverdue(item), 'vendor-done': item.status === 'completed' }">
-                <div class="vendor-main-info">
-                  <span class="vendor-name">{{ item.vendor_name }}</span>
-                  <span v-if="item.item_description" class="vendor-desc">{{ item.item_description }}</span>
+              <template v-for="cluster in getVendorClusters(group)" :key="vendorKey(group, cluster)">
+                <!-- vendor ชื่อซ้ำหลายรายการ: รวมเป็นแถวเดียว กดขยายดูรายการย่อย -->
+                <div v-if="cluster.repeated" class="vendor-row vendor-cluster-row" @click="toggleVendorGroup(vendorKey(group, cluster))">
+                  <div class="vendor-main-info">
+                    <i :class="isVendorExpanded(vendorKey(group, cluster)) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="cluster-chevron"></i>
+                    <span class="vendor-name">{{ cluster.vendor_name }}</span>
+                    <span class="cluster-count"><i class="pi pi-list"></i> {{ cluster.items.length }} รายการ</span>
+                  </div>
+                  <div class="vendor-col vendor-col-po"><span class="col-empty">—</span></div>
+                  <div class="vendor-col vendor-col-order"><span class="col-empty">—</span></div>
+                  <div class="vendor-col vendor-col-delivery"><span class="col-empty">—</span></div>
+                  <div class="vendor-col vendor-col-amount">
+                    <span v-if="sumAmount(cluster.items) !== null" class="tag-amount"><i class="pi pi-wallet"></i> ฿{{ formatMoney(sumAmount(cluster.items)) }}</span>
+                    <span v-else class="col-empty">—</span>
+                  </div>
+                  <div class="vendor-col vendor-col-leadtime">
+                    <span v-if="getClusterLeadtimes(cluster.items)" class="tag-leadtime"><i class="pi pi-clock"></i> {{ getClusterLeadtimes(cluster.items) }}</span>
+                    <span v-else class="col-empty">—</span>
+                  </div>
+                  <div class="vendor-col vendor-col-notes"><span class="col-empty">—</span></div>
+                  <div class="vendor-col vendor-col-assignee"><span class="col-empty">—</span></div>
+                  <div class="vendor-status-area">
+                    <div class="cluster-status-grid">
+                      <span v-for="s in getClusterStatusCounts(cluster.items)" :key="s.status" class="status-chip chip-mini" :class="'chip-' + s.status" v-tooltip.top="getItemStatusLabel(s.status)">{{ s.count }}× {{ getItemStatusLabel(s.status) }}</span>
+                    </div>
+                  </div>
+                  <div class="vendor-actions">
+                    <Button :icon="isVendorExpanded(vendorKey(group, cluster)) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" :label="isVendorExpanded(vendorKey(group, cluster)) ? 'ย่อ' : 'ดูรายการ'" @click.stop="toggleVendorGroup(vendorKey(group, cluster))" text size="small" class="cluster-toggle" />
+                  </div>
                 </div>
-                <div class="vendor-col vendor-col-po">
-                  <span v-if="item.po_number" class="tag-po"><i class="pi pi-file"></i> {{ item.po_number }}</span>
-                  <span v-else class="col-empty">—</span>
-                </div>
-                <div class="vendor-col vendor-col-delivery">
-                  <span v-if="item.delivery_date" class="tag-delivery" :class="{ 'tag-overdue': isOverdue(item) }"><i class="pi pi-calendar"></i> {{ formatDate(item.delivery_date) }}</span>
-                  <span v-else class="col-empty">—</span>
-                </div>
-                <div class="vendor-col vendor-col-assignee">
-                  <span v-if="item.assigned_user_name" class="tag-assignee"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
-                  <span v-else class="col-empty">—</span>
-                </div>
-                <div class="vendor-status-area">
-                  <span class="status-chip" :class="'chip-' + item.status">{{ getItemStatusLabel(item.status) }}</span>
-                  <span v-if="item.status_history && item.status_history.length" class="history-count-badge" @click="openHistory(item)" v-tooltip.top="'ดูประวัติ'">
-                    <i class="pi pi-history"></i> {{ item.status_history.length }}
-                  </span>
-                </div>
-                <div class="vendor-actions">
-                  <Button v-if="getNextStatus(item.status)"
-                    :label="getNextActionLabel(item.status)"
-                    :class="'action-btn btn-' + getNextStatus(item.status)"
-                    @click="advanceStatus(item)" size="small" />
-                  <Button icon="pi pi-history" v-tooltip.top="'ประวัติ'" @click="openHistory(item)" text size="small" class="icon-btn" />
-                  <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditItem(item)" text size="small" class="icon-btn" />
-                  <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteItem(item)" text severity="danger" size="small" class="icon-btn" />
-                </div>
-              </div>
+                <!-- รายการของ vendor (ชื่อซ้ำ = dropdown ย่อย / รายการเดียว = แถวปกติ) -->
+                <transition name="expand">
+                  <div v-if="!cluster.repeated || isVendorExpanded(vendorKey(group, cluster))" class="vendor-sublist" :class="{ 'is-nested': cluster.repeated }">
+                    <div v-for="item in cluster.items" :key="item.id" class="vendor-row" :class="{ 'vendor-overdue': isOverdue(item), 'vendor-done': item.status === 'completed', 'vendor-sub-row': cluster.repeated }">
+                      <div class="vendor-main-info">
+                        <span v-if="!cluster.repeated" class="vendor-name">{{ item.vendor_name }}</span>
+                        <span v-if="item.item_description" class="vendor-desc">{{ item.item_description }}</span>
+                      </div>
+                      <div class="vendor-col vendor-col-po">
+                        <span v-if="item.po_number" class="tag-po"><i class="pi pi-file"></i> {{ item.po_number }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-col vendor-col-order">
+                        <span v-if="item.order_date" class="tag-order"><i class="pi pi-shopping-bag"></i> {{ formatDate(item.order_date) }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-col vendor-col-delivery">
+                        <span v-if="item.delivery_date" class="tag-delivery" :class="{ 'tag-overdue': isOverdue(item) }"><i class="pi pi-calendar"></i> {{ formatDate(item.delivery_date) }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-col vendor-col-amount">
+                        <span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="tag-amount"><i class="pi pi-wallet"></i> ฿{{ formatMoney(item.amount) }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-col vendor-col-leadtime">
+                        <span v-if="getLeadtimeFromNotes(item.notes)" class="tag-leadtime" v-tooltip.top="'Leadtime จากหมายเหตุ'"><i class="pi pi-clock"></i> {{ getLeadtimeFromNotes(item.notes) }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-col vendor-col-notes">
+                        <span v-if="item.notes" class="tag-notes" v-tooltip.top="item.notes"><i class="pi pi-comment"></i> {{ item.notes }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-col vendor-col-assignee">
+                        <span v-if="item.assigned_user_name" class="tag-assignee"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
+                        <span v-else class="col-empty">—</span>
+                      </div>
+                      <div class="vendor-status-area">
+                        <span class="status-chip" :class="'chip-' + item.status">{{ getItemStatusLabel(item.status) }}</span>
+                        <span v-if="item.status_history && item.status_history.length" class="history-count-badge" @click="openHistory(item)" v-tooltip.top="'ดูประวัติ'">
+                          <i class="pi pi-history"></i> {{ item.status_history.length }}
+                        </span>
+                      </div>
+                      <div class="vendor-actions">
+                        <Button v-if="getNextStatus(item.status)"
+                          :label="getNextActionLabel(item.status)"
+                          :class="'action-btn btn-' + getNextStatus(item.status)"
+                          @click="advanceStatus(item)" size="small" />
+                        <Button icon="pi pi-history" v-tooltip.top="'ประวัติ'" @click="openHistory(item)" text size="small" class="icon-btn" />
+                        <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditItem(item)" text size="small" class="icon-btn" />
+                        <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteItem(item)" text severity="danger" size="small" class="icon-btn" />
+                      </div>
+                    </div>
+                  </div>
+                </transition>
+              </template>
             </div>
           </transition>
         </div>
@@ -257,8 +316,9 @@
           <div v-for="item in overdueItems" :key="item.id" class="cal-event cal-event-overdue">
             <span class="cal-dot dot-overdue"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ item.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }} • กำหนด {{ formatDate(item.delivery_date) }}</span>
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span> • กำหนด {{ formatDate(item.delivery_date) }}</span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
             </div>
             <span class="cal-event-badge badge-overdue">เลย {{ getOverdueDays(item) }} วัน</span>
             <span class="cal-event-time">{{ formatDateTime(item.updated_at || item.created_at) }}</span>
@@ -270,8 +330,9 @@
           <div v-for="item in todayItems" :key="'today-'+item.id" class="cal-event">
             <span class="cal-dot" :class="'dot-' + item.status"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ item.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }} • กำหนดส่งวันนี้</span>
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span> • กำหนดส่งวันนี้</span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
             </div>
             <span class="cal-event-badge" :class="'badge-' + item.status">{{ getItemStatusLabel(item.status) }}</span>
             <span class="cal-event-time">{{ formatDateTime(item.updated_at || item.created_at) }}</span>
@@ -280,8 +341,9 @@
           <div v-for="evt in todayHistoryEvents" :key="'hist-'+evt.key" class="cal-event" :class="getHistoryEventClass(evt)">
             <span class="cal-dot" :class="'dot-' + getHistoryDotColor(evt)"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ evt.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="evt.so_number" class="cal-so">[{{ evt.so_number }}]</span> {{ evt.task_name }} • {{ evt.description }}</span>
+              <span class="cal-event-name">{{ evt.vendor_name }}<span v-if="evt.amount !== null && evt.amount !== undefined && evt.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(evt.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="evt.so_number" class="cal-so">[{{ evt.so_number }}]</span> {{ evt.task_name }}<span v-if="evt.step_name"> • {{ evt.step_name }}</span> • {{ evt.description }}</span>
+              <span v-if="getItemDetailLine(evt)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(evt) }}<span v-if="evt.changed_by" class="cal-desc-by"> • โดย {{ evt.changed_by }}</span></span>
               <span v-if="evt.remark" class="cal-event-remark"><i class="pi pi-comment"></i> {{ evt.remark }}</span>
             </div>
             <span class="cal-event-badge" :class="getHistoryBadgeClass(evt)">{{ evt.badge }}</span>
@@ -295,8 +357,9 @@
           <div v-for="item in thisWeekItems" :key="'week-'+item.id" class="cal-event">
             <span class="cal-dot" :class="'dot-' + item.status"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ item.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }} • {{ formatDate(item.delivery_date) }}</span>
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span> • {{ formatDate(item.delivery_date) }}</span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
             </div>
             <span class="cal-event-badge" :class="'badge-' + item.status">{{ getDeliveryLabel(item) }}</span>
             <span class="cal-event-time">{{ formatDate(item.delivery_date) }}</span>
@@ -309,8 +372,9 @@
           <div v-for="item in nextWeekItems" :key="'next-'+item.id" class="cal-event">
             <span class="cal-dot" :class="'dot-' + item.status"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ item.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }} • {{ formatDate(item.delivery_date) }}</span>
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span> • {{ formatDate(item.delivery_date) }}</span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
             </div>
             <span class="cal-event-badge badge-upcoming">{{ formatDate(item.delivery_date) }}</span>
             <span class="cal-event-time">{{ formatDate(item.delivery_date) }}</span>
@@ -324,8 +388,9 @@
           <div v-for="item in upcomingDeliveryItems" :key="'upcoming-'+item.id" class="cal-event cal-event-delivery">
             <span class="cal-dot dot-delivery"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ item.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }} • {{ formatDate(item.delivery_date) }}</span>
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span> • {{ formatDate(item.delivery_date) }}</span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
             </div>
             <span class="cal-event-badge badge-delivery">{{ getDeliveryLabel(item) }}</span>
             <span class="cal-event-time">{{ formatDate(item.delivery_date) }}</span>
@@ -338,8 +403,9 @@
           <div v-for="item in completedItems" :key="'done-'+item.id" class="cal-event cal-event-completed">
             <span class="cal-dot dot-completed"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ item.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}</span>
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span></span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
             </div>
             <span class="cal-event-badge badge-completed">เสร็จสิ้น</span>
             <span class="cal-event-time">{{ formatDateTime(item.updated_at) }}</span>
@@ -362,13 +428,25 @@
         <div class="mini-cal-legend">
           <span class="legend-item"><span class="legend-dot legend-delivery"></span> มีกำหนดส่ง</span>
         </div>
-        <div v-if="selectedDateEvents.length > 0" class="cal-selected-events">
+        <div v-if="selectedDateEvents.length > 0 || selectedDateDeliveryItems.length > 0" class="cal-selected-events">
           <div class="cal-selected-title"><i class="pi pi-info-circle"></i> {{ formatFullDate(calendarDate) }}</div>
+          <!-- รายการที่มีกำหนดส่งในวันนี้ -->
+          <div v-for="item in selectedDateDeliveryItems" :key="'ditem-'+item.id" class="cal-event cal-event-sm cal-event-delivery">
+            <span class="cal-dot" :class="'dot-' + item.status"></span>
+            <div class="cal-event-info">
+              <span class="cal-event-name">{{ item.vendor_name }}<span v-if="item.amount !== null && item.amount !== undefined && item.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(item.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="item.so_number" class="cal-so">[{{ item.so_number }}]</span> {{ item.task_name }}<span v-if="item.step_name"> • {{ item.step_name }}</span> • กำหนดส่ง</span>
+              <span v-if="getItemDetailLine(item)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(item) }}</span>
+            </div>
+            <span class="cal-event-badge" :class="'badge-' + item.status">{{ getItemStatusLabel(item.status) }}</span>
+            <span class="cal-event-time">{{ formatDate(item.delivery_date) }}</span>
+          </div>
           <div v-for="(evt, idx) in selectedDateEvents" :key="'sel-'+idx" class="cal-event cal-event-sm">
             <span class="cal-dot" :class="'dot-' + (evt.dotColor || evt.status)"></span>
             <div class="cal-event-info">
-              <span class="cal-event-name">{{ evt.vendor_name }}</span>
-              <span class="cal-event-project"><span v-if="evt.so_number" class="cal-so">[{{ evt.so_number }}]</span> {{ evt.task_name }} • {{ evt.description }}</span>
+              <span class="cal-event-name">{{ evt.vendor_name }}<span v-if="evt.amount !== null && evt.amount !== undefined && evt.amount !== ''" class="cal-amount-chip">฿{{ formatMoney(evt.amount) }}</span></span>
+              <span class="cal-event-project"><span v-if="evt.so_number" class="cal-so">[{{ evt.so_number }}]</span> {{ evt.task_name }}<span v-if="evt.step_name"> • {{ evt.step_name }}</span> • {{ evt.description }}</span>
+              <span v-if="getItemDetailLine(evt)" class="cal-event-desc"><i class="pi pi-box"></i> {{ getItemDetailLine(evt) }}<span v-if="evt.changed_by" class="cal-desc-by"> • โดย {{ evt.changed_by }}</span></span>
               <span v-if="evt.remark" class="cal-event-remark"><i class="pi pi-comment"></i> {{ evt.remark }}</span>
             </div>
             <span class="cal-event-time">{{ evt.time }}</span>
@@ -381,9 +459,125 @@
       </div>
     </div>
 
+    <!-- Import Excel Preview Dialog -->
+    <Dialog v-model:visible="showImportDialog" header="Import Excel - ตรวจสอบข้อมูล" :style="{width: '1150px', maxWidth: '95vw'}" modal :draggable="false" class="modern-dialog">
+      <div class="dialog-body">
+        <!-- Format Badge -->
+        <div class="import-format-row">
+          <span class="import-format-badge" :class="'fmt-' + importFormat">
+            <i :class="importFormat === 'CostSheet' ? 'pi pi-file-excel' : 'pi pi-table'"></i>
+            {{ importFormat === 'CostSheet' ? 'Cost Sheet Format' : 'BOQ Draft Format' }}
+          </span>
+          <span class="import-count">{{ importPreview.length }} vendor ที่พบ</span>
+        </div>
+
+        <!-- Warnings จาก parser (ไฟล์จริงอาจคลาดเคลื่อนจาก format ตัวอย่าง) -->
+        <div v-if="importWarnings && importWarnings.length" class="import-warnings">
+          <i class="pi pi-exclamation-triangle"></i>
+          <ul>
+            <li v-for="(w, i) in importWarnings" :key="i">{{ w }}</li>
+          </ul>
+        </div>
+
+        <!-- Step Selection -->
+        <div class="import-step-select">
+          <label><i class="pi pi-shopping-cart"></i> เลือก Step จัดซื้อที่จะนำเข้า <span class="required">*</span></label>
+          <Dropdown v-model="importTargetStep" :options="filteredProcurementStepsForImport" 
+            optionLabel="displayLabel" placeholder="เลือก Step จัดซื้อ" 
+            class="w-full" filter>
+            <template #option="slotProps">
+              <div class="project-option">
+                <span v-if="slotProps.option.so_number" class="project-option-so">{{ slotProps.option.so_number }}</span>
+                <span class="project-option-name">{{ slotProps.option.task_name }} — {{ slotProps.option.step_name }}</span>
+              </div>
+            </template>
+          </Dropdown>
+        </div>
+
+        <!-- Preview Table -->
+        <div class="import-preview-table">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:30px">#</th>
+                <th>Vendor</th>
+                <th>รายละเอียด</th>
+                <th>PO Number</th>
+                <th>วันที่สั่ง</th>
+                <th>กำหนดส่ง</th>
+                <th>ยอดเงิน (฿)</th>
+                <th>Leadtime</th>
+                <th>หมายเหตุ</th>
+                <th>สถานะ</th>
+                <th style="width:30px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(v, idx) in importPreview" :key="idx" :class="{ 'import-row-skip': v._skip }">
+                <td class="import-idx">{{ idx + 1 }}</td>
+                <td class="import-vendor-cell">
+                  <InputText v-model="v.vendor_name" class="import-input" :class="{ 'input-error': !v.vendor_name }" />
+                </td>
+                <td>
+                  <InputText v-model="v.item_description" class="import-input import-input-long" placeholder="(ว่าง)" />
+                </td>
+                <td>
+                  <InputText v-model="v.po_number" class="import-input import-input-sm" placeholder="-" />
+                </td>
+                <td>
+                  <InputText v-model="v.order_date" class="import-input import-input-date" placeholder="yyyy-mm-dd" v-tooltip.top="'ดึงจาก PO Date หรือ note สั่งของ'" />
+                </td>
+                <td>
+                  <InputText v-model="v.delivery_date" class="import-input import-input-date" placeholder="yyyy-mm-dd" v-tooltip.top="'ดึงจาก Date of Deliver หรือ note นัดส่ง'" />
+                </td>
+                <td>
+                  <InputText v-model="v.amount" class="import-input import-input-date" placeholder="-" v-tooltip.top="'ราคาซื้อรวม VAT'" />
+                </td>
+                <td class="import-leadtime">
+                  <span v-if="v.leadtime" class="import-leadtime-badge"><i class="pi pi-clock"></i> {{ v.leadtime }}</span>
+                  <span v-else class="import-dash">-</span>
+                </td>
+                <td>
+                  <InputText v-model="v.notes" class="import-input import-input-notes" placeholder="หมายเหตุสินค้า" v-tooltip.top="'จากไฟล์ / แก้ไขได้'" />
+                </td>
+                <td>
+                  <Dropdown v-model="v.status" :options="itemStatusOptions" optionLabel="label" optionValue="value" class="import-status-dd" />
+                </td>
+                <td>
+                  <button class="import-remove-btn" @click="importPreview.splice(idx, 1)" v-tooltip.top="'ลบแถวนี้'"><i class="pi pi-times"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-if="importPreview.length === 0" class="import-empty">ไม่พบข้อมูล vendor ในไฟล์นี้</div>
+        </div>
+
+        <!-- Notes preview (expandable) -->
+        <div v-if="importPreview.some(v => v.notes)" class="import-notes-hint">
+          <i class="pi pi-info-circle"></i> ระบบอ่านข้อมูลจาก column ของไฟล์ BOQ โดยตรง (ชื่อ column คล้ายกันก็อ่านได้ เช่น Distributor/Vendor/ผู้ขาย) — ตรวจและแก้ค่าในตารางได้ทุกช่องก่อนกด Import
+        </div>
+      </div>
+
+      <template #footer>
+        <Button label="ยกเลิก" icon="pi pi-times" @click="showImportDialog = false" class="btn-cancel" text />
+        <Button 
+          :label="`Import ${importPreview.filter(v => v.vendor_name).length} Vendor`" 
+          icon="pi pi-check" 
+          @click="confirmImport" 
+          :disabled="!importTargetStep || importPreview.filter(v => v.vendor_name).length === 0 || importLoading"
+          :loading="importLoading"
+          class="btn-confirm" />
+      </template>
+    </Dialog>
+
     <!-- Status Change Remark Dialog -->
     <Dialog v-model:visible="showRemarkDialog" header="เปลี่ยนสถานะ" :style="{width: '440px'}" modal :draggable="false" class="modern-dialog">
       <div class="dialog-body">
+        <div v-if="remarkItem" class="remark-target">
+          <span class="remark-target-vendor"><i class="pi pi-truck"></i> {{ remarkItem.vendor_name }}</span>
+          <span v-if="remarkItem.item_description" class="remark-target-desc"><i class="pi pi-box"></i> {{ remarkItem.item_description }}</span>
+          <span v-if="remarkItem.po_number" class="remark-target-po"><i class="pi pi-file"></i> {{ remarkItem.po_number }}</span>
+        </div>
         <div class="remark-info">
           <span class="status-chip" :class="'chip-' + remarkFromStatus">{{ getItemStatusLabel(remarkFromStatus) }}</span>
           <i class="pi pi-arrow-right remark-arrow"></i>
@@ -409,6 +603,12 @@
           <strong>{{ historyItem.vendor_name }}</strong>
           <span v-if="historyItem.so_number" class="so-tag-sm">{{ historyItem.so_number }}</span>
           <span class="text-muted">{{ historyItem.task_name }}</span>
+        </div>
+        <!-- รายละเอียดสินค้า: แยกประวัติของ vendor ที่มีหลายรายการ -->
+        <div v-if="historyItem && (historyItem.item_description || historyItem.po_number || (historyItem.amount !== null && historyItem.amount !== undefined && historyItem.amount !== ''))" class="history-item-info">
+          <span v-if="historyItem.item_description" class="history-item-desc"><i class="pi pi-box"></i> {{ historyItem.item_description }}</span>
+          <span v-if="historyItem.po_number" class="history-item-po"><i class="pi pi-file"></i> {{ historyItem.po_number }}</span>
+          <span v-if="historyItem.amount !== null && historyItem.amount !== undefined && historyItem.amount !== ''" class="history-item-amount"><i class="pi pi-wallet"></i> ฿{{ formatMoney(historyItem.amount) }}</span>
         </div>
         <div v-if="historyItem && (historyItem.status_history || []).length > 0" class="history-timeline">
           <div v-for="(h, idx) in historyItem.status_history" :key="idx" class="history-item">
@@ -473,6 +673,10 @@
             <label>เลข PO</label>
             <InputText v-model="currentItem.po_number" placeholder="PO-XXXX" class="w-full" />
           </div>
+          <div class="field">
+            <label>ยอดเงิน (฿)</label>
+            <InputText v-model="currentItem.amount" placeholder="เช่น 100000.00" class="w-full" />
+          </div>
           <div class="form-divider"></div>
           <div class="field-group">
             <div class="field">
@@ -497,8 +701,8 @@
           </div>
           <div class="form-divider"></div>
           <div class="field">
-            <label>หมายเหตุ</label>
-            <Textarea v-model="currentItem.notes" rows="2" placeholder="หมายเหตุเพิ่มเติม" class="w-full" />
+            <label>หมายเหตุ / Comment สินค้า</label>
+            <Textarea v-model="currentItem.notes" rows="2" placeholder="หมายเหตุเพิ่มเติม เช่น เลข Invoice, leadtime, ติดต่อซัพพลายเออร์" class="w-full" />
           </div>
         </div>
       </div>
@@ -513,10 +717,13 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import { useConfirm } from 'primevue/useconfirm'
+import { useDragScroll } from '@/composables/useDragScroll'
 
 export default {
   name: 'ProcurementView',
   setup() {
+    // ตาราง preview import: กดค้างแล้วลากเพื่อเลื่อนซ้าย-ขวาได้เลย (ไม่ต้องใช้ scroll bar)
+    useDragScroll('.import-preview-table')
     return { $confirm: useConfirm() }
   },
   data() {
@@ -537,7 +744,7 @@ export default {
       editingItem: null,
       currentStep: null,
       currentItem: {
-        vendor_name: '', item_description: '', po_number: '',
+        vendor_name: '', item_description: '', po_number: '', amount: '',
         order_date: null, delivery_date: null, status: 'pending', notes: '',
         assigned_user_id: null, assigned_user_name: ''
       },
@@ -556,7 +763,16 @@ export default {
       remarkToStatus: '',
       remarkText: '',
       showHistoryDialog: false,
-      historyItem: null
+      historyItem: null,
+      // Import Excel state
+      showImportDialog: false,
+      importFormat: 'BOQ',
+      importPreview: [],
+      importTargetStep: null,
+      importLoading: false,
+      importWarnings: [],
+      // vendor ซ้ำในกลุ่มโครงการ: state ขยาย/ย่อ dropdown ย่อย
+      expandedVendors: {}
     }
   },
   computed: {
@@ -590,6 +806,12 @@ export default {
         s.so_number?.toLowerCase().includes(q) ||
         s.description?.toLowerCase().includes(q)
       )
+    },
+    filteredProcurementStepsForImport() {
+      return this.procurementSteps
+        .filter(s => (s.id ?? s.step_id) && s.task_id)
+        .map(s => ({ ...s, id: s.id ?? s.step_id, displayLabel: s.so_number ? `[${s.so_number}] ${s.task_name} — ${s.step_name}` : `${s.task_name} — ${s.step_name}` }))
+        .sort((a, b) => (a.task_name || '').localeCompare(b.task_name || '', 'th'))
     },
     groupedByStep() {
       const groups = {}
@@ -673,16 +895,25 @@ export default {
     allHistoryEvents() {
       const events = []
       for (const item of this.allItems) {
+        // ข้อมูลร่วมของทุก event เพื่อให้ไทม์ไลน์แสดงรายละเอียดครบ
+        const common = {
+          vendor_name: item.vendor_name,
+          task_name: item.task_name,
+          so_number: item.so_number,
+          step_name: item.step_name,
+          item_description: item.item_description,
+          po_number: item.po_number,
+          amount: item.amount
+        }
         // Event: เพิ่ม vendor
         if (item.created_at) {
           events.push({
+            ...common,
             key: `created-${item.id}`,
             type: 'created',
-            vendor_name: item.vendor_name,
-            task_name: item.task_name,
-            so_number: item.so_number,
-            description: `เพิ่ม Vendor ใหม่`,
+            description: `เพิ่มรายการจัดซื้อ`,
             remark: '',
+            changed_by: item.created_by_name || '',
             date: item.created_at.split('T')[0],
             datetime: item.created_at,
             time: this.formatDateTime(item.created_at),
@@ -695,13 +926,12 @@ export default {
         if (item.status_history && item.status_history.length > 0) {
           for (const h of item.status_history) {
             events.push({
+              ...common,
               key: `hist-${item.id}-${h.changed_at}`,
               type: 'status_change',
-              vendor_name: item.vendor_name,
-              task_name: item.task_name,
-              so_number: item.so_number,
               description: `${this.getItemStatusLabel(h.from)} → ${this.getItemStatusLabel(h.to)}`,
               remark: h.remark || '',
+              changed_by: h.changed_by || '',
               date: h.changed_at ? h.changed_at.split('T')[0] : '',
               datetime: h.changed_at,
               time: this.formatDateTime(h.changed_at),
@@ -716,12 +946,12 @@ export default {
         if (item.delivery_date && item.status !== 'completed' && item.status !== 'received') {
           const dStr = item.delivery_date.split('T')[0]
           events.push({
+            ...common,
             key: `delivery-${item.id}`,
             type: 'delivery',
-            vendor_name: item.vendor_name,
-            task_name: item.task_name,
             description: `กำหนดส่ง`,
             remark: '',
+            changed_by: '',
             date: dStr,
             datetime: item.delivery_date,
             time: this.formatDate(item.delivery_date),
@@ -741,6 +971,12 @@ export default {
       if (!this.calendarDate) return []
       const selStr = this.getLocalDateStr(this.calendarDate)
       return this.allHistoryEvents.filter(e => e.date === selStr)
+    },
+    // รายการจัดซื้อที่มีกำหนดส่งในวันที่เลือกในปฏิทิน
+    selectedDateDeliveryItems() {
+      if (!this.calendarDate) return []
+      const selStr = this.getLocalDateStr(this.calendarDate)
+      return this.allItems.filter(i => i.delivery_date && i.delivery_date.split('T')[0] === selStr)
     }
   },
   mounted() { this.loadData() },
@@ -766,6 +1002,73 @@ export default {
     },
     toggleGroup(stepId) {
       this.expandedGroups[stepId] = !this.expandedGroups[stepId]
+    },
+    // จัดกลุ่ม item ในโครงการเดียวกันตามชื่อ vendor (ชื่อซ้ำ = รวมเป็น cluster เดียว)
+    getVendorClusters(group) {
+      const map = {}, order = []
+      for (const item of group.items) {
+        const name = item.vendor_name || '(ไม่ระบุชื่อ)'
+        if (!map[name]) { map[name] = { vendor_name: name, items: [] }; order.push(map[name]) }
+        map[name].items.push(item)
+      }
+      return order.map(c => ({ ...c, repeated: c.items.length > 1 }))
+    },
+    vendorKey(group, cluster) {
+      return group.step_id + '::' + cluster.vendor_name
+    },
+    isVendorExpanded(key) {
+      return !!this.expandedVendors[key]
+    },
+    toggleVendorGroup(key) {
+      this.expandedVendors[key] = !this.expandedVendors[key]
+    },
+    // สรุปสถานะของ vendor cluster: นับจำนวนแยกตามสถานะ (แสดงเป็น 2 คอลัมน์ย่อย)
+    getClusterStatusCounts(items) {
+      const counts = {}
+      for (const i of items) counts[i.status] = (counts[i.status] || 0) + 1
+      // เรียงตามลำดับ flow เพื่อให้ chip เรียงจากต้นไปจนถึงปลาย
+      const flow = ['pending', 'approved', 'ordered', 'waiting', 'received', 'completed']
+      return flow.filter(st => counts[st]).map(st => ({ status: st, count: counts[st] }))
+    },
+    // บรรทัดรายละเอียดของ item สำหรับไทม์ไลน์: รายละเอียดสินค้า + PO + ผู้รับผิดชอบ
+    getItemDetailLine(item) {
+      const parts = []
+      if (item.item_description) parts.push(item.item_description)
+      if (item.po_number) parts.push('PO: ' + item.po_number)
+      if (item.assigned_user_name) parts.push('ผู้รับผิดชอบ: ' + item.assigned_user_name)
+      return parts.join(' • ')
+    },
+    // จัดรูปยอดเงินเป็นทศนิยม 2 ตำแหน่ง เช่น 100,000.00 (คืน null ถ้าไม่มี/ไม่ใช่ตัวเลข)
+    formatMoney(v) {
+      if (v === null || v === undefined || v === '') return null
+      const n = Number(v)
+      if (isNaN(n)) return null
+      return n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    },
+    // ผลรวมยอดเงินของรายการชุดหนึ่ง (คืน null ถ้าไม่มีรายการใดมียอดเงินเลย)
+    sumAmount(items) {
+      let sum = 0, has = false
+      for (const i of items) {
+        if (i.amount === null || i.amount === undefined || i.amount === '') continue
+        const n = Number(i.amount)
+        if (!isNaN(n)) { sum += n; has = true }
+      }
+      return has ? Math.round(sum * 100) / 100 : null
+    },
+    // ดึง leadtime จากหมายเหตุ เช่น "** leadtime 20 วัน" → "20 วัน"
+    getLeadtimeFromNotes(notes) {
+      if (!notes) return null
+      const m = String(notes).match(/leadtime\s*:?\s*(\d+(?:\s*-\s*\d+)?)\s*วัน/i)
+      return m ? m[1].replace(/\s+/g, '') + ' วัน' : null
+    },
+    // leadtime ที่ไม่ซ้ำกันของ vendor cluster (สำหรับแถวรวม)
+    getClusterLeadtimes(items) {
+      const seen = new Set()
+      for (const i of items) {
+        const lt = this.getLeadtimeFromNotes(i.notes)
+        if (lt) seen.add(lt)
+      }
+      return [...seen].join(', ') || null
     },
     toggleAllGroups() {
       const target = !this.allExpanded
@@ -897,6 +1200,68 @@ export default {
     searchVendor(event) {
       const q = event.query.toLowerCase()
       this.vendorSuggestions = q ? this.vendorList.filter(v => v.toLowerCase().includes(q)) : [...this.vendorList]
+    },
+    async onImportFileChange(e) {
+      const file = e.target.files && e.target.files[0]
+      e.target.value = '' // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้
+      if (!file) return
+      if (!/\.(xlsx|xls)$/i.test(file.name)) {
+        this.$toast.add({ severity: 'warn', summary: 'ไฟล์ไม่ถูกต้อง', detail: 'รองรับเฉพาะไฟล์ .xlsx / .xls', life: 3000 })
+        return
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        this.$toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'ขนาดไฟล์ต้องไม่เกิน 20MB', life: 3000 })
+        return
+      }
+      this.importLoading = true
+      try {
+        const fd = new FormData()
+        fd.append('file', file)
+        const res = await axios.post('/api/procurement/import/preview', fd)
+        this.importFormat = res.data.format || 'BOQ'
+        this.importPreview = (res.data.vendors || []).map(v => ({ ...v, status: v.status || 'pending' }))
+        this.importWarnings = res.data.warnings || []
+        this.showImportDialog = true
+        if (this.importPreview.length === 0) {
+          this.$toast.add({ severity: 'info', summary: 'ไม่พบข้อมูล', detail: 'ไม่พบรายการ vendor ในไฟล์นี้ — ตรวจสอบว่ากรอกข้อมูลครบ (Distributor/รายละเอียด หรือชื่อ tab vendor)', life: 5000 })
+        }
+      } catch (err) {
+        console.error(err)
+        this.$toast.add({ severity: 'error', summary: 'อ่านไฟล์ไม่สำเร็จ', detail: err.response?.data?.error || err.userMessage || 'ไม่สามารถอ่านไฟล์ Excel ได้', life: 4000 })
+      } finally {
+        this.importLoading = false
+      }
+    },
+    async confirmImport() {
+      if (!this.importTargetStep) return
+      const vendors = this.importPreview.filter(v => v.vendor_name && String(v.vendor_name).trim())
+      if (vendors.length === 0) return
+      this.importLoading = true
+      try {
+        const payload = {
+          step_id: this.importTargetStep.id,
+          task_id: this.importTargetStep.task_id,
+          vendors: vendors.map(v => {
+            const clean = { ...v }
+            delete clean._sheet // ตัด field ชั่วคราวจาก parser ออกก่อนส่ง
+            delete clean._skip
+            delete clean.leadtime // leadtime ไม่มีคอลัมน์ใน DB (อยู่ใน notes แล้ว)
+            return clean
+          })
+        }
+        const res = await axios.post('/api/procurement/import/confirm', payload)
+        this.showImportDialog = false
+        this.importPreview = []
+        this.importWarnings = []
+        this.importTargetStep = null
+        this.$toast.add({ severity: 'success', summary: 'นำเข้าสำเร็จ', detail: `เพิ่ม ${res.data.created} รายการเรียบร้อย`, life: 3000 })
+        await this.loadData()
+      } catch (err) {
+        console.error(err)
+        this.$toast.add({ severity: 'error', summary: 'นำเข้าไม่สำเร็จ', detail: err.response?.data?.error || err.userMessage || 'ไม่สามารถนำเข้าข้อมูลได้', life: 4000 })
+      } finally {
+        this.importLoading = false
+      }
     },
     async saveItem() {
       const data = { ...this.currentItem, step_id: this.currentStep.id, task_id: this.currentStep.task_id, order_date: this.currentItem.order_date ? this.fmtDate(this.currentItem.order_date) : null, delivery_date: this.currentItem.delivery_date ? this.fmtDate(this.currentItem.delivery_date) : null }
@@ -1297,11 +1662,12 @@ export default {
 .group-add-btn:hover { background: #dbeafe !important; transform: scale(1.08); }
 
 /* Vendor List (inside group) */
-.vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; }
+.vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; overflow-x: auto; }
+.vendor-row-header, .vendor-row { min-width: 1280px; }
 
 .vendor-row-header {
   display: grid;
-  grid-template-columns: 1.7fr 0.9fr 1fr 1.1fr 1fr auto;
+  grid-template-columns: 1.35fr 0.7fr 0.8fr 0.8fr 0.8fr 0.7fr 1.15fr 0.8fr 0.9fr auto;
   gap: 0.85rem;
   padding: 0.6rem 1.4rem 0.6rem 3.15rem;
   background: #f8fafc;
@@ -1313,11 +1679,11 @@ export default {
   letter-spacing: 0.04em;
 }
 .vendor-row-header > div { display: flex; align-items: center; }
-.vh-actions { min-width: 130px; }
+.vh-actions { min-width: 210px; }
 
 .vendor-row {
   display: grid;
-  grid-template-columns: 1.7fr 0.9fr 1fr 1.1fr 1fr auto;
+  grid-template-columns: 1.35fr 0.7fr 0.8fr 0.8fr 0.8fr 0.7fr 1.15fr 0.8fr 0.9fr auto;
   align-items: center;
   gap: 0.85rem;
   padding: 0.8rem 1.4rem 0.8rem 3.15rem;
@@ -1344,6 +1710,22 @@ export default {
 .vendor-row.vendor-overdue::before { background: #dc2626; }
 .vendor-row.vendor-done { opacity: 0.65; }
 .vendor-row.vendor-done::before { background: #16a34a; }
+
+/* ===== Vendor Cluster: รวม vendor ชื่อซ้ำเป็น dropdown ย่อย ===== */
+.vendor-cluster-row { cursor: pointer; background: linear-gradient(90deg, #f8fafc 0%, #fff 100%); }
+.vendor-cluster-row:hover { background: #eef4fb; box-shadow: inset 3px 0 0 #4f46e5; }
+.vendor-cluster-row:hover::before { background: #4f46e5; transform: translateY(-50%) scale(1.3); }
+.vendor-cluster-row .vendor-main-info { display: flex; align-items: center; gap: 0.6rem; }
+.vendor-cluster-row .vendor-name { display: inline; }
+.cluster-chevron { color: #94a3b8; font-size: 0.75rem; flex-shrink: 0; }
+.cluster-count { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 700; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.18rem 0.6rem; border-radius: 12px; white-space: nowrap; }
+.cluster-count i { font-size: 0.65rem; }
+.cluster-toggle { font-size: 0.72rem !important; }
+.vendor-sublist.is-nested { background: #f8fafc; border-bottom: 1px solid #f1f5f9; padding: 0.3rem 0; }
+.vendor-sublist.is-nested .vendor-row { background: #fbfdff; }
+.vendor-sublist.is-nested .vendor-row:last-child { border-bottom: 1px solid #f8fafc; }
+.cluster-status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.22rem 0.4rem; width: 100%; align-items: center; }
+.status-chip.chip-mini { font-size: 0.62rem; padding: 0.16rem 0.45rem; white-space: nowrap; overflow: hidden; max-width: 100%; }
 
 .vendor-main-info { min-width: 0; }
 .vendor-name { font-weight: 650; color: #0f172a; font-size: 0.88rem; display: block; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1387,7 +1769,7 @@ export default {
 .detail-tag.tag-overdue { color: #b91c1c; background: #fef2f2; border-color: #fecaca; font-weight: 600; }
 
 /* Colored column tags - ไม่ซ้ำกับสี status chip */
-.tag-po, .tag-delivery, .tag-assignee {
+.tag-po, .tag-order, .tag-delivery, .tag-amount, .tag-assignee {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -1402,11 +1784,20 @@ export default {
 .tag-delivery { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; }
 .tag-delivery i { font-size: 0.66rem; opacity: 0.8; }
 .tag-delivery.tag-overdue { color: #be123c; background: #fff1f2; border-color: #fecdd3; }
+.tag-order { color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; }
+.tag-order i { font-size: 0.66rem; opacity: 0.8; }
+.tag-amount { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; font-weight: 700; }
+.tag-amount i { font-size: 0.66rem; opacity: 0.8; }
+.tag-leadtime { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; padding: 0.2rem 0.5rem; border-radius: 8px; white-space: nowrap; }
+.tag-leadtime i { font-size: 0.64rem; }
+.tag-notes { display: block; font-size: 0.7rem; color: #64748b; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+.tag-notes i { font-size: 0.62rem; color: #94a3b8; margin-right: 0.25rem; }
+.group-amount { font-size: 0.72rem; font-weight: 700; color: #047857; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 12px; }
 .tag-assignee { color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; }
 .tag-assignee i { font-size: 0.66rem; opacity: 0.8; }
 
 .vendor-status-area { }
-.vendor-actions { display: flex; align-items: center; gap: 0.25rem; }
+.vendor-actions { display: flex; align-items: center; gap: 0.25rem; min-width: 210px; justify-content: flex-end; }
 
 /* Shared tags */
 .so-tag { font-size: 0.7rem; color: #4f46e5; background: linear-gradient(135deg, #eef2ff, #e0e7ff); padding: 0.2rem 0.5rem; border-radius: 7px; font-weight: 800; font-family: 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; border: 1px solid #c7d2fe; }
@@ -1493,6 +1884,10 @@ export default {
 .cal-event-badge.badge-delivery { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #b91c1c; }
 .cal-event-time { font-size: 0.67rem; color: #94a3b8; white-space: nowrap; font-weight: 500; }
 .cal-event-remark { display: block; font-size: 0.7rem; color: #64748b; font-style: italic; margin-top: 3px; }
+.cal-event-desc { display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: #94a3b8; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.cal-event-desc i { font-size: 0.62rem; flex-shrink: 0; }
+.cal-desc-po, .cal-desc-by { color: #64748b; }
+.cal-amount-chip { display: inline-flex; align-items: center; font-size: 0.64rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 0.05rem 0.4rem; margin-left: 0.45rem; white-space: nowrap; vertical-align: middle; }
 .cal-so { color: #4f46e5; font-weight: 800; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.69rem; }
 .cal-empty { font-size: 0.82rem; color: #94a3b8; padding: 0.8rem 0.95rem; text-align: center; background: #fafbfc; border-radius: 10px; border: 1px dashed #e2e8f0; }
 
@@ -1573,15 +1968,29 @@ export default {
 .modern-dialog :deep(.p-dialog-title) { font-weight: 800; font-size: 1.05rem; color: #0f172a; letter-spacing: -0.02em; }
 .modern-dialog :deep(.p-dialog-header-icon) { width: 32px; height: 32px; border-radius: 50%; color: #64748b; transition: all 0.2s; }
 .modern-dialog :deep(.p-dialog-header-icon:hover) { background: #f1f5f9; color: #0f172a; }
-.modern-dialog :deep(.p-dialog-content) { padding: 1.5rem 1.5rem 1rem; }
+.modern-dialog :deep(.p-dialog-content) { padding: 1.5rem 1.5rem 1rem; max-height: calc(100vh - 230px); overflow-y: auto; }
+.modern-dialog :deep(.p-dialog-content::-webkit-scrollbar) { width: 6px; }
+.modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-track) { background: transparent; }
+.modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-thumb) { background: #e2e8f0; border-radius: 3px; }
+.modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-thumb:hover) { background: #cbd5e1; }
 .modern-dialog :deep(.p-dialog-footer) { padding: 1rem 1.5rem 1.25rem; border-top: 1.5px solid #f1f5f9; background: #fafbfc; display: flex; justify-content: flex-end; gap: 0.65rem; }
-
-.dialog-body { }
 .dialog-desc { margin: 0 0 1rem; font-size: 0.84rem; color: #64748b; }
 .history-vendor-info { margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .history-vendor-info strong { color: #0f172a; }
+.history-item-info { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin: -0.6rem 0 1rem; }
+.history-item-desc { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.76rem; color: #334155; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.22rem 0.6rem; border-radius: 8px; max-width: 100%; }
+.history-item-desc i { font-size: 0.66rem; color: #94a3b8; flex-shrink: 0; }
+.history-item-po { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; color: #0f766e; background: #f0fdfa; border: 1px solid #99f6e4; padding: 0.22rem 0.55rem; border-radius: 8px; white-space: nowrap; }
+.history-item-po i { font-size: 0.64rem; opacity: 0.8; }
+.history-item-amount { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 700; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.22rem 0.55rem; border-radius: 8px; white-space: nowrap; }
+.history-item-amount i { font-size: 0.64rem; opacity: 0.8; }
 
 .remark-info { display: flex; align-items: center; gap: 1rem; justify-content: center; padding: 1.15rem 1.5rem; background: #f8fafc; border-radius: 12px; border: 1.5px solid #e8ecf0; }
+.remark-target { display: flex; align-items: center; justify-content: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.85rem; font-size: 0.8rem; color: #334155; }
+.remark-target-vendor { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 700; color: #0f172a; }
+.remark-target-vendor i { color: #7c3aed; font-size: 0.72rem; }
+.remark-target-desc, .remark-target-po { display: inline-flex; align-items: center; gap: 0.28rem; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.16rem 0.5rem; border-radius: 8px; font-size: 0.72rem; color: #64748b; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remark-target-desc i, .remark-target-po i { color: #94a3b8; font-size: 0.66rem; }
 .remark-arrow { color: #cbd5e1; font-size: 0.85rem; }
 
 .history-timeline { display: flex; flex-direction: column; max-height: 400px; overflow-y: auto; padding-right: 0.3rem; }
@@ -1625,7 +2034,6 @@ export default {
 .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
 .form-section-title { font-size: 0.78rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.45rem; }
 .form-section-title i { color: #3b82f6; font-size: 0.82rem; }
-.form-divider { height: 1px; background: #f1f5f9; margin: 1rem 0 1.25rem; }
 .empty-state-sm { text-align: center; padding: 2.5rem 1.5rem; color: #94a3b8; }
 .empty-state-sm i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; opacity: 0.4; }
 .empty-state-sm p { font-size: 0.85rem; margin: 0; }
@@ -1762,4 +2170,41 @@ export default {
   .vendor-row::before { left: 1rem; }
 }
 
+/* ===== Import Excel ===== */
+.import-btn { font-weight: 600; border-radius: 10px; }
+.import-format-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+.import-format-badge { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.9rem; border-radius: 20px; }
+.import-format-badge.fmt-CostSheet { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.import-format-badge.fmt-BOQ { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.import-count { font-size: 0.82rem; color: #64748b; font-weight: 600; }
+.import-warnings { display: flex; gap: 0.6rem; align-items: flex-start; background: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #f97316; color: #9a3412; border-radius: 10px; padding: 0.65rem 0.9rem; margin-bottom: 1rem; font-size: 0.78rem; }
+.import-warnings i { margin-top: 2px; color: #f97316; }
+.import-warnings ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.import-step-select { margin-bottom: 1rem; }
+.import-step-select label { display: flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 0.45rem; }
+.import-step-select .required { color: #ef4444; }
+.import-preview-table { border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: auto; max-height: 340px; background: #fff; cursor: grab; }
+.import-preview-table table { width: 100%; min-width: 1430px; border-collapse: collapse; font-size: 0.8rem; }
+.import-vendor-cell { min-width: 210px; }
+.import-input-notes { width: 170px; }
+.import-preview-table th { position: sticky; top: 0; background: #f8fafc; color: #475569; font-weight: 700; text-align: left; padding: 0.55rem 0.7rem; border-bottom: 1.5px solid #e2e8f0; z-index: 1; }
+.import-preview-table td { padding: 0.4rem 0.7rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+.import-preview-table tr.import-row-skip td { opacity: 0.5; }
+.import-idx { color: #94a3b8; font-size: 0.75rem; }
+.import-input { width: 100%; padding: 0.4rem 0.6rem; font-size: 0.8rem; border: 1.5px solid #e2e8f0; border-radius: 8px; }
+.import-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+.import-input.input-error { border-color: #ef4444; }
+.import-input-long { min-width: 260px; }
+.import-input-sm { width: 130px; }
+.import-input-date { width: 115px; font-variant-numeric: tabular-nums; }
+.import-leadtime { white-space: nowrap; }
+.import-leadtime-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 700; color: #7c2d12; background: #ffedd5; border: 1px solid #fed7aa; padding: 0.25rem 0.65rem; border-radius: 16px; }
+.import-leadtime-badge i { font-size: 0.7rem; }
+.import-dash { color: #cbd5e1; }
+.import-status-dd { width: 150px; font-size: 0.8rem; }
+.import-remove-btn { width: 26px; height: 26px; border: none; border-radius: 8px; background: #fee2e2; color: #dc2626; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s; }
+.import-remove-btn:hover { background: #fecaca; }
+.import-remove-btn i { font-size: 0.7rem; }
+.import-empty { padding: 2rem 1rem; text-align: center; color: #94a3b8; font-size: 0.85rem; }
+.import-notes-hint { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.85rem; font-size: 0.78rem; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 0.55rem 0.85rem; }
 </style>
