@@ -609,11 +609,16 @@ export default {
     },
     sortedProjects() {
       // เรียงโครงการที่มีชื่อตัวเองใน workflow step ไว้บนสุด
+      // และให้โครงการ "CM ต่อเนื่อง" (ปิดแล้วแต่ยังมีงาน CM) อยู่ก่อนโครงการทั่วไป — ไม่จมหายไปกับกองปิดโครงการ
       return [...this.filteredProjects].sort((a, b) => {
         const aHasMe = this.hasMyAssignment(a)
         const bHasMe = this.hasMyAssignment(b)
         if (aHasMe && !bHasMe) return -1
         if (!aHasMe && bHasMe) return 1
+        const aCm = this.getLatestProjectStatuses(a).includes('cm')
+        const bCm = this.getLatestProjectStatuses(b).includes('cm')
+        if (aCm && !bCm) return -1
+        if (!aCm && bCm) return 1
         return 0
       })
     }
@@ -1051,7 +1056,11 @@ export default {
       )
     },
     getRowClass(data) {
-      return this.hasMyAssignment(data) ? 'my-project-row' : ''
+      const classes = []
+      if (this.hasMyAssignment(data)) classes.push('my-project-row')
+      // โครงการที่ปิดไปแล้วแต่มี CM ต่อเนื่อง — ไฮไลต์แยกจากโครงการที่ปิดสนิท
+      if (this.getLatestProjectStatuses(data).includes('cm')) classes.push('cm-project-row')
+      return classes.join(' ') || ''
     },
     canCompleteStep(step, task) {
       if (step.status === 'completed') return false
@@ -2113,6 +2122,15 @@ export default {
 
 :deep(.my-project-row:hover) {
   background: linear-gradient(90deg, #fde68a 0%, #fef9c3 100%) !important;
+}
+
+/* ===== โครงการ CM ต่อเนื่อง (ปิดโครงการแล้วแต่ยังมีงาน CM) ===== */
+:deep(.cm-project-row) {
+  background: linear-gradient(90deg, #f5f3ff 0%, #faf5ff 100%) !important;
+  border-left: 4px solid #8b5cf6 !important;
+}
+:deep(.cm-project-row:hover) {
+  background: linear-gradient(90deg, #ede9fe 0%, #f5f3ff 100%) !important;
 }
 .clickable-name { color: #4A90E2; cursor: pointer; font-weight: 500; }
 .clickable-name:hover { text-decoration: underline; color: #2563eb; }
