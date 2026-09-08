@@ -708,7 +708,7 @@
       </div>
       <template #footer>
         <Button label="ยกเลิก" icon="pi pi-times" @click="showItemDialog = false" class="btn-cancel" text />
-        <Button :label="editingItem ? 'บันทึก' : 'เพิ่ม Vendor'" :icon="editingItem ? 'pi pi-check' : 'pi pi-plus'" @click="saveItem" :disabled="!currentItem.vendor_name" class="btn-confirm" />
+        <Button :label="editingItem ? 'บันทึก' : 'เพิ่ม Vendor'" :icon="editingItem ? 'pi pi-check' : 'pi pi-plus'" @click="saveItem" :disabled="!getVendorNameStr(currentItem.vendor_name)" class="btn-confirm" />
       </template>
     </Dialog>
   </div>
@@ -1201,6 +1201,12 @@ export default {
       const q = event.query.toLowerCase()
       this.vendorSuggestions = q ? this.vendorList.filter(v => v.toLowerCase().includes(q)) : [...this.vendorList]
     },
+    getVendorNameStr(v) {
+      if (!v) return ''
+      if (typeof v === 'string') return v.trim()
+      if (typeof v === 'object') return (v.value || v.name || '').trim()
+      return ''
+    },
     async onImportFileChange(e) {
       const file = e.target.files && e.target.files[0]
       e.target.value = '' // reset เพื่อให้เลือกไฟล์เดิมซ้ำได้
@@ -1264,14 +1270,31 @@ export default {
       }
     },
     async saveItem() {
-      const data = { ...this.currentItem, step_id: this.currentStep.id, task_id: this.currentStep.task_id, order_date: this.currentItem.order_date ? this.fmtDate(this.currentItem.order_date) : null, delivery_date: this.currentItem.delivery_date ? this.fmtDate(this.currentItem.delivery_date) : null }
+      // vendor_name อาจเป็น string หรือ object จาก AutoComplete
+      const vendorName = typeof this.currentItem.vendor_name === 'object' 
+        ? (this.currentItem.vendor_name?.value || this.currentItem.vendor_name?.name || '')
+        : (this.currentItem.vendor_name || '')
+      
+      if (!vendorName.trim()) {
+        this.$toast.add({ severity: 'warn', summary: 'กรุณากรอกชื่อ Vendor', life: 3000 })
+        return
+      }
+
+      const data = {
+        ...this.currentItem,
+        vendor_name: vendorName.trim(),
+        step_id: this.currentStep.id,
+        task_id: this.currentStep.task_id,
+        order_date: this.currentItem.order_date ? this.fmtDate(this.currentItem.order_date) : null,
+        delivery_date: this.currentItem.delivery_date ? this.fmtDate(this.currentItem.delivery_date) : null
+      }
       try {
         if (this.editingItem) { await axios.put(`/api/procurement/${this.editingItem.id}`, data) }
         else { await axios.post('/api/procurement', data) }
         this.showItemDialog = false
         this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: 'บันทึกเรียบร้อย', life: 3000 })
         await this.loadData()
-      } catch (e) { this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถบันทึกได้', life: 3000 }) }
+      } catch (e) { this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกได้', life: 3000 }) }
     },
     deleteItem(item) {
       this.$confirm.require({
