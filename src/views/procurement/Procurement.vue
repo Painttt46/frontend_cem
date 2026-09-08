@@ -225,7 +225,10 @@
                     <span v-if="getClusterLeadtimes(cluster.items)" class="tag-leadtime"><i class="pi pi-clock"></i> {{ getClusterLeadtimes(cluster.items) }}</span>
                     <span v-else class="col-empty">—</span>
                   </div>
-                  <div class="vendor-col vendor-col-notes"><span class="col-empty">—</span></div>
+                  <div class="vendor-col vendor-col-notes">
+                    <span v-if="getVendorNote(group, cluster)" class="tag-notes tag-vendor-note" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'หมายเหตุ Vendor: ' + getVendorNote(group, cluster).comment"><i class="pi pi-shop"></i> {{ getVendorNote(group, cluster).comment }}</span>
+                    <button v-else class="add-vendor-note-btn" @click.stop="openVendorNoteDialog(group, cluster)"><i class="pi pi-plus-circle"></i> เพิ่มหมายเหตุ vendor</button>
+                  </div>
                   <div class="vendor-col vendor-col-assignee"><span class="col-empty">—</span></div>
                   <div class="vendor-status-area">
                     <div class="cluster-status-grid">
@@ -265,8 +268,9 @@
                         <span v-else class="col-empty">—</span>
                       </div>
                       <div class="vendor-col vendor-col-notes">
+                        <span v-if="getVendorNote(group, cluster)" class="tag-notes tag-vendor-note" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'หมายเหตุ Vendor: ' + getVendorNote(group, cluster).comment"><i class="pi pi-shop"></i> {{ getVendorNote(group, cluster).comment }}</span>
                         <span v-if="item.notes" class="tag-notes" v-tooltip.top="item.notes"><i class="pi pi-comment"></i> {{ item.notes }}</span>
-                        <span v-else class="col-empty">—</span>
+                        <span v-if="!item.notes && !getVendorNote(group, cluster)" class="col-empty">—</span>
                       </div>
                       <div class="vendor-col vendor-col-assignee">
                         <span v-if="item.assigned_user_name" class="tag-assignee"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
@@ -631,6 +635,25 @@
       </div>
     </Dialog>
 
+    <!-- Vendor Note Dialog (หมายเหตุระดับ vendor) -->
+    <Dialog v-model:visible="showVendorNoteDialog" header="หมายเหตุ Vendor" :style="{width: '540px', maxWidth: '95vw'}" modal :draggable="false" class="modern-dialog">
+      <div class="dialog-body">
+        <div v-if="vendorNoteTarget" class="vn-target">
+          <span class="vn-vendor"><i class="pi pi-truck"></i> {{ vendorNoteTarget.vendor_name }}</span>
+        </div>
+        <div class="item-form" style="margin-top:0.85rem">
+          <div class="field">
+            <label>หมายเหตุของ Vendor <span class="optional">(ใช้ร่วมทุกรายการของ vendor นี้ในโครงการ)</span></label>
+            <Textarea v-model="vendorNoteText" rows="4" placeholder="เช่น เงื่อนไขการจ่ายเงิน, ผู้ติดต่อหลัก, ข้อตกลงพิเศษกับ vendor..." class="w-full" />
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <Button label="ยกเลิก" icon="pi pi-times" @click="showVendorNoteDialog = false" class="btn-cancel" text />
+        <Button label="บันทึก" icon="pi pi-check" @click="saveVendorNote" class="btn-confirm" />
+      </template>
+    </Dialog>
+
     <!-- Select Step Dialog -->
     <Dialog v-model:visible="showSelectStepDialog" header="เลือก Step จัดซื้อ" :style="{width: '520px', maxWidth: '95vw'}" modal :draggable="false" position="center" class="modern-dialog">
       <div class="dialog-body">
@@ -772,7 +795,12 @@ export default {
       importLoading: false,
       importWarnings: [],
       // vendor ซ้ำในกลุ่มโครงการ: state ขยาย/ย่อ dropdown ย่อย
-      expandedVendors: {}
+      expandedVendors: {},
+      // หมายเหตุระดับ vendor (ใช้ร่วมทุกรายการของ vendor ใน step)
+      vendorNotes: [],
+      showVendorNoteDialog: false,
+      vendorNoteTarget: null,
+      vendorNoteText: ''
     }
   },
   computed: {
@@ -984,14 +1012,16 @@ export default {
     async loadData() {
       this.loading = true
       try {
-        const [stepsRes, itemsRes, usersRes, vendorsRes] = await Promise.all([
+        const [stepsRes, itemsRes, usersRes, vendorsRes, vendorNotesRes] = await Promise.all([
           axios.get('/api/task-steps/procurement'),
           axios.get('/api/procurement'),
           axios.get('/api/users'),
-          axios.get('/api/procurement/vendors')
+          axios.get('/api/procurement/vendors'),
+          axios.get('/api/procurement/vendor-notes', { silent: true }).catch(() => ({ data: [] }))
         ])
         this.procurementSteps = stepsRes.data
         this.allItems = itemsRes.data
+        this.vendorNotes = vendorNotesRes.data || []
         this.users = usersRes.data.map(u => ({ id: u.id, name: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}` }))
         this.vendorList = vendorsRes.data || []
         // Auto expand all groups on first load
@@ -1069,6 +1099,32 @@ export default {
         if (lt) seen.add(lt)
       }
       return [...seen].join(', ') || null
+    },
+    // หมายเหตุระดับ vendor ของ step นี้ (ใช้ร่วมทุกรายการของ vendor)
+    getVendorNote(group, cluster) {
+      if (!group || !cluster) return null
+      return this.vendorNotes.find(n => n.step_id === group.step_id && n.vendor_name === cluster.vendor_name) || null
+    },
+    openVendorNoteDialog(group, cluster) {
+      this.vendorNoteTarget = { step_id: group.step_id, task_id: group.task_id, vendor_name: cluster.vendor_name }
+      const existing = this.getVendorNote(group, cluster)
+      this.vendorNoteText = existing ? existing.comment || '' : ''
+      this.showVendorNoteDialog = true
+    },
+    async saveVendorNote() {
+      if (!this.vendorNoteTarget) return
+      try {
+        await axios.put('/api/procurement/vendor-notes', {
+          step_id: this.vendorNoteTarget.step_id,
+          vendor_name: this.vendorNoteTarget.vendor_name,
+          comment: this.vendorNoteText
+        })
+        this.$toast.add({ severity: 'success', summary: 'บันทึกหมายเหตุ Vendor แล้ว', life: 2000 })
+        this.showVendorNoteDialog = false
+        await this.loadData()
+      } catch (e) {
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'บันทึกไม่สำเร็จ', life: 3000 })
+      }
     },
     toggleAllGroups() {
       const target = !this.allExpanded
@@ -1815,6 +1871,15 @@ export default {
 .tag-leadtime i { font-size: 0.64rem; }
 .tag-notes { display: block; font-size: 0.7rem; color: #64748b; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
 .tag-notes i { font-size: 0.62rem; color: #94a3b8; margin-right: 0.25rem; }
+.tag-vendor-note { color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; font-weight: 600; cursor: pointer; }
+.tag-vendor-note i { color: #7c3aed; }
+.tag-vendor-note:hover { background: #ede9fe; }
+.tag-notes + .tag-notes { margin-top: 2px; }
+.add-vendor-note-btn { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; color: #7c3aed; background: #f5f3ff; border: 1px dashed #ddd6fe; border-radius: 8px; padding: 0.18rem 0.55rem; cursor: pointer; white-space: nowrap; }
+.add-vendor-note-btn:hover { background: #ede9fe; }
+.vn-target { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding-bottom: 0.85rem; border-bottom: 1.5px solid #f1f5f9; }
+.vn-vendor { font-weight: 700; color: #0f172a; display: inline-flex; gap: 0.35rem; align-items: center; }
+.vn-vendor i { color: #7c3aed; font-size: 0.75rem; }
 .group-amount { font-size: 0.72rem; font-weight: 700; color: #047857; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 12px; }
 .tag-assignee { color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; }
 .tag-assignee i { font-size: 0.66rem; opacity: 0.8; }

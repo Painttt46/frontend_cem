@@ -363,9 +363,18 @@
                   <span class="proc-cluster-name">{{ cluster.vendor_name }}</span>
                   <span class="cluster-count"><i class="pi pi-list"></i> {{ cluster.items.length }} รายการ</span>
                   <span v-if="getProcurementTotalAmountForItems(cluster.items) !== null" class="pi-header-amount"><i class="pi pi-wallet"></i> {{ formatMoney(getProcurementTotalAmountForItems(cluster.items)) }}</span>
+                  <span v-if="getVendorNote(selectedStep.id, cluster.vendor_name)" class="proc-cluster-note-chip" v-tooltip.top="'หมายเหตุ Vendor: ' + getVendorNote(selectedStep.id, cluster.vendor_name).comment"><i class="pi pi-shop"></i> หมายเหตุ vendor</span>
                   <span class="proc-cluster-done"><i class="pi pi-check"></i> {{ getClusterDoneCount(cluster.items) }}/{{ cluster.items.length }} ได้ของ/เสร็จ</span>
                 </div>
                 <div v-show="!cluster.repeated || isClusterExpanded(clusterKey(selectedStep.id, cluster))" class="proc-cluster-body" :class="{ 'is-nested': cluster.repeated }">
+                  <!-- หมายเหตุระดับ vendor (ใช้ร่วมทุกรายการ) -->
+                  <div v-if="getVendorNote(selectedStep.id, cluster.vendor_name)" class="vendor-note-bar">
+                    <i class="pi pi-shop"></i>
+                    <div>
+                      <span class="vnb-label">หมายเหตุ Vendor:</span>{{ getVendorNote(selectedStep.id, cluster.vendor_name).comment }}
+                      <span v-if="getVendorNote(selectedStep.id, cluster.vendor_name).updated_by_name" class="vnb-meta">แก้ล่าสุดโดย {{ getVendorNote(selectedStep.id, cluster.vendor_name).updated_by_name }} • {{ formatHistoryTime(getVendorNote(selectedStep.id, cluster.vendor_name).updated_at) }}</span>
+                    </div>
+                  </div>
               <div v-for="item in cluster.items" :key="item.id" class="procurement-item" :class="['pi-status-' + item.status, { 'pi-overdue': isProcurementOverdue(item) }]">
                 <!-- Collapsible Header -->
                 <div class="pi-header" @click="toggleProcurementItem(item.id)">
@@ -517,7 +526,9 @@ export default {
       procurementItems: [],
       expandedProcurementItems: {},
       // vendor ซ้ำใน step: state ขยาย/ย่อ dropdown
-      expandedProcurementClusters: {}
+      expandedProcurementClusters: {},
+      // หมายเหตุระดับ vendor (จาก /api/procurement/vendor-notes)
+      vendorNotes: []
     }
   },
   computed: {
@@ -686,9 +697,18 @@ export default {
     },
     async loadProcurementItems() {
       try {
-        const response = await this.$http.get('/api/procurement', { silent: true })
-        this.procurementItems = response.data
+        const [itemsRes, notesRes] = await Promise.all([
+          this.$http.get('/api/procurement', { silent: true }),
+          this.$http.get('/api/procurement/vendor-notes', { silent: true }).catch(() => ({ data: [] }))
+        ])
+        this.procurementItems = itemsRes.data
+        this.vendorNotes = notesRes.data || []
       } catch { /* ignore */ }
+    },
+    // หมายเหตุระดับ vendor ของ step (ใช้ร่วมทุกรายการของ vendor)
+    getVendorNote(stepId, vendorName) {
+      if (!stepId || !vendorName) return null
+      return this.vendorNotes.find(n => n.step_id === stepId && n.vendor_name === vendorName) || null
     },
     getProcurementItems(stepId) {
       return this.procurementItems.filter(i => i.step_id === stepId)
@@ -1055,11 +1075,24 @@ export default {
         step.assigned_users && step.assigned_users.some(u => u.id === this.currentUserId)
       )
     },
+    // step ที่มีสถานะโครงการเป็น CM
+    getCmSteps(project) {
+      if (!project.steps) return []
+      return project.steps.filter(s => (s.project_statuses || []).includes('cm') || s.project_status === 'cm')
+    },
+    // เช็คว่าผู้ใช้ปัจจุบันมีชื่ออยู่ใน step ที่มีสถานะ CM หรือไม่
+    hasMyCmAssignment(project) {
+      const cmSteps = this.getCmSteps(project)
+      if (!cmSteps.length) return false
+      return cmSteps.some(step =>
+        step.assigned_users && step.assigned_users.some(u => u.id === this.currentUserId)
+      )
+    },
     getRowClass(data) {
       const classes = []
       if (this.hasMyAssignment(data)) classes.push('my-project-row')
-      // โครงการที่ปิดไปแล้วแต่มี CM ต่อเนื่อง — ไฮไลต์แยกจากโครงการที่ปิดสนิท
-      if (this.getLatestProjectStatuses(data).includes('cm')) classes.push('cm-project-row')
+      // ไฮไลต์ CM (ม่วง) เฉพาะผู้ใช้ที่มีชื่ออยู่ใน step ที่มีสถานะ CM — คนอื่นเห็นเป็นแถวปกติ
+      if (this.hasMyCmAssignment(data)) classes.push('cm-project-row')
       return classes.join(' ') || ''
     },
     canCompleteStep(step, task) {
@@ -1472,6 +1505,24 @@ export default {
   white-space: nowrap;
 }
 .proc-cluster-done { margin-left: auto; font-size: 0.7rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
+.proc-cluster-note-chip { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.66rem; color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; padding: 0.14rem 0.5rem; border-radius: 10px; white-space: nowrap; }
+.proc-cluster-note-chip i { font-size: 0.6rem; }
+.vendor-note-bar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: linear-gradient(90deg, #f5f3ff 0%, #faf5ff 100%);
+  border: 1px solid #ede9fe;
+  border-left: 3px solid #8b5cf6;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.78rem;
+  color: #4c1d95;
+  line-height: 1.5;
+}
+.vendor-note-bar i { color: #7c3aed; margin-top: 2px; }
+.vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; }
+.vnb-meta { display: block; font-size: 0.68rem; color: #94a3b8; margin-top: 2px; }
 .proc-cluster-body.is-nested {
   padding: 0.3rem 0 0.3rem 0.9rem;
   border-left: 2px solid #e9d5ff;
