@@ -1,13 +1,11 @@
 <template>
   <div class="sales-page">
-    <Toast />
-    <ConfirmDialog />
 
     <!-- Header -->
     <Card class="header-card">
       <template #header>
         <div class="main-header">
-          <h1><i class="pi pi-briefcase"></i> บันทึกการเข้าพบ</h1>
+          <h1><i class="pi pi-briefcase"></i> เข้าพบลูกค้า</h1>
           <div class="header-actions">
             <span class="stat-item"><i class="pi pi-calendar"></i> {{ visits.length }} กิจกรรม</span>
           </div>
@@ -41,6 +39,7 @@
             placeholder="ประเภทกิจกรรม" :showClear="true" class="filter-dropdown" />
           <Calendar v-model="filterDateRange" selectionMode="range" dateFormat="dd/mm/yy"
             placeholder="กรองตามวันที่" :showIcon="true" class="filter-dropdown" />
+          <Button v-if="filterDateRange && filterDateRange[0]" icon="pi pi-times" v-tooltip.top="'ล้างตัวกรองวันที่'" @click="filterDateRange = null" text size="small" class="filter-clear-btn" />
         </div>
         <div class="filter-right">
           <span class="result-count"><strong>{{ filteredVisits.length }}</strong> รายการ</span>
@@ -57,27 +56,36 @@
         <Button icon="pi pi-plus" label="สร้าง Visit แรก" @click="openCreateDialog" class="add-btn" style="margin-top:1rem" />
       </div>
 
-      <div v-for="visit in filteredVisits" :key="visit.id" class="visit-card" @click="openDetailDialog(visit)">
+      <div v-for="visit in filteredVisits" :key="visit.id" class="visit-card" :class="{ 'visit-card-overdue': isVisitOverdue(visit) }" @click="openDetailDialog(visit)">
         <div class="visit-left">
           <div class="visit-type-badge" :class="'vtype-' + visit.visit_type">
             <i :class="getVisitTypeIcon(visit.visit_type)"></i>
           </div>
           <div class="visit-info">
-            <div class="visit-title">{{ visit.company_name || 'ไม่ระบุลูกค้า' }}</div>
+            <div class="visit-title">
+              {{ visit.company_name || 'ไม่ระบุลูกค้า' }}
+              <span v-if="visit.created_by_name" class="visit-owner"><i class="pi pi-user"></i> {{ visit.created_by_name }}</span>
+            </div>
             <div class="visit-meta">
-              <span><i class="pi pi-calendar"></i> {{ formatVisitDate(visit.visit_date) }}</span>
+              <span><i class="pi pi-calendar"></i> {{ formatVisitDate(visit.visit_date) }}<template v-if="visit.visit_end_date"> – {{ formatVisitTime(visit.visit_end_date) }}</template></span>
               <span v-if="visit.location"><i class="pi pi-map-marker"></i> {{ visit.location }}</span>
               <span v-if="visit.task_name" class="visit-project"><i class="pi pi-briefcase"></i> {{ visit.so_number ? `[${visit.so_number}]` : '' }} {{ visit.task_name }}</span>
             </div>
             <div v-if="visit.agenda" class="visit-agenda">{{ visit.agenda }}</div>
+            <!-- Tags สรุปเพื่อการติดตามงาน: ใครไป / ลูกค้ากี่คน / action / สรุป / นัดถัดไป / พิกัด -->
+            <div class="visit-tags">
+              <span v-if="getTeamNames(visit)" class="visit-tag tag-team"><i class="pi pi-users"></i> {{ getTeamNames(visit) }}</span>
+              <span v-if="visit.customer_attendees && visit.customer_attendees.length" class="visit-tag tag-customer"><i class="pi pi-building"></i> ฝั่งลูกค้า {{ visit.customer_attendees.length }} คน</span>
+              <span v-if="visit.action_items && visit.action_items.length" class="visit-tag tag-action"><i class="pi pi-check-square"></i> Action {{ visit.action_items.length }}</span>
+              <span v-if="visit.summary" class="visit-tag tag-summary"><i class="pi pi-align-left"></i> มีสรุป</span>
+              <span v-if="visit.next_visit_date" class="visit-tag tag-next"><i class="pi pi-calendar-plus"></i> นัดถัดไป {{ formatDate(visit.next_visit_date) }}</span>
+              <span v-if="visit.latitude && visit.longitude" class="visit-tag tag-gps"><i class="pi pi-map"></i> มีพิกัด GPS</span>
+            </div>
           </div>
         </div>
         <div class="visit-right">
           <span class="visit-status-badge" :class="'vstatus-' + visit.status">{{ getStatusLabel(visit.status) }}</span>
           <span class="visit-type-label">{{ getVisitTypeLabel(visit.visit_type) }}</span>
-          <div class="visit-attendees" v-if="visit.internal_attendees && visit.internal_attendees.length">
-            <i class="pi pi-users"></i> {{ visit.internal_attendees.length }} คน
-          </div>
           <div class="visit-actions" @click.stop>
             <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditDialog(visit)" text size="small" />
             <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteVisit(visit)" text severity="danger" size="small" />
@@ -159,11 +167,16 @@
             </div>
             <div class="field">
               <label>ผู้เข้าร่วมฝั่งลูกค้า</label>
-              <div v-for="(ca, idx) in form.customer_attendees" :key="idx" class="customer-attendee-row">
-                <InputText v-model="ca.name" placeholder="ชื่อ" class="ca-input" />
-                <InputText v-model="ca.position" placeholder="ตำแหน่ง" class="ca-input" />
-                <InputText v-model="ca.email" placeholder="อีเมล" class="ca-input" />
-                <Button icon="pi pi-times" @click="form.customer_attendees.splice(idx,1)" text severity="danger" size="small" class="ca-remove" />
+              <div v-for="(ca, idx) in form.customer_attendees" :key="idx" class="customer-attendee-card">
+                <div class="ca-row">
+                  <InputText v-model="ca.name" placeholder="ชื่อ" class="ca-input" />
+                  <InputText v-model="ca.position" placeholder="ตำแหน่ง" class="ca-input" />
+                  <Button icon="pi pi-times" @click="form.customer_attendees.splice(idx,1)" text severity="danger" size="small" class="ca-remove" />
+                </div>
+                <div class="ca-row">
+                  <InputText v-model="ca.email" placeholder="อีเมล" class="ca-input" />
+                  <InputText v-model="ca.phone" placeholder="โทรศัพท์" class="ca-input" />
+                </div>
               </div>
               <Button icon="pi pi-plus" label="เพิ่มผู้เข้าร่วม" @click="form.customer_attendees.push({name:'',position:'',email:'',phone:''})" text size="small" class="add-attendee-btn" />
             </div>
@@ -176,6 +189,14 @@
             <div class="field">
               <label>สรุปการประชุม</label>
               <Textarea v-model="form.summary" rows="3" placeholder="สรุปผลการประชุม..." class="w-full" />
+            </div>
+            <div class="field">
+              <label>Action Items <span class="optional">(สิ่งที่ต้องทำต่อ)</span></label>
+              <div v-for="(ai, idx) in form.action_items" :key="idx" class="customer-attendee-row">
+                <InputText v-model="ai.text" placeholder="เช่น ส่งใบเสนอราคาภายใน 3 วัน..." class="ca-input" />
+                <Button icon="pi pi-times" @click="form.action_items.splice(idx,1)" text severity="danger" size="small" class="ca-remove" />
+              </div>
+              <Button icon="pi pi-plus" label="เพิ่ม Action Item" @click="form.action_items.push({ text: '', done: false })" text size="small" class="add-attendee-btn" />
             </div>
             <div class="field-row">
               <div class="field flex-1">
@@ -243,6 +264,9 @@
           <div v-if="selectedVisit.location" class="detail-item">
             <div class="detail-label"><i class="pi pi-map-marker"></i> สถานที่</div>
             <div class="detail-value">{{ selectedVisit.location }}</div>
+            <a v-if="selectedVisit.latitude && selectedVisit.longitude"
+              :href="`https://www.google.com/maps?q=${selectedVisit.latitude},${selectedVisit.longitude}`"
+              target="_blank" rel="noopener" class="maps-link"><i class="pi pi-map"></i> เปิดใน Google Maps</a>
           </div>
           <div v-if="selectedVisit.task_name" class="detail-item">
             <div class="detail-label"><i class="pi pi-briefcase"></i> โครงการ</div>
@@ -254,6 +278,10 @@
           <div v-if="selectedVisit.created_by_name" class="detail-item">
             <div class="detail-label"><i class="pi pi-user"></i> บันทึกโดย</div>
             <div class="detail-value">{{ selectedVisit.created_by_name }}</div>
+          </div>
+          <div v-if="selectedVisit.created_at" class="detail-item">
+            <div class="detail-label"><i class="pi pi-clock"></i> บันทึกเมื่อ</div>
+            <div class="detail-value">{{ formatVisitDate(selectedVisit.created_at) }}</div>
           </div>
           <div v-if="selectedVisit.next_visit_date" class="detail-item">
             <div class="detail-label"><i class="pi pi-calendar-plus"></i> นัดครั้งถัดไป</div>
@@ -278,6 +306,7 @@
               <strong>{{ a.name }}</strong>
               <span v-if="a.position" class="ca-pos">{{ a.position }}</span>
               <span v-if="a.email" class="ca-email">{{ a.email }}</span>
+              <span v-if="a.phone" class="ca-pos"><i class="pi pi-phone"></i> {{ a.phone }}</span>
             </div>
           </div>
         </div>
@@ -294,7 +323,7 @@
 
         <div v-if="selectedVisit.action_items && selectedVisit.action_items.length" class="detail-section">
           <div class="detail-section-title"><i class="pi pi-check-square"></i> Action Items</div>
-          <div v-for="(ai, idx) in selectedVisit.action_items" :key="idx" class="action-item">
+          <div v-for="(ai, idx) in selectedVisit.action_items" :key="idx" class="action-item" :class="{ 'ai-done': ai.done }">
             <i class="pi pi-chevron-right"></i> {{ ai.text || ai }}
           </div>
         </div>
@@ -346,11 +375,14 @@ export default {
       if (this.filterStatus) result = result.filter(v => v.status === this.filterStatus)
       if (this.filterType) result = result.filter(v => v.visit_type === this.filterType)
       if (this.filterDateRange && this.filterDateRange[0]) {
-        const from = this.filterDateRange[0]
-        const to = this.filterDateRange[1] || from
+        // copy Date ใหม่ก่อน setHours กัน mutate ค่าใน v-model ของ Calendar
+        const from = new Date(this.filterDateRange[0])
+        from.setHours(0, 0, 0, 0)
+        const to = new Date(this.filterDateRange[1] || this.filterDateRange[0])
+        to.setHours(23, 59, 59, 999)
         result = result.filter(v => {
           const d = new Date(v.visit_date)
-          return d >= from && d <= new Date(to.setHours(23,59,59))
+          return d >= from && d <= to
         })
       }
       if (this.searchQuery) {
@@ -359,12 +391,12 @@ export default {
           v.company_name?.toLowerCase().includes(q) ||
           v.location?.toLowerCase().includes(q) ||
           v.agenda?.toLowerCase().includes(q) ||
+          v.summary?.toLowerCase().includes(q) ||
           v.task_name?.toLowerCase().includes(q)
         )
       }
       return result
-    },
-    filteredProcurementStepsForImport() { return [] }
+    }
   },
   mounted() { this.loadAll() },
   methods: {
@@ -406,8 +438,13 @@ export default {
         visit_end_date: visit.visit_end_date ? new Date(visit.visit_end_date) : null,
         next_visit_date: visit.next_visit_date ? new Date(visit.next_visit_date) : null,
         internal_attendees: visit.internal_attendees || [],
-        customer_attendees: visit.customer_attendees || [],
-        action_items: visit.action_items || []
+        customer_attendees: (visit.customer_attendees || []).map(a => ({
+          name: a.name || '', position: a.position || '', email: a.email || '', phone: a.phone || ''
+        })),
+        // รองรับข้อมูลเก่าที่ action_items เป็น string แทน object
+        action_items: (visit.action_items || []).map(a => typeof a === 'object'
+          ? { text: a.text || '', done: !!a.done }
+          : { text: String(a), done: false })
       }
       this.showFormDialog = true
     },
@@ -417,6 +454,11 @@ export default {
     },
     async saveVisit() {
       if (!this.form.visit_date) return
+      // ตรวจเวลาสิ้นสุดต้องไม่ก่อนเวลาเริ่ม
+      if (this.form.visit_end_date && new Date(this.form.visit_end_date) < new Date(this.form.visit_date)) {
+        this.$toast.add({ severity: 'warn', summary: 'เวลาไม่ถูกต้อง', detail: 'เวลาสิ้นสุดต้องหลังจากเวลาเริ่มต้น', life: 3000 })
+        return
+      }
       this.saving = true
       try {
         const payload = {
@@ -424,7 +466,9 @@ export default {
           visit_date: this.form.visit_date instanceof Date ? this.form.visit_date.toISOString() : this.form.visit_date,
           visit_end_date: this.form.visit_end_date instanceof Date ? this.form.visit_end_date.toISOString() : this.form.visit_end_date,
           next_visit_date: this.form.next_visit_date instanceof Date ? this.fmtDate(this.form.next_visit_date) : this.form.next_visit_date,
-          internal_attendees: (this.form.internal_attendees || []).map(u => typeof u === 'object' ? { id: u.id, name: u.name, position: u.position } : u)
+          internal_attendees: (this.form.internal_attendees || []).map(u => typeof u === 'object' ? { id: u.id, name: u.name, position: u.position } : u),
+          // ตัด action item ที่ไม่ได้กรอกข้อความออกก่อนบันทึก
+          action_items: (this.form.action_items || []).filter(a => a && a.text && String(a.text).trim()).map(a => ({ text: String(a.text).trim(), done: !!a.done }))
         }
         if (this.editingVisit) {
           await axios.put(`/api/sales-visits/${this.editingVisit.id}`, payload)
@@ -451,27 +495,53 @@ export default {
     },
     deleteVisit(visit) {
       this.$confirm.require({
-        message: `ลบ Visit นี้?`, header: 'ยืนยันการลบ', icon: 'pi pi-exclamation-triangle',
+        message: `ลบการเข้าพบ "${visit.company_name || 'ไม่ระบุลูกค้า'}" วันที่ ${this.formatDate(visit.visit_date)}?`,
+        header: 'ยืนยันการลบ',
+        icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'ลบ', rejectLabel: 'ยกเลิก', acceptClass: 'p-button-danger',
         accept: async () => {
-          await axios.delete(`/api/sales-visits/${visit.id}`)
-          await this.loadAll()
-          this.$toast.add({ severity: 'success', summary: 'ลบแล้ว', life: 2000 })
+          try {
+            await axios.delete(`/api/sales-visits/${visit.id}`)
+            await this.loadAll()
+            this.$toast.add({ severity: 'success', summary: 'ลบแล้ว', life: 2000 })
+          } catch (e) {
+            this.$toast.add({ severity: 'error', summary: 'ลบไม่สำเร็จ', detail: e.response?.data?.error || 'ไม่สามารถลบได้', life: 3000 })
+          }
         }
       })
     },
     getLocation() {
+      if (!navigator.geolocation) {
+        this.$toast.add({ severity: 'warn', summary: 'ไม่รองรับ', detail: 'เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง', life: 3000 })
+        return
+      }
       this.gettingLocation = true
-      navigator.geolocation?.getCurrentPosition(pos => {
+      navigator.geolocation.getCurrentPosition(pos => {
         this.form.latitude = pos.coords.latitude
         this.form.longitude = pos.coords.longitude
         this.gettingLocation = false
         if (!this.form.location) this.form.location = `${pos.coords.latitude.toFixed(6)}, ${pos.coords.longitude.toFixed(6)}`
-      }, () => { this.gettingLocation = false })
+      }, (err) => {
+        this.gettingLocation = false
+        const detail = err.code === err.PERMISSION_DENIED ? 'ไม่ได้รับอนุญาตให้เข้าถึงตำแหน่ง' : 'ไม่สามารถระบุตำแหน่งได้'
+        this.$toast.add({ severity: 'warn', summary: 'ระบุตำแหน่งไม่สำเร็จ', detail, life: 3000 })
+      }, { enableHighAccuracy: true, timeout: 10000 })
     },
     getVisitTypeLabel(t) {
       const map = { on_site: 'On-site', online: 'Online Meeting', phone: 'Phone Call', survey: 'Site Survey', demo: 'POC/Demo' }
       return map[t] || t
+    },
+    // ชื่อทีมที่ไปเข้าพบ (แสดงสูงสุด 3 คน เกินนั้น +N)
+    getTeamNames(visit) {
+      const list = visit.internal_attendees || []
+      if (!list.length) return ''
+      const names = list.map(u => u.name || u)
+      return names.length <= 3 ? names.join(', ') : names.slice(0, 3).join(', ') + ` +${names.length - 3}`
+    },
+    // กำหนดการที่เลยเวลามาแล้วแต่ยังไม่เสร็จ/ไม่ถูกยกเลิก
+    isVisitOverdue(visit) {
+      if (!visit.visit_date || visit.status === 'done' || visit.status === 'cancelled') return false
+      return new Date(visit.visit_date) < new Date()
     },
     getVisitTypeIcon(t) {
       const map = { on_site: 'pi pi-map-marker', online: 'pi pi-video', phone: 'pi pi-phone', survey: 'pi pi-compass', demo: 'pi pi-desktop' }
@@ -504,6 +574,17 @@ export default {
 
 <style scoped>
 .sales-page { padding: 1rem; max-width: 100%; background: #f1f5f9; min-height: 100vh; font-family: 'Segoe UI', sans-serif; overflow: auto; }
+
+/* Modern Dialog — จัดสไตล์ให้เหมือน dialog อื่นในระบบ + scroll ภายในจอ */
+.modern-dialog :deep(.p-dialog) { border-radius: 18px; overflow: hidden; box-shadow: 0 20px 60px -12px rgba(16,24,40,0.28); border: none; }
+.modern-dialog :deep(.p-dialog-header) { padding: 1.25rem 1.5rem; border-bottom: 1.5px solid #f1f5f9; background: #fff; }
+.modern-dialog :deep(.p-dialog-title) { font-weight: 800; font-size: 1.05rem; color: #0f172a; letter-spacing: -0.02em; }
+.modern-dialog :deep(.p-dialog-header-icon) { width: 32px; height: 32px; border-radius: 50%; color: #64748b; transition: all 0.2s; }
+.modern-dialog :deep(.p-dialog-header-icon:hover) { background: #f1f5f9; color: #0f172a; }
+.modern-dialog :deep(.p-dialog-content) { padding: 1.5rem 1.5rem 1rem; max-height: calc(100vh - 230px); overflow-y: auto; }
+.modern-dialog :deep(.p-dialog-content::-webkit-scrollbar) { width: 6px; }
+.modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-thumb) { background: #e2e8f0; border-radius: 3px; }
+.modern-dialog :deep(.p-dialog-footer) { padding: 1rem 1.5rem 1.25rem; border-top: 1.5px solid #f1f5f9; background: #fafbfc; display: flex; justify-content: flex-end; gap: 0.65rem; }
 
 /* Header */
 .header-card { margin-bottom: 1.25rem; box-shadow: none; border: none; background: transparent; }
@@ -538,6 +619,8 @@ export default {
 .search-clear { position: absolute; right: 0.75rem; color: #94a3b8; cursor: pointer; }
 .filter-dropdown { border-radius: 10px; height: 38px; min-width: 160px; }
 .result-count { font-size: 0.82rem; color: #64748b; }
+.filter-clear-btn { color: #94a3b8; flex-shrink: 0; }
+.filter-clear-btn:hover { color: #ef4444; }
 .result-count strong { color: #0f172a; font-weight: 800; }
 .add-btn { background: linear-gradient(135deg, #3b82f6, #2563eb) !important; border: none !important; font-weight: 700; border-radius: 10px; box-shadow: 0 3px 10px rgba(59,130,246,0.35); height: 38px; }
 
@@ -582,6 +665,9 @@ export default {
 .field-action-btn { flex-shrink: 0; }
 .field-row { display: flex; gap: 0.85rem; }
 .customer-attendee-row { display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.5rem; }
+.customer-attendee-card { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px; padding: 0.5rem 0.6rem; margin-bottom: 0.5rem; }
+.ca-row { display: flex; gap: 0.4rem; align-items: center; margin-bottom: 0.4rem; }
+.ca-row:last-child { margin-bottom: 0; }
 .ca-input { flex: 1; min-width: 0; }
 .ca-remove { flex-shrink: 0; }
 .add-attendee-btn { color: #3b82f6; }
@@ -616,6 +702,25 @@ export default {
 .ca-pos { color: #64748b; }
 .ca-email { color: #3b82f6; }
 .action-item { font-size: 0.85rem; color: #334155; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; }
+.action-item.ai-done { opacity: 0.55; text-decoration: line-through; }
+.maps-link { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.35rem; font-size: 0.78rem; color: #3b82f6; font-weight: 600; text-decoration: none; }
+.maps-link:hover { text-decoration: underline; }
+.optional { color: #94a3b8; font-weight: 400; font-size: 0.72rem; }
+
+/* ===== Visit Card: รายละเอียดครบเพื่อการติดตามงาน ===== */
+.visit-title { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.visit-owner { font-size: 0.72rem; color: #64748b; background: #f8fafc; border: 1px solid #eef2f6; padding: 0.12rem 0.5rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.25rem; font-weight: 500; }
+.visit-owner i { font-size: 0.64rem; color: #94a3b8; }
+.visit-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
+.visit-tag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.68rem; font-weight: 600; padding: 0.14rem 0.5rem; border-radius: 10px; white-space: nowrap; }
+.visit-tag i { font-size: 0.62rem; }
+.tag-team { color: #2563eb; background: #eff6ff; border: 1px solid #dbeafe; }
+.tag-customer { color: #0891b2; background: #ecfeff; border: 1px solid #cffafe; }
+.tag-action { color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; }
+.tag-summary { color: #64748b; background: #f8fafc; border: 1px solid #f1f5f9; }
+.tag-next { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; }
+.tag-gps { color: #16a34a; background: #f0fdf4; border: 1px solid #dcfce7; }
+.visit-card-overdue { border: 1.5px solid #fecaca; background: linear-gradient(90deg, #fff5f5 0%, #fff 30%); }
 .so-tag-sm { font-size: 0.68rem; color: #4f46e5; background: #eef2ff; padding: 0.1rem 0.4rem; border-radius: 5px; font-weight: 800; font-family: monospace; }
 
 /* Skeleton */

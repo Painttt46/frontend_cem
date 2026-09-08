@@ -89,7 +89,7 @@ const routes = [
     path: '/sales-activity',
     name: 'sales-activity',
     component: SalesActivity,
-    meta: { requiresAuth: true, requiresPermission: '/sales-activity', title: 'บันทึกการเข้าพบ - Gent-CEM' },
+    meta: { requiresAuth: true, requiresPermission: '/sales-activity', title: 'เข้าพบลูกค้า - Gent-CEM' },
   },
   {
     path: '/management',
