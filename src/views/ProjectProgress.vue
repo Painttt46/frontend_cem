@@ -785,8 +785,11 @@ export default {
     getProcurementStatusLabel(status) {
       const map = {
         pending: 'รอใบเสนอราคา',
+                negotiating: 'ต่อรอง',
         approved: 'อนุมัติแล้ว',
         ordered: 'สั่งซื้อแล้ว',
+        ready_to_ship: 'ของพร้อมส่ง',
+                awaiting_payment: 'รอชำระเงิน',
         waiting: 'รอของ',
         received: 'ของมาแล้ว',
         completed: 'เสร็จสิ้น'
@@ -797,7 +800,7 @@ export default {
       return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount)
     },
     getProcurementProgress(status) {
-      const map = { pending: 0, approved: 20, ordered: 40, waiting: 60, received: 80, completed: 100 }
+      const map = { pending: 0, negotiating: 10, approved: 20, ordered: 35, awaiting_payment: 50, waiting: 60, ready_to_ship: 75, received: 85, completed: 100 }
       return map[status] || 0
     },
     // ดึง leadtime จากหมายเหตุ เช่น "** leadtime 20 วัน" → "20 วัน" (เหมือนหน้า /procurement)
@@ -1519,7 +1522,7 @@ export default {
 .proc-cluster-header .cluster-chevron { color: #94a3b8; font-size: 0.7rem; flex-shrink: 0; width: 14px; }
 .proc-cluster-name {
   font-weight: 700;
-  font-size: 0.83rem;
+  font-size: 1rem;
   color: #5b21b6;
   flex: 1;
   min-width: 0;
@@ -1527,7 +1530,7 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.proc-cluster-done { margin-left: auto; font-size: 0.7rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
+.proc-cluster-done { margin-left: auto; font-size: 0.8rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
 .vendor-note-bar {
   display: flex;
   align-items: flex-start;
@@ -1537,18 +1540,18 @@ export default {
   border-left: 3px solid #8b5cf6;
   border-radius: 8px;
   padding: 0.55rem 0.75rem;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   color: #4c1d95;
   line-height: 1.5;
 }
 .vendor-note-bar i { color: #7c3aed; margin-top: 2px; }
 .vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; }
-.vnb-meta { display: block; font-size: 0.68rem; color: #94a3b8; margin-top: 2px; }
+.vnb-meta { display: block; font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
 .proc-cluster-file-chip { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
 .vendor-files-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.vfr-label { font-size: 0.72rem; font-weight: 800; color: #2563eb; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.vfr-label { font-size: 0.84rem; font-weight: 800; color: #2563eb; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
 .vfr-label i { font-size: 0.66rem; }
-.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; max-width: 260px; overflow: hidden; }
+.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; max-width: 260px; overflow: hidden; }
 .file-chip:hover { background: #dbeafe; transform: translateY(-1px); }
 .file-chip i { font-size: 0.66rem; flex-shrink: 0; }
 .file-chip > span:first-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1607,8 +1610,8 @@ export default {
 
 .pi-vendor-wrap { flex: 1; min-width: 140px; }
 .pi-vendor {
-  font-weight: 600;
-  font-size: 0.83rem;
+  font-weight: 700;
+  font-size: 1rem;
   color: #1e293b;
   display: block;
   overflow: hidden;
@@ -1617,8 +1620,8 @@ export default {
 }
 .pi-vendor-desc {
   display: block;
-  font-size: 0.68rem;
-  color: #94a3b8;
+  font-size: 0.82rem;
+  color: #334155;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1628,7 +1631,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   padding: 0.14rem 0.45rem;
   border-radius: 8px;
   white-space: nowrap;
@@ -1639,8 +1642,8 @@ export default {
 .pi-header-po i, .pi-header-amount i { font-size: 0.62rem; opacity: 0.8; }
 
 .pi-header-date {
-  font-size: 0.7rem;
-  color: #6b7280;
+  font-size: 0.84rem;
+  color: #1e293b;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -1660,7 +1663,7 @@ export default {
 }
 
 .pi-status-chip {
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   padding: 0.15rem 0.45rem;
   border-radius: 10px;
   font-weight: 600;
@@ -1673,10 +1676,13 @@ export default {
 .pi-status-chip.chip-waiting { background: #ede9fe; color: #6d28d9; }
 .pi-status-chip.chip-received { background: #d1fae5; color: #065f46; }
 .pi-status-chip.chip-completed { background: #dcfce7; color: #16a34a; }
+.pi-status-chip.chip-ready_to_ship { background: #cffafe; color: #0e7490; }
+.pi-status-chip.chip-negotiating { background: #fdf4ff; color: #a21caf; }
+.pi-status-chip.chip-awaiting_payment { background: #fff7ed; color: #c2410c; }
 
 .pi-desc {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 0.86rem;
+  color: #1e293b;
   margin-top: 2px;
 }
 
@@ -1691,8 +1697,8 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.7rem;
-  color: #6b7280;
+  font-size: 0.84rem;
+  color: #1e293b;
   background: #f8fafc;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
@@ -1724,7 +1730,7 @@ export default {
   min-width: 30px;
 }
 .pi-notes {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #64748b;
   font-style: italic;
   margin-top: 0.3rem;
@@ -1769,8 +1775,9 @@ export default {
 .pi-history-dot.dot-received { background: #06b6d4; }
 .pi-history-dot.dot-completed { background: #16a34a; }
 .pi-history-text {
-  color: #475569;
-  font-weight: 500;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 .pi-history-remark {
   color: #64748b;

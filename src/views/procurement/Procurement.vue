@@ -289,7 +289,7 @@
                               <button class="edit-note-inline-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'แก้ไขหมายเหตุ'"><i class="pi pi-pencil"></i></button>
                             </div>
                             <span v-if="item.notes" class="tag-notes" v-tooltip.top="item.notes"><i class="pi pi-comment"></i>{{ item.notes.trim() }}</span>
-                            <button v-if="!getVendorNote(group, cluster) && !item.notes" class="add-note-inline-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'เพิ่มหมายเหตุ Vendor'"><i class="pi pi-plus"></i> เพิ่มหมายเหตุ</button>
+                            <button v-if="!getVendorNote(group, cluster)" class="add-note-inline-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'เพิ่มหมายเหตุ Vendor'"><i class="pi pi-plus"></i> เพิ่มหมายเหตุ</button>
                           </div>
                         </template>
                       </div>
@@ -315,6 +315,10 @@
                         </span>
                       </div>
                       <div class="vendor-actions">
+                        <Button :icon="item.notify_pm ? 'pi pi-star-fill' : 'pi pi-star'"
+                          :class="['star-toggle', { 'star-on': item.notify_pm }]"
+                          v-tooltip.top="item.notify_pm ? 'กำลังแจ้งเตือน PM ทางอีเมล — กดเพื่อปิด' : 'Mark: แจ้งเตือน PM ทางอีเมลเมื่อสถานะเปลี่ยน'"
+                          @click="toggleNotifyPm(item)" text size="small" />
                         <Button v-if="getNextStatus(item.status)"
                           :label="getNextActionLabel(item.status)"
                           :class="'action-btn btn-' + getNextStatus(item.status)"
@@ -856,8 +860,12 @@ export default {
       },
       itemStatusOptions: [
         { label: 'รอใบเสนอราคา', value: 'pending' },
+        { label: 'ต่อรอง', value: 'negotiating' },
+        { label: 'ต่อรอง', value: 'negotiating' },
         { label: 'อนุมัติแล้ว', value: 'approved' },
         { label: 'สั่งซื้อแล้ว', value: 'ordered' },
+        { label: 'รอชำระเงิน', value: 'awaiting_payment' },
+        { label: 'ของพร้อมส่ง', value: 'ready_to_ship' },
         { label: 'รอของ', value: 'waiting' },
         { label: 'ของมาแล้ว', value: 'received' },
         { label: 'เสร็จสิ้น', value: 'completed' }
@@ -1211,7 +1219,7 @@ export default {
       const counts = {}
       for (const i of items) counts[i.status] = (counts[i.status] || 0) + 1
       // เรียงตามลำดับ flow เพื่อให้ chip เรียงจากต้นไปจนถึงปลาย
-      const flow = ['pending', 'approved', 'ordered', 'waiting', 'received', 'completed']
+      const flow = ['pending', 'negotiating', 'approved', 'ordered', 'awaiting_payment', 'waiting', 'ready_to_ship', 'received', 'completed']
       return flow.filter(st => counts[st]).map(st => ({ status: st, count: counts[st] }))
     },
     // บรรทัดรายละเอียดของ item สำหรับไทม์ไลน์: รายละเอียดสินค้า + PO + ผู้รับผิดชอบ
@@ -1223,6 +1231,21 @@ export default {
       return parts.join(' • ')
     },
     // จัดรูปยอดเงินเป็นทศนิยม 2 ตำแหน่ง เช่น 100,000.00 (คืน null ถ้าไม่มี/ไม่ใช่ตัวเลข)
+    // Mark/unmark รายการ: ส่งอีเมลแจ้ง PM เมื่อสถานะเปลี่ยน
+    async toggleNotifyPm(item) {
+      try {
+        const res = await axios.put(`/api/procurement/${item.id}/notify`)
+        item.notify_pm = res.data.notify_pm
+        this.$toast.add({
+          severity: res.data.notify_pm ? 'success' : 'info',
+          summary: res.data.notify_pm ? 'เปิดแจ้งเตือน PM' : 'ปิดแจ้งเตือน PM',
+          detail: res.data.notify_pm ? 'จะส่งอีเมลแจ้ง PM ทุกครั้งที่สถานะของรายการนี้เปลี่ยน' : 'รายการนี้จะไม่ส่งอีเมลแจ้ง PM',
+          life: 2500
+        })
+      } catch (e) {
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: 'ไม่สามารถตั้งค่าการแจ้งเตือนได้', life: 3000 })
+      }
+    },
     formatMoney(v) {
       if (v === null || v === undefined || v === '') return null
       const n = Number(v)
@@ -1419,7 +1442,7 @@ export default {
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
     },
     getProgressPercent(status) {
-      const map = { pending: 0, approved: 20, ordered: 40, waiting: 60, received: 80, completed: 100 }
+      const map = { pending: 0, negotiating: 10, approved: 20, ordered: 35, awaiting_payment: 50, waiting: 60, ready_to_ship: 75, received: 85, completed: 100 }
       return map[status] || 0
     },
     getItemStatusLabel(status) {
@@ -1427,12 +1450,12 @@ export default {
       return found ? found.label : status
     },
     getNextStatus(status) {
-      const flow = ['pending', 'approved', 'ordered', 'waiting', 'received', 'completed']
+      const flow = ['pending', 'negotiating', 'approved', 'ordered', 'awaiting_payment', 'waiting', 'ready_to_ship', 'received', 'completed']
       const idx = flow.indexOf(status)
       return idx >= 0 && idx < flow.length - 1 ? flow[idx + 1] : null
     },
     getNextActionLabel(status) {
-      const map = { pending: 'อนุมัติ', approved: 'สั่งซื้อ', ordered: 'รอของ', waiting: 'ของมาแล้ว', received: 'เสร็จสิ้น' }
+      const map = { pending: 'ต่อรอง', negotiating: 'อนุมัติ', approved: 'สั่งซื้อ', ordered: 'รอชำระเงิน', awaiting_payment: 'รอของ', waiting: 'ของพร้อมส่ง', ready_to_ship: 'ของมาแล้ว', received: 'เสร็จสิ้น' }
       return map[status] || ''
     },
     async advanceStatus(item) {
@@ -1979,7 +2002,7 @@ export default {
 .group-name { font-weight: 700; color: #0f172a; font-size: 0.98rem; letter-spacing: -0.01em; }
 .group-step-name { font-size: 0.82rem; color: #64748b; font-weight: 500; }
 .group-meta { display: flex; gap: 0.85rem; margin-top: 0.4rem; flex-wrap: wrap; }
-.group-vendor-count { font-size: 0.76rem; color: #64748b; display: inline-flex; align-items: center; gap: 0.3rem; background: #f8fafc; padding: 0.15rem 0.5rem; border-radius: 6px; }
+.group-vendor-count { font-size: 0.86rem; color: #334155; display: inline-flex; align-items: center; gap: 0.3rem; background: #f8fafc; padding: 0.15rem 0.5rem; border-radius: 6px; }
 .group-pm { font-size: 0.76rem; color: #059669; display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; padding: 0.15rem 0.5rem; border-radius: 6px; }
 .group-right { display: flex; align-items: center; gap: 1.15rem; flex-shrink: 0; }
 .group-progress { display: flex; align-items: center; gap: 0.6rem; }
@@ -1996,7 +2019,7 @@ export default {
 .vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; overflow-x: auto; cursor: grab; }
 /* ข้อความในตารางเลือก/highlight ได้ — cursor เป็น text */
 .vendor-name, .vendor-desc, .tag-notes, .tag-po, .tag-delivery, .tag-amount, .tag-leadtime, .tag-order, .tag-assignee, .status-chip, .visit-owner { cursor: text; }
-.vendor-row-header, .vendor-row { min-width: 1580px; }
+.vendor-row-header, .vendor-row { min-width: 1780px; }
 
 .vendor-row-header {
   display: grid;
@@ -2051,7 +2074,7 @@ export default {
 .vendor-cluster-row .vendor-main-info { display: flex; align-items: center; gap: 0.6rem; }
 .vendor-cluster-row .vendor-name { display: inline; }
 .cluster-chevron { color: #94a3b8; font-size: 0.75rem; flex-shrink: 0; }
-.cluster-count { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 700; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.18rem 0.6rem; border-radius: 12px; white-space: nowrap; }
+.cluster-count { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.82rem; font-weight: 700; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.18rem 0.6rem; border-radius: 12px; white-space: nowrap; }
 .cluster-count i { font-size: 0.65rem; }
 .cluster-toggle { font-size: 0.72rem !important; }
 .vendor-sublist.is-nested { background: #f8fafc; border-bottom: 1px solid #f1f5f9; padding: 0.3rem 0; }
@@ -2059,11 +2082,11 @@ export default {
 .vendor-sublist.is-nested .vendor-row:last-child { border-bottom: 1px solid #f8fafc; }
 .cluster-status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.22rem 0.4rem; width: 100%; align-items: stretch; }
 /* อนุญาตให้ข้อความ wrap เต็มคำ แทนการตัดด้วย ellipsis */
-.status-chip.chip-mini { font-size: 0.62rem; padding: 0.16rem 0.45rem; white-space: normal; line-height: 1.35; text-align: left; justify-content: flex-start; border-radius: 8px; }
+.status-chip.chip-mini { font-size: 0.7rem; padding: 0.16rem 0.45rem; white-space: normal; line-height: 1.35; text-align: left; justify-content: flex-start; border-radius: 8px; }
 
 .vendor-main-info { min-width: 0; }
-.vendor-name { font-weight: 650; color: #0f172a; font-size: 0.88rem; display: block; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vendor-desc { font-size: 0.74rem; color: #64748b; display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vendor-name { font-weight: 700; color: #1d4ed8; font-size: 1.05rem; display: block; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vendor-desc { font-size: 0.88rem; color: #1e293b; display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .vendor-col { display: flex; align-items: center; min-width: 0; }
 .col-empty { color: #cbd5e1; font-size: 0.8rem; }
@@ -2107,27 +2130,28 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.71rem;
-  font-weight: 600;
-  padding: 0.25rem 0.6rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
   border-radius: 8px;
   white-space: nowrap;
 }
-.tag-po { color: #0f766e; background: #f0fdfa; border: 1px solid #99f6e4; }
+.tag-po { color: #0f5132; background: #f0fdfa; border: 1px solid #99f6e4; }
 .tag-po i { font-size: 0.66rem; opacity: 0.8; }
-.tag-delivery { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; }
+.tag-delivery { color: #9a3412; background: #fff7ed; border: 1px solid #fed7aa; }
 .tag-delivery i { font-size: 0.66rem; opacity: 0.8; }
 .tag-delivery.tag-overdue { color: #be123c; background: #fff1f2; border-color: #fecdd3; }
-.tag-order { color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; }
+.tag-order { color: #312e81; background: #eef2ff; border: 1px solid #c7d2fe; }
 .tag-order i { font-size: 0.66rem; opacity: 0.8; }
-.tag-amount { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; font-weight: 700; }
+.tag-amount { color: #065f46; background: #ecfdf5; border: 1px solid #a7f3d0; font-weight: 700; }
 .tag-amount i { font-size: 0.66rem; opacity: 0.8; }
-.tag-leadtime { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; padding: 0.2rem 0.5rem; border-radius: 8px; white-space: nowrap; }
+.tag-leadtime { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; font-weight: 700; color: #7c2d12; background: #fff7ed; border: 1px solid #fed7aa; padding: 0.2rem 0.5rem; border-radius: 8px; white-space: nowrap; }
 .tag-leadtime i { font-size: 0.64rem; }
-.tag-notes { display: inline-flex; align-items: flex-start; gap: 0.3rem; font-size: 0.7rem; color: #64748b; max-width: 100%; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4; cursor: default; }
-.tag-notes i { font-size: 0.62rem; color: #94a3b8; margin-top: 0.12rem; }
-.tag-vendor-note { color: #7c3aed; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border: 1px solid #ddd6fe; font-weight: 600; cursor: default; padding: 0.35rem 0.6rem; border-radius: 10px; line-height: 1.5; }
+.tag-notes { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.88rem; color: #1e293b; max-width: 100%; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4; cursor: default; }
+.tag-notes i { font-size: 0.66rem; color: #64748b; }
+.tag-vendor-note { color: #5b21b6; font-size: 0.88rem; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border: 1px solid #ddd6fe; font-weight: 600; cursor: default; padding: 0.35rem 0.6rem; border-radius: 10px; line-height: 1.5; }
 .tag-vendor-note i { color: #7c3aed; }
+.tag-po i, .tag-delivery i, .tag-order i, .tag-amount i { font-size: 0.72rem; }
 .tag-vendor-note:hover { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); }
 .tag-notes + .tag-notes { margin-top: 2px; }
 .combined-notes { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
@@ -2164,17 +2188,21 @@ export default {
 .vn-file-del:hover { background: #fecaca; }
 .vn-file-del i { font-size: 0.65rem; }
 .vn-files-empty { font-size: 0.76rem; color: #94a3b8; text-align: center; padding: 0.6rem; background: #f8fafc; border: 1px dashed #e2e8f0; border-radius: 8px; }
+.star-toggle { color: #cbd5e1 !important; }
+.star-toggle:hover { color: #f59e0b !important; }
+.star-toggle.star-on, .star-toggle.star-on:hover { color: #f59e0b !important; }
+.star-toggle .pi { font-size: 0.9rem; }
 .vn-upload-btn { font-size: 0.78rem !important; }
 .vn-file-pending { border-color: #bfdbfe !important; background: #eff6ff !important; }
 .vn-pending-label { color: #3b82f6; font-weight: 600; }
 /* ===== คอลัมน์ไฟล์แนบ (แยกจากหมายเหตุให้ชัดเจน) ===== */
-.tag-file-chip { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.68rem; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.16rem 0.5rem; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tag-file-chip { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.85rem; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.16rem 0.5rem; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .tag-file-chip:hover { background: #dbeafe; }
 .tag-file-chip i { font-size: 0.62rem; flex-shrink: 0; }
 .add-file-btn { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.66rem; color: #2563eb; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 8px; padding: 0.2rem 0.55rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
 .add-file-btn:hover { background: #dbeafe; border-color: #60a5fa; }
 .add-file-btn i { font-size: 0.62rem; }
-.group-amount { font-size: 0.72rem; font-weight: 700; color: #047857; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 12px; }
+.group-amount { font-size: 0.85rem; font-weight: 700; color: #047857; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 12px; }
 .tag-assignee { color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; }
 .tag-assignee i { font-size: 0.66rem; opacity: 0.8; }
 
@@ -2188,13 +2216,15 @@ export default {
 .text-muted { color: #cbd5e1; }
 
 /* Status Chips */
-.status-chip { display: inline-flex; align-items: center; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.71rem; font-weight: 700; letter-spacing: 0.015em; border: 1px solid transparent; white-space: nowrap; flex-shrink: 0; }
-.status-chip.chip-pending { background: #f8fafc; color: #64748b; border-color: #e2e8f0; }
-.status-chip.chip-approved { background: #fffbeb; color: #b45309; border-color: #fde68a; }
-.status-chip.chip-ordered { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-.status-chip.chip-waiting { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
-.status-chip.chip-received { background: #ecfeff; color: #0e7490; border-color: #a5f3fc; }
-.status-chip.chip-completed { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+.status-chip { display: inline-flex; align-items: center; padding: 0.36rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.015em; border: 1px solid transparent; white-space: nowrap; flex-shrink: 0; }
+.status-chip.chip-pending { background: #f1f5f9; color: #334155; border-color: #cbd5e1; }
+.status-chip.chip-approved { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.status-chip.chip-ordered { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.status-chip.chip-waiting { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+.status-chip.chip-received { background: #cffafe; color: #0e7490; border-color: #67e8f9; }
+.status-chip.chip-completed { background: #dcfce7; color: #166534; border-color: #86efac; }
+.status-chip.chip-negotiating { background: #fdf4ff; color: #a21caf; border-color: #f5d0fe; }
+.status-chip.chip-awaiting_payment { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
 
 /* Action Buttons */
 .action-cell { display: flex; align-items: center; gap: 0.3rem; }
@@ -2214,6 +2244,8 @@ export default {
 .action-btn.btn-waiting { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; }
 .action-btn.btn-received { background: linear-gradient(135deg, #06b6d4, #0891b2); color: #fff; }
 .action-btn.btn-completed { background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; }
+.action-btn.btn-negotiating { background: linear-gradient(135deg, #d946ef, #a21caf); color: #fff; }
+.action-btn.btn-awaiting_payment { background: linear-gradient(135deg, #f97316, #ea580c); color: #fff; }
 
 /* ===== Calendar Section ===== */
 .calendar-section { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; margin-top: 1.75rem; padding-bottom: 2.5rem; }
@@ -2649,6 +2681,8 @@ export default {
 .sdot-waiting { background: #8b5cf6; }
 .sdot-received { background: #10b981; }
 .sdot-completed { background: #16a34a; }
+.sdot-negotiating { background: #d946ef; }
+.sdot-awaiting_payment { background: #f97316; }
 
 /* ===== เลือกผู้รับผิดชอบ: วงกลมอักษรแรก + ชื่อ + ตำแหน่ง ===== */
 .user-pick { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
