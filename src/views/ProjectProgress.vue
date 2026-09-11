@@ -363,7 +363,6 @@
                   <span class="proc-cluster-name">{{ cluster.vendor_name }}</span>
                   <span class="cluster-count"><i class="pi pi-list"></i> {{ cluster.items.length }} รายการ</span>
                   <span v-if="getProcurementTotalAmountForItems(cluster.items) !== null" class="pi-header-amount"><i class="pi pi-wallet"></i> {{ formatMoney(getProcurementTotalAmountForItems(cluster.items)) }}</span>
-                  <span v-if="getVendorNote(selectedStep.id, cluster.vendor_name)" class="proc-cluster-note-chip" v-tooltip.top="'หมายเหตุ Vendor: ' + getVendorNote(selectedStep.id, cluster.vendor_name).comment"><i class="pi pi-shop"></i> หมายเหตุ vendor</span>
                   <span class="proc-cluster-done"><i class="pi pi-check"></i> {{ getClusterDoneCount(cluster.items) }}/{{ cluster.items.length }} ได้ของ/เสร็จ</span>
                 </div>
                 <div v-show="!cluster.repeated || isClusterExpanded(clusterKey(selectedStep.id, cluster))" class="proc-cluster-body" :class="{ 'is-nested': cluster.repeated }">
@@ -371,9 +370,16 @@
                   <div v-if="getVendorNote(selectedStep.id, cluster.vendor_name)" class="vendor-note-bar">
                     <i class="pi pi-shop"></i>
                     <div>
-                      <span class="vnb-label">หมายเหตุ Vendor:</span>{{ getVendorNote(selectedStep.id, cluster.vendor_name).comment }}
+                      <span class="vnb-label">หมายเหตุ Vendor:</span>{{ getVendorNote(selectedStep.id, cluster.vendor_name).comment.trim() }}
                       <span v-if="getVendorNote(selectedStep.id, cluster.vendor_name).updated_by_name" class="vnb-meta">แก้ล่าสุดโดย {{ getVendorNote(selectedStep.id, cluster.vendor_name).updated_by_name }} • {{ formatHistoryTime(getVendorNote(selectedStep.id, cluster.vendor_name).updated_at) }}</span>
                     </div>
+                  </div>
+                  <!-- ไฟล์แนบระดับ vendor — คลิกเพื่อดาวน์โหลด -->
+                  <div v-if="getVendorFiles(selectedStep.id, cluster.vendor_name).length" class="vendor-files-row">
+                    <span class="vfr-label"><i class="pi pi-paperclip"></i> ไฟล์แนบ ({{ getVendorFiles(selectedStep.id, cluster.vendor_name).length }}):</span>
+                    <a v-for="f in getVendorFiles(selectedStep.id, cluster.vendor_name)" :key="f.id" :href="f.file_path" :download="f.file_name" class="file-chip" v-tooltip.top="f.file_name + (f.uploaded_by_name ? ' • ' + f.uploaded_by_name : '')">
+                      <i class="pi pi-download"></i> {{ f.file_name }} <span class="file-chip-size">{{ formatFileSize(f.file_size) }}</span>
+                    </a>
                   </div>
               <div v-for="item in cluster.items" :key="item.id" class="procurement-item" :class="['pi-status-' + item.status, { 'pi-overdue': isProcurementOverdue(item) }]">
                 <!-- Collapsible Header -->
@@ -528,7 +534,9 @@ export default {
       // vendor ซ้ำใน step: state ขยาย/ย่อ dropdown
       expandedProcurementClusters: {},
       // หมายเหตุระดับ vendor (จาก /api/procurement/vendor-notes)
-      vendorNotes: []
+      vendorNotes: [],
+      // ไฟล์แนบระดับ vendor (จาก /api/procurement/vendor-files)
+      vendorFiles: []
     }
   },
   computed: {
@@ -697,18 +705,31 @@ export default {
     },
     async loadProcurementItems() {
       try {
-        const [itemsRes, notesRes] = await Promise.all([
+        const [itemsRes, notesRes, filesRes] = await Promise.all([
           this.$http.get('/api/procurement', { silent: true }),
-          this.$http.get('/api/procurement/vendor-notes', { silent: true }).catch(() => ({ data: [] }))
+          this.$http.get('/api/procurement/vendor-notes', { silent: true }).catch(() => ({ data: [] })),
+          this.$http.get('/api/procurement/vendor-files', { silent: true }).catch(() => ({ data: [] }))
         ])
         this.procurementItems = itemsRes.data
         this.vendorNotes = notesRes.data || []
+        this.vendorFiles = filesRes.data || []
       } catch { /* ignore */ }
     },
     // หมายเหตุระดับ vendor ของ step (ใช้ร่วมทุกรายการของ vendor)
     getVendorNote(stepId, vendorName) {
       if (!stepId || !vendorName) return null
       return this.vendorNotes.find(n => n.step_id === stepId && n.vendor_name === vendorName) || null
+    },
+    // ไฟล์แนบระดับ vendor ของ step
+    getVendorFiles(stepId, vendorName) {
+      if (!stepId || !vendorName) return []
+      return this.vendorFiles.filter(f => f.step_id === stepId && f.vendor_name === vendorName)
+    },
+    formatFileSize(bytes) {
+      if (!bytes && bytes !== 0) return ''
+      if (bytes < 1024) return bytes + ' B'
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+      return (bytes / 1024 / 1024).toFixed(2) + ' MB'
     },
     getProcurementItems(stepId) {
       return this.procurementItems.filter(i => i.step_id === stepId)
@@ -1491,6 +1512,8 @@ export default {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.15s;
+  flex-wrap: wrap;
+  row-gap: 0.3rem;
 }
 .proc-cluster-header:hover { background: #f3e8ff; }
 .proc-cluster-header .cluster-chevron { color: #94a3b8; font-size: 0.7rem; flex-shrink: 0; width: 14px; }
@@ -1505,8 +1528,6 @@ export default {
   white-space: nowrap;
 }
 .proc-cluster-done { margin-left: auto; font-size: 0.7rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
-.proc-cluster-note-chip { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.66rem; color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; padding: 0.14rem 0.5rem; border-radius: 10px; white-space: nowrap; }
-.proc-cluster-note-chip i { font-size: 0.6rem; }
 .vendor-note-bar {
   display: flex;
   align-items: flex-start;
@@ -1523,6 +1544,18 @@ export default {
 .vendor-note-bar i { color: #7c3aed; margin-top: 2px; }
 .vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; }
 .vnb-meta { display: block; font-size: 0.68rem; color: #94a3b8; margin-top: 2px; }
+.proc-cluster-file-chip { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
+.vendor-files-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.vfr-label { font-size: 0.72rem; font-weight: 800; color: #2563eb; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.vfr-label i { font-size: 0.66rem; }
+.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; max-width: 260px; overflow: hidden; }
+.file-chip:hover { background: #dbeafe; transform: translateY(-1px); }
+.file-chip i { font-size: 0.66rem; flex-shrink: 0; }
+.file-chip > span:first-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-chip-size { font-size: 0.64rem; color: #64748b; font-weight: 400; flex-shrink: 0; }
+.file-chip-add { color: #4b5563; background: #f8fafc; border: 1px dashed #cbd5e1; }
+.file-chip-add:hover { background: #eef2f7; color: #1d4ed8; }
+.file-chip-add:disabled { opacity: 0.6; cursor: wait; }
 .proc-cluster-body.is-nested {
   padding: 0.3rem 0 0.3rem 0.9rem;
   border-left: 2px solid #e9d5ff;

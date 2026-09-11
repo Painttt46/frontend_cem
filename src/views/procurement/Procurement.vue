@@ -227,8 +227,11 @@
                     <span v-else class="col-empty">—</span>
                   </div>
                   <div class="vendor-col vendor-col-notes">
-                    <span v-if="getVendorNote(group, cluster)" class="tag-notes tag-vendor-note" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'หมายเหตุ Vendor: ' + getVendorNote(group, cluster).comment"><i class="pi pi-shop"></i> {{ getVendorNote(group, cluster).comment }}</span>
-                    <span v-else class="col-empty">—</span>
+                    <div v-if="getVendorNote(group, cluster)" class="vendor-note-display">
+                      <span class="tag-notes tag-vendor-note" v-tooltip.top="'หมายเหตุ Vendor: ' + trimNote(getVendorNote(group, cluster).comment)"><i class="pi pi-shop"></i>{{ trimNote(getVendorNote(group, cluster).comment) }}</span>
+                      <button class="edit-note-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'แก้ไขหมายเหตุ'"><i class="pi pi-pencil"></i></button>
+                    </div>
+                    <button v-else class="add-note-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'เพิ่มหมายเหตุ Vendor'"><i class="pi pi-plus"></i> เพิ่มหมายเหตุ</button>
                   </div>
                   <div class="vendor-col vendor-col-files">
                     <span v-if="getVendorFiles(group, cluster).length" class="tag-file-chip" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="getVendorFiles(group, cluster).map(f => f.file_name).join(', ')"><i class="pi pi-paperclip"></i> {{ getVendorFiles(group, cluster).length }} ไฟล์</span>
@@ -273,13 +276,33 @@
                         <span v-else class="col-empty">—</span>
                       </div>
                       <div class="vendor-col vendor-col-notes">
-                        <span v-if="getVendorNote(group, cluster)" class="tag-notes tag-vendor-note" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'หมายเหตุ Vendor: ' + getVendorNote(group, cluster).comment"><i class="pi pi-shop"></i> {{ getVendorNote(group, cluster).comment }}</span>
-                        <span v-if="item.notes" class="tag-notes" v-tooltip.top="item.notes"><i class="pi pi-comment"></i> {{ item.notes }}</span>
-                        <span v-if="!item.notes && !getVendorNote(group, cluster)" class="col-empty">—</span>
+                        <!-- กรณี dropdown: ไม่แสดงหมายเหตุ vendor/ไฟล์ (แสดงที่ header แล้ว) -->
+                        <template v-if="cluster.repeated">
+                          <span v-if="item.notes" class="tag-notes" v-tooltip.top="item.notes"><i class="pi pi-comment"></i>{{ item.notes.trim() }}</span>
+                          <span v-else class="col-empty">—</span>
+                        </template>
+                        <!-- กรณีรายการเดียว: แสดงหมายเหตุ vendor + หมายเหตุรายการร่วมกัน -->
+                        <template v-else>
+                          <div class="combined-notes">
+                            <div v-if="getVendorNote(group, cluster)" class="vendor-note-inline">
+                              <span class="tag-notes tag-vendor-note" v-tooltip.top="'หมายเหตุ Vendor: ' + trimNote(getVendorNote(group, cluster).comment)"><i class="pi pi-shop"></i>{{ trimNote(getVendorNote(group, cluster).comment) }}</span>
+                              <button class="edit-note-inline-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'แก้ไขหมายเหตุ'"><i class="pi pi-pencil"></i></button>
+                            </div>
+                            <span v-if="item.notes" class="tag-notes" v-tooltip.top="item.notes"><i class="pi pi-comment"></i>{{ item.notes.trim() }}</span>
+                            <button v-if="!getVendorNote(group, cluster) && !item.notes" class="add-note-inline-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'เพิ่มหมายเหตุ Vendor'"><i class="pi pi-plus"></i> เพิ่มหมายเหตุ</button>
+                          </div>
+                        </template>
                       </div>
                       <div class="vendor-col vendor-col-files">
-                        <span v-if="getVendorFiles(group, cluster).length" class="tag-file-chip" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="getVendorFiles(group, cluster).map(f => f.file_name).join(', ')"><i class="pi pi-paperclip"></i> {{ getVendorFiles(group, cluster).length }} ไฟล์</span>
-                        <span v-else class="col-empty">—</span>
+                        <!-- กรณี dropdown: ไม่แสดงไฟล์ (แสดงที่ header แล้ว) -->
+                        <template v-if="cluster.repeated">
+                          <span class="col-empty">—</span>
+                        </template>
+                        <!-- กรณีรายการเดียว: แสดงไฟล์แนบ -->
+                        <template v-else>
+                          <span v-if="getVendorFiles(group, cluster).length" class="tag-file-chip" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="getVendorFiles(group, cluster).map(f => f.file_name).join(', ')"><i class="pi pi-paperclip"></i> {{ getVendorFiles(group, cluster).length }} ไฟล์</span>
+                          <button v-else class="add-file-btn" @click.stop="openVendorNoteDialog(group, cluster)" v-tooltip.top="'เพิ่มไฟล์แนบ vendor'"><i class="pi pi-paperclip"></i> แนบไฟล์</button>
+                        </template>
                       </div>
                       <div class="vendor-col vendor-col-assignee">
                         <span v-if="item.assigned_user_name" class="tag-assignee"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
@@ -649,6 +672,7 @@
       <div class="dialog-body">
         <div v-if="vendorNoteTarget" class="vn-target">
           <span class="vn-vendor"><i class="pi pi-truck"></i> {{ vendorNoteTarget.vendor_name }}</span>
+          <span v-if="vendorNoteTarget.is_repeated" class="vn-info-badge"><i class="pi pi-list"></i> {{ vendorNoteTarget.item_count }} รายการ</span>
         </div>
         <div class="item-form" style="margin-top:0.85rem">
           <div class="field">
@@ -658,22 +682,30 @@
           <div class="field">
             <label>ไฟล์แนบ <span class="optional">(ใบเสนอราคา, PO, ใบส่งของ ฯลฯ — ใช้ร่วมทุกรายการของ vendor)</span></label>
             <div class="vn-files">
+              <!-- ไฟล์ที่อัปโหลดแล้ว -->
               <div v-for="f in vendorNoteFiles" :key="f.id" class="vn-file-row">
                 <i class="pi pi-file"></i>
                 <a :href="f.file_path" target="_blank" rel="noopener" class="vn-file-name" :download="f.file_name">{{ f.file_name }}</a>
                 <span class="vn-file-meta">{{ formatFileSize(f.file_size) }}<template v-if="f.uploaded_by_name"> • {{ f.uploaded_by_name }}</template></span>
                 <button class="vn-file-del" @click="deleteVendorFile(f)" v-tooltip.top="'ลบไฟล์'"><i class="pi pi-times"></i></button>
               </div>
-              <div v-if="vendorNoteFiles.length === 0" class="vn-files-empty"><i class="pi pi-inbox"></i> ยังไม่มีไฟล์แนบ</div>
+              <!-- ไฟล์ที่เลือกไว้รอ upload -->
+              <div v-for="(pf, idx) in pendingVendorFiles" :key="'pf-' + idx" class="vn-file-row vn-file-pending">
+                <i class="pi pi-file-plus" style="color:#3b82f6"></i>
+                <span class="vn-file-name">{{ pf.name }}</span>
+                <span class="vn-file-meta vn-pending-label">รอบันทึก</span>
+                <button class="vn-file-del" @click="pendingVendorFiles.splice(idx,1)" v-tooltip.top="'ยกเลิกไฟล์นี้'"><i class="pi pi-times"></i></button>
+              </div>
+              <div v-if="vendorNoteFiles.length === 0 && pendingVendorFiles.length === 0" class="vn-files-empty"><i class="pi pi-inbox"></i> ยังไม่มีไฟล์แนบ</div>
             </div>
-            <input ref="vendorFileInput" type="file" style="display:none" @change="onVendorFileUpload" />
-            <Button icon="pi pi-upload" label="แนบไฟล์" @click="triggerVendorFileUpload" size="small" outlined class="vn-upload-btn" :loading="vendorNoteUploading" />
+            <input ref="vendorFileInput" type="file" style="display:none" multiple @change="onVendorFileSelect" />
+            <Button icon="pi pi-paperclip" label="เลือกไฟล์" @click="triggerVendorFileUpload" size="small" outlined class="vn-upload-btn" />
           </div>
         </div>
       </div>
       <template #footer>
-        <Button label="ยกเลิก" icon="pi pi-times" @click="showVendorNoteDialog = false" class="btn-cancel" text />
-        <Button label="บันทึก" icon="pi pi-check" @click="saveVendorNote" class="btn-confirm" />
+        <Button label="ยกเลิก" icon="pi pi-times" @click="cancelVendorNote" class="btn-cancel" text />
+        <Button label="บันทึก" icon="pi pi-check" @click="saveVendorNote" :loading="vendorNoteUploading" class="btn-confirm" />
       </template>
     </Dialog>
 
@@ -708,8 +740,21 @@
         <div class="item-form">
           <div class="field">
             <label>ชื่อ Vendor / ผู้ขาย <span class="required">*</span></label>
-            <AutoComplete v-model="currentItem.vendor_name" :suggestions="vendorSuggestions" @complete="searchVendor" 
-              placeholder="เช่น บริษัท ABC จำกัด" class="w-full" :dropdown="true" />
+            <div class="vendor-ac-wrap">
+              <span class="vendor-ac-icon"><i class="pi pi-search"></i></span>
+              <AutoComplete v-model="currentItem.vendor_name" :suggestions="vendorSuggestions" @complete="searchVendor"
+                placeholder="ค้นหา หรือพิมพ์ชื่อ vendor ใหม่..." inputClass="vendor-ac-input" class="w-full" :dropdown="true"
+                autoHighlight completeOnFocus filter filterPlaceholder="พิมพ์เพื่อกรองรายชื่อ..."
+                emptyMessage="ไม่พบในรายการ — ชื่อที่พิมพ์จะถูกบันทึกเป็น vendor ใหม่">
+                <template #item="slotProps">
+                  <div class="vendor-ac-item"><i class="pi pi-building"></i> {{ slotProps.item }}</div>
+                </template>
+                <template #footer>
+                  <div class="vendor-panel-footer"><i class="pi pi-info-circle"></i> พิมพ์ชื่อที่ไม่มีในรายการ = สร้าง vendor ใหม่</div>
+                </template>
+              </AutoComplete>
+            </div>
+            <small class="field-hint"><i class="pi pi-info-circle"></i> คลิกเพื่อเลือกจากรายการ หรือพิมพ์ชื่อใหม่เพื่อเพิ่มเข้าระบบได้เลย</small>
           </div>
           <div class="field">
             <label>รายการสินค้า / รายละเอียด</label>
@@ -737,12 +782,27 @@
           <div class="field-group">
             <div class="field">
               <label>สถานะ</label>
-              <Dropdown v-model="currentItem.status" :options="itemStatusOptions" optionLabel="label" optionValue="value" class="w-full" />
+              <Dropdown v-model="currentItem.status" :options="itemStatusOptions" optionLabel="label" optionValue="value" class="w-full">
+                <template #option="slotProps">
+                  <span class="status-dot" :class="'sdot-' + slotProps.option.value"></span>
+                  {{ slotProps.option.label }}
+                </template>
+              </Dropdown>
             </div>
             <div class="field">
               <label>ผู้รับผิดชอบ</label>
               <Dropdown v-model="currentItem.assigned_user_id" :options="users" optionLabel="name" optionValue="id"
-                placeholder="เลือกผู้รับผิดชอบ" class="w-full" filter :showClear="true" @change="onAssignedUserChange" />
+                placeholder="เลือกผู้รับผิดชอบ" class="w-full" filter :showClear="true" @change="onAssignedUserChange">
+                <template #option="slotProps">
+                  <div class="user-pick">
+                    <span class="user-avatar">{{ (slotProps.option.name || '?').charAt(0) }}</span>
+                    <div class="user-pick-text">
+                      <div class="user-pick-name">{{ slotProps.option.name }}</div>
+                      <div v-if="slotProps.option.position" class="user-pick-pos">{{ slotProps.option.position }}</div>
+                    </div>
+                  </div>
+                </template>
+              </Dropdown>
             </div>
           </div>
           <div class="form-divider"></div>
@@ -824,6 +884,8 @@ export default {
       showVendorNoteDialog: false,
       vendorNoteTarget: null,
       vendorNoteText: '',
+      pendingVendorFiles: [],
+      pendingDeleteFileIds: [],
       // ไฟล์แนบระดับ vendor
       vendorFiles: [],
       vendorNoteUploading: false
@@ -1037,10 +1099,70 @@ export default {
       return this.allItems.filter(i => i.delivery_date && i.delivery_date.split('T')[0] === selStr)
     }
   },
-  mounted() { this.loadData() },
+  mounted() {
+    this.loadData()
+    this.setupVendorListDragScroll()
+  },
+  beforeUnmount() {
+    // เก็บกวาด event listeners ของ drag-scroll ตารางหลัก
+    if (this._vendorDragHandlers) {
+      document.removeEventListener('mousedown', this._vendorDragHandlers.down)
+      document.removeEventListener('mousemove', this._vendorDragHandlers.move)
+      document.removeEventListener('mouseup', this._vendorDragHandlers.up)
+    }
+  },
   methods: {
+    // กดค้างที่พื้นที่ว่างในตารางหลัก แล้วลากเพื่อเลื่อนซ้าย-ขวา (ไม่ต้องใช้ scrollbar)
+    // แต่ถ้ากดบนข้อความ → ให้เลือก/highlight ข้อความได้ตามปกติ
+    setupVendorListDragScroll() {
+      let isDown = false
+      let startX = 0
+      let startScroll = 0
+
+      // เช็คว่า element ที่กดมีข้อความตรง ๆ อยู่ไหม (มี = ให้เลือกข้อความ ไม่ drag)
+      const hasDirectText = (el) => {
+        return Array.from(el.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim().length > 0)
+      }
+
+      const down = (e) => {
+        const target = e.target.closest('.vendor-list')
+        if (!target) return
+        // ไม่รบกวนการคลิก/พิมพ์ใน input, ปุ่ม, dropdown
+        if (e.target.closest('input, textarea, button, a, .p-dropdown, .p-button, .p-checkbox')) return
+        // กดบนข้อความ → ให้ highlight/เลือกข้อความได้ (ไม่เริ่ม drag)
+        if ((e.target.tagName === 'SPAN' || e.target.tagName === 'DIV' || e.target.tagName === 'TD' || e.target.tagName === 'STRONG' || e.target.tagName === 'H5') && hasDirectText(e.target)) return
+        isDown = true
+        startX = e.pageX
+        startScroll = target.scrollLeft
+        target.style.cursor = 'grabbing'
+      }
+      const move = (e) => {
+        if (!isDown) return
+        const target = e.target.closest('.vendor-list')
+        if (!target) return
+        const dx = e.pageX - startX
+        // เริ่ม drag จริงเมื่อลากเกิน 5px แล้วค่อยกันการเลือกข้อความ
+        if (Math.abs(dx) > 5) {
+          target.style.userSelect = 'none'
+          e.preventDefault()
+        }
+        target.scrollLeft = startScroll - dx
+      }
+      const up = () => {
+        if (!isDown) return
+        isDown = false
+        document.querySelectorAll('.vendor-list').forEach(el => {
+          el.style.cursor = 'grab'
+          el.style.userSelect = ''
+        })
+      }
+
+      document.addEventListener('mousedown', down)
+      document.addEventListener('mousemove', move)
+      document.addEventListener('mouseup', up)
+      this._vendorDragHandlers = { down, move, up }
+    },
     async loadData() {
-      this.loading = true
       try {
         const [stepsRes, itemsRes, usersRes, vendorsRes, vendorNotesRes, vendorFilesRes] = await Promise.all([
           axios.get('/api/task-steps/procurement'),
@@ -1135,59 +1257,103 @@ export default {
     // หมายเหตุระดับ vendor ของ step นี้ (ใช้ร่วมทุกรายการของ vendor)
     getVendorNote(group, cluster) {
       if (!group || !cluster) return null
-      return this.vendorNotes.find(n => n.step_id === group.step_id && n.vendor_name === cluster.vendor_name) || null
+      const note = this.vendorNotes.find(n => n.step_id === group.step_id && n.vendor_name === cluster.vendor_name)
+      // คืน null ถ้าไม่มี note หรือ comment ว่าง
+      if (!note || !note.comment || note.comment.trim() === '') return null
+      return note
+    },
+    // ตัดช่องว่าง/บรรทัดเกินหน้า-หลัง กันข้อความเว้นวรรคช่องแรก (รวม NBSP/Zero-width space ที่มาจาก Excel)
+    trimNote(text) {
+      return text
+        ? String(text)
+            .replace(/\u200B/g, '')
+            .replace(/\u200C/g, '')
+            .replace(/\u200D/g, '')
+            .replace(/\uFEFF/g, '')
+            .replace(/\u00A0/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+        : ''
     },
     openVendorNoteDialog(group, cluster) {
-      this.vendorNoteTarget = { step_id: group.step_id, task_id: group.task_id, vendor_name: cluster.vendor_name }
+      this.vendorNoteTarget = { step_id: group.step_id, task_id: group.task_id, vendor_name: cluster.vendor_name, is_repeated: cluster.repeated, item_count: cluster.items?.length || 1 }
       const existing = this.getVendorNote(group, cluster)
-      this.vendorNoteText = existing ? existing.comment || '' : ''
+      this.vendorNoteText = existing ? this.trimNote(existing.comment) : ''
+      this.pendingVendorFiles = []
+      this.pendingDeleteFileIds = []
       this.showVendorNoteDialog = true
     },
-    async saveVendorNote() {
-      if (!this.vendorNoteTarget) return
-      try {
-        await axios.put('/api/procurement/vendor-notes', {
-          step_id: this.vendorNoteTarget.step_id,
-          vendor_name: this.vendorNoteTarget.vendor_name,
-          comment: this.vendorNoteText
-        })
-        this.$toast.add({ severity: 'success', summary: 'บันทึกหมายเหตุ Vendor แล้ว', life: 2000 })
-        this.showVendorNoteDialog = false
-        await this.loadData()
-      } catch (e) {
-        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'บันทึกไม่สำเร็จ', life: 3000 })
+    cancelVendorNote() {
+      // Restore files that were marked for deletion
+      if (this.pendingDeleteFileIds.length > 0) {
+        this.reloadVendorFilesOnly()
       }
-    },
-    // ไฟล์แนบระดับ vendor ของ step นี้
-    getVendorFiles(group, cluster) {
-      if (!group || !cluster) return []
-      return this.vendorFiles.filter(f => f.step_id === group.step_id && f.vendor_name === cluster.vendor_name)
+      this.pendingVendorFiles = []
+      this.pendingDeleteFileIds = []
+      this.showVendorNoteDialog = false
     },
     triggerVendorFileUpload() {
       this.$refs.vendorFileInput && this.$refs.vendorFileInput.click()
     },
-    async onVendorFileUpload(e) {
-      const file = e.target.files && e.target.files[0]
-      e.target.value = '' // reset เพื่อเลือกไฟล์เดิมซ้ำได้
-      if (!file || !this.vendorNoteTarget) return
-      if (file.size > 20 * 1024 * 1024) {
-        this.$toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'ขนาดไฟล์ต้องไม่เกิน 20MB', life: 3000 })
-        return
+    onVendorFileSelect(e) {
+      const files = Array.from(e.target.files || [])
+      e.target.value = ''
+      for (const f of files) {
+        if (f.size > 20 * 1024 * 1024) {
+          this.$toast.add({ severity: 'warn', summary: `ไฟล์ "${f.name}" ใหญ่เกินไป`, detail: 'ขนาดไฟล์ต้องไม่เกิน 20MB', life: 3000 })
+          continue
+        }
+        this.pendingVendorFiles.push(f)
       }
+    },
+    async saveVendorNote() {
+      if (!this.vendorNoteTarget) return
       this.vendorNoteUploading = true
       try {
-        const fd = new FormData()
-        fd.append('file', file)
-        fd.append('step_id', this.vendorNoteTarget.step_id)
-        fd.append('vendor_name', this.vendorNoteTarget.vendor_name)
-        await axios.post('/api/procurement/vendor-files', fd)
-        this.$toast.add({ severity: 'success', summary: 'แนบไฟล์แล้ว', life: 2000 })
-        await this.loadData()
+        // 1. บันทึก note
+        await axios.put('/api/procurement/vendor-notes', {
+          step_id: this.vendorNoteTarget.step_id,
+          vendor_name: this.vendorNoteTarget.vendor_name,
+          comment: (this.vendorNoteText || "").trim()
+        })
+        // 2. upload ไฟล์ที่รอ
+        for (const file of this.pendingVendorFiles) {
+          const fd = new FormData()
+          fd.append('file', file)
+          fd.append('step_id', this.vendorNoteTarget.step_id)
+          fd.append('vendor_name', this.vendorNoteTarget.vendor_name)
+          await axios.post('/api/procurement/vendor-files', fd)
+        }
+        // 3. ลบไฟล์ที่รอลบ (จาก pendingDeleteFileIds)
+        for (const fileId of this.pendingDeleteFileIds) {
+          await axios.delete(`/api/procurement/vendor-files/${fileId}`)
+        }
+        this.pendingVendorFiles = []
+        this.pendingDeleteFileIds = []
+        this.$toast.add({ severity: 'success', summary: 'บันทึกเรียบร้อย', life: 2000 })
+        this.showVendorNoteDialog = false
+        await this.reloadVendorFilesOnly()
       } catch (e) {
-        this.$toast.add({ severity: 'error', summary: 'อัปโหลดไม่สำเร็จ', detail: e.response?.data?.error || 'ลองอีกครั้ง', life: 3000 })
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'บันทึกไม่สำเร็จ', life: 3000 })
       } finally {
         this.vendorNoteUploading = false
       }
+    },
+    async reloadVendorFilesOnly() {
+      try {
+        const [filesRes, notesRes, itemsRes] = await Promise.all([
+          axios.get('/api/procurement/vendor-files', { silent: true }).catch(() => ({ data: [] })),
+          axios.get('/api/procurement/vendor-notes', { silent: true }).catch(() => ({ data: [] })),
+          axios.get('/api/procurement', { silent: true })
+        ])
+        this.vendorFiles = filesRes.data || []
+        this.vendorNotes = notesRes.data || []
+        this.allItems = itemsRes.data
+      } catch (e) { console.error(e) }
+    },
+    getVendorFiles(group, cluster) {
+      if (!group || !cluster) return []
+      return this.vendorFiles.filter(f => f.step_id === group.step_id && f.vendor_name === cluster.vendor_name)
     },
     deleteVendorFile(f) {
       this.$confirm.require({
@@ -1195,14 +1361,14 @@ export default {
         header: 'ยืนยันการลบ',
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'ลบ', rejectLabel: 'ยกเลิก', acceptClass: 'p-button-danger',
-        accept: async () => {
-          try {
-            await axios.delete(`/api/procurement/vendor-files/${f.id}`)
-            this.$toast.add({ severity: 'success', summary: 'ลบไฟล์แล้ว', life: 2000 })
-            await this.loadData()
-          } catch (e) {
-            this.$toast.add({ severity: 'error', summary: 'ลบไม่สำเร็จ', detail: e.response?.data?.error || 'ลองอีกครั้ง', life: 3000 })
+        accept: () => {
+          // Add to pending delete list instead of deleting immediately
+          if (!this.pendingDeleteFileIds.includes(f.id)) {
+            this.pendingDeleteFileIds.push(f.id)
           }
+          // Remove from local display immediately
+          this.vendorFiles = this.vendorFiles.filter(file => file.id !== f.id)
+          this.$toast.add({ severity: 'success', summary: 'เพิ่มลงรายการลบ', detail: 'ไฟล์จะถูกลบเมื่อกดบันทึก', life: 2000 })
         }
       })
     },
@@ -1827,7 +1993,9 @@ export default {
 .group-add-btn:hover { background: #dbeafe !important; transform: scale(1.08); }
 
 /* Vendor List (inside group) */
-.vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; overflow-x: auto; }
+.vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; overflow-x: auto; cursor: grab; }
+/* ข้อความในตารางเลือก/highlight ได้ — cursor เป็น text */
+.vendor-name, .vendor-desc, .tag-notes, .tag-po, .tag-delivery, .tag-amount, .tag-leadtime, .tag-order, .tag-assignee, .status-chip, .visit-owner { cursor: text; }
 .vendor-row-header, .vendor-row { min-width: 1580px; }
 
 .vendor-row-header {
@@ -1956,17 +2124,36 @@ export default {
 .tag-amount i { font-size: 0.66rem; opacity: 0.8; }
 .tag-leadtime { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.7rem; font-weight: 700; color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; padding: 0.2rem 0.5rem; border-radius: 8px; white-space: nowrap; }
 .tag-leadtime i { font-size: 0.64rem; }
-.tag-notes { display: block; font-size: 0.7rem; color: #64748b; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
-.tag-notes i { font-size: 0.62rem; color: #94a3b8; margin-right: 0.25rem; }
-.tag-vendor-note { color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; font-weight: 600; cursor: pointer; }
+.tag-notes { display: inline-flex; align-items: flex-start; gap: 0.3rem; font-size: 0.7rem; color: #64748b; max-width: 100%; word-wrap: break-word; white-space: pre-wrap; line-height: 1.4; cursor: default; }
+.tag-notes i { font-size: 0.62rem; color: #94a3b8; margin-top: 0.12rem; }
+.tag-vendor-note { color: #7c3aed; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border: 1px solid #ddd6fe; font-weight: 600; cursor: default; padding: 0.35rem 0.6rem; border-radius: 10px; line-height: 1.5; }
 .tag-vendor-note i { color: #7c3aed; }
-.tag-vendor-note:hover { background: #ede9fe; }
+.tag-vendor-note:hover { background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%); }
 .tag-notes + .tag-notes { margin-top: 2px; }
+.combined-notes { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.vendor-note-display { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+.vendor-note-display .tag-notes { flex: 1; min-width: 0; }
+.edit-note-btn { width: 22px; height: 22px; border: none; border-radius: 6px; background: #e0e7ff; color: #6366f1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.edit-note-btn:hover { background: #c7d2fe; color: #4f46e5; }
+.edit-note-btn i { font-size: 0.65rem; }
+.add-note-btn { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; color: #7c3aed; background: #f5f3ff; border: 1px dashed #ddd6fe; border-radius: 8px; padding: 0.25rem 0.55rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.add-note-btn:hover { background: #ede9fe; border-color: #c4b5fd; }
+.add-note-btn i { font-size: 0.65rem; }
+.vendor-note-inline { display: flex; align-items: center; gap: 0.3rem; min-width: 0; }
+.vendor-note-inline .tag-notes { flex: 1; min-width: 0; }
+.edit-note-inline-btn { width: 20px; height: 20px; border: none; border-radius: 5px; background: #e0e7ff; color: #6366f1; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.edit-note-inline-btn:hover { background: #c7d2fe; color: #4f46e5; }
+.edit-note-inline-btn i { font-size: 0.6rem; }
+.add-note-inline-btn { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.66rem; color: #7c3aed; background: #f5f3ff; border: 1px dashed #ddd6fe; border-radius: 7px; padding: 0.2rem 0.5rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.add-note-inline-btn:hover { background: #ede9fe; border-color: #c4b5fd; }
+.add-note-inline-btn i { font-size: 0.6rem; }
 .add-vendor-note-btn { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.68rem; color: #7c3aed; background: #f5f3ff; border: 1px dashed #ddd6fe; border-radius: 8px; padding: 0.18rem 0.55rem; cursor: pointer; white-space: nowrap; }
 .add-vendor-note-btn:hover { background: #ede9fe; }
 .vn-target { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding-bottom: 0.85rem; border-bottom: 1.5px solid #f1f5f9; }
 .vn-vendor { font-weight: 700; color: #0f172a; display: inline-flex; gap: 0.35rem; align-items: center; }
 .vn-vendor i { color: #7c3aed; font-size: 0.75rem; }
+.vn-info-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; font-weight: 600; color: #6366f1; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 0.25rem 0.55rem; border-radius: 8px; }
+.vn-info-badge i { font-size: 0.65rem; }
 .vn-files { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.6rem; }
 .vn-file-row { display: flex; align-items: center; gap: 0.5rem; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 8px; padding: 0.45rem 0.65rem; }
 .vn-file-row > i { color: #7c3aed; font-size: 0.8rem; flex-shrink: 0; }
@@ -1978,12 +2165,14 @@ export default {
 .vn-file-del i { font-size: 0.65rem; }
 .vn-files-empty { font-size: 0.76rem; color: #94a3b8; text-align: center; padding: 0.6rem; background: #f8fafc; border: 1px dashed #e2e8f0; border-radius: 8px; }
 .vn-upload-btn { font-size: 0.78rem !important; }
+.vn-file-pending { border-color: #bfdbfe !important; background: #eff6ff !important; }
+.vn-pending-label { color: #3b82f6; font-weight: 600; }
 /* ===== คอลัมน์ไฟล์แนบ (แยกจากหมายเหตุให้ชัดเจน) ===== */
 .tag-file-chip { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.68rem; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.16rem 0.5rem; border-radius: 8px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .tag-file-chip:hover { background: #dbeafe; }
 .tag-file-chip i { font-size: 0.62rem; flex-shrink: 0; }
-.add-file-btn { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.66rem; color: #2563eb; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 8px; padding: 0.16rem 0.5rem; cursor: pointer; white-space: nowrap; }
-.add-file-btn:hover { background: #dbeafe; }
+.add-file-btn { display: inline-flex; align-items: center; gap: 0.28rem; font-size: 0.66rem; color: #2563eb; background: #eff6ff; border: 1px dashed #93c5fd; border-radius: 8px; padding: 0.2rem 0.55rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.add-file-btn:hover { background: #dbeafe; border-color: #60a5fa; }
 .add-file-btn i { font-size: 0.62rem; }
 .group-amount { font-size: 0.72rem; font-weight: 700; color: #047857; display: inline-flex; align-items: center; gap: 0.3rem; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 12px; }
 .tag-assignee { color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe; }
@@ -2400,4 +2589,93 @@ export default {
 .import-remove-btn i { font-size: 0.7rem; }
 .import-empty { padding: 2rem 1rem; text-align: center; color: #94a3b8; font-size: 0.85rem; }
 .import-notes-hint { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.85rem; font-size: 0.78rem; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 0.55rem 0.85rem; }
+</style>
+
+<style>
+/* ===== Dropdown Panel — panel เด้งออกนอก dialog (append to body) จึงต้องใช้ global ===== */
+.p-dropdown-panel, .p-autocomplete-panel {
+  border-radius: 12px !important;
+  box-shadow: 0 12px 36px -8px rgba(16,24,40,0.22) !important;
+  border: 1.5px solid #e8ecf0 !important;
+  overflow: hidden;
+}
+.p-dropdown-panel .p-dropdown-items, .p-autocomplete-panel .p-autocomplete-items {
+  padding: 0.4rem;
+}
+.p-dropdown-panel .p-dropdown-item, .p-autocomplete-panel .p-autocomplete-item {
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  margin: 0.1rem 0;
+  transition: background 0.12s;
+}
+.p-dropdown-panel .p-dropdown-item:not(.p-highlight):not(.p-disabled):hover,
+.p-autocomplete-panel .p-autocomplete-item:not(.p-highlight):hover {
+  background: #f0f7ff;
+}
+.p-dropdown-panel .p-dropdown-header {
+  border-bottom: 1.5px solid #f1f5f9;
+  padding: 0.6rem 0.75rem;
+}
+.p-dropdown-panel .p-dropdown-filter, .p-autocomplete-panel .p-autocomplete-filter {
+  border-radius: 8px;
+  font-size: 0.82rem;
+}
+.p-autocomplete-panel .p-autocomplete-filter { border-radius: 8px; font-size: 0.82rem; padding-left: 2.5rem; }
+.vendor-panel-footer {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.7rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.vendor-panel-footer i { color: #60a5fa; }
+
+/* ===== จุดสีสถานะใน dropdown เลือกสถานะ ===== */
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+  display: inline-block;
+}
+.sdot-pending { background: #94a3b8; }
+.sdot-approved { background: #f59e0b; }
+.sdot-ordered { background: #3b82f6; }
+.sdot-waiting { background: #8b5cf6; }
+.sdot-received { background: #10b981; }
+.sdot-completed { background: #16a34a; }
+
+/* ===== เลือกผู้รับผิดชอบ: วงกลมอักษรแรก + ชื่อ + ตำแหน่ง ===== */
+.user-pick { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.user-pick-text { min-width: 0; }
+.user-pick-name { font-weight: 600; font-size: 0.84rem; color: #0f172a; }
+.user-pick-pos { font-size: 0.7rem; color: #94a3b8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ===== AutoComplete เลือก vendor ===== */
+.vendor-ac-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: #334155; }
+.vendor-ac-item i { color: #7c3aed; font-size: 0.8rem; }
+.field-hint { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.35rem; font-size: 0.72rem; color: #94a3b8; }
+.field-hint i { font-size: 0.66rem; color: #60a5fa; flex-shrink: 0; }
+/* ช่องชื่อ Vendor: ไอคอนค้นหาใน input */
+.vendor-ac-wrap { position: relative; }
+.item-form .vendor-ac-wrap input.p-inputtext { padding-left: 2.4rem !important; }
+.vendor-ac-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #94a3b8; z-index: 1; pointer-events: none; font-size: 0.85rem; }
 </style>
