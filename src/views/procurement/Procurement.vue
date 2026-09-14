@@ -2035,11 +2035,11 @@ export default {
 .vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; overflow-x: auto; cursor: grab; }
 /* ข้อความในตารางเลือก/highlight ได้ — cursor เป็น text */
 .vendor-name, .vendor-desc, .tag-notes, .tag-po, .tag-delivery, .tag-amount, .tag-leadtime, .tag-order, .tag-assignee, .status-chip, .visit-owner { cursor: text; }
-.vendor-row-header, .vendor-row { min-width: 2080px; }
+.vendor-row-header, .vendor-row { min-width: 2125px; }
 
 .vendor-row-header {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 1.15fr 1.5fr 290px;
+  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 1.15fr 1.5fr 335px;
   gap: 0.85rem;
   padding: 0.6rem 1.4rem 0.6rem 3.15rem;
   background: #f8fafc;
@@ -2055,7 +2055,7 @@ export default {
 
 .vendor-row {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 1.15fr 1.5fr 290px;
+  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 1.15fr 1.5fr 335px;
   align-items: center;
   gap: 0.85rem;
   padding: 0.8rem 1.4rem 0.8rem 3.15rem;
@@ -2208,7 +2208,7 @@ export default {
 .star-toggle:hover { color: #f59e0b !important; }
 .star-toggle.star-on, .star-toggle.star-on:hover { color: #f59e0b !important; }
 .star-toggle .pi { font-size: 0.9rem; }
-.status-pick-dd { width: 150px; }
+.status-pick-dd { width: 190px; }
 .status-pick-dd :deep(.p-dropdown-label) { font-size: 0.76rem; padding: 0 0.5rem; }
 .status-pick-dd :deep(.p-dropdown-trigger) { width: 1.8rem; background: rgba(255,255,255,0.6); color: #475569; }
 /* สี dropdown ตามสถานะปัจจุบัน */
