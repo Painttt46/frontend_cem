@@ -305,7 +305,7 @@
                         </template>
                       </div>
                       <div class="vendor-col vendor-col-assignee">
-                        <span v-if="item.assigned_user_name" class="tag-assignee"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
+                        <span v-if="item.assigned_user_name" class="tag-assignee" v-tooltip.top="item.assigned_user_name"><i class="pi pi-user"></i> {{ item.assigned_user_name }}</span>
                         <span v-else class="col-empty">—</span>
                       </div>
                       <div class="vendor-status-area">
@@ -319,10 +319,14 @@
                           :class="['star-toggle', { 'star-on': item.notify_pm }]"
                           v-tooltip.top="item.notify_pm ? 'กำลังแจ้งเตือน PM ทางอีเมล — กดเพื่อปิด' : 'Mark: แจ้งเตือน PM ทางอีเมลเมื่อสถานะเปลี่ยน'"
                           @click="toggleNotifyPm(item)" text size="small" />
-                        <Button v-if="getNextStatus(item.status)"
-                          :label="getNextActionLabel(item.status)"
-                          :class="'action-btn btn-' + getNextStatus(item.status)"
-                          @click="advanceStatus(item)" size="small" />
+                        <Dropdown :model-value="item.status" :options="itemStatusOptions" optionLabel="label" optionValue="value"
+  @update:model-value="pickStatus(item, $event)" :class="['status-pick-dd', 'spd-' + item.status]"
+  v-tooltip.top="'เลือกเปลี่ยนสถานะโดยตรง'">
+  <template #option="slotProps">
+    <span class="status-dot" :class="'sdot-' + slotProps.option.value"></span>
+    {{ slotProps.option.label }}
+  </template>
+</Dropdown>
                         <Button icon="pi pi-history" v-tooltip.top="'ประวัติ'" @click="openHistory(item)" text size="small" class="icon-btn" />
                         <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditItem(item)" text size="small" class="icon-btn" />
                         <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteItem(item)" text severity="danger" size="small" class="icon-btn" />
@@ -860,7 +864,6 @@ export default {
       },
       itemStatusOptions: [
         { label: 'รอใบเสนอราคา', value: 'pending' },
-        { label: 'ต่อรอง', value: 'negotiating' },
         { label: 'ต่อรอง', value: 'negotiating' },
         { label: 'อนุมัติแล้ว', value: 'approved' },
         { label: 'สั่งซื้อแล้ว', value: 'ordered' },
@@ -1458,6 +1461,19 @@ export default {
       const map = { pending: 'ต่อรอง', negotiating: 'อนุมัติ', approved: 'สั่งซื้อ', ordered: 'รอชำระเงิน', awaiting_payment: 'รอของ', waiting: 'ของพร้อมส่ง', ready_to_ship: 'ของมาแล้ว', received: 'เสร็จสิ้น' }
       return map[status] || ''
     },
+    // เลือกสถานะใหม่จาก dropdown ในตาราง → เปิด dialog ใส่หมายเหตุ
+    pickStatus(item, newStatus) {
+      if (!newStatus || newStatus === item.status) return
+      this.requestStatusChange(item, newStatus)
+    },
+    requestStatusChange(item, toStatus) {
+      if (!toStatus || toStatus === item.status) return
+      this.remarkItem = item
+      this.remarkFromStatus = item.status
+      this.remarkToStatus = toStatus
+      this.remarkText = ''
+      this.showRemarkDialog = true
+    },
     async advanceStatus(item) {
       const next = this.getNextStatus(item.status)
       if (!next) return
@@ -2019,11 +2035,11 @@ export default {
 .vendor-list { border-top: 1.5px solid #f1f5f9; background: #fdfdfe; overflow-x: auto; cursor: grab; }
 /* ข้อความในตารางเลือก/highlight ได้ — cursor เป็น text */
 .vendor-name, .vendor-desc, .tag-notes, .tag-po, .tag-delivery, .tag-amount, .tag-leadtime, .tag-order, .tag-assignee, .status-chip, .visit-owner { cursor: text; }
-.vendor-row-header, .vendor-row { min-width: 1780px; }
+.vendor-row-header, .vendor-row { min-width: 2080px; }
 
 .vendor-row-header {
   display: grid;
-  grid-template-columns: 1.35fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 0.8fr 1.25fr auto;
+  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 0.8fr 1.5fr 290px;
   gap: 0.85rem;
   padding: 0.6rem 1.4rem 0.6rem 3.15rem;
   background: #f8fafc;
@@ -2039,7 +2055,7 @@ export default {
 
 .vendor-row {
   display: grid;
-  grid-template-columns: 1.35fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 0.8fr 1.25fr auto;
+  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 0.8fr 1.5fr 290px;
   align-items: center;
   gap: 0.85rem;
   padding: 0.8rem 1.4rem 0.8rem 3.15rem;
@@ -2192,6 +2208,25 @@ export default {
 .star-toggle:hover { color: #f59e0b !important; }
 .star-toggle.star-on, .star-toggle.star-on:hover { color: #f59e0b !important; }
 .star-toggle .pi { font-size: 0.9rem; }
+.status-pick-dd { width: 150px; }
+.status-pick-dd :deep(.p-dropdown-label) { font-size: 0.76rem; padding: 0 0.5rem; }
+.status-pick-dd :deep(.p-dropdown-trigger) { width: 1.8rem; background: rgba(255,255,255,0.6); color: #475569; }
+/* สี dropdown ตามสถานะปัจจุบัน */
+.status-pick-dd.spd-pending { background: #f1f5f9; } .status-pick-dd.spd-pending :deep(.p-dropdown-label) { color: #334155; font-weight: 700; }
+.status-pick-dd.spd-negotiating { background: #fdf4ff; } .status-pick-dd.spd-negotiating :deep(.p-dropdown-label) { color: #a21caf; font-weight: 700; }
+.status-pick-dd.spd-approved { background: #fef3c7; } .status-pick-dd.spd-approved :deep(.p-dropdown-label) { color: #92400e; font-weight: 700; }
+.status-pick-dd.spd-ordered { background: #dbeafe; } .status-pick-dd.spd-ordered :deep(.p-dropdown-label) { color: #1e40af; font-weight: 700; }
+.status-pick-dd.spd-awaiting_payment { background: #ffedd5; } .status-pick-dd.spd-awaiting_payment :deep(.p-dropdown-label) { color: #c2410c; font-weight: 700; }
+.status-pick-dd.spd-waiting { background: #ede9fe; } .status-pick-dd.spd-waiting :deep(.p-dropdown-label) { color: #6d28d9; font-weight: 700; }
+.status-pick-dd.spd-ready_to_ship { background: #cffafe; } .status-pick-dd.spd-ready_to_ship :deep(.p-dropdown-label) { color: #0e7490; font-weight: 700; }
+.status-pick-dd.spd-received { background: #d1fae5; } .status-pick-dd.spd-received :deep(.p-dropdown-label) { color: #065f46; font-weight: 700; }
+.status-pick-dd.spd-completed { background: #dcfce7; } .status-pick-dd.spd-completed :deep(.p-dropdown-label) { color: #15803d; font-weight: 700; }
+/* กันเนื้อหาล้นคอลัมน์ทับกัน — ตัดที่ขอบคอลัมน์ตัวเองพร้อม tooltip */
+.vendor-row .vendor-col, .vendor-row .vendor-status-area, .vendor-row .vendor-main-info { min-width: 0; overflow: hidden; }
+.vendor-row .tag-po, .vendor-row .tag-order, .vendor-row .tag-delivery, .vendor-row .tag-amount,
+.vendor-row .tag-leadtime, .vendor-row .tag-assignee, .vendor-row .tag-notes, .vendor-row .tag-vendor-note,
+.vendor-row .tag-file-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.vendor-row .vendor-status-area { flex-wrap: wrap; row-gap: 0.2rem; }
 .vn-upload-btn { font-size: 0.78rem !important; }
 .vn-file-pending { border-color: #bfdbfe !important; background: #eff6ff !important; }
 .vn-pending-label { color: #3b82f6; font-weight: 600; }
@@ -2225,6 +2260,11 @@ export default {
 .status-chip.chip-completed { background: #dcfce7; color: #166534; border-color: #86efac; }
 .status-chip.chip-negotiating { background: #fdf4ff; color: #a21caf; border-color: #f5d0fe; }
 .status-chip.chip-awaiting_payment { background: #fff7ed; color: #c2410c; border-color: #fdba74; }
+.status-chip.chip-ready_to_ship { background: #cffafe; color: #0e7490; border-color: #67e8f9; }
+/* จุดสีสถานะใหม่ใน timeline/history */
+.dot-negotiating { background: #d946ef; }
+.dot-awaiting_payment { background: #f97316; }
+.dot-ready_to_ship { background: #22d3ee; }
 
 /* Action Buttons */
 .action-cell { display: flex; align-items: center; gap: 0.3rem; }
@@ -2683,6 +2723,7 @@ export default {
 .sdot-completed { background: #16a34a; }
 .sdot-negotiating { background: #d946ef; }
 .sdot-awaiting_payment { background: #f97316; }
+.sdot-ready_to_ship { background: #22d3ee; }
 
 /* ===== เลือกผู้รับผิดชอบ: วงกลมอักษรแรก + ชื่อ + ตำแหน่ง ===== */
 .user-pick { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }

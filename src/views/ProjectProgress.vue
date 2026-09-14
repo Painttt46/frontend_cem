@@ -268,7 +268,7 @@
   <!-- Step Detail Dialog -->
   <Dialog v-model:visible="showStepDetail" :modal="true" :draggable="false" :closable="true"
     :style="{ width: '900px', maxHeight: '90vh' }" :breakpoints="{ '960px': '92vw', '640px': '97vw' }"
-    :contentStyle="{ overflow: 'hidden' }" class="step-detail-dlg" :showHeader="false">
+    :contentStyle="{ overflowY: 'auto' }" class="step-detail-dlg" :showHeader="false">
     <div v-if="selectedStep" class="step-detail-dialog">
       <!-- Custom Header -->
       <div class="dlg-header" :class="getStepClass(selectedStep)">
@@ -718,7 +718,10 @@ export default {
     // หมายเหตุระดับ vendor ของ step (ใช้ร่วมทุกรายการของ vendor)
     getVendorNote(stepId, vendorName) {
       if (!stepId || !vendorName) return null
-      return this.vendorNotes.find(n => n.step_id === stepId && n.vendor_name === vendorName) || null
+      const note = this.vendorNotes.find(n => n.step_id === stepId && n.vendor_name === vendorName)
+      // คืน null ถ้าไม่มี note หรือ comment ว่าง — กัน render error (.comment.trim() พัง)
+      if (!note || !note.comment || String(note.comment).trim() === '') return null
+      return note
     },
     // ไฟล์แนบระดับ vendor ของ step
     getVendorFiles(stepId, vendorName) {
@@ -1677,6 +1680,9 @@ export default {
 .pi-status-chip.chip-received { background: #d1fae5; color: #065f46; }
 .pi-status-chip.chip-completed { background: #dcfce7; color: #16a34a; }
 .pi-status-chip.chip-ready_to_ship { background: #cffafe; color: #0e7490; }
+.pi-history-dot.dot-negotiating { background: #d946ef; }
+.pi-history-dot.dot-awaiting_payment { background: #f97316; }
+.pi-history-dot.dot-ready_to_ship { background: #22d3ee; }
 .pi-status-chip.chip-negotiating { background: #fdf4ff; color: #a21caf; }
 .pi-status-chip.chip-awaiting_payment { background: #fff7ed; color: #c2410c; }
 
