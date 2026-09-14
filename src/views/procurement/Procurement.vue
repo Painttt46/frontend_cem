@@ -2039,7 +2039,7 @@ export default {
 
 .vendor-row-header {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 0.8fr 1.5fr 290px;
+  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 1.15fr 1.5fr 290px;
   gap: 0.85rem;
   padding: 0.6rem 1.4rem 0.6rem 3.15rem;
   background: #f8fafc;
@@ -2055,7 +2055,7 @@ export default {
 
 .vendor-row {
   display: grid;
-  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 0.8fr 1.5fr 290px;
+  grid-template-columns: 1.3fr 0.7fr 0.8fr 0.8fr 0.8fr 0.65fr 1fr 0.85fr 1.15fr 1.5fr 290px;
   align-items: center;
   gap: 0.85rem;
   padding: 0.8rem 1.4rem 0.8rem 3.15rem;
@@ -2226,6 +2226,7 @@ export default {
 .vendor-row .tag-po, .vendor-row .tag-order, .vendor-row .tag-delivery, .vendor-row .tag-amount,
 .vendor-row .tag-leadtime, .vendor-row .tag-assignee, .vendor-row .tag-notes, .vendor-row .tag-vendor-note,
 .vendor-row .tag-file-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.vendor-row .tag-assignee { white-space: normal; word-break: break-word; line-height: 1.35; }
 .vendor-row .vendor-status-area { flex-wrap: wrap; row-gap: 0.2rem; }
 .vn-upload-btn { font-size: 0.78rem !important; }
 .vn-file-pending { border-color: #bfdbfe !important; background: #eff6ff !important; }
