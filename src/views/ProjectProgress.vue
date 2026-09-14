@@ -362,6 +362,7 @@
                   <i :class="isClusterExpanded(clusterKey(selectedStep.id, cluster)) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="cluster-chevron"></i>
                   <span class="proc-cluster-name">{{ cluster.vendor_name }}</span>
                   <span class="cluster-count"><i class="pi pi-list"></i> {{ cluster.items.length }} รายการ</span>
+                  <span v-if="getVendorFiles(selectedStep.id, cluster.vendor_name).length" class="cluster-files-badge" v-tooltip.top="'ไฟล์แนบของ vendor นี้'"><i class="pi pi-paperclip"></i> {{ getVendorFiles(selectedStep.id, cluster.vendor_name).length }}</span>
                   <span v-if="getProcurementTotalAmountForItems(cluster.items) !== null" class="pi-header-amount"><i class="pi pi-wallet"></i> {{ formatMoney(getProcurementTotalAmountForItems(cluster.items)) }}</span>
                   <span class="proc-cluster-done"><i class="pi pi-check"></i> {{ getClusterDoneCount(cluster.items) }}/{{ cluster.items.length }} ได้ของ/เสร็จ</span>
                 </div>
@@ -378,7 +379,7 @@
                   <div v-if="getVendorFiles(selectedStep.id, cluster.vendor_name).length" class="vendor-files-row">
                     <span class="vfr-label"><i class="pi pi-paperclip"></i> ไฟล์แนบ ({{ getVendorFiles(selectedStep.id, cluster.vendor_name).length }}):</span>
                     <a v-for="f in getVendorFiles(selectedStep.id, cluster.vendor_name)" :key="f.id" :href="f.file_path" :download="f.file_name" class="file-chip" v-tooltip.top="f.file_name + (f.uploaded_by_name ? ' • ' + f.uploaded_by_name : '')">
-                      <i class="pi pi-download"></i> {{ f.file_name }} <span class="file-chip-size">{{ formatFileSize(f.file_size) }}</span>
+                      <i class="pi pi-download"></i> <span class="file-chip-name">{{ f.file_name }}</span> <span class="file-chip-size">{{ formatFileSize(f.file_size) }}</span>
                     </a>
                   </div>
               <div v-for="item in cluster.items" :key="item.id" class="procurement-item" :class="['pi-status-' + item.status, { 'pi-overdue': isProcurementOverdue(item) }]">
@@ -800,7 +801,7 @@ export default {
       return map[status] || status
     },
     formatMoney(amount) {
-      return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(amount)
+      return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(amount)
     },
     getProcurementProgress(status) {
       const map = { pending: 0, negotiating: 10, approved: 20, ordered: 35, awaiting_payment: 50, waiting: 60, ready_to_ship: 75, received: 85, completed: 100 }
@@ -838,6 +839,8 @@ export default {
       // เมื่อเปิด step ใหม่ ให้ auto-expand เฉพาะ vendor ที่ยังไม่เสร็จ/ต้องติดตาม (ไม่ expand ทั้งหมดเพื่อให้อ่านง่าย)
       this.expandedProcurementItems = {}
       if (step.step_type === 'procurement') {
+        // รีเฟรชข้อมูลจัดซื้อทุกครั้งที่เปิด step — กันข้อมูลไฟล์/หมายเหตุเก่า (stale)
+        this.loadProcurementItems()
         const items = this.getProcurementItems(step.id)
         if (items.length === 1) {
           this.expandedProcurementItems[items[0].id] = true
@@ -1534,6 +1537,8 @@ export default {
   white-space: nowrap;
 }
 .proc-cluster-done { margin-left: auto; font-size: 0.8rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
+.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.74rem; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
+.cluster-files-badge i { font-size: 0.66rem; }
 .vendor-note-bar {
   display: flex;
   align-items: flex-start;
@@ -1542,22 +1547,23 @@ export default {
   border: 1px solid #ede9fe;
   border-left: 3px solid #8b5cf6;
   border-radius: 8px;
-  padding: 0.55rem 0.75rem;
-  font-size: 0.84rem;
-  color: #4c1d95;
-  line-height: 1.5;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.94rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.55;
 }
-.vendor-note-bar i { color: #7c3aed; margin-top: 2px; }
-.vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; }
-.vnb-meta { display: block; font-size: 0.74rem; color: #94a3b8; margin-top: 2px; }
+.vendor-note-bar i { color: #7c3aed; margin-top: 3px; font-size: 0.9rem; }
+.vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; white-space: nowrap; }
+.vnb-meta { display: block; font-size: 0.78rem; color: #64748b; margin-top: 3px; font-weight: 400; }
 .proc-cluster-file-chip { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
 .vendor-files-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .vfr-label { font-size: 0.84rem; font-weight: 800; color: #2563eb; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
 .vfr-label i { font-size: 0.66rem; }
-.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; max-width: 260px; overflow: hidden; }
+.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
 .file-chip:hover { background: #dbeafe; transform: translateY(-1px); }
 .file-chip i { font-size: 0.66rem; flex-shrink: 0; }
-.file-chip > span:first-of-type { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-chip-name { white-space: normal; word-break: break-word; line-height: 1.35; }
 .file-chip-size { font-size: 0.64rem; color: #64748b; font-weight: 400; flex-shrink: 0; }
 .file-chip-add { color: #4b5563; background: #f8fafc; border: 1px dashed #cbd5e1; }
 .file-chip-add:hover { background: #eef2f7; color: #1d4ed8; }
@@ -1736,13 +1742,16 @@ export default {
   min-width: 30px;
 }
 .pi-notes {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-style: italic;
+  font-size: 0.9rem;
+  color: #1e293b;
+  font-weight: 600;
+  font-style: normal;
   margin-top: 0.3rem;
-  background: #f8fafc;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  background: #fffbeb;
+  border-left: 3px solid #f59e0b;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  line-height: 1.5;
 }
 .pi-meta-overdue {
   color: #dc2626 !important;
@@ -1786,11 +1795,14 @@ export default {
   font-size: 0.8rem;
 }
 .pi-history-remark {
-  color: #64748b;
-  font-style: italic;
-  background: #f1f5f9;
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
+  color: #92400e;
+  font-weight: 600;
+  font-style: normal;
+  font-size: 0.86rem;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
 }
 .pi-history-time {
   color: #94a3b8;

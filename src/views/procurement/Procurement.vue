@@ -786,6 +786,10 @@
               <label>วันกำหนดส่ง</label>
               <Calendar v-model="currentItem.delivery_date" dateFormat="yy-mm-dd" showIcon class="w-full" />
             </div>
+            <div class="field">
+              <label>Leadtime (วัน)</label>
+              <InputText v-model="currentItem.leadtime" placeholder="เช่น 20 หรือ 15-30" class="w-full" />
+            </div>
           </div>
           <div class="field-group">
             <div class="field">
@@ -1253,7 +1257,7 @@ export default {
       if (v === null || v === undefined || v === '') return null
       const n = Number(v)
       if (isNaN(n)) return null
-      return n.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      return n.toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
     },
     // ผลรวมยอดเงินของรายการชุดหนึ่ง (คืน null ถ้าไม่มีรายการใดมียอดเงินเลย)
     sumAmount(items) {
@@ -1531,13 +1535,17 @@ export default {
       this.currentStep = { id: step.id || step.step_id, task_id: step.task_id }
       this.editingItem = null
       this.showSelectStepDialog = false
-      this.currentItem = { vendor_name: '', item_description: '', po_number: '', order_date: null, delivery_date: null, status: 'pending', notes: '', assigned_user_id: null, assigned_user_name: '' }
+      this.currentItem = { vendor_name: '', item_description: '', po_number: '', order_date: null, delivery_date: null, status: 'pending', notes: '', leadtime: '', assigned_user_id: null, assigned_user_name: '' }
       this.showItemDialog = true
     },
     openEditItem(item) {
       this.currentStep = { id: item.step_id, task_id: item.task_id }
       this.editingItem = item
       this.currentItem = { ...item, order_date: item.order_date ? new Date(item.order_date) : null, delivery_date: item.delivery_date ? new Date(item.delivery_date) : null }
+      // แยก leadtime จาก notes ให้แสดงในฟิลด์ของตัวเอง
+      const ltMatch = item.notes ? String(item.notes).match(/leadtime\s*:?\s*(\d+(?:\s*-\s*\d+)?)\s*วัน/i) : null
+      this.currentItem.leadtime = ltMatch ? ltMatch[1].replace(/\s+/g, '') : ''
+      this.currentItem.notes = item.notes ? String(item.notes).replace(/\s*\*{0,2}\s*leadtime\s*:?\s*\d+(?:\s*-\s*\d+)?\s*วัน\s*/i, ' ').replace(/\s{2,}/g, ' ').trim() : ''
       this.showItemDialog = true
     },
     onAssignedUserChange() {
@@ -1627,7 +1635,10 @@ export default {
         return
       }
 
-      const data = {
+      let notesVal = String(this.currentItem.notes || '').replace(/\s*\*{0,2}\s*leadtime\s*:?\s*\d+(?:\s*-\s*\d+)?\s*วัน\s*/i, ' ').replace(/\s{2,}/g, ' ').trim()
+      const ltVal = String(this.currentItem.leadtime || '').trim()
+      if (ltVal) notesVal = (notesVal ? notesVal + ' ' : '') + '** leadtime ' + ltVal + ' วัน'
+const data = {
         ...this.currentItem,
         vendor_name: vendorName.trim(),
         step_id: this.currentStep.id,
@@ -1635,6 +1646,8 @@ export default {
         order_date: this.currentItem.order_date ? this.fmtDate(this.currentItem.order_date) : null,
         delivery_date: this.currentItem.delivery_date ? this.fmtDate(this.currentItem.delivery_date) : null
       }
+      data.notes = notesVal
+      delete data.leadtime
       try {
         if (this.editingItem) { await axios.put(`/api/procurement/${this.editingItem.id}`, data) }
         else { await axios.post('/api/procurement', data) }
@@ -2336,6 +2349,9 @@ export default {
 .cal-event-badge.badge-overdue { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #b91c1c; }
 .cal-event-badge.badge-new { background: #dbeafe; color: #1e40af; }
 .cal-event-badge.badge-completed { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+.cal-event-badge.badge-negotiating { background: #fdf4ff; color: #a21caf; }
+.cal-event-badge.badge-awaiting_payment { background: #fff7ed; color: #c2410c; }
+.cal-event-badge.badge-ready_to_ship { background: #cffafe; color: #0e7490; }
 .cal-event-badge.badge-delivery { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #b91c1c; }
 .cal-event-time { font-size: 0.67rem; color: #94a3b8; white-space: nowrap; font-weight: 500; }
 .cal-event-remark { display: block; font-size: 0.7rem; color: #64748b; font-style: italic; margin-top: 3px; }
