@@ -2221,8 +2221,8 @@ const data = {
 .star-toggle:hover { color: #f59e0b !important; }
 .star-toggle.star-on, .star-toggle.star-on:hover { color: #f59e0b !important; }
 .star-toggle .pi { font-size: 0.9rem; }
-.status-pick-dd { width: 190px; }
-.status-pick-dd :deep(.p-dropdown-label) { font-size: 0.76rem; padding: 0 0.5rem; }
+.status-pick-dd { width: 190px; min-height: 2.7rem; }
+.status-pick-dd :deep(.p-dropdown-label) { font-size: 0.82rem; padding: 0.5rem 0.6rem; }
 .status-pick-dd :deep(.p-dropdown-trigger) { width: 1.8rem; background: rgba(255,255,255,0.6); color: #475569; }
 /* สี dropdown ตามสถานะปัจจุบัน */
 .status-pick-dd.spd-pending { background: #f1f5f9; } .status-pick-dd.spd-pending :deep(.p-dropdown-label) { color: #334155; font-weight: 700; }

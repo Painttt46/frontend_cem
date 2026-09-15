@@ -1629,8 +1629,8 @@ export default {
 }
 .pi-vendor-desc {
   display: block;
-  font-size: 0.82rem;
-  color: #334155;
+  font-size: 0.88rem;
+  color: #1e293b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1640,7 +1640,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.82rem;
+  font-size: 0.86rem;
   padding: 0.14rem 0.45rem;
   border-radius: 8px;
   white-space: nowrap;
@@ -1693,7 +1693,7 @@ export default {
 .pi-status-chip.chip-awaiting_payment { background: #fff7ed; color: #c2410c; }
 
 .pi-desc {
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   color: #1e293b;
   margin-top: 2px;
 }
@@ -1709,7 +1709,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   color: #1e293b;
   background: #f8fafc;
   padding: 0.1rem 0.4rem;
@@ -1764,16 +1764,16 @@ export default {
   border-top: 1px dashed #e2e8f0;
 }
 .pi-history-title {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  color: #64748b;
+  color: #475569;
   margin-bottom: 0.3rem;
 }
 .pi-history-item {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   padding: 0.2rem 0;
   flex-wrap: wrap;
 }
@@ -1805,7 +1805,8 @@ export default {
   border-radius: 5px;
 }
 .pi-history-time {
-  color: #94a3b8;
+  color: #64748b;
+  font-size: 0.78rem;
   margin-left: auto;
 }
 
