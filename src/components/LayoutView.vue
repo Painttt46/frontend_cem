@@ -27,7 +27,7 @@
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
         :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
-        :v-tooltip="sidebarVisible ? 'ซ่อนเมนู' : 'แสดงเมนู'" />
+        v-tooltip="sidebarVisible ? 'ซ่อนเมนู' : 'แสดงเมนู'" />
 
       <Dialog v-model:visible="visible" header="Setting" 
         :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" 

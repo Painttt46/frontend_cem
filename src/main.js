@@ -87,7 +87,26 @@ app.component('TabView', TabView);
 app.component('TabPanel', TabPanel);
 app.component('Textarea', Textarea);
 app.component('ProgressBar', ProgressBar);
-app.directive('Tooltip', Tooltip);
+// Tooltip directive แบบทนทาน — กัน error "Cannot set properties of null (setting '$_ptooltipModifiers')"
+// เมื่อ element ที่ผูก tooltip ถูกถอดออกระหว่าง render (v-for/v-if swap)
+function safeHook(obj, key) {
+  const orig = obj[key];
+  if (!orig) return undefined;
+  return function (...args) {
+    const el = args[0];
+    if (!el || el.nodeType === 8) return; // null หรือ comment node = element ถูกถอดแล้ว ข้ามได้
+    try { return orig.apply(this, args); } catch { /* ไม่ให้ tooltip พังทั้งหน้า */ }
+  };
+}
+const SafeTooltip = {
+  beforeMount: safeHook(Tooltip, 'beforeMount'),
+  mounted: safeHook(Tooltip, 'mounted'),
+  beforeUpdate: safeHook(Tooltip, 'beforeUpdate'),
+  updated: safeHook(Tooltip, 'updated'),
+  beforeUnmount: safeHook(Tooltip, 'beforeUnmount'),
+  unmounted: safeHook(Tooltip, 'unmounted')
+};
+app.directive('Tooltip', SafeTooltip);
 app.use(ConfirmationService);
 app.use(ToastService);
 

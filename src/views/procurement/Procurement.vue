@@ -1329,8 +1329,8 @@ export default {
       const files = Array.from(e.target.files || [])
       e.target.value = ''
       for (const f of files) {
-        if (f.size > 20 * 1024 * 1024) {
-          this.$toast.add({ severity: 'warn', summary: `ไฟล์ "${f.name}" ใหญ่เกินไป`, detail: 'ขนาดไฟล์ต้องไม่เกิน 20MB', life: 3000 })
+        if (f.size > 200 * 1024 * 1024) {
+          this.$toast.add({ severity: 'warn', summary: `ไฟล์ "${f.name}" ใหญ่เกินไป`, detail: 'ขนาดไฟล์ต้องไม่เกิน 200MB', life: 3000 })
           continue
         }
         this.pendingVendorFiles.push(f)
@@ -1570,8 +1570,8 @@ export default {
         this.$toast.add({ severity: 'warn', summary: 'ไฟล์ไม่ถูกต้อง', detail: 'รองรับเฉพาะไฟล์ .xlsx / .xls', life: 3000 })
         return
       }
-      if (file.size > 20 * 1024 * 1024) {
-        this.$toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'ขนาดไฟล์ต้องไม่เกิน 20MB', life: 3000 })
+      if (file.size > 200 * 1024 * 1024) {
+        this.$toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'ขนาดไฟล์ต้องไม่เกิน 200MB', life: 3000 })
         return
       }
       this.importLoading = true
