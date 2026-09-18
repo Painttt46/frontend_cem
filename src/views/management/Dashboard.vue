@@ -184,7 +184,7 @@
               <div class="summary-content">
                 <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.totalUsers }}</h3>
+                  <h3><CountUp :value="stats.totalUsers" /></h3>
                   <p>ผู้ใช้งานทั้งหมด</p>
                 </div>
               </div>
@@ -196,7 +196,7 @@
               <div class="summary-content">
                 <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.workingToday }}/{{ stats.totalEngineers }}</h3>
+                  <h3><CountUp :value="stats.workingToday" />/<CountUp :value="stats.totalEngineers" /></h3>
                   <p>Engineer ลงงานวันนี้</p>
                 </div>
               </div>
@@ -208,7 +208,7 @@
               <div class="summary-content">
                 <i class="pi pi-calendar-times summary-icon" style="color: #f59e0b"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.todayLeaves }}</h3>
+                  <h3><CountUp :value="stats.todayLeaves" /></h3>
                   <p>ลางานวันนี้</p>
                 </div>
               </div>
@@ -220,7 +220,7 @@
               <div class="summary-content">
                 <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.activeCars }}</h3>
+                  <h3><CountUp :value="stats.activeCars" /></h3>
                   <p>รถกำลังใช้งาน</p>
                 </div>
               </div>
@@ -232,7 +232,7 @@
               <div class="summary-content">
                 <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.dueSoon }}</h3>
+                  <h3><CountUp :value="stats.dueSoon" /></h3>
                   <p>โครงการครบกำหนดสัปดาห์นี้</p>
                 </div>
               </div>
@@ -244,7 +244,7 @@
               <div class="summary-content">
                 <i class="pi pi-exclamation-triangle summary-icon" style="color: #ef4444"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.overdue }}</h3>
+                  <h3><CountUp :value="stats.overdue" /></h3>
                   <p>โครงการที่พ้นกําหนดระยะเวลาตามสัญญา</p>
                 </div>
               </div>
@@ -256,7 +256,7 @@
               <div class="summary-content">
                 <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.activeTasks }}</h3>
+                  <h3><CountUp :value="stats.activeTasks" /></h3>
                   <p>โครงการที่กำลังดำเนินการ</p>
                 </div>
               </div>
@@ -268,7 +268,7 @@
               <div class="summary-content">
                 <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
                 <div class="summary-info">
-                  <h3>{{ stats.completedTasks }}</h3>
+                  <h3><CountUp :value="stats.completedTasks" /></h3>
                   <p>โครงการเสร็จสิ้น</p>
                 </div>
               </div>
@@ -525,15 +525,13 @@
 
 <script setup>
 /* eslint-disable no-unused-vars */
-import { useDragScroll } from '@/composables/useDragScroll'
-useDragScroll('.p-datatable-wrapper')
-
 import { ref, onMounted, onUnmounted, nextTick, watch, computed } from 'vue'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
 import userService from '@/services/userService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import CountUp from '@/components/CountUp.vue'
 import { isCompleted, isActive } from '@/utils/statusHelper'
 
 const { handleError } = useErrorHandler()
@@ -1014,15 +1012,16 @@ const loadData = async () => {
 
   try {
     // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
+    // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
     const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours, userWorkHours] = await Promise.all([
-      userService.getActiveUsers(),
-      axios.get('/api/leave').then(r => r.data),
-      axios.get('/api/settings/dashboard-summary').then(r => r.data),
-      axios.get('/api/tasks').then(r => r.data),
-      axios.get('/api/daily-work/summary').then(r => r.data),
-      axios.get('/api/task-steps/all').then(r => r.data),
-      axios.get('/api/settings/role-work-hours').then(r => r.data).catch(() => []),
-      axios.get('/api/settings/user-work-hours').then(r => r.data).catch(() => [])
+      userService.getActiveUsers(true),
+      axios.get('/api/leave', { silent: true }).then(r => r.data),
+      axios.get('/api/settings/dashboard-summary', { silent: true }).then(r => r.data),
+      axios.get('/api/tasks', { silent: true }).then(r => r.data),
+      axios.get('/api/daily-work/summary', { silent: true }).then(r => r.data),
+      axios.get('/api/task-steps/all', { silent: true }).then(r => r.data),
+      axios.get('/api/settings/role-work-hours', { silent: true }).then(r => r.data).catch(() => []),
+      axios.get('/api/settings/user-work-hours', { silent: true }).then(r => r.data).catch(() => [])
     ])
 
     // สร้าง map ชั่วโมงทำงานต่อวันตาม role และ lunch break

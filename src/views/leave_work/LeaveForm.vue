@@ -409,7 +409,6 @@ export default {
         
         // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
         const rawDays = totalHours / hoursPerDay
-        console.log('[calculateDays] totalHours:', totalHours, 'hoursPerDay:', hoursPerDay, 'rawDays:', rawDays, 'workHours:', JSON.stringify(this.workHours))
         const days = rawDays
         const hoursDisplay = totalHours.toFixed(2)
         const daysDisplay = days.toFixed(2)
@@ -936,7 +935,6 @@ export default {
         
         // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
         const rawDays = totalHours / hoursPerDay
-        console.log('[calculateTotalDays] totalHours:', totalHours, 'hoursPerDay:', hoursPerDay, 'rawDays:', rawDays)
         return Math.round(rawDays * 10000) / 10000
       }
       return 0

@@ -412,11 +412,12 @@ export default {
     async loadAll() {
       this.loading = true
       try {
+        // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
         const [visitsRes, customersRes, tasksRes, usersRes] = await Promise.all([
-          axios.get('/api/sales-visits'),
-          axios.get('/api/sales-visits/customers'),
-          axios.get('/api/tasks'),
-          axios.get('/api/users')
+          axios.get('/api/sales-visits', { silent: true }),
+          axios.get('/api/sales-visits/customers', { silent: true }),
+          axios.get('/api/tasks', { silent: true }),
+          axios.get('/api/users', { silent: true })
         ])
         this.visits = visitsRes.data
         this.customers = customersRes.data

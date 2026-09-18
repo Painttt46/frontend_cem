@@ -7,14 +7,14 @@ class UserService {
    * @param {boolean} useCache - Use cache or force refresh
    * @returns {Promise<Array>}
    */
-  async getUsers(useCache = true) {
+  async getUsers(useCache = true, silent = false) {
     const cacheKey = 'users:all'
-    
+
     if (useCache) {
       return cache.getOrSet(
         cacheKey,
         async () => {
-          const response = await axios.get('/api/users')
+          const response = await axios.get('/api/users', { silent })
           return response.data
         },
         5 * 60 * 1000 // 5 minutes
@@ -22,17 +22,18 @@ class UserService {
     }
 
     // Force refresh
-    const response = await axios.get('/api/users')
+    const response = await axios.get('/api/users', { silent })
     cache.set(cacheKey, response.data)
     return response.data
   }
 
   /**
    * Get active users only
+   * @param {boolean} silent - Skip global loading overlay
    * @returns {Promise<Array>}
    */
-  async getActiveUsers() {
-    const users = await this.getUsers()
+  async getActiveUsers(silent = false) {
+    const users = await this.getUsers(true, silent)
     return users.filter(u => u.is_active)
   }
 

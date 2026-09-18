@@ -395,7 +395,6 @@ export default {
       try {
         // Step 1: ดึง Preview ก่อน
         const res = await axios.get('/api/erp-sync/preview', { timeout: 300000, silent: true })
-        console.log('[syncERP] preview:', res.data)
         
         this.previewData = res.data
         this.showPreview = true
@@ -418,7 +417,6 @@ export default {
       try {
         // Step 2: Sync จริง
         const res = await axios.post('/api/erp-sync/projects', {}, { timeout: 300000, silent: true })
-        console.log('[confirmSync] response:', res.data)
         this.syncData = { ...res.data, syncedAt: new Date().toLocaleString('th-TH') }
         this.showSyncResult = true
         await this.loadSyncHistory()

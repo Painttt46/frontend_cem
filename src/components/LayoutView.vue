@@ -212,7 +212,6 @@ var soc_role = ref();
 var soc_firstname = ref();
 var soc_lastname = ref();
 
-var users = ref();
 var currentTime = ref(new Date());
 
 const currentDateTime = computed(() => {
@@ -225,13 +224,6 @@ const currentDateTime = computed(() => {
     second: '2-digit'
   })
 });
-
-function fetchData() {
-  axios.get('/user', {
-  }).then(user_response => {
-    users.value = user_response.data.data;
-  });
-}
 
 const resetTimer = () => {
   timeout.value = 300; // รีเซ็ตเวลาเป็น 5 นาที
@@ -257,7 +249,6 @@ onMounted(() => {
   setInterval(() => {
     currentTime.value = new Date();
   }, 1000);
-  fetchData
 });
 
 onUnmounted(() => {
@@ -311,7 +302,7 @@ const startCountdown = () => {
       clearInterval(countdownTimer);
       reloadTab();
     }
-  }, 2000);
+  }, 1000);
 };
 </script>
 

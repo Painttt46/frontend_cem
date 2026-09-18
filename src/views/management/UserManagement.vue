@@ -217,9 +217,6 @@ import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { FilterMatchMode } from 'primevue/api'
 import axios from '@/utils/axiosConfig'
-import { useDragScroll } from '@/composables/useDragScroll'
-
-useDragScroll('.p-datatable-wrapper')
 
 const toast = useToast()
 

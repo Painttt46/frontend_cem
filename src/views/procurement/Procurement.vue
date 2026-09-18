@@ -835,13 +835,10 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import { useConfirm } from 'primevue/useconfirm'
-import { useDragScroll } from '@/composables/useDragScroll'
 
 export default {
   name: 'ProcurementView',
   setup() {
-    // ตาราง preview import: กดค้างแล้วลากเพื่อเลื่อนซ้าย-ขวาได้เลย (ไม่ต้องใช้ scroll bar)
-    useDragScroll('.import-preview-table')
     return { $confirm: useConfirm() }
   },
   data() {
@@ -1180,10 +1177,10 @@ export default {
     async loadData() {
       try {
         const [stepsRes, itemsRes, usersRes, vendorsRes, vendorNotesRes, vendorFilesRes] = await Promise.all([
-          axios.get('/api/task-steps/procurement'),
-          axios.get('/api/procurement'),
-          axios.get('/api/users'),
-          axios.get('/api/procurement/vendors'),
+          axios.get('/api/task-steps/procurement', { silent: true }),
+          axios.get('/api/procurement', { silent: true }),
+          axios.get('/api/users', { silent: true }),
+          axios.get('/api/procurement/vendors', { silent: true }),
           axios.get('/api/procurement/vendor-notes', { silent: true }).catch(() => ({ data: [] })),
           axios.get('/api/procurement/vendor-files', { silent: true }).catch(() => ({ data: [] }))
         ])

@@ -222,9 +222,6 @@
 </template>
 
 <script setup>
-import { useDragScroll } from '@/composables/useDragScroll'
-useDragScroll('.p-datatable-wrapper')
-
 import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'

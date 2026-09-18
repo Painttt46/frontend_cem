@@ -234,7 +234,7 @@ async function auth(username, password) {
     const ipData = await ipResponse.json();
     clientIp = ipData.ip;
   } catch (e) {
-    console.log('Could not get public IP');
+    // ไม่สามารถดึง public IP ได้ - ไม่ critical ข้ามไปได้
   }
 
   // Use proxy instead of direct localhost

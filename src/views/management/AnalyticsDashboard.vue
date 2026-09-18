@@ -29,50 +29,65 @@
         <div class="chart-section">
           <!-- Workload Stats -->
           <div class="stats-grid mb-4">
-            <Card class="stat-card">
-              <template #content>
-                <div class="stat-content">
-                  <i class="pi pi-clock" style="color: #4A90E2"></i>
-                  <div>
-                    <h3>{{ workloadStats.totalHours }}</h3>
-                    <p>ชั่วโมงทำงานรวม</p>
+            <template v-if="loading">
+              <Card v-for="i in 4" :key="i" class="stat-card">
+                <template #content>
+                  <div class="stat-content">
+                    <div class="skeleton skeleton-icon"></div>
+                    <div>
+                      <div class="skeleton skeleton-text" style="width: 60px; height: 28px;"></div>
+                      <div class="skeleton skeleton-text" style="width: 100px; height: 14px; margin-top: 8px;"></div>
+                    </div>
                   </div>
-                </div>
-              </template>
-            </Card>
-            <Card class="stat-card">
-              <template #content>
-                <div class="stat-content">
-                  <i class="pi pi-users" style="color: #10b981"></i>
-                  <div>
-                    <h3>{{ workloadStats.activeUsers }}</h3>
-                    <p>พนักงานที่บันทึกงาน</p>
+                </template>
+              </Card>
+            </template>
+            <template v-else>
+              <Card class="stat-card">
+                <template #content>
+                  <div class="stat-content">
+                    <i class="pi pi-clock" style="color: #4A90E2"></i>
+                    <div>
+                      <h3><CountUp :value="workloadStats.totalHours" /></h3>
+                      <p>ชั่วโมงทำงานรวม</p>
+                    </div>
                   </div>
-                </div>
-              </template>
-            </Card>
-            <Card class="stat-card">
-              <template #content>
-                <div class="stat-content">
-                  <i class="pi pi-chart-bar" style="color: #f59e0b"></i>
-                  <div>
-                    <h3>{{ workloadStats.avgHours }}</h3>
-                    <p>เฉลี่ยต่อคน/เดือน</p>
+                </template>
+              </Card>
+              <Card class="stat-card">
+                <template #content>
+                  <div class="stat-content">
+                    <i class="pi pi-users" style="color: #10b981"></i>
+                    <div>
+                      <h3><CountUp :value="workloadStats.activeUsers" /></h3>
+                      <p>พนักงานที่บันทึกงาน</p>
+                    </div>
                   </div>
-                </div>
-              </template>
-            </Card>
-            <Card class="stat-card">
-              <template #content>
-                <div class="stat-content">
-                  <i class="pi pi-calendar" style="color: #8b5cf6"></i>
-                  <div>
-                    <h3>{{ workloadStats.workDays }}</h3>
-                    <p>วันทำงานรวม</p>
+                </template>
+              </Card>
+              <Card class="stat-card">
+                <template #content>
+                  <div class="stat-content">
+                    <i class="pi pi-chart-bar" style="color: #f59e0b"></i>
+                    <div>
+                      <h3><CountUp :value="workloadStats.avgHours" /></h3>
+                      <p>เฉลี่ยต่อคน/เดือน</p>
+                    </div>
                   </div>
-                </div>
-              </template>
-            </Card>
+                </template>
+              </Card>
+              <Card class="stat-card">
+                <template #content>
+                  <div class="stat-content">
+                    <i class="pi pi-calendar" style="color: #8b5cf6"></i>
+                    <div>
+                      <h3><CountUp :value="workloadStats.workDays" /></h3>
+                      <p>วันทำงานรวม</p>
+                    </div>
+                  </div>
+                </template>
+              </Card>
+            </template>
           </div>
 
           <Card class="mb-4">
@@ -102,17 +117,32 @@
       <TabPanel header="📅 สถิติการลา">
         <div class="chart-section">
           <div class="stats-grid mb-4">
-            <Card v-for="(stat, key) in leaveStats" :key="key" class="stat-card" @click="showLeaveDetail()" style="cursor: pointer;">
-              <template #content>
-                <div class="stat-content">
-                  <i :class="stat.icon" :style="{ color: stat.color }"></i>
-                  <div>
-                    <h3>{{ stat.value }}</h3>
-                    <p>{{ stat.label }}</p>
+            <template v-if="loading">
+              <Card v-for="i in 4" :key="i" class="stat-card">
+                <template #content>
+                  <div class="stat-content">
+                    <div class="skeleton skeleton-icon"></div>
+                    <div>
+                      <div class="skeleton skeleton-text" style="width: 60px; height: 28px;"></div>
+                      <div class="skeleton skeleton-text" style="width: 100px; height: 14px; margin-top: 8px;"></div>
+                    </div>
                   </div>
-                </div>
-              </template>
-            </Card>
+                </template>
+              </Card>
+            </template>
+            <template v-else>
+              <Card v-for="(stat, key) in leaveStats" :key="key" class="stat-card" @click="showLeaveDetail()" style="cursor: pointer;">
+                <template #content>
+                  <div class="stat-content">
+                    <i :class="stat.icon" :style="{ color: stat.color }"></i>
+                    <div>
+                      <h3><CountUp :value="stat.value" /></h3>
+                      <p>{{ stat.label }}</p>
+                    </div>
+                  </div>
+                </template>
+              </Card>
+            </template>
           </div>
 
           <!-- Leave Detail Table -->
@@ -186,8 +216,10 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
 import { useErrorHandler } from '@/composables/useErrorHandler'
+import CountUp from '@/components/CountUp.vue'
 
 const { handleError } = useErrorHandler()
+const loading = ref(true)
 
 // Filters
 const currentYear = new Date().getFullYear()
@@ -248,7 +280,6 @@ const filteredDailyWork = computed(() => {
     const workYear = new Date(w.work_date).getFullYear()
     return workYear === selectedYear.value && userIds.has(w.user_id)
   })
-  console.log('filteredDailyWork:', filtered.length, 'selectedYear:', selectedYear.value, 'total:', dailyWork.value.length)
   return filtered
 })
 
@@ -259,7 +290,6 @@ const filteredLeaves = computed(() => {
     const leaveYear = new Date(l.start_datetime).getFullYear()
     return leaveYear === selectedYear.value && userIds.has(l.user_id)
   })
-  console.log('filteredLeaves:', filtered.length, 'total leaves:', leaves.value.length)
   return filtered
 })
 
@@ -403,26 +433,21 @@ const leaveByType = computed(() => {
 })
 // Methods
 const loadData = async () => {
+  loading.value = true
   try {
+    // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
     const [usersRes, workRes, leavesRes, tasksRes, leaveTypesRes] = await Promise.all([
-      axios.get('/api/users'),
-      axios.get('/api/daily-work'),
-      axios.get('/api/leave'),
-      axios.get('/api/tasks'),
-      axios.get('/api/leave/leave-types')
+      axios.get('/api/users', { silent: true }),
+      axios.get('/api/daily-work', { silent: true }),
+      axios.get('/api/leave', { silent: true }),
+      axios.get('/api/tasks', { silent: true }),
+      axios.get('/api/leave/leave-types', { silent: true })
     ])
 
     users.value = usersRes.data // ไม่ filter status เพราะอาจไม่มี field นี้
     dailyWork.value = workRes.data
     leaves.value = leavesRes.data
     tasks.value = tasksRes.data
-
-    console.log('Loaded data:', {
-      users: users.value.length,
-      dailyWork: dailyWork.value.length,
-      leaves: leaves.value.length,
-      tasks: tasks.value.length
-    })
 
     // Department options
     const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))]
@@ -435,6 +460,8 @@ const loadData = async () => {
     renderCharts()
   } catch (error) {
     handleError(error, { customMessage: 'ไม่สามารถโหลดข้อมูลได้' })
+  } finally {
+    loading.value = false
   }
 }
 

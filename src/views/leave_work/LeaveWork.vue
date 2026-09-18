@@ -503,7 +503,6 @@ export default {
         const myLevel2 = level2.find(a => a.user_id == userId)
 
         this.isInApprovalList = !!(myLevel1?.can_approve || myLevel2?.can_approve)
-        console.log("[LeaveWork] role:", localStorage.getItem("soc_role"), "myLevel1:", myLevel1, "myLevel2:", myLevel2, "isInApprovalList:", this.isInApprovalList)
 
         // can_approve ใช้สำหรับปุ่มอนุมัติเท่านั้น
         const myLevel1Approve = level1.find(a => a.user_id == userId && a.can_approve)

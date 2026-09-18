@@ -65,7 +65,7 @@ export default {
       let startX, scrollLeft, wrapper = null
 
       document.addEventListener('mousedown', (e) => {
-        const el = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container')
+        const el = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container, .import-preview-table')
         if (!el) return
         
         wrapper = el

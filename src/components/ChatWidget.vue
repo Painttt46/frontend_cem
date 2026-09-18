@@ -202,7 +202,15 @@ export default {
       localStorage.removeItem('gent_chat_history');
     },
     formatMessage(text) {
-      return text?.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') || '';
+      if (!text) return '';
+      // escape HTML ก่อนเสมอ กัน XSS จากข้อความที่มาจาก webhook ภายนอก/ประวัติแชท
+      const escaped = String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+      return escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
     },
     scrollToBottom() {
       this.$nextTick(() => {
