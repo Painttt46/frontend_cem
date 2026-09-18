@@ -340,10 +340,12 @@ const loadAuditLogs = async () => {
     if (logFilter.value.table_name) params.append('table_name', logFilter.value.table_name)
     if (logFilter.value.action) params.append('action', logFilter.value.action)
     if (logFilter.value.dateRange?.[0]) {
-      params.append('start_date', logFilter.value.dateRange[0].toISOString().split('T')[0])
+      const localYMD = (d) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+      params.append('start_date', localYMD(logFilter.value.dateRange[0]))
     }
     if (logFilter.value.dateRange?.[1]) {
-      params.append('end_date', logFilter.value.dateRange[1].toISOString().split('T')[0])
+      const localYMD2 = (d) => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}` }
+      params.append('end_date', localYMD2(logFilter.value.dateRange[1]))
     }
     params.append('limit', '50')
 

@@ -357,8 +357,8 @@
             </div>
             <div class="procurement-items-list">
               <template v-for="cluster in getProcurementClusters(selectedStep.id)" :key="clusterKey(selectedStep.id, cluster)">
-                <!-- vendor ซ้ำหลายรายการ: รวมเป็น dropdown ย่อย -->
-                <div v-if="cluster.repeated" class="proc-cluster-header" @click="toggleProcurementCluster(clusterKey(selectedStep.id, cluster))">
+                <!-- ทุก vendor เป็น dropdown ย่อย (รวม vendor ที่มีรายการเดียว) — ไฟล์/หมายเหตุโหลดแสดงในนั้น -->
+                <div class="proc-cluster-header" @click="toggleProcurementCluster(clusterKey(selectedStep.id, cluster))">
                   <i :class="isClusterExpanded(clusterKey(selectedStep.id, cluster)) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" class="cluster-chevron"></i>
                   <span class="proc-cluster-name">{{ cluster.vendor_name }}</span>
                   <span class="cluster-count"><i class="pi pi-list"></i> {{ cluster.items.length }} รายการ</span>
@@ -366,7 +366,7 @@
                   <span v-if="getProcurementTotalAmountForItems(cluster.items) !== null" class="pi-header-amount"><i class="pi pi-wallet"></i> {{ formatMoney(getProcurementTotalAmountForItems(cluster.items)) }}</span>
                   <span class="proc-cluster-done"><i class="pi pi-check"></i> {{ getClusterDoneCount(cluster.items) }}/{{ cluster.items.length }} ได้ของ/เสร็จ</span>
                 </div>
-                <div v-show="!cluster.repeated || isClusterExpanded(clusterKey(selectedStep.id, cluster))" class="proc-cluster-body" :class="{ 'is-nested': cluster.repeated }">
+                <div v-show="isClusterExpanded(clusterKey(selectedStep.id, cluster))" class="proc-cluster-body" :class="{ 'is-nested': cluster.repeated }">
                   <!-- หมายเหตุระดับ vendor (ใช้ร่วมทุกรายการ) -->
                   <div v-if="getVendorNote(selectedStep.id, cluster.vendor_name)" class="vendor-note-bar">
                     <i class="pi pi-shop"></i>

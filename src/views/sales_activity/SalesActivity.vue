@@ -463,8 +463,8 @@ export default {
       try {
         const payload = {
           ...this.form,
-          visit_date: this.form.visit_date instanceof Date ? this.form.visit_date.toISOString() : this.form.visit_date,
-          visit_end_date: this.form.visit_end_date instanceof Date ? this.form.visit_end_date.toISOString() : this.form.visit_end_date,
+          visit_date: this.form.visit_date instanceof Date ? this.fmtDate(this.form.visit_date) : this.form.visit_date,
+          visit_end_date: this.form.visit_end_date instanceof Date ? this.fmtDate(this.form.visit_end_date) : this.form.visit_end_date,
           next_visit_date: this.form.next_visit_date instanceof Date ? this.fmtDate(this.form.next_visit_date) : this.form.next_visit_date,
           internal_attendees: (this.form.internal_attendees || []).map(u => typeof u === 'object' ? { id: u.id, name: u.name, position: u.position } : u),
           // ตัด action item ที่ไม่ได้กรอกข้อความออกก่อนบันทึก

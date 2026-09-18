@@ -154,13 +154,33 @@ const matchesDateFormat = (value, query) => {
   return formats.some(f => normalizeText(f).includes(query))
 }
 
+// แปลงข้อความวันที่ → ISO yyyy-mm-dd (รองรับ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd)
+const toIsoDate = (text) => {
+  if (!text) return ''
+  const str = String(text).trim()
+  const dmy = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
+  if (dmy) {
+    return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`
+  }
+  const iso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (iso) {
+    return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`
+  }
+  return ''
+}
+
 // Deep search in nested objects and arrays
 const deepSearch = (obj, query) => {
   if (obj === null || obj === undefined) return false
   
   // String or number - direct match or date format match
   if (typeof obj === 'string' || typeof obj === 'number') {
-    return normalizeText(obj).includes(query) || matchesDateFormat(obj, query)
+    if (normalizeText(obj).includes(query) || matchesDateFormat(obj, query)) return true
+    // รองรับค้นด้วยรูปแบบวันที่ที่ต่างจากข้อมูล เช่น พิมพ์ 08/07/2026 เจอ 2026-07-08
+    const objIso = toIsoDate(obj)
+    const queryIso = toIsoDate(query)
+    if (objIso && queryIso) return objIso === queryIso || objIso.startsWith(queryIso)
+    return false
   }
   
   // Array - search each element
@@ -213,6 +233,24 @@ const getNestedValue = (obj, path) => {
 const applyFilter = (item, filter) => {
   const fieldValue = normalizeText(getNestedValue(item, filter.column))
   const searchValue = normalizeText(filter.value)
+
+  // date-aware: ค่าในตารางเป็นวันที่ → เทียบแบบวันที่ (รับ input ได้ทั้ง dd/mm/yyyy และ yyyy-mm-dd)
+  const fieldIso = toIsoDate(fieldValue)
+  const searchIso = toIsoDate(searchValue)
+  if (fieldIso !== '' && searchIso !== '') {
+    switch (filter.operator) {
+      case 'equals':
+        return fieldIso === searchIso
+      case 'notEquals':
+        return fieldIso !== searchIso
+      case 'greaterThan':
+        return fieldIso > searchIso
+      case 'lessThan':
+        return fieldIso < searchIso
+      default:
+        return fieldIso.includes(searchIso)
+    }
+  }
 
   switch (filter.operator) {
     case 'contains':

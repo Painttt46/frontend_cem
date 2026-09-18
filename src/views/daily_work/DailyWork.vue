@@ -155,6 +155,10 @@ export default {
       const map = {}
       this.workRecords.filter(r => String(r.task_id) === String(this.filterTask)).forEach(r => {
         if (r.step_id && r.step_name) map[r.step_id] = r.step_name
+        // รายการแบบหลายขั้นตอน (step_ids) — ดึงชื่อขั้นตอนจาก steps_data ด้วย
+        if (Array.isArray(r.steps_data)) {
+          r.steps_data.forEach(s => { if (s.id && s.step_name) map[s.id] = s.step_name })
+        }
       })
       return Object.entries(map).map(([v, l]) => ({ value: v, label: l }))
     },
@@ -163,7 +167,10 @@ export default {
       if (this.activeFilter === 'today') records = records.filter(r => r.work_date && r.work_date.substring(0, 10) === this.todayStr)
       else if (this.activeFilter === 'future') records = records.filter(r => r.work_date && r.work_date.substring(0, 10) > this.todayStr)
       if (this.filterTask) records = records.filter(r => String(r.task_id) === String(this.filterTask))
-      if (this.filterStep) records = records.filter(r => String(r.step_id) === String(this.filterStep))
+      if (this.filterStep) records = records.filter(r =>
+        String(r.step_id) === String(this.filterStep) ||
+        (Array.isArray(r.steps_data) && r.steps_data.some(s => String(s.id) === String(this.filterStep)))
+      )
       return records
     },
     currentDateTime() {

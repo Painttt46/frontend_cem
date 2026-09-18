@@ -1090,7 +1090,8 @@ const loadData = async () => {
     // Calculate stats
     stats.value.totalUsers = activeUsers.length
 
-    const today = new Date().toISOString().split('T')[0]
+    const nowLocal = new Date()
+    const today = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}`
     const todayDate = new Date(today + 'T00:00:00') // Local midnight
     const weekFromNow = new Date(todayDate)
     weekFromNow.setDate(weekFromNow.getDate() + 7)
