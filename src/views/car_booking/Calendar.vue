@@ -13,6 +13,20 @@
           <i class="pi pi-chevron-right"></i>
         </button>
       </div>
+      <!-- Active booking countdown -->
+      <div v-if="activeBookingInfo" class="active-countdown" :class="{ 'countdown-urgent': activeBookingInfo.urgent }">
+        <i class="pi pi-car"></i>
+        <div class="countdown-text">
+          <div class="countdown-main">
+            <strong>รถกำลังใช้งาน</strong>
+            <span class="countdown-dot">·</span>
+            <span>คืนรถ {{ activeBookingInfo.time }}</span>
+            <span class="countdown-left">{{ activeBookingInfo.remaining }}</span>
+          </div>
+          <small v-if="activeBookingInfo.urgent">ครบเวลาแล้วระบบจะปิดรายการให้อัตโนมัติ</small>
+        </div>
+      </div>
+
       <!-- Car Status Bar -->
       <div class="car-status-bar">
         <div class="status-item">
@@ -47,6 +61,7 @@
             'other-month': !date.isCurrentMonth,
             'has-booking': hasBookingOnDate(date.date),
             'active-usage': isActiveUsage(date.date),
+            'returned-day': isReturnedDate(date.date) && !isActiveUsage(date.date),
             'today': isToday(date.date),
             'past-date': isPastDate(date.date)
           }]" @click="date.isCurrentMonth && selectDate(date.date)">
@@ -56,6 +71,12 @@
             </div>
             <div v-if="hasBookingOnDate(date.date) && !isActiveUsage(date.date)" class="booking-text-center">
               <div class="booking-text">จองเเล้ว</div>
+            </div>
+            <div v-if="isReturnedDate(date.date) && !isActiveUsage(date.date) && !hasBookingOnDate(date.date)" class="booking-indicator">
+              <span class="booking-emoji">{{ isAutoReturnedDate(date.date) ? '⏱️' : '✅' }}</span>
+            </div>
+            <div v-if="isReturnedDate(date.date) && !isActiveUsage(date.date) && !hasBookingOnDate(date.date)" class="booking-text-center">
+              <div class="booking-text returned-text" :class="{ 'auto': isAutoReturnedDate(date.date) }">{{ isAutoReturnedDate(date.date) ? 'คืนอัตโนมัติ' : 'คืนแล้ว' }}</div>
             </div>
 
 
@@ -291,10 +312,33 @@ export default {
       selectedCarRecord: null,
       latestFuel: 50,
       latestEasyPass: 500,
-      latestReturnLocation: null
+      latestReturnLocation: null,
+      now: new Date(),
+      countdownTimer: null
     }
   },
   computed: {
+    activeBookingInfo() {
+      const active = (this.records || []).find(r => r.status === 'active')
+      if (!active) return null
+      const base = new Date(active.expected_return_date || active.selected_date)
+      const [h, m] = String(active.expected_return_time || '').split(':').map(Number)
+      if (!h && h !== 0) return null
+      const exp = new Date(base)
+      exp.setHours(h, m || 0, 0, 0)
+      const diffMs = exp - this.now
+      const passed = diffMs <= 0
+      const mins = Math.floor(Math.abs(diffMs) / 60000)
+      const hours = Math.floor(mins / 60)
+      const remaining = passed
+        ? 'เกินเวลาแล้ว ระบบจะปิดรายการให้อัตโนมัติในไม่ช้า'
+        : hours > 0 ? `อีก ${hours} ชม. ${mins % 60} น.` : `อีก ${mins} นาที`
+      return {
+        time: active.expected_return_time,
+        remaining,
+        urgent: passed || mins <= 30
+      }
+    },
     monthYear() {
       return this.currentDate.toLocaleDateString('th-TH', {
         year: 'numeric',
@@ -327,6 +371,11 @@ export default {
   },
   mounted() {
     this.fetchLatestFuel()
+    // นาฬิกาสำหรับ countdown เวลาคืนรถ
+    this.countdownTimer = setInterval(() => { this.now = new Date() }, 30000)
+  },
+  beforeUnmount() {
+    if (this.countdownTimer) clearInterval(this.countdownTimer)
   },
   methods: {
     formatColleagues(colleagues) {
@@ -419,12 +468,27 @@ export default {
       checkDate.setHours(0, 0, 0, 0)
       return checkDate < today
     },
+    // วันที่ "จองเเล้ว" = เฉพาะ pending (รอเวลาใช้งาน) — active แสดงเป็นสีใช้งานอยู่แท้
     hasBookingOnDate(date) {
       const dateStr = date.toDateString()
 
       return this.records.some(r =>
-        (r.status === 'pending' || r.status === 'active') &&
+        r.status === 'pending' &&
         new Date(r.selected_date).toDateString() === dateStr
+      )
+    },
+    // วันที่มีการคืนรถ (จาก flow ใหม่: คืนก่อนเวลา หรือ ระบบปิดให้อัตโนมัติ)
+    isReturnedDate(date) {
+      return this.records.some(r => {
+        if (r.status !== 'returned') return false
+        const ret = r.return_date || r.expected_return_date || r.selected_date
+        return new Date(ret).toDateString() === date.toDateString()
+      })
+    },
+    isAutoReturnedDate(date) {
+      return this.records.some(r =>
+        r.status === 'returned' && r.auto_returned &&
+        new Date(r.return_date || r.expected_return_date || r.selected_date).toDateString() === date.toDateString()
       )
     },
     isActiveUsage(date) {
@@ -432,20 +496,28 @@ export default {
       const activeBooking = this.records.find(r => r.status === 'active')
       if (!activeBooking) return false
 
+      // เทียบที่ระดับ "วัน" (กันผลจาก timezone parsing ของ string YYYY-MM-DD)
       const borrowDate = new Date(activeBooking.selected_date)
+      borrowDate.setHours(0, 0, 0, 0)
+
+      const day = new Date(date)
+      day.setHours(0, 0, 0, 0)
+
       const today = new Date()
+      today.setHours(0, 0, 0, 0)
 
       // If there's a return_date, use it as end date
       let endDate
       if (activeBooking.return_date) {
         endDate = new Date(activeBooking.return_date)
+        endDate.setHours(0, 0, 0, 0)
       } else {
         // If no return date, only show up to today (no future dates)
         endDate = today
       }
 
       // Show active status from borrow date to end date (but not beyond today)
-      return date >= borrowDate && date <= endDate && date <= today
+      return day >= borrowDate && day <= endDate && day <= today
     },
     isToday(date) {
       const today = new Date()
@@ -486,6 +558,48 @@ export default {
   font-weight: bold;
   display: inline-block;
   width: fit-content;
+}
+
+/* Active countdown banner */
+.active-countdown {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1.5px solid #93c5fd;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  margin: 0.85rem 0;
+  font-size: 0.85rem;
+  color: #1e3a8a;
+}
+.active-countdown i { font-size: 1.3rem; color: #2563eb; flex-shrink: 0; }
+.countdown-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.countdown-main { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; line-height: 1.4; }
+.countdown-main strong { white-space: nowrap; }
+.countdown-dot { color: #93c5fd; font-weight: 800; }
+.countdown-left {
+  font-weight: 800;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid #bfdbfe;
+  padding: 0.1rem 0.55rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+.countdown-text small { color: #b45309; font-weight: 600; }
+.active-countdown.countdown-urgent {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-color: #fbbf24;
+  color: #92400e;
+}
+.active-countdown.countdown-urgent i { color: #d97706; }
+.active-countdown.countdown-urgent .countdown-dot { color: #fcd34d; }
+.active-countdown.countdown-urgent .countdown-left {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.12);
+  border-color: #fcd34d;
 }
 
 /* Car Status Bar */
@@ -709,6 +823,16 @@ export default {
   border-radius: 3px;
 }
 
+/* วันที่คืนรถแล้ว / คืนอัตโนมัติ */
+.calendar-day.returned-day {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.booking-text.returned-text { color: #475569; }
+
+.booking-text.returned-text.auto { color: #6d28d9; }
+
 .booking-emoji {
   font-size: 1.3rem;
   animation: bookingPulse 2s ease-in-out infinite;
@@ -808,6 +932,24 @@ export default {
 @media (max-width: 480px) {
   .calendar-container {
     margin: 0.25rem;
+  }
+
+  /* Banner นับเวลาคืนรถ: จัด 2 บรรทัดแบบตั้งใจ ไม่ให้ตัวอักษรหลุดเป็นท่อน ๆ */
+  .active-countdown {
+    padding: 0.6rem 0.75rem;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+  }
+  .countdown-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  .countdown-dot {
+    display: none;
+  }
+  .countdown-left {
+    align-self: flex-start;
   }
 
   .calendar-header {

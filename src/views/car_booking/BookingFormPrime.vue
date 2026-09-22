@@ -36,9 +36,37 @@
 
             <label for="time" class="input-label">เวลา *</label>
 
-            <InputText id="time" :value="borrowForm.time" @input="updateBorrowForm('time', $event.target.value)"
+            <Calendar id="time" v-model="pickupTimeModel" timeOnly hourFormat="24"
 
-              type="time" required class="corporate-input" />
+              placeholder="เลือกเวลา (นาฬิกา 24 ชม.)" class="w-full" />
+
+          </div>
+
+
+
+          <div class="input-group">
+
+            <label for="expectedReturnTime" class="input-label">เวลาคืนรถ (โดยประมาณ) *</label>
+
+            <Calendar id="expectedReturnTime" v-model="expectedReturnTimeModel" timeOnly hourFormat="24"
+
+              placeholder="เลือกเวลา (นาฬิกา 24 ชม.)" class="w-full" />
+
+            <small class="field-hint">ครบเวลานี้ระบบจะปิดรายการให้อัตโนมัติ (คืนก่อนเวลาได้)</small>
+
+          </div>
+
+
+
+          <div class="input-group">
+
+            <label for="expectedReturnDate" class="input-label">วันที่คืนรถ</label>
+
+            <Calendar id="expectedReturnDate" :modelValue="borrowForm.expected_return_date || selectedDate"
+
+              @update:modelValue="updateBorrowForm('expected_return_date', $event)"
+
+              dateFormat="dd/mm/yy" :minDate="selectedDate" class="w-full" :showIcon="true" />
 
           </div>
 
@@ -74,23 +102,53 @@
 
                 <div v-if="slotProps.value" class="task-selected">
 
-                  <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
+                  <div class="proj-icon"><i class="pi pi-briefcase"></i></div>
 
-                  <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
+                  <div class="task-selected-info">
+
+                    <div class="task-selected-name">
+
+                      <span v-if="getTaskSO(slotProps.value)" class="so-badge">{{ getTaskSO(slotProps.value) }}</span>
+
+                      <span class="task-name-text">{{ getTaskName(slotProps.value) }}</span>
+
+                    </div>
+
+                    <small v-if="getTaskCustomer(slotProps.value)" class="proj-sub"><i class="pi pi-building"></i> {{ getTaskCustomer(slotProps.value) }}</small>
+
+                  </div>
 
                 </div>
 
-                <span v-else>เลือกโครงการ</span>
+                <span v-else class="return-placeholder">เลือกโครงการ</span>
 
               </template>
 
               <template #option="slotProps">
 
-                <div class="task-option">
+                <div class="task-option proj-option">
 
-                  <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
+                  <div class="proj-icon"><i class="pi pi-briefcase"></i></div>
 
-                  <span class="task-name-text">{{ slotProps.option.task_name }}</span>
+                  <div class="task-option-info">
+
+                    <div class="task-option-name">
+
+                      <span v-if="slotProps.option.so_number" class="so-badge">{{ slotProps.option.so_number }}</span>
+
+                      <span class="task-name-text">{{ slotProps.option.task_name }}</span>
+
+                    </div>
+
+                    <div v-if="slotProps.option.sale_owner || slotProps.option.customer_info" class="proj-meta">
+
+                      <span v-if="slotProps.option.sale_owner" class="proj-meta-item"><i class="pi pi-user"></i> {{ slotProps.option.sale_owner }}</span>
+
+                      <span v-if="slotProps.option.customer_info" class="proj-meta-item"><i class="pi pi-building"></i> {{ slotProps.option.customer_info }}</span>
+
+                    </div>
+
+                  </div>
 
                 </div>
 
@@ -304,7 +362,71 @@
 
             <Dropdown v-model="selectedReturnBorrow" :options="formattedAvailableBorrows" optionLabel="displayText"
 
-              optionValue="id" class="corporate-dropdown" />
+              optionValue="id" class="corporate-dropdown return-dropdown" placeholder="เลือกรายการที่ต้องการคืน"
+
+              filter filterPlaceholder="ค้นหาชื่อ / โครงการ / เลข Ticket">
+
+              <template #value="slotProps">
+
+                <div v-if="slotProps.value && getReturnOption(slotProps.value)" class="return-option">
+
+                  <span class="ticket-chip">#{{ slotProps.value }}</span>
+
+                  <span class="return-option-name">{{ getReturnOption(slotProps.value).name }}</span>
+
+                  <span class="return-option-when">{{ getReturnOption(slotProps.value).dateText }} · {{ getReturnOption(slotProps.value).time }}</span>
+
+                </div>
+
+                <span v-else class="return-placeholder">เลือกรายการที่ต้องการคืน</span>
+
+              </template>
+
+              <template #option="slotProps">
+
+                <div class="return-option">
+
+                  <span class="ticket-chip">#{{ slotProps.option.id }}</span>
+
+                  <div class="return-option-info">
+
+                    <div class="return-option-top">
+
+                      <span class="return-option-name">{{ slotProps.option.name }}</span>
+
+                      <span v-if="slotProps.option.project" class="return-option-project">{{ slotProps.option.project }}</span>
+
+                    </div>
+
+                    <div class="return-option-meta">
+
+                      <span><i class="pi pi-calendar"></i> {{ slotProps.option.dateText }}</span>
+
+                      <span><i class="pi pi-clock"></i> รับ {{ slotProps.option.time }}</span>
+
+                      <span v-if="slotProps.option.location"><i class="pi pi-map-marker"></i> {{ slotProps.option.location }}</span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </template>
+
+            </Dropdown>
+
+            <div v-if="selectedReturnInfo" class="return-summary">
+
+              <span class="rs-item"><i class="pi pi-calendar"></i> รับรถ {{ selectedReturnInfo.dateText }}</span>
+
+              <span class="rs-item"><i class="pi pi-clock"></i> เวลารับ {{ selectedReturnInfo.time }}</span>
+
+              <span class="rs-item"><i class="pi pi-map-marker"></i> {{ selectedReturnInfo.location || 'ไม่ระบุสถานที่' }}</span>
+
+              <span class="rs-item"><i class="pi pi-briefcase"></i> {{ selectedReturnInfo.project || 'ไม่มีโครงการ' }}</span>
+
+            </div>
 
           </div>
 
@@ -480,7 +602,73 @@
 
             <Dropdown v-model="selectedCancelBorrow" :options="formattedPendingBorrows" optionLabel="displayText"
 
-              optionValue="id" class="corporate-dropdown" />
+              optionValue="id" class="corporate-dropdown return-dropdown" placeholder="เลือกรายการที่ต้องการยกเลิก"
+
+              filter filterPlaceholder="ค้นหาชื่อ / โครงการ / เลข Ticket">
+
+              <template #value="slotProps">
+
+                <div v-if="slotProps.value && getCancelOption(slotProps.value)" class="return-option">
+
+                  <span class="ticket-chip">#{{ slotProps.value }}</span>
+
+                  <span class="return-option-name">{{ getCancelOption(slotProps.value).name }}</span>
+
+                  <span class="return-option-when">{{ getCancelOption(slotProps.value).dateText }} · {{ getCancelOption(slotProps.value).time }}</span>
+
+                </div>
+
+                <span v-else class="return-placeholder">เลือกรายการที่ต้องการยกเลิก</span>
+
+              </template>
+
+              <template #option="slotProps">
+
+                <div class="return-option">
+
+                  <span class="ticket-chip">#{{ slotProps.option.id }}</span>
+
+                  <div class="return-option-info">
+
+                    <div class="return-option-top">
+
+                      <span class="return-option-name">{{ slotProps.option.name }}</span>
+
+                      <span v-if="slotProps.option.project" class="return-option-project">{{ slotProps.option.project }}</span>
+
+                    </div>
+
+                    <div class="return-option-meta">
+
+                      <span><i class="pi pi-calendar"></i> {{ slotProps.option.dateText }}</span>
+
+                      <span><i class="pi pi-clock"></i> รับ {{ slotProps.option.time }}</span>
+
+                      <span v-if="slotProps.option.location"><i class="pi pi-map-marker"></i> {{ slotProps.option.location }}</span>
+
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </template>
+
+            </Dropdown>
+
+            <div v-if="selectedCancelInfo" class="return-summary cancel-summary">
+
+              <span class="rs-item"><i class="pi pi-calendar"></i> รับรถ {{ selectedCancelInfo.dateText }}</span>
+
+              <span class="rs-item"><i class="pi pi-clock"></i> เวลารับ {{ selectedCancelInfo.time }}</span>
+
+              <span class="rs-item"><i class="pi pi-map-marker"></i> {{ selectedCancelInfo.location || 'ไม่ระบุสถานที่' }}</span>
+
+              <span class="rs-item"><i class="pi pi-briefcase"></i> {{ selectedCancelInfo.project || 'ไม่มีโครงการ' }}</span>
+
+            </div>
+
+            <small class="field-hint cancel-hint"><i class="pi pi-exclamation-triangle"></i> ยืนยันแล้วจะแจ้งเตือนทีมงานผ่าน Teams และรายการจะถูกลบถาวร</small>
 
           </div>
 
@@ -674,10 +862,47 @@ export default {
 
         id: borrow.id,
 
-        displayText: `${borrow.id} - ${borrow.name} (${borrow.project}) - ${this.formatDate(borrow.selected_date)} ${borrow.time}`
+        displayText: `${borrow.id} - ${borrow.name} (${borrow.project}) - ${this.formatDate(borrow.selected_date)} ${borrow.time}`,
+
+        name: borrow.name,
+
+        project: borrow.project || '',
+
+        dateText: this.formatDate(borrow.selected_date),
+
+        time: borrow.time,
+
+        location: borrow.location || ''
 
       }))
 
+    },
+
+    selectedReturnInfo() {
+
+      if (!this.selectedReturnBorrow) return null
+
+      return this.formattedAvailableBorrows.find(b => b.id === this.selectedReturnBorrow) || null
+
+    },
+
+    selectedCancelInfo() {
+
+      if (!this.selectedCancelBorrow) return null
+
+      return this.formattedPendingBorrows.find(b => b.id === this.selectedCancelBorrow) || null
+
+    },
+
+    // เวลารับ/เวลาคืน: ผูก Calendar timeOnly (24 ชม.) — เก็บในรูป "HH:MM" เหมือนเดิม
+    pickupTimeModel: {
+      get() { return this.timeStringToDate(this.borrowForm.time) },
+      set(v) { this.$emit('update-borrow-form', { field: 'time', value: this.dateToTimeString(v) }) }
+    },
+
+    expectedReturnTimeModel: {
+      get() { return this.timeStringToDate(this.borrowForm.expected_return_time) },
+      set(v) { this.$emit('update-borrow-form', { field: 'expected_return_time', value: this.dateToTimeString(v) }) }
     },
 
     formattedPendingBorrows() {
@@ -686,7 +911,17 @@ export default {
 
         id: borrow.id,
 
-        displayText: `${borrow.id} - ${borrow.name} (${borrow.project}) - ${this.formatDate(borrow.selected_date)} ${borrow.time}`
+        displayText: `${borrow.id} - ${borrow.name} (${borrow.project}) - ${this.formatDate(borrow.selected_date)} ${borrow.time}`,
+
+        name: borrow.name,
+
+        project: borrow.project || '',
+
+        dateText: this.formatDate(borrow.selected_date),
+
+        time: borrow.time,
+
+        location: borrow.location || ''
 
       }))
 
@@ -790,11 +1025,55 @@ export default {
 
     },
 
+    getReturnOption(id) {
+
+      return this.formattedAvailableBorrows.find(b => b.id === id) || null
+
+    },
+
+    getCancelOption(id) {
+
+      return this.formattedPendingBorrows.find(b => b.id === id) || null
+
+    },
+
+    timeStringToDate(s) {
+
+      if (!s) return null
+
+      const [h, m] = String(s).split(':').map(Number)
+
+      const d = new Date()
+
+      d.setHours(h || 0, m || 0, 0, 0)
+
+      return d
+
+    },
+
+    dateToTimeString(d) {
+
+      if (!d) return ''
+
+      const p = n => String(n).padStart(2, '0')
+
+      return `${p(d.getHours())}:${p(d.getMinutes())}`
+
+    },
+
     getTaskName(taskId) {
 
       const task = this.projectOptions.find(t => t.id === taskId)
 
       return task?.task_name || ''
+
+    },
+
+    getTaskCustomer(taskId) {
+
+      const task = this.projectOptions.find(t => t.id === taskId)
+
+      return task?.customer_info || ''
 
     },
 
@@ -1075,6 +1354,100 @@ export default {
     },
 
     confirmSubmit(type) {
+
+      // Validate selected booking for cancel form
+
+      if (type === 'cancel' && !this.selectedCancelBorrow) {
+
+        this.$toast.add({
+
+          severity: 'error',
+
+          summary: 'กรุณาเลือกรายการ',
+
+          detail: 'เลือกการจองที่ต้องการยกเลิกก่อนยืนยัน',
+
+          life: 3000
+
+        })
+
+        return
+
+      }
+
+      // Validate expected return time for borrow form
+
+      if (type === 'borrow') {
+
+        if (!this.borrowForm.time) {
+
+          this.$toast.add({
+
+            severity: 'error',
+
+            summary: 'กรุณาระบุเวลารับรถ',
+
+            detail: 'เลือกเวลารับรถก่อนบันทึก',
+
+            life: 3000
+
+          })
+
+          return
+
+        }
+
+        if (!this.borrowForm.expected_return_time) {
+
+          this.$toast.add({
+
+            severity: 'error',
+
+            summary: 'กรุณาระบุเวลาคืนรถ',
+
+            detail: 'ระบุเวลาคืนโดยประมาณ เพื่อให้ระบบปิดรายการอัตโนมัติเมื่อครบเวลา',
+
+            life: 3000
+
+          })
+
+          return
+
+        }
+
+        const pickup = new Date(this.selectedDate || new Date())
+
+        const [ph, pm] = (this.borrowForm.time || '00:00').split(':').map(Number)
+
+        pickup.setHours(ph || 0, pm || 0, 0, 0)
+
+        const expDate = new Date(this.borrowForm.expected_return_date || this.selectedDate || new Date())
+
+        const [eh, em] = this.borrowForm.expected_return_time.split(':').map(Number)
+
+        expDate.setHours(eh, em, 0, 0)
+
+        if (expDate <= pickup) {
+
+          const p = n => String(n).padStart(2, '0')
+
+          this.$toast.add({
+
+            severity: 'error',
+
+            summary: 'เวลาคืนไม่ถูกต้อง',
+
+            detail: `เวลารับ ${p(ph)}:${p(pm)} แต่เวลาคืน ${p(eh)}:${p(em)} — เวลา/วันที่คืนต้องเป็นเวลาหลังจากเวลารับรถ`,
+
+            life: 4000
+
+          })
+
+          return
+
+        }
+
+      }
 
       // Validate fuel level for return form
 
@@ -1402,7 +1775,166 @@ export default {
 
   font-size: 0.9rem;
 
+  display: block;
+
+  margin-bottom: 0.35rem;
+
 }
+
+.field-hint {
+
+  display: block;
+
+  margin-top: 0.3rem;
+
+  font-size: 0.72rem;
+
+  color: #64748b;
+
+}
+
+.return-dropdown { width: 100%; }
+
+.return-option {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.55rem;
+
+  width: 100%;
+
+  min-width: 0;
+
+  padding: 0.15rem 0;
+
+}
+
+.ticket-chip {
+
+  font-family: monospace;
+
+  font-weight: 800;
+
+  font-size: 0.72rem;
+
+  color: #4f46e5;
+
+  background: #eef2ff;
+
+  border: 1px solid #e0e7ff;
+
+  border-radius: 6px;
+
+  padding: 0.12rem 0.45rem;
+
+  flex-shrink: 0;
+
+}
+
+.return-option-info { min-width: 0; flex: 1; }
+
+.return-option-top { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+.return-option-name { font-weight: 600; color: #1e293b; font-size: 0.84rem; }
+
+.return-option-project {
+
+  font-size: 0.66rem;
+
+  font-weight: 700;
+
+  color: #1d4ed8;
+
+  background: #eff6ff;
+
+  border: 1px solid #dbeafe;
+
+  border-radius: 20px;
+
+  padding: 0.08rem 0.45rem;
+
+  max-width: 180px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+.return-option-meta {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.7rem;
+
+  flex-wrap: wrap;
+
+  margin-top: 0.2rem;
+
+  font-size: 0.7rem;
+
+  color: #64748b;
+
+}
+
+.return-option-meta i { font-size: 0.62rem; color: #94a3b8; }
+
+.return-option-when { font-size: 0.74rem; color: #64748b; white-space: nowrap; margin-left: auto; }
+
+.return-placeholder { color: #94a3b8; }
+
+.return-summary {
+
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 0.35rem 1rem;
+
+  margin-top: 0.5rem;
+
+  background: #f8fafc;
+
+  border: 1px solid #eef2f6;
+
+  border-radius: 10px;
+
+  padding: 0.5rem 0.75rem;
+
+  font-size: 0.76rem;
+
+  color: #475569;
+
+}
+
+.rs-item { display: inline-flex; align-items: center; gap: 0.3rem; }
+
+.rs-item i { font-size: 0.68rem; color: #94a3b8; }
+
+/* ฟอร์มยกเลิก: summary + hint โทนแดง/ส้มเตือน */
+.cancel-summary {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #7f1d1d;
+}
+.cancel-summary .rs-item i { color: #f87171; }
+.cancel-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+  color: #b45309;
+  font-weight: 600;
+}
+.cancel-hint i { color: #f59e0b; }
 
 
 
@@ -1861,6 +2393,136 @@ export default {
   white-space: normal;
 
   line-height: 1.4;
+
+}
+
+/* Dropdown โครงการ (แจ้งใช้รถ) */
+.task-selected {
+
+  align-items: center !important;
+
+  gap: 0.55rem !important;
+
+}
+
+.task-selected-info { min-width: 0; flex: 1; }
+
+.task-selected-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+.task-option-info { min-width: 0; flex: 1; }
+
+.task-option-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+.proj-icon {
+
+  width: 32px;
+
+  height: 32px;
+
+  border-radius: 9px;
+
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+
+  color: #2563eb;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 0.8rem;
+
+  flex-shrink: 0;
+
+}
+
+.proj-sub {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.25rem;
+
+  font-size: 0.68rem;
+
+  color: #64748b;
+
+  margin-top: 0.15rem;
+
+  max-width: 100%;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+.proj-sub i { font-size: 0.6rem; color: #94a3b8; flex-shrink: 0; }
+
+.proj-meta {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 0.7rem;
+
+  flex-wrap: wrap;
+
+  margin-top: 0.2rem;
+
+  font-size: 0.7rem;
+
+  color: #64748b;
+
+}
+
+.proj-meta-item {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 0.25rem;
+
+  max-width: 200px;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+.proj-meta-item i { font-size: 0.6rem; color: #94a3b8; flex-shrink: 0; }
+
+/* Responsive: dialog แจ้งคืนรถบนมือถือ */
+@media (max-width: 768px) {
+
+  .form-actions {
+
+    flex-direction: column-reverse;
+
+  }
+
+  .form-actions .p-button {
+
+    width: 100%;
+
+    min-width: 0;
+
+  }
+
+  .return-option-when {
+
+    display: none;
+
+  }
 
 }
 

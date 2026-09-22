@@ -32,9 +32,13 @@
         <div class="filter-left">
           <div class="search-box">
             <i class="pi pi-search search-icon" />
-            <InputText v-model="searchQuery" placeholder="ค้นหาลูกค้า, สถานที่, agenda..." />
+            <InputText v-model="searchQuery" placeholder="ค้นหาลูกค้า, SO, สถานที่, ทีม, agenda..." />
             <i v-if="searchQuery" class="pi pi-times-circle search-clear" @click="searchQuery = ''" />
           </div>
+          <Dropdown v-model="dataScope" :options="dataScopeOptions" optionLabel="label" optionValue="value"
+            class="filter-dropdown" v-tooltip.top="'ช่วงข้อมูลที่โหลด'" />
+          <Dropdown v-if="isAdmin" v-model="filterUserId" :options="users" optionLabel="name" optionValue="id"
+            placeholder="พนักงานทั้งหมด" :showClear="true" class="filter-dropdown" />
           <Dropdown v-model="filterType" :options="visitTypeOptions" optionLabel="label" optionValue="value"
             placeholder="ประเภทกิจกรรม" :showClear="true" class="filter-dropdown" />
           <Calendar v-model="filterDateRange" selectionMode="range" dateFormat="dd/mm/yy"
@@ -87,6 +91,7 @@
           <span class="visit-status-badge" :class="'vstatus-' + visit.status">{{ getStatusLabel(visit.status) }}</span>
           <span class="visit-type-label">{{ getVisitTypeLabel(visit.visit_type) }}</span>
           <div class="visit-actions" @click.stop>
+            <Button v-if="visit.next_visit_date" icon="pi pi-calendar-plus" v-tooltip.top="'สร้างนัดถัดไปจากวันนัดหมายที่ตั้งไว้'" @click="openNextVisitDialog(visit)" text size="small" />
             <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditDialog(visit)" text size="small" />
             <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteVisit(visit)" text severity="danger" size="small" />
           </div>
@@ -126,20 +131,86 @@
               <label>ลูกค้า / บริษัท</label>
               <div class="field-with-action">
                 <Dropdown v-model="form.customer_id" :options="customers" optionLabel="company_name" optionValue="id"
-                  placeholder="เลือกลูกค้า" class="flex-1" filter :showClear="true" />
-                <Button icon="pi pi-plus" v-tooltip.top="'เพิ่มลูกค้าใหม่'" @click="showCustomerDialog = true" text size="small" class="field-action-btn" />
+                  placeholder="เลือกลูกค้า" class="flex-1" filter filterPlaceholder="ค้นหาลูกค้า..." :showClear="true">
+                  <template #value="slotProps">
+                    <div v-if="slotProps.value && getCustomerById(slotProps.value)" class="customer-selected">
+                      <div class="cavatar sm" :class="getAvatarClass(getCustomerById(slotProps.value).company_name)">{{ getInitial(getCustomerById(slotProps.value).company_name) }}</div>
+                      <span class="customer-selected-name">{{ getCustomerById(slotProps.value).company_name }}</span>
+                      <span v-if="getCustomerById(slotProps.value).industry" class="customer-industry-chip">{{ getCustomerById(slotProps.value).industry }}</span>
+                    </div>
+                    <span v-else class="task-value-placeholder">{{ slotProps.placeholder }}</span>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="customer-option">
+                      <div class="cavatar" :class="getAvatarClass(slotProps.option.company_name)">{{ getInitial(slotProps.option.company_name) }}</div>
+                      <div class="customer-option-info">
+                        <div class="customer-option-name">
+                          <span class="customer-option-title">{{ slotProps.option.company_name }}</span>
+                          <span v-if="slotProps.option.industry" class="customer-industry-chip">{{ slotProps.option.industry }}</span>
+                        </div>
+                        <div v-if="slotProps.option.contact_name || slotProps.option.phone || slotProps.option.email" class="customer-option-meta">
+                          <span v-if="slotProps.option.contact_name" class="customer-meta-badge"><i class="pi pi-user"></i> {{ slotProps.option.contact_name }}<template v-if="slotProps.option.contact_position"> · {{ slotProps.option.contact_position }}</template></span>
+                          <span v-if="slotProps.option.phone" class="customer-meta-badge phone"><i class="pi pi-phone"></i> {{ slotProps.option.phone }}</span>
+                          <span v-if="slotProps.option.email" class="customer-meta-badge email"><i class="pi pi-envelope"></i> {{ slotProps.option.email }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </Dropdown>
+                  <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไขข้อมูลลูกค้าที่เลือก'" @click="openCustomerEditDialog" text size="small" class="field-action-btn" :disabled="!form.customer_id" />
+                  <Button icon="pi pi-plus" v-tooltip.top="'เพิ่มลูกค้าใหม่'" @click="openCustomerDialog" text size="small" class="field-action-btn" />
               </div>
             </div>
             <div class="field">
               <label>โครงการที่เกี่ยวข้อง</label>
               <Dropdown v-model="form.task_id" :options="tasks" optionLabel="display_name" optionValue="id"
-                placeholder="เชื่อมโยงโครงการ" class="w-full" filter :showClear="true" />
+                placeholder="เชื่อมโยงโครงการ" class="w-full" filter filterPlaceholder="ค้นหาโครงการ..." :showClear="true">
+                <template #value="slotProps">
+                  <div v-if="slotProps.value && getTaskById(slotProps.value)" class="task-selected">
+                    <span v-if="getTaskById(slotProps.value).so_number" class="task-so-chip">{{ getTaskById(slotProps.value).so_number }}</span>
+                    <span class="task-selected-name">{{ getTaskById(slotProps.value).task_name }}</span>
+                    <span v-if="isMyProject(getTaskById(slotProps.value))" class="task-mine-chip"><i class="pi pi-star-fill"></i> โครงการของคุณ</span>
+                  </div>
+                  <span v-else class="task-value-placeholder">{{ slotProps.placeholder }}</span>
+                </template>
+                <template #option="slotProps">
+                  <div class="task-option" :class="{ 'task-option-mine': isMyProject(slotProps.option) }">
+                    <div class="task-option-icon"><i class="pi pi-briefcase"></i></div>
+                    <div class="task-option-info">
+                      <div class="task-option-name">
+                        <span v-if="slotProps.option.so_number" class="task-so-chip">{{ slotProps.option.so_number }}</span>
+                        <span class="task-option-title">{{ slotProps.option.task_name }}</span>
+                        <span v-if="isMyProject(slotProps.option)" class="task-mine-chip"><i class="pi pi-star-fill"></i> โครงการของคุณ</span>
+                      </div>
+                      <div v-if="slotProps.option.sale_owner || slotProps.option.project_manager" class="task-option-meta">
+                        <span v-if="slotProps.option.sale_owner" class="task-owner-badge" :class="{ 'mine': isMyProject(slotProps.option) }"><i class="pi pi-user"></i> Sale: {{ slotProps.option.sale_owner }}</span>
+                        <span v-if="slotProps.option.project_manager" class="task-owner-badge pm"><i class="pi pi-user-edit"></i> PM: {{ slotProps.option.project_manager }}</span>
+                      </div>
+                    </div>
+                    <i v-if="isMyProject(slotProps.option)" class="pi pi-star task-option-star"></i>
+                  </div>
+                </template>
+              </Dropdown>
             </div>
 
             <div class="form-section-title"><i class="pi pi-map-marker"></i> รูปแบบ & สถานที่</div>
             <div class="field">
               <label>ประเภทกิจกรรม</label>
-              <Dropdown v-model="form.visit_type" :options="visitTypeOptions" optionLabel="label" optionValue="value" class="w-full" />
+              <Dropdown v-model="form.visit_type" :options="visitTypeOptions" optionLabel="label" optionValue="value" class="w-full">
+                <template #value="slotProps">
+                  <div v-if="slotProps.value" class="type-status-value">
+                    <span class="ts-badge" :class="'vt-' + slotProps.value"><i :class="getVisitTypeIcon(slotProps.value)"></i></span>
+                    {{ getVisitTypeLabel(slotProps.value) }}
+                  </div>
+                  <span v-else class="task-value-placeholder">{{ slotProps.placeholder }}</span>
+                </template>
+                <template #option="slotProps">
+                  <div class="type-status-option">
+                    <span class="ts-badge" :class="'vt-' + slotProps.option.value"><i :class="getVisitTypeIcon(slotProps.option.value)"></i></span>
+                    <span class="ts-label">{{ slotProps.option.label }}</span>
+                  </div>
+                </template>
+              </Dropdown>
             </div>
             <div class="field">
               <label>สถานที่</label>
@@ -158,9 +229,12 @@
               <MultiSelect v-model="form.internal_attendees" :options="users" optionLabel="name"
                 placeholder="เลือกทีมงาน" display="chip" filter filterPlaceholder="ค้นหา..." class="w-full">
                 <template #option="slotProps">
-                  <div class="user-option">
-                    <div class="user-name">{{ slotProps.option.name }}</div>
-                    <div class="user-info" v-if="slotProps.option.position">{{ slotProps.option.position }}</div>
+                  <div class="team-option">
+                    <div class="cavatar" :class="getAvatarClass(slotProps.option.name)">{{ getInitial(slotProps.option.name) }}</div>
+                    <div class="team-option-info">
+                      <div class="team-option-name">{{ slotProps.option.name }}</div>
+                      <div class="team-option-pos" v-if="slotProps.option.position">{{ slotProps.option.position }}</div>
+                    </div>
                   </div>
                 </template>
               </MultiSelect>
@@ -201,7 +275,21 @@
             <div class="field-row">
               <div class="field flex-1">
                 <label>สถานะ</label>
-                <Dropdown v-model="form.status" :options="visitStatusOptions" optionLabel="label" optionValue="value" class="w-full" />
+                <Dropdown v-model="form.status" :options="visitStatusOptions" optionLabel="label" optionValue="value" class="w-full">
+                  <template #value="slotProps">
+                    <div v-if="slotProps.value" class="type-status-value">
+                      <span class="ts-badge" :class="'vs-' + slotProps.value"><i :class="getStatusIcon(slotProps.value)"></i></span>
+                      {{ getStatusLabel(slotProps.value) }}
+                    </div>
+                    <span v-else class="task-value-placeholder">{{ slotProps.placeholder }}</span>
+                  </template>
+                  <template #option="slotProps">
+                    <div class="type-status-option">
+                      <span class="ts-badge" :class="'vs-' + slotProps.option.value"><i :class="getStatusIcon(slotProps.option.value)"></i></span>
+                      <span class="ts-label">{{ slotProps.option.label }}</span>
+                    </div>
+                  </template>
+                </Dropdown>
               </div>
               <div class="field flex-1">
                 <label>นัดครั้งถัดไป</label>
@@ -218,7 +306,7 @@
     </Dialog>
 
     <!-- Quick Create Customer Dialog -->
-    <Dialog v-model:visible="showCustomerDialog" header="เพิ่มลูกค้าใหม่" :style="{width:'480px'}" modal :draggable="false" class="modern-dialog">
+    <Dialog v-model:visible="showCustomerDialog" :header="customerDialogMode === 'edit' ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มลูกค้าใหม่'" :style="{width:'480px'}" modal :draggable="false" class="modern-dialog">
       <div class="dialog-body item-form">
         <div class="field"><label>ชื่อบริษัท <span class="required">*</span></label><InputText v-model="newCustomer.company_name" class="w-full" /></div>
         <div class="field-group">
@@ -234,7 +322,7 @@
       </div>
       <template #footer>
         <Button label="ยกเลิก" @click="showCustomerDialog = false" class="btn-cancel" text />
-        <Button label="สร้างลูกค้า" icon="pi pi-check" @click="createCustomer" :disabled="!newCustomer.company_name" class="btn-confirm" />
+        <Button :label="customerDialogMode === 'edit' ? 'บันทึก' : 'สร้างลูกค้า'" icon="pi pi-check" @click="saveCustomer" :disabled="!newCustomer.company_name" class="btn-confirm" />
       </template>
     </Dialog>
 
@@ -344,7 +432,16 @@ export default {
       visits: [], customers: [], tasks: [], users: [],
       loading: false, saving: false, gettingLocation: false,
       searchQuery: '', filterStatus: null, filterType: null, filterDateRange: null,
+      filterUserId: null, userRole: '', dataScope: 'year',
+      dataScopeOptions: [
+        { label: 'เดือนนี้', value: 'month' },
+        { label: '3 เดือนล่าสุด', value: 'quarter' },
+        { label: 'ปีนี้', value: 'year' },
+        { label: 'ปีกลาย', value: 'lastyear' },
+        { label: 'ทั้งหมด', value: 'all' }
+      ],
       showFormDialog: false, showCustomerDialog: false, showDetailDialog: false,
+      customerDialogMode: 'create',
       editingVisit: null, selectedVisit: null,
       form: this.emptyForm(),
       newCustomer: { company_name: '', industry: '', phone: '', email: '', address: '', contact_name: '', contact_position: '' },
@@ -365,14 +462,19 @@ export default {
         { key: 'scheduled', label: 'กำหนดการ', icon: 'pi pi-clock', colorClass: 'kpi-scheduled' },
         { key: 'done', label: 'เสร็จสิ้น', icon: 'pi pi-check-circle', colorClass: 'kpi-done' },
         { key: 'follow_up', label: 'Follow-up', icon: 'pi pi-refresh', colorClass: 'kpi-followup' },
-        { key: 'cancelled', label: 'ยกเลิก', icon: 'pi pi-times-circle', colorClass: 'kpi-cancelled' }
+        { key: 'cancelled', label: 'ยกเลิก', icon: 'pi pi-times-circle', colorClass: 'kpi-cancelled' },
+        { key: 'overdue', label: 'เกินกำหนด', icon: 'pi pi-exclamation-circle', colorClass: 'kpi-overdue' }
       ]
     }
   },
   computed: {
-    filteredVisits() {
+    isAdmin() {
+      return ['superadmin', 'admin', 'hr'].includes(this.userRole)
+    },
+    // ชุดผลลัพธ์หลังตัวกรองทุกอย่าง "ยกเว้น" สถานะ — ใช้ทั้งแสดงรายการและนับ KPI
+    baseFilteredVisits() {
       let result = [...this.visits]
-      if (this.filterStatus) result = result.filter(v => v.status === this.filterStatus)
+      if (this.filterUserId) result = result.filter(v => String(v.created_by) === String(this.filterUserId))
       if (this.filterType) result = result.filter(v => v.visit_type === this.filterType)
       if (this.filterDateRange && this.filterDateRange[0]) {
         // copy Date ใหม่ก่อน setHours กัน mutate ค่าใน v-model ของ Calendar
@@ -389,16 +491,35 @@ export default {
         const q = this.searchQuery.toLowerCase()
         result = result.filter(v =>
           v.company_name?.toLowerCase().includes(q) ||
+          v.so_number?.toLowerCase().includes(q) ||
           v.location?.toLowerCase().includes(q) ||
           v.agenda?.toLowerCase().includes(q) ||
           v.summary?.toLowerCase().includes(q) ||
-          v.task_name?.toLowerCase().includes(q)
+          v.task_name?.toLowerCase().includes(q) ||
+          v.created_by_name?.toLowerCase().includes(q) ||
+          (v.internal_attendees || []).some(u => String(u.name || u).toLowerCase().includes(q))
         )
+      }
+      return result
+    },
+    filteredVisits() {
+      let result = [...this.baseFilteredVisits]
+      if (this.filterStatus) {
+        result = this.filterStatus === 'overdue'
+          ? result.filter(v => this.isVisitOverdue(v))
+          : result.filter(v => v.status === this.filterStatus)
       }
       return result
     }
   },
-  mounted() { this.loadAll() },
+  watch: {
+    // เปลี่ยนช่วงข้อมูล → โหลดใหม่จาก server (จำกัดปริมาณข้อมูลตามช่วงเวลา)
+    dataScope() { this.loadAll() }
+  },
+  mounted() {
+    this.userRole = localStorage.getItem('soc_role') || ''
+    this.loadAll()
+  },
   methods: {
     emptyForm() {
       return {
@@ -414,7 +535,7 @@ export default {
       try {
         // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
         const [visitsRes, customersRes, tasksRes, usersRes] = await Promise.all([
-          axios.get('/api/sales-visits', { silent: true }),
+          axios.get('/api/sales-visits', { silent: true, params: this.buildScopeParams() }),
           axios.get('/api/sales-visits/customers', { silent: true }),
           axios.get('/api/tasks', { silent: true }),
           axios.get('/api/users', { silent: true })
@@ -425,7 +546,56 @@ export default {
         this.users = usersRes.data.map(u => ({ id: u.id, name: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`, position: u.position }))
       } catch (e) { console.error(e) } finally { this.loading = false }
     },
-    countByStatus(status) { return this.visits.filter(v => v.status === status).length },
+    // จำกัดปริมาณข้อมูลที่โหลดจาก server ตามช่วงเวลาที่เลือก (แทนการโหลดทั้งหมดทุกครั้ง)
+    buildScopeParams() {
+      const now = new Date()
+      let from = null, to = null
+      if (this.dataScope === 'month') {
+        from = new Date(now.getFullYear(), now.getMonth(), 1)
+        to = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      } else if (this.dataScope === 'quarter') {
+        from = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate())
+        to = now
+      } else if (this.dataScope === 'year') {
+        from = new Date(now.getFullYear(), 0, 1)
+        to = new Date(now.getFullYear(), 11, 31)
+      } else if (this.dataScope === 'lastyear') {
+        from = new Date(now.getFullYear() - 1, 0, 1)
+        to = new Date(now.getFullYear() - 1, 11, 31)
+      }
+      const params = {}
+      if (from) params.from_date = this.fmtDate(from)
+      if (to) params.to_date = this.fmtDate(to)
+      return params
+    },
+    countByStatus(status) {
+      // 'overdue' ไม่ใช่สถานะจริง — นับจากกำหนดการที่เลยเวลาแล้วแต่ยังไม่เสร็จ/ไม่ยกเลิก
+      if (status === 'overdue') return this.baseFilteredVisits.filter(v => this.isVisitOverdue(v)).length
+      return this.baseFilteredVisits.filter(v => v.status === status).length
+    },
+    getTaskById(id) { return this.tasks.find(t => t.id === id) || null },
+    getCustomerById(id) { return this.customers.find(c => c.id === id) || null },
+    // ตัวอักษรแรกสำหรับ avatar ลูกค้า
+    getInitial(name) { return name ? String(name).trim().charAt(0).toUpperCase() : '?' },
+    // สี avatar คงที่ตามชื่อบริษัท (hash ง่าย ๆ)
+    getAvatarClass(name) {
+      if (!name) return 'cavatar-c0'
+      let hash = 0
+      for (const ch of String(name)) hash = (hash * 31 + ch.charCodeAt(0)) % 997
+      return 'cavatar-c' + (hash % 5)
+    },
+    // โครงการที่ตัวเองเป็น Sale เจ้าของงาน — เทียบ sale_owner กับชื่อผู้ใช้ปัจจุบันจาก localStorage
+    isMyProject(task) {
+      if (!task || !task.sale_owner) return false
+      const owner = String(task.sale_owner).toLowerCase().trim()
+      const firstname = (localStorage.getItem('soc_firstname') || '').toLowerCase().trim()
+      const lastname = (localStorage.getItem('soc_lastname') || '').toLowerCase().trim()
+      const nickname = (localStorage.getItem('soc_nickname') || '').toLowerCase().trim()
+      if (firstname && lastname && owner.includes(`${firstname} ${lastname}`)) return true
+      if (firstname && lastname && owner.includes(firstname) && owner.includes(lastname)) return true
+      if (nickname && nickname.length >= 3 && owner.includes(nickname)) return true
+      return false
+    },
     openCreateDialog() {
       this.editingVisit = null
       this.form = this.emptyForm()
@@ -453,6 +623,30 @@ export default {
       this.selectedVisit = visit
       this.showDetailDialog = true
     },
+    // สร้างนัดถัดไป — clone ข้อมูล visit เดิมเป็นกำหนดการใหม่ตามวัน next_visit_date
+    openNextVisitDialog(visit) {
+      this.editingVisit = null
+      const next = new Date(visit.next_visit_date)
+      const orig = visit.visit_date ? new Date(visit.visit_date) : null
+      const hasOrigTime = orig && !isNaN(orig)
+      // คงช่วงเวลาของนัดเดิมไว้ (ถ้าไม่มีใช้ 09:00)
+      next.setHours(hasOrigTime ? orig.getHours() : 9, hasOrigTime ? orig.getMinutes() : 0, 0, 0)
+      this.form = {
+        ...this.emptyForm(),
+        visit_date: next,
+        customer_id: visit.customer_id || null,
+        task_id: visit.task_id || null,
+        visit_type: visit.visit_type || 'on_site',
+        location: visit.location || '',
+        latitude: visit.latitude || null,
+        longitude: visit.longitude || null,
+        internal_attendees: (visit.internal_attendees || []).map(u => typeof u === 'object' ? { ...u } : u),
+        customer_attendees: (visit.customer_attendees || []).map(a => ({
+          name: a.name || '', position: a.position || '', email: a.email || '', phone: a.phone || ''
+        }))
+      }
+      this.showFormDialog = true
+    },
     async saveVisit() {
       if (!this.form.visit_date) return
       // ตรวจเวลาสิ้นสุดต้องไม่ก่อนเวลาเริ่ม
@@ -464,8 +658,9 @@ export default {
       try {
         const payload = {
           ...this.form,
-          visit_date: this.form.visit_date instanceof Date ? this.fmtDate(this.form.visit_date) : this.form.visit_date,
-          visit_end_date: this.form.visit_end_date instanceof Date ? this.fmtDate(this.form.visit_end_date) : this.form.visit_end_date,
+          // ส่งวันที่+เวลาแบบเต็ม กันเวลาถูกตัดเหลือ 00:00
+          visit_date: this.form.visit_date instanceof Date ? this.fmtDateTime(this.form.visit_date) : this.form.visit_date,
+          visit_end_date: this.form.visit_end_date instanceof Date ? this.fmtDateTime(this.form.visit_end_date) : this.form.visit_end_date,
           next_visit_date: this.form.next_visit_date instanceof Date ? this.fmtDate(this.form.next_visit_date) : this.form.next_visit_date,
           internal_attendees: (this.form.internal_attendees || []).map(u => typeof u === 'object' ? { id: u.id, name: u.name, position: u.position } : u),
           // ตัด action item ที่ไม่ได้กรอกข้อความออกก่อนบันทึก
@@ -484,15 +679,41 @@ export default {
         this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกได้', life: 3000 })
       } finally { this.saving = false }
     },
-    async createCustomer() {
+    // เปิด dialog ลูกค้า (สร้างใหม่ / แก้ไขของที่เลือก)
+    openCustomerDialog() {
+      this.customerDialogMode = 'create'
+      this.newCustomer = { company_name: '', industry: '', phone: '', email: '', address: '', contact_name: '', contact_position: '' }
+      this.showCustomerDialog = true
+    },
+    openCustomerEditDialog() {
+      const c = this.getCustomerById(this.form.customer_id)
+      if (!c) return
+      this.customerDialogMode = 'edit'
+      this.newCustomer = {
+        company_name: c.company_name || '', industry: c.industry || '', phone: c.phone || '',
+        email: c.email || '', address: c.address || '',
+        contact_name: c.contact_name || '', contact_position: c.contact_position || ''
+      }
+      this.showCustomerDialog = true
+    },
+    async saveCustomer() {
+      if (!this.newCustomer.company_name) return
       try {
-        const res = await axios.post('/api/sales-visits/customers', this.newCustomer)
-        this.customers.push(res.data)
-        this.form.customer_id = res.data.id
+        if (this.customerDialogMode === 'edit') {
+          const res = await axios.put(`/api/sales-visits/customers/${this.form.customer_id}`, this.newCustomer)
+          const idx = this.customers.findIndex(c => c.id === this.form.customer_id)
+          if (idx !== -1) this.customers.splice(idx, 1, res.data)
+          this.$toast.add({ severity: 'success', summary: 'บันทึกลูกค้าแล้ว', life: 2000 })
+        } else {
+          const res = await axios.post('/api/sales-visits/customers', this.newCustomer)
+          this.customers.push(res.data)
+          this.form.customer_id = res.data.id
+          this.$toast.add({ severity: 'success', summary: 'สร้างลูกค้าแล้ว', life: 2000 })
+        }
         this.showCustomerDialog = false
-        this.newCustomer = { company_name: '', industry: '', phone: '', email: '', address: '', contact_name: '', contact_position: '' }
-        this.$toast.add({ severity: 'success', summary: 'สร้างลูกค้าแล้ว', life: 2000 })
-      } catch (e) { this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', life: 3000 }) }
+      } catch (e) {
+        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกลูกค้าได้', life: 3000 })
+      }
     },
     deleteVisit(visit) {
       this.$confirm.require({
@@ -552,6 +773,10 @@ export default {
       const map = { scheduled: 'กำหนดการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก', follow_up: 'Follow-up' }
       return map[s] || s
     },
+    getStatusIcon(s) {
+      const map = { scheduled: 'pi pi-clock', done: 'pi pi-check-circle', cancelled: 'pi pi-times-circle', follow_up: 'pi pi-refresh' }
+      return map[s] || 'pi pi-circle-fill'
+    },
     formatVisitDate(d) {
       if (!d) return ''
       return new Date(d).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -568,6 +793,12 @@ export default {
       if (!d) return null
       const x = new Date(d)
       return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`
+    },
+    fmtDateTime(d) {
+      if (!d) return null
+      const x = new Date(d)
+      const p = n => String(n).padStart(2, '0')
+      return `${x.getFullYear()}-${p(x.getMonth()+1)}-${p(x.getDate())} ${p(x.getHours())}:${p(x.getMinutes())}:${p(x.getSeconds())}`
     }
   }
 }
@@ -596,7 +827,7 @@ export default {
 .stat-item { color: rgba(255,255,255,0.85); font-size: 0.88rem; background: rgba(255,255,255,0.15); padding: 0.4rem 1rem; border-radius: 20px; }
 
 /* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; margin-bottom: 1.25rem; }
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.85rem; margin-bottom: 1.25rem; }
 .kpi-card { background: #fff; border-radius: 14px; padding: 1rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: 0 1px 3px rgba(0,0,0,0.04); cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
 .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
 .kpi-card.kpi-active { border-color: #3b82f6; background: #f8fbff; }
@@ -605,6 +836,7 @@ export default {
 .kpi-done { background: #dcfce7; color: #16a34a; }
 .kpi-followup { background: #fef3c7; color: #d97706; }
 .kpi-cancelled { background: #fee2e2; color: #dc2626; }
+.kpi-overdue { background: #ffedd5; color: #ea580c; }
 .kpi-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
 .kpi-label { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
@@ -675,6 +907,81 @@ export default {
 .user-option { padding: 0.2rem 0; }
 .user-name { font-weight: 500; font-size: 0.85rem; }
 .user-info { font-size: 0.72rem; color: #64748b; }
+
+/* ===== Team MultiSelect: ทีมภายใน ===== */
+.team-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.25rem 0.4rem; width: 100%; }
+.team-option-info { min-width: 0; }
+.team-option-name { font-weight: 600; font-size: 0.84rem; color: #1e293b; }
+.team-option-pos { font-size: 0.7rem; color: #64748b; margin-top: 0.1rem; }
+.form-col :deep(.p-multiselect-token) { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; border-radius: 20px; font-size: 0.72rem; font-weight: 600; padding: 0.2rem 0.6rem; }
+.form-col :deep(.p-multiselect-token-icon) { color: #3b82f6; margin-left: 0.25rem; }
+
+/* ===== Type & Status Dropdowns: ประเภทกิจกรรม / สถานะ ===== */
+.type-status-option { display: flex; align-items: center; gap: 0.6rem; padding: 0.15rem 0.25rem; }
+.ts-label { font-size: 0.84rem; font-weight: 600; color: #1e293b; }
+.type-status-value { display: inline-flex; align-items: center; gap: 0.45rem; min-width: 0; color: #0f172a; font-weight: 600; font-size: 0.86rem; }
+.ts-badge { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; flex-shrink: 0; }
+/* ประเภทกิจกรรม */
+.vt-on_site { background: #dbeafe; color: #2563eb; }
+.vt-online { background: #dcfce7; color: #16a34a; }
+.vt-phone { background: #fef3c7; color: #d97706; }
+.vt-survey { background: #ede9fe; color: #7c3aed; }
+.vt-demo { background: #fce7f3; color: #be185d; }
+/* สถานะ */
+.vs-scheduled { background: #dbeafe; color: #2563eb; }
+.vs-done { background: #dcfce7; color: #16a34a; }
+.vs-cancelled { background: #fee2e2; color: #dc2626; }
+.vs-follow_up { background: #fef3c7; color: #b45309; }
+
+/* ===== Task Dropdown: โครงการที่เกี่ยวข้อง ===== */
+.task-value-placeholder { color: #94a3b8; font-size: 0.86rem; }
+.task-selected { display: flex; align-items: center; gap: 0.45rem; min-width: 0; flex-wrap: wrap; }
+.task-selected-name { font-weight: 600; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.task-so-chip { font-size: 0.66rem; color: #4f46e5; background: #eef2ff; border: 1px solid #e0e7ff; padding: 0.08rem 0.4rem; border-radius: 5px; font-weight: 800; font-family: monospace; white-space: nowrap; }
+.task-mine-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.64rem; font-weight: 800; color: #b45309; background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #fbbf24; padding: 0.1rem 0.45rem; border-radius: 20px; white-space: nowrap; box-shadow: 0 1px 4px rgba(245,158,11,0.25); }
+.task-mine-chip i { font-size: 0.6rem; color: #f59e0b; }
+.task-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1.5px solid transparent; width: 100%; }
+.task-option-icon { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+.task-option-info { min-width: 0; flex: 1; }
+.task-option-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: 0.84rem; color: #1e293b; }
+.task-option-title { font-weight: 600; }
+.task-option-meta { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.25rem; }
+.task-owner-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.68rem; color: #64748b; background: #f8fafc; border: 1px solid #eef2f6; padding: 0.1rem 0.45rem; border-radius: 8px; font-weight: 500; }
+.task-owner-badge i { font-size: 0.6rem; color: #94a3b8; }
+.task-owner-badge.pm i { color: #7c3aed; }
+.task-option-star { color: #f59e0b; font-size: 0.8rem; flex-shrink: 0; }
+/* โครงการที่ตัวเองเป็น Sale — highlight สีทอง */
+.task-option-mine { background: linear-gradient(90deg, #fffbeb 0%, #fef9c3 100%); border-color: #fbbf24; }
+.task-option-mine .task-option-icon { background: linear-gradient(135deg, #fef3c7, #fde68a); color: #d97706; }
+.task-option-mine .task-option-title { color: #92400e; }
+.task-owner-badge.mine { color: #b45309; background: #fef3c7; border-color: #fcd34d; font-weight: 700; }
+.task-owner-badge.mine i { color: #f59e0b; }
+/* คงไฮไลต์สีทองไว้แม้ตอน option ถูกเลือกอยู่ (p-highlight) */
+.p-dropdown-item.p-highlight .task-option { box-shadow: inset 0 0 0 999px rgba(59,130,246,0.07); }
+.p-dropdown-item.p-highlight .task-option-mine { box-shadow: inset 0 0 0 999px rgba(245,158,11,0.16); }
+
+/* ===== Customer Dropdown: ลูกค้า / บริษัท ===== */
+.customer-selected { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+.customer-selected-name { font-weight: 600; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cavatar { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: #fff; flex-shrink: 0; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.12); }
+.cavatar.sm { width: 26px; height: 26px; border-radius: 8px; font-size: 0.75rem; }
+.cavatar-c0 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.cavatar-c1 { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+.cavatar-c2 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+.cavatar-c3 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.cavatar-c4 { background: linear-gradient(135deg, #10b981, #059669); }
+.customer-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.35rem 0.5rem; border-radius: 10px; width: 100%; }
+.customer-option-info { min-width: 0; flex: 1; }
+.customer-option-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.customer-option-title { font-size: 0.84rem; font-weight: 600; color: #1e293b; }
+.customer-industry-chip { font-size: 0.64rem; font-weight: 700; color: #0e7490; background: #ecfeff; border: 1px solid #cffafe; padding: 0.08rem 0.45rem; border-radius: 20px; white-space: nowrap; }
+.customer-option-meta { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.25rem; }
+.customer-meta-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.68rem; color: #64748b; background: #f8fafc; border: 1px solid #eef2f6; padding: 0.1rem 0.45rem; border-radius: 8px; white-space: nowrap; }
+.customer-meta-badge i { font-size: 0.6rem; color: #94a3b8; }
+.customer-meta-badge.phone { color: #16a34a; background: #f0fdf4; border-color: #dcfce7; }
+.customer-meta-badge.phone i { color: #22c55e; }
+.customer-meta-badge.email { color: #2563eb; background: #eff6ff; border-color: #dbeafe; }
+.customer-meta-badge.email i { color: #3b82f6; }
 .w-full { width: 100%; }
 .required { color: #dc2626; }
 

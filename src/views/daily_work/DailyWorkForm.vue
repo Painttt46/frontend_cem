@@ -290,7 +290,8 @@ export default {
         startTime: null, endTime: null, attendees: [], selectedAttendee: null,
         filteredAttendees: []
       }],
-      minDate: (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d; })(),
+      // ลงงานย้อนหลังได้สูงสุด 5 วัน (วันนี้ + ย้อนไป 5 วัน)
+      minDate: (() => { const d = new Date(); d.setDate(d.getDate() - 5); return d; })(),
       formData: { 
         workDate: new Date(),
         useDateRange: false,

@@ -124,9 +124,14 @@
 
         <Column header="สถานะ">
           <template #body="slotProps">
-            <Badge v-if="slotProps.data.returned" value="คืนแล้ว" severity="success" icon="pi pi-check" />
-            <Badge v-else-if="isWaitingToUse(slotProps.data)" value="รอใช้งาน" severity="info" icon="pi pi-clock" />
-            <Badge v-else value="ยังไม่คืน" severity="warning" icon="pi pi-clock" />
+            <div class="status-cell">
+              <Badge v-if="slotProps.data.returned" value="คืนแล้ว" severity="success" icon="pi pi-check" />
+              <Badge v-else-if="isWaitingToUse(slotProps.data)" value="รอใช้งาน" severity="info" icon="pi pi-clock" />
+              <Badge v-else value="ยังไม่คืน" severity="warning" icon="pi pi-clock" />
+              <span v-if="slotProps.data.borrowRecord.auto_returned" class="auto-return-badge" v-tooltip="'ระบบปิดรายการให้อัตโนมัติเมื่อครบเวลาคืนที่ตั้งไว้ตอนจอง'">
+                <i class="pi pi-clock"></i> คืนอัตโนมัติ
+              </span>
+            </div>
           </template>
         </Column>
       </EnhancedDataTable>
@@ -639,6 +644,31 @@ export default {
 .no-description {
   color: #6c757d;
   font-style: italic;
+}
+
+.status-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.auto-return-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  padding: 0.12rem 0.45rem;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.auto-return-badge i {
+  font-size: 0.6rem;
 }
 
 .clickable-name {

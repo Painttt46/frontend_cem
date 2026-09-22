@@ -52,10 +52,54 @@
 /* Table horizontal drag scroll */
 .p-datatable-wrapper,
 .p-datatable-table-container,
+.p-datatable-scrollable-body,
 .works-table-wrapper,
 .history-table-wrapper,
 [class*="table-wrapper"] {
   overflow-x: auto;
+}
+
+/*
+ * มือถือ: ปิด selection/callout กันกดค้างแล้วลากเข้าโหมดเลือกข้อความจนเลื่อนไม่ได้
+ * เดสก์ท็อปเลือก/highlight ข้อความได้ปกติ — drag-scroll ใน App.vue
+ * จะเว้นจุดที่กดลงบนข้อความให้เอง (กดพื้นที่ว่าง = เลื่อน, กดข้อความ = เลือก)
+ */
+@media (hover: none) and (pointer: coarse) {
+  body,
+  #app {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input,
+  textarea,
+  [contenteditable="true"],
+  .p-inputtext,
+  .p-inputtextarea {
+    -webkit-user-select: text;
+    user-select: text;
+    -webkit-touch-callout: default;
+  }
+}
+
+/* ปิดกรอบสีเทา/ฟ้าตอนแตะบนมือถือ */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* เดสก์ท็อป: ชี้บอกว่ากดค้างในพื้นที่เหล่านี้แล้วลากเพื่อเลื่อนได้ */
+@media (hover: hover) and (pointer: fine) {
+  .p-datatable-wrapper,
+  .p-datatable-table-container,
+  .p-datatable-scrollable-body,
+  .works-table-wrapper,
+  .history-table-wrapper,
+  .import-preview-table,
+  .vendor-list,
+  [class*="table-wrapper"] {
+    cursor: grab;
+  }
 }
 
 /* Shared shimmer skeleton — ใช้แทนการก็อปโค้ด .skeleton ซ้ำในแต่ละหน้า */

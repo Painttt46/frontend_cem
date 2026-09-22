@@ -143,7 +143,9 @@ export default {
         task_id: null,
         discription: '',
         colleagues: [],
-        images: []
+        images: [],
+        expected_return_time: '',
+        expected_return_date: null
       },
       returnForm: {
         borrowId: '',
@@ -503,7 +505,11 @@ export default {
           images,
           user_id: localStorage.getItem('soc_user_id'),
           fuel_level_borrow: payload.fuelLevelBorrow || null,
-          easy_pass_borrow: payload.easyPassBorrow || null
+          easy_pass_borrow: payload.easyPassBorrow || null,
+          expected_return_date: this.borrowForm.expected_return_date
+            ? this.formatDateForDB(this.borrowForm.expected_return_date)
+            : this.formatDateForDB(this.selectedDate),
+          expected_return_time: this.borrowForm.expected_return_time || null
         }
 
         await this.$http.post('/api/car-booking', borrowData)

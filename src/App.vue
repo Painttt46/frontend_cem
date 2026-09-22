@@ -62,50 +62,73 @@ export default {
   },
   methods: {
     initDragScroll() {
-      let startX, scrollLeft, wrapper = null
+      // Universal drag-scroll ทุกหน้า (สไตล์เดียวกับ .vendor-list ในหน้าจัดซื้อ):
+      // กดค้างบนพื้นที่ว่างของ scroll container ใดก็ได้ แล้วลากเพื่อเลื่อนทั้งแนวนอน/แนวตั้ง
+      let state = null // { el, startX, startY, scrollLeft, scrollTop }
+
+      const INTERACTIVE = 'input, textarea, select, button, a, label, .p-button, .p-dropdown, .p-multiselect, .p-calendar, .p-checkbox, .p-radiobutton, .p-selectbutton, .p-slider, .p-rating'
+
+      // หา scroll container ที่ใกล้ที่สุดรอบจุดที่กด (overflow auto/scroll และมีเนื้อหาล้นจริง)
+      const findScrollable = (node) => {
+        while (node && node !== document.body) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            const style = getComputedStyle(node)
+            const canX = /(auto|scroll|overlay)/.test(style.overflowX) && node.scrollWidth > node.clientWidth + 1
+            const canY = /(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight + 1
+            if (canX || canY) return node
+          }
+          node = node.parentNode
+        }
+        return null
+      }
+
+      // เช็คว่า element ที่กดมีข้อความตรง ๆ อยู่ไหม (มี = ให้เลือกข้อความ ไม่ drag)
+      const hasDirectText = (el) => Array.from(el.childNodes || []).some(
+        (n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim().length > 0
+      )
 
       document.addEventListener('mousedown', (e) => {
-        const el = e.target.closest('.p-datatable-wrapper, .p-datatable-table-container, .import-preview-table')
+        if (e.button !== 0) return
+        // ไม่รบกวนการคลิก/พิมพ์/ลากใน element ที่มี interaction ของตัวเอง
+        if (e.target.closest(INTERACTIVE)) return
+        // กดลงบนข้อความโดยตรง → ให้ highlight/เลือกข้อความได้ (ไม่เริ่ม drag)
+        if (hasDirectText(e.target)) return
+        const el = findScrollable(e.target)
         if (!el) return
-        
-        wrapper = el
-        if (wrapper.scrollWidth <= wrapper.clientWidth) {
-          wrapper = null
-          return
-        }
-        
-        const tag = e.target.tagName.toLowerCase()
-        
-        // td, th, tr, div ให้ drag ได้ ยกเว้นมี text โดยตรงที่ไม่ใช่ whitespace
-        if (['td', 'th', 'tr', 'div', 'table', 'tbody', 'thead'].includes(tag)) {
-          // เช็คว่าคลิกโดน text จริงไหม
-          const range = document.caretRangeFromPoint(e.clientX, e.clientY)
-          if (range && range.startContainer.nodeType === Node.TEXT_NODE && range.startContainer.textContent.trim()) {
-            wrapper = null
-            return
-          }
-        } else if (['span', 'a', 'button', 'input', 'textarea', 'label', 'i', 'p'].includes(tag)) {
-          wrapper = null
-          return
-        }
-        
-        startX = e.pageX
-        scrollLeft = wrapper.scrollLeft
+        state = { el, startX: e.pageX, startY: e.pageY, scrollLeft: el.scrollLeft, scrollTop: el.scrollTop }
         e.preventDefault()
       })
 
       document.addEventListener('mousemove', (e) => {
-        if (!wrapper || startX === undefined) return
-        wrapper.style.cursor = 'grabbing'
-        const walk = (e.pageX - startX) * 1.5
-        wrapper.scrollLeft = scrollLeft - walk
+        if (!state) return
+        const dx = e.pageX - state.startX
+        const dy = e.pageY - state.startY
+        // เริ่ม drag จริงเมื่อลากเกิน ~4px กันสั่นตอนคลิกปกติ
+        if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+          state.el.style.cursor = 'grabbing'
+          state.el.style.userSelect = 'none'
+          if (state.el.scrollWidth > state.el.clientWidth) state.el.scrollLeft = state.scrollLeft - dx
+          if (state.el.scrollHeight > state.el.clientHeight) state.el.scrollTop = state.scrollTop - dy
+        }
       })
 
-      document.addEventListener('mouseup', () => {
-        if (wrapper) wrapper.style.cursor = ''
-        wrapper = null
-        startX = undefined
-      })
+      const end = () => {
+        if (!state) return
+        state.el.style.cursor = ''
+        state.el.style.userSelect = ''
+        state = null
+      }
+      document.addEventListener('mouseup', end)
+      document.addEventListener('mouseleave', end)
+
+      // มือถือ/แท็บเล็ต: กดค้างในตารางไม่ให้เด้ง context menu มาบังการเลื่อน
+      if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+        document.addEventListener('contextmenu', (e) => {
+          if (e.target.closest('.p-datatable-wrapper, .p-datatable-table-container, .p-datatable-scrollable-body, .works-table-wrapper, .history-table-wrapper, [class*="table-wrapper"], .import-preview-table, .vendor-list')) {
+            e.preventDefault()
+          }
+        })
+      }
     }
   }
 };
