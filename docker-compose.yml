@@ -8,8 +8,8 @@ services:
       - TZ=Asia/Bangkok
       - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
-    #ports:
-    #  - "3000:80"
+    ports:
+      - "3000:80"
     restart: unless-stopped
     networks:
       - cem_network
