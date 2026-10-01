@@ -650,8 +650,9 @@ export default {
         const newImages = []
         for (const file of files) {
           const reader = new FileReader()
-          const base64 = await new Promise((resolve) => {
+          const base64 = await new Promise((resolve, reject) => {
             reader.onload = () => resolve(reader.result)
+            reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'))
             reader.readAsDataURL(file)
           })
           newImages.push({
@@ -662,14 +663,10 @@ export default {
           })
         }
 
-        // Update booking with new images
-        const currentImages = booking.images || []
-        const updatedImages = [...currentImages, ...newImages]
-
-        // Update in database via API
-        await this.$http.put(`/api/car-booking/${bookingId}`, {
-          images: updatedImages
-        })
+        // ส่ง "เฉพาะรูปใหม่" ไป endpoint append — server merge กับรูปเดิมเอง (ไม่ทับรูปเดิม)
+        await this.$http.post(`/api/car-booking/${bookingId}/images`, {
+          images: newImages
+        }, { timeout: 300000 })
 
         await this.loadRecords()
 
@@ -679,11 +676,11 @@ export default {
           detail: `อัปโหลดรูปภาพ ${files.length} ไฟล์เรียบร้อย`,
           life: 3000
         })
-      } catch { // ignore
+      } catch (error) {
         this.$toast.add({
           severity: 'error',
           summary: 'อัปโหลดไม่สำเร็จ',
-          detail: 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
+          detail: error.response?.data?.error || 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
           life: 4000
         })
       }
@@ -696,7 +693,9 @@ export default {
         task_id: null,
         discription: '',
         colleagues: [],
-        images: []
+        images: [],
+        expected_return_time: '',
+        expected_return_date: null
       }
       this.returnForm = {
         borrowId: '',

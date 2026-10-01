@@ -1103,11 +1103,6 @@ export default {
 .fuel-seg:nth-child(4) { height: 20px; }
 .fuel-seg:nth-child(5) { height: 24px; }
 
-.seg-empty { background: #e5e7eb; }
-.seg-high { background: #22c55e; }
-.seg-mid { background: #f59e0b; }
-.seg-low { background: #ef4444; }
-
 .fuel-text {
   font-weight: 700;
   font-size: 0.9rem;

@@ -154,7 +154,9 @@ export default {
     formData: {
       deep: true,
       handler(val) {
-        localStorage.setItem('add_task_draft', JSON.stringify(val))
+        // เก็บ draft โดยไม่รวม files (File object serialize เป็น {} ไม่ได้) — เก็บเฉพาะชื่อไฟล์ไว้โชว์
+        const draft = { ...val, files: [], fileNames: (val.files || []).map(f => f.name || '') }
+        localStorage.setItem('add_task_draft', JSON.stringify(draft))
       }
     }
   },
@@ -165,6 +167,9 @@ export default {
     if (draft) {
       try {
         const d = JSON.parse(draft)
+        // ไม่ restore files จาก draft (File object เก็บใน localStorage ไม่ได้)
+        delete d.files
+        delete d.fileNames
         if (d.taskName || d.soNumber || (d.steps && d.steps.length)) {
           this.formData = { ...this.formData, ...d }
         }
@@ -196,8 +201,12 @@ export default {
         .catch(() => {})
     },
     handleFileUpload(event) {
-      const files = Array.from(event.target.files)
-      this.formData.files = [...this.formData.files, ...files]
+      const files = Array.from(event.target.files || [])
+      event.target.value = '' // reset ให้เลือกไฟล์เดิมซ้ำได้
+      files.forEach(file => { if (this.formData.files.length < 20) this.formData.files.push(file) })
+      if (files.length && this.formData.files.length >= 20) {
+        this.$toast.add({ severity: 'warn', summary: 'แนบได้สูงสุด 20 ไฟล์ต่อรายการ', life: 3000 })
+      }
     },
     removeFile(index) {
       this.formData.files.splice(index, 1)
@@ -206,18 +215,15 @@ export default {
       if (this.formData.files.length === 0) return []
       const formData = new FormData()
       this.formData.files.forEach(file => { formData.append('files', file) })
-      try {
-        const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        return response.data.files || []
-      } catch (error) {
-        this.$toast.add({ severity: 'error', summary: 'อัปโหลดไฟล์ไม่สำเร็จ', detail: error.response?.data?.error || error.message, life: 5000 })
-        return []
-      }
+      const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000 // 10 นาที สำหรับไฟล์ใหญ่
+      })
+      return response.data.files || []
     },
     async submitForm() {
       try {
+        // uploadFiles จะ throw เมื่ออัปโหลดไม่สำเร็จ — submit หยุดทันที ไม่เซฟงานโดยไฟล์หาย
         const uploadedFiles = await this.uploadFiles()
         const formatDate = (date) => {
           if (!date) return null

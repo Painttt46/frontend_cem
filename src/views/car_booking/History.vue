@@ -125,9 +125,9 @@
         <Column header="สถานะ">
           <template #body="slotProps">
             <div class="status-cell">
-              <Badge v-if="slotProps.data.returned" value="คืนแล้ว" severity="success" icon="pi pi-check" />
-              <Badge v-else-if="isWaitingToUse(slotProps.data)" value="รอใช้งาน" severity="info" icon="pi pi-clock" />
-              <Badge v-else value="ยังไม่คืน" severity="warning" icon="pi pi-clock" />
+              <Badge v-if="slotProps.data.returned" value="✓ คืนแล้ว" severity="success" />
+              <Badge v-else-if="isWaitingToUse(slotProps.data)" value="รอใช้งาน" severity="info" />
+              <Badge v-else value="ยังไม่คืน" severity="warning" />
               <span v-if="slotProps.data.borrowRecord.auto_returned" class="auto-return-badge" v-tooltip="'ระบบปิดรายการให้อัตโนมัติเมื่อครบเวลาคืนที่ตั้งไว้ตอนจอง'">
                 <i class="pi pi-clock"></i> คืนอัตโนมัติ
               </span>

@@ -328,7 +328,6 @@ export default {
     EnhancedDataTable
   },
   emits: ['view-attachments', 'request-deleted'],
-  inject: ['$confirm', '$toast'],
   props: {
     records: Array,
     showSensitiveColumns: {
@@ -657,7 +656,8 @@ export default {
         const formData = new FormData()
         for (const file of files) formData.append('files', file)
         const uploadRes = await this.$http.post('/api/files/upload?type=leave', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 600000 // 10 นาที สำหรับไฟล์ใหญ่
         })
         const newFiles = uploadRes.data.files || []
         const updated = [...this.selectedAttachments, ...newFiles]
@@ -685,7 +685,16 @@ export default {
           accept: async () => {
             try {
               await this.$http.delete(`/api/files/${fileName}`)
-            } catch { /* ไม่หยุดแม้ลบไฟล์ไม่สำเร็จ */ }
+            } catch (err) {
+              // ลบไฟล์กายภาพไม่สำเร็จ (เช่น ไม่มีสิทธิ์ admin) — แจ้งจริง ไม่หลอกว่าลบสำเร็จ
+              this.$toast.add({
+                severity: 'error',
+                summary: 'ลบไฟล์ไม่สำเร็จ',
+                detail: err.response?.data?.error || 'ไฟล์ยังอยู่บนเซิร์ฟเวอร์ กรุณาติดต่อผู้ดูแลระบบ',
+                life: 4000
+              })
+              return
+            }
             const updated = this.selectedAttachments.filter(f => f !== fileName)
             await this.$http.put(`/api/leave/${this.selectedRecord.id}/attachments`, { attachments: updated })
             this.selectedAttachments = updated

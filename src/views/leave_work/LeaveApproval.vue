@@ -292,7 +292,6 @@ export default {
       default: false
     }
   },
-  inject: ['$toast'],
   created() {
     this.$http = axios
   },

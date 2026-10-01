@@ -272,7 +272,7 @@ import { isActive } from '@/utils/statusHelper'
 export default {
   name: 'DailyWorkForm',
   components: { Checkbox, Button, MultiSelect, AutoComplete },
-  inject: ['$toast'],
+  // หมายเหตุ: $toast ใช้จาก globalProperties ของ PrimeVue — ห้าม inject เพราะจะ shadow เป็น undefined
   created() {
     this.$http = axios
   },
@@ -526,7 +526,14 @@ export default {
     isStepCompleted(step) { return step?.status === 'completed' },
     getTaskSO(id) { return this.tasks.find(t => t.id === id)?.so_number },
     getTaskName(id) { return this.tasks.find(t => t.id === id)?.task_name },
-    handleFileUploadEntry(event, entry) { entry.files = [...(entry.files || []), ...Array.from(event.target.files)] },
+    handleFileUploadEntry(event, entry) {
+      const incoming = Array.from(event.target.files || [])
+      event.target.value = '' // reset ให้เลือกไฟล์เดิมซ้ำได้
+      incoming.forEach(file => { if ((entry.files?.length || 0) < 20) entry.files.push(file) })
+      if (incoming.length && (entry.files?.length || 0) >= 20) {
+        this.$toast.add({ severity: 'warn', summary: 'แนบได้สูงสุด 20 ไฟล์ต่อรายการ', life: 3000 })
+      }
+    },
     async loadUsers() {
       try {
         const response = await this.$http.get('/api/users')
@@ -610,24 +617,15 @@ export default {
     async uploadFilesForEntry(entry) {
       if (!entry.files || entry.files.length === 0) return []
       
-      try {
-        const formData = new FormData()
-        entry.files.forEach(file => formData.append('files', file))
-        
-        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        return response.data.files || []
-      } catch (error) {
-        console.error('File upload error:', error)
-        this.$toast.add({ 
-          severity: 'error', 
-          summary: 'อัปโหลดไฟล์ไม่สำเร็จ', 
-          detail: error.response?.data?.error || error.message, 
-          life: 5000 
-        })
-        return []
-      }
+      const formData = new FormData()
+      entry.files.forEach(file => formData.append('files', file))
+      
+      // throw เมื่อ fail — submitForm จะหยุด ไม่บันทึกงานโดยไฟล์หาย
+      const response = await this.$http.post('/api/files/upload?type=daily_work', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000 // 10 นาที สำหรับไฟล์ใหญ่
+      })
+      return response.data.files || []
     },
     async submitForm() {
       if (this.isSubmitting) return
@@ -656,6 +654,7 @@ export default {
       const validEntries = this.taskEntries.filter(e => e.taskId)
       if (validEntries.length === 0) {
         this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกโครงการอย่างน้อย 1 รายการ', life: 3000 })
+        this.isSubmitting = false
         return
       }
 
@@ -663,10 +662,12 @@ export default {
       for (const e of validEntries) {
         if (!e.startTime || !e.endTime) {
           this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณากรอกเวลาเริ่มและสิ้นสุดให้ครบทุกโครงการ', life: 3000 })
+          this.isSubmitting = false
           return
         }
         if (!e.location || !e.workDescription) {
           this.$toast.add({ severity: 'warn', summary: 'กรุณากรอกข้อมูลให้ครบ', detail: 'สถานที่และรายละเอียดงานเป็นข้อมูลที่จำเป็น', life: 3000 })
+          this.isSubmitting = false
           return
         }
       }
@@ -694,9 +695,26 @@ export default {
         const totalSubmissions = datesToSubmit.length * validEntries.length
         let completedSubmissions = 0
 
+        // อัปโหลดไฟล์ "ครั้งเดียวต่อรายการ" ก่อน loop วันที่ — กันอัปโหลดซ้ำ N วัน N เท่า
+        const uploadedFilesByEntry = {}
+        try {
+          for (const entry of validEntries) {
+            uploadedFilesByEntry[entry.taskId] = await this.uploadFilesForEntry(entry)
+          }
+        } catch (uploadErr) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'อัปโหลดไฟล์ไม่สำเร็จ',
+            detail: uploadErr.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง (งานยังไม่ถูกบันทึก)',
+            life: 5000
+          })
+          this.isSubmitting = false
+          return
+        }
+
         await Promise.all(datesToSubmit.map(async workDate => {
           return Promise.all(validEntries.map(async entry => {
-          const uploadedFiles = await this.uploadFilesForEntry(entry)
+          const uploadedFiles = uploadedFilesByEntry[entry.taskId] || []
           const eventDetails = entry.eventDetails || ''
 
           // Calculate total hours

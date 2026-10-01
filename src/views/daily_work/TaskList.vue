@@ -1166,8 +1166,12 @@ export default {
       this.editDialog = true
     },
     handleEditFileUpload(event) {
-      const files = Array.from(event.target.files)
-      this.editFormData.newFiles = [...this.editFormData.newFiles, ...files]
+      const files = Array.from(event.target.files || [])
+      event.target.value = '' // reset ให้เลือกไฟล์เดิมซ้ำได้
+      files.forEach(file => { if (this.editFormData.newFiles.length < 20) this.editFormData.newFiles.push(file) })
+      if (files.length && this.editFormData.newFiles.length >= 20) {
+        this.$toast.add({ severity: 'warn', summary: 'แนบได้สูงสุด 20 ไฟล์ต่อรายการ', life: 3000 })
+      }
     },
     removeExistingFile(index) {
       this.editFormData.existingFiles.splice(index, 1)
@@ -1183,20 +1187,18 @@ export default {
         formData.append('files', file)
       })
       
-      try {
-        const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        return response.data.files || []
-      } catch (error) {
-        return []
-      }
+      // throw เมื่อ fail — updateTask จะหยุดบันทึกและแจ้งผู้ใช้ (ไม่เซฟงานโดยไฟล์หาย)
+      const response = await this.$http.post('/api/files/upload?type=tasks', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000 // 10 นาที สำหรับไฟล์ใหญ่
+      })
+      return response.data.files || []
     },
     async updateTask() {
       try {
-        // Upload ไฟล์ใหม่
+        // Upload ไฟล์ใหม่ — uploadNewFiles จะ throw ถ้า fail ทำให้ไม่บันทึกงานโดยไฟล์หาย
         const newUploadedFiles = await this.uploadNewFiles()
-        
+
         // รวมไฟล์เดิมกับไฟล์ใหม่
         const allFiles = [...this.editFormData.existingFiles, ...newUploadedFiles]
         

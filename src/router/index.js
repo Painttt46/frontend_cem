@@ -233,7 +233,7 @@ router.beforeEach(async (to, from, next) => {
 
       if (!canAccessRoute(to.meta.requiresPermission)) {
         // Redirect to first accessible route
-        const accessibleRoutes = ['/leave_work', '/daily_work', '/car_booking', '/projects'];
+        const accessibleRoutes = ['/leave_work', '/daily_work', '/car_booking', '/projects', '/sales-activity', '/procurement'];
         for (const route of accessibleRoutes) {
           if (canAccessRoute(route)) {
             next(route);

@@ -161,7 +161,7 @@
         <Column header="รายละเอียดงาน">
           <template #body="slotProps">
             <Button v-if="slotProps.data.projects.length === 1" label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined
-              @click="showDetails(slotProps.data.projects[0])" />
+              @click="showDetails(slotProps.data.projects[0], slotProps.data)" />
             <span v-else class="text-muted"></span>
           </template>
         </Column>
@@ -253,7 +253,7 @@
                 </template>
               </div>
               <div class="exp-cell exp-cell-actions">
-                <Button icon="pi pi-info-circle" size="small" severity="info" text @click="showDetails(proj)" v-tooltip="'รายละเอียด'" />
+                <Button icon="pi pi-info-circle" size="small" severity="info" text @click="showDetails(proj, slotProps.data)" v-tooltip="'รายละเอียด'" />
                 <Button v-if="hasFiles(proj)" icon="pi pi-paperclip" size="small" severity="secondary" text @click="downloadFiles(proj)" v-tooltip="`${getFilesCount(proj)} ไฟล์`" />
               </div>
               <div class="exp-cell exp-cell-actions">
@@ -269,19 +269,102 @@
   </Card>
 
   <!-- Dialog สำหรับแสดงรายละเอียดงาน -->
-  <div v-if="detailDialog" class="dialog-overlay" @click="detailDialog = false">
-    <div class="dialog-content" @click.stop>
-      <div class="dialog-header">
-        <h3>รายละเอียดงาน</h3>
-        <button class="dialog-close" @click="detailDialog = false">&times;</button>
+  <Dialog v-model:visible="detailDialog" modal header="รายละเอียดงาน" :style="{ width: '92vw', maxWidth: '680px' }" position="center" :draggable="false" class="dt-dialog">
+    <div v-if="selectedRecord" class="dt-wrap">
+      <!-- โครงการ -->
+      <div class="dt-header">
+        <div class="dt-icon"><i class="pi pi-briefcase"></i></div>
+        <div class="dt-title">
+          <div class="dt-name">
+            <span v-if="selectedRecord.so_number" class="dt-so">{{ selectedRecord.so_number }}</span>
+            <span class="dt-task">{{ selectedRecord.task_name || 'ไม่ระบุโครงการ' }}</span>
+          </div>
+          <div v-if="selectedRecord.customer_info" class="dt-customer"><i class="pi pi-building"></i> {{ selectedRecord.customer_info }}</div>
+        </div>
+        <span v-if="selectedRecord.work_status" class="dt-status" :class="dtStatusClass(selectedRecord.work_status)">{{ getStatusLabel(selectedRecord.work_status) }}</span>
       </div>
-      <div class="dialog-body">
-        <div class="work-description">
-          {{ selectedRecord?.work_description || 'ไม่มีรายละเอียด' }}
+
+      <!-- ข้อมูลทั่วไป -->
+      <div class="dt-grid">
+        <div class="dt-item">
+          <div class="dt-label"><i class="pi pi-calendar"></i> วันที่</div>
+          <div class="dt-value">{{ formatDate(selectedRecord.work_date) }}</div>
+        </div>
+        <div class="dt-item">
+          <div class="dt-label"><i class="pi pi-clock"></i> เวลา</div>
+          <div class="dt-value">{{ formatTime(selectedRecord.start_time) }} - {{ formatTime(selectedRecord.end_time) }}</div>
+        </div>
+        <div class="dt-item">
+          <div class="dt-label"><i class="pi pi-map-marker"></i> สถานที่</div>
+          <div class="dt-value">{{ selectedRecord.location || 'ไม่ระบุ' }}</div>
+        </div>
+        <div class="dt-item">
+          <div class="dt-label"><i class="pi pi-users"></i> ผู้ลงงาน</div>
+          <div class="dt-value">{{ detailEmployee || 'ไม่ระบุ' }}</div>
+        </div>
+      </div>
+
+      <!-- ขั้นตอน -->
+      <div v-if="(selectedRecord.steps_data && selectedRecord.steps_data.length) || selectedRecord.step_name" class="dt-section">
+        <div class="dt-section-title"><i class="pi pi-list"></i> ขั้นตอน</div>
+        <div v-if="selectedRecord.steps_data && selectedRecord.steps_data.length" class="steps-container">
+          <div v-for="step in selectedRecord.steps_data" :key="step.id" class="step-card-mini clickable-step"
+            :style="{ borderLeftColor: getStepColorFromData(step) }"
+            @click="goToProjectProgress(selectedRecord.task_id, step.id)">
+            <div class="step-header-mini">
+              <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">{{ (step.step_order || 0) + 1 }}</span>
+              <span class="step-name-mini">{{ step.step_name }}</span>
+              <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">{{ getStepLabelFromData(step) }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-else class="steps-container">
+          <div class="step-card-mini" :style="{ borderLeftColor: getStepColor(selectedRecord) }">
+            <div class="step-header-mini">
+              <span class="step-number-mini" :style="{ background: getStepColor(selectedRecord) }">{{ (selectedRecord.step_order || 0) + 1 }}</span>
+              <span class="step-name-mini">{{ selectedRecord.step_name }}</span>
+              <span class="step-status-badge-mini" :style="{ background: getStepColor(selectedRecord) + '20', color: getStepColor(selectedRecord) }">{{ getStepLabel(selectedRecord) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- หมวดหมู่ -->
+      <div v-if="parseCategoryArray(selectedRecord.category).length" class="dt-section">
+        <div class="dt-section-title"><i class="pi pi-tags"></i> หมวดหมู่</div>
+        <div class="dt-cats">
+          <Badge v-for="cat in parseCategoryArray(selectedRecord.category)" :key="cat"
+            :value="getCategoryLabel(cat)"
+            :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }" />
+        </div>
+      </div>
+
+      <!-- รายละเอียดงาน -->
+      <div class="dt-section">
+        <div class="dt-section-title"><i class="pi pi-align-left"></i> รายละเอียดงาน</div>
+        <div class="dt-desc" :class="{ 'dt-desc-empty': !selectedRecord.work_description }">
+          {{ selectedRecord.work_description || 'ไม่มีรายละเอียด' }}
+        </div>
+      </div>
+
+      <!-- ไฟล์แนบ -->
+      <div v-if="hasFiles(selectedRecord)" class="dt-section">
+        <div class="dt-section-title"><i class="pi pi-paperclip"></i> ไฟล์แนบ ({{ getFilesCount(selectedRecord) }})</div>
+        <div class="dt-files">
+          <div v-for="(file, i) in parseFiles(selectedRecord.files)" :key="i" class="dt-file" @click="viewFullImage(file)">
+            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="dt-thumb" alt="file" />
+            <div v-else class="dt-file-icon"><i class="pi pi-file"></i></div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+    <template #footer>
+      <div class="dt-footer">
+        <Button v-if="hasFiles(selectedRecord)" icon="pi pi-download" label="ไฟล์แนบ" size="small" severity="info" outlined @click="downloadFiles(selectedRecord)" />
+        <Button icon="pi pi-times" label="ปิด" size="small" severity="secondary" text @click="detailDialog = false" />
+      </div>
+    </template>
+  </Dialog>
 
   <!-- Files Dialog -->
   <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
@@ -485,7 +568,7 @@ export default {
     EnhancedDataTable,
     Checkbox
   },
-  inject: ['$confirm', '$toast'],
+  // $toast/$confirm ใช้จาก globalProperties ของ PrimeVue — ห้าม inject เพราะจะ shadow เป็น undefined
   emits: ['refresh-data', 'add-to-group'],
   props: {
     records: {
@@ -550,6 +633,11 @@ export default {
       })
       return Object.values(groups).sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
     },
+    detailEmployee() {
+      if (!this.detailGroup) return ''
+      const g = this.detailGroup
+      return [g.employee_name, g.employee_position].filter(Boolean).join(' · ')
+    },
     calculateEditHours() {
       if (!this.editFormData.start_time_text || !this.editFormData.end_time_text) return '0.00 ชม.'
       const start = this.editFormData.start_time_text.split(':')
@@ -573,6 +661,7 @@ export default {
       tasks: [],
       detailDialog: false,
       selectedRecord: null,
+      detailGroup: null,
       filesDialog: false,
       selectedRecordFiles: [],
       fullImageDialog: false,
@@ -1078,8 +1167,12 @@ export default {
       return date
     },
     handleEditFileUpload(event) {
-      const files = Array.from(event.target.files)
-      this.editFormData.newFiles = [...this.editFormData.newFiles, ...files]
+      const files = Array.from(event.target.files || [])
+      event.target.value = '' // reset ให้เลือกไฟล์เดิมซ้ำได้
+      files.forEach(file => { if (this.editFormData.newFiles.length < 20) this.editFormData.newFiles.push(file) })
+      if (files.length && this.editFormData.newFiles.length >= 20) {
+        this.$toast.add({ severity: 'warn', summary: 'แนบได้สูงสุด 20 ไฟล์ต่อรายการ', life: 3000 })
+      }
     },
     removeExistingFile(index) {
       this.editFormData.existingFiles.splice(index, 1)
@@ -1095,14 +1188,12 @@ export default {
         formData.append('files', file)
       })
 
-      try {
-        const response = await this.$http.post('/api/files/upload?type=daily_work', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        return response.data.files || []
-      } catch { // ignore
-        return []
-      }
+      // throw เมื่อ fail — updateRecord จะหยุดบันทึกและแจ้งผู้ใช้ (ไม่เซฟงานโดยไฟล์หาย)
+      const response = await this.$http.post('/api/files/upload?type=daily_work', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 600000 // 10 นาที สำหรับไฟล์ใหญ่
+      })
+      return response.data.files || []
     },
     async updateRecord() {
       try {
@@ -1119,8 +1210,19 @@ export default {
 
         // รองรับการทำงานข้ามวัน - ไม่ต้อง validate เวลา
 
-        // Upload ไฟล์ใหม่
-        const newUploadedFiles = await this.uploadNewFiles()
+        // Upload ไฟล์ใหม่ — ถ้า fail ให้หยุดบันทึก ไม่บันทึกงานโดยไฟล์หาย
+        let newUploadedFiles
+        try {
+          newUploadedFiles = await this.uploadNewFiles()
+        } catch (uploadErr) {
+          this.$toast.add({
+            severity: 'error',
+            summary: 'อัปโหลดไฟล์ไม่สำเร็จ',
+            detail: uploadErr.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง (งานยังไม่ถูกบันทึก)',
+            life: 5000
+          })
+          return
+        }
 
         // รวมไฟล์เดิมกับไฟล์ใหม่
         const allFiles = [...this.editFormData.existingFiles, ...newUploadedFiles]
@@ -1181,9 +1283,22 @@ export default {
         })
       }
     },
-    showDetails(record) {
+    showDetails(record, group) {
       this.selectedRecord = record
+      this.detailGroup = group || null
       this.detailDialog = true
+    },
+    // แปลง files (jsonb ที่อาจเป็น string) เป็น array
+    parseFiles(files) {
+      if (typeof files === 'string') {
+        try { files = JSON.parse(files) } catch { files = [] }
+      }
+      return Array.isArray(files) ? files : []
+    },
+    dtStatusClass(status) {
+      if (status === 'cancelled') return 'st-cancelled'
+      if (status === 'completed') return 'st-completed'
+      return 'st-active'
     },
     // Method สำหรับตัดข้อความให้สั้น
     truncateText(text, maxLength) {
@@ -1941,6 +2056,85 @@ export default {
 
 .detail-content p {
   margin: 0.5rem 0;
+}
+
+/* ===== Dialog รายละเอียดงาน (dt-*) ===== */
+.dt-wrap { display: flex; flex-direction: column; gap: 1rem; }
+.dt-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 1.5px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+.dt-icon {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.dt-title { flex: 1; min-width: 0; }
+.dt-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.dt-so {
+  font-family: monospace; font-weight: 800; font-size: 0.7rem;
+  color: #fff; background: linear-gradient(135deg, #3b82f6, #2563eb);
+  padding: 0.12rem 0.45rem; border-radius: 5px; white-space: nowrap;
+}
+.dt-task { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
+.dt-customer {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.74rem; color: #475569; margin-top: 0.25rem;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dt-customer i { font-size: 0.64rem; color: #94a3b8; flex-shrink: 0; }
+.dt-status {
+  flex-shrink: 0; font-size: 0.7rem; font-weight: 700;
+  padding: 0.2rem 0.6rem; border-radius: 20px; white-space: nowrap;
+}
+.dt-status.st-completed { background: #dcfce7; color: #166534; }
+.dt-status.st-cancelled { background: #fee2e2; color: #b91c1c; }
+.dt-status.st-active { background: #dbeafe; color: #1d4ed8; }
+.dt-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
+}
+.dt-item { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px; padding: 0.6rem 0.8rem; }
+.dt-label {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.66rem; font-weight: 700; color: #94a3b8;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem;
+}
+.dt-label i { font-size: 0.66rem; }
+.dt-value { font-size: 0.86rem; color: #0f172a; font-weight: 500; }
+.dt-section { display: flex; flex-direction: column; gap: 0.5rem; }
+.dt-section-title {
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.78rem; font-weight: 800; color: #334155;
+}
+.dt-section-title i { color: #3b82f6; font-size: 0.78rem; }
+.dt-cats { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.dt-desc {
+  background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px;
+  padding: 0.75rem 1rem; font-size: 0.88rem; color: #334155;
+  line-height: 1.65; white-space: pre-wrap; word-break: break-word;
+}
+.dt-desc-empty { color: #94a3b8; font-style: italic; }
+.dt-files { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.dt-file {
+  width: 72px; height: 72px; border-radius: 10px; overflow: hidden;
+  border: 1.5px solid #e2e8f0; cursor: pointer; background: #f8fafc;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.dt-file:hover { border-color: #3b82f6; transform: translateY(-1px); }
+.dt-thumb { width: 100%; height: 100%; object-fit: cover; }
+.dt-file-icon { font-size: 1.4rem; color: #94a3b8; }
+.dt-footer { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .dt-grid { grid-template-columns: 1fr; }
+  .dt-footer { flex-direction: column-reverse; }
+  .dt-footer .p-button { width: 100%; }
 }
 
 /* Mobile Responsive */

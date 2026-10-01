@@ -693,7 +693,7 @@
               <!-- ไฟล์ที่อัปโหลดแล้ว -->
               <div v-for="f in vendorNoteFiles" :key="f.id" class="vn-file-row">
                 <i class="pi pi-file"></i>
-                <a :href="f.file_path" target="_blank" rel="noopener" class="vn-file-name" :download="f.file_name">{{ f.file_name }}</a>
+                <a :href="fileHref(f.file_path)" target="_blank" rel="noopener" class="vn-file-name" :download="f.file_name">{{ f.file_name }}</a>
                 <span class="vn-file-meta">{{ formatFileSize(f.file_size) }}<template v-if="f.uploaded_by_name"> • {{ f.uploaded_by_name }}</template></span>
                 <button class="vn-file-del" @click="deleteVendorFile(f)" v-tooltip.top="'ลบไฟล์'"><i class="pi pi-times"></i></button>
               </div>
@@ -1124,6 +1124,12 @@ export default {
     }
   },
   methods: {
+    // ลิงก์ไฟล์ /uploads ต้องแนบ token (server บังคับ auth ที่ static uploads แล้ว)
+    fileHref(path) {
+      const token = localStorage.getItem('soc_token') || ''
+      if (!path) return '#'
+      return path + (path.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token)
+    },
     // กดค้างที่พื้นที่ว่างในตารางหลัก แล้วลากเพื่อเลื่อนซ้าย-ขวา (ไม่ต้องใช้ scrollbar)
     // แต่ถ้ากดบนข้อความ → ให้เลือก/highlight ข้อความได้ตามปกติ
     setupVendorListDragScroll() {
@@ -1326,10 +1332,6 @@ export default {
       const files = Array.from(e.target.files || [])
       e.target.value = ''
       for (const f of files) {
-        if (f.size > 200 * 1024 * 1024) {
-          this.$toast.add({ severity: 'warn', summary: `ไฟล์ "${f.name}" ใหญ่เกินไป`, detail: 'ขนาดไฟล์ต้องไม่เกิน 200MB', life: 3000 })
-          continue
-        }
         this.pendingVendorFiles.push(f)
       }
     },
@@ -1349,7 +1351,7 @@ export default {
           fd.append('file', file)
           fd.append('step_id', this.vendorNoteTarget.step_id)
           fd.append('vendor_name', this.vendorNoteTarget.vendor_name)
-          await axios.post('/api/procurement/vendor-files', fd)
+          await axios.post('/api/procurement/vendor-files', fd, { timeout: 600000 }) // 10 นาที สำหรับไฟล์ใหญ่
         }
         // 3. ลบไฟล์ที่รอลบ (จาก pendingDeleteFileIds)
         for (const fileId of this.pendingDeleteFileIds) {
@@ -1567,8 +1569,8 @@ export default {
         this.$toast.add({ severity: 'warn', summary: 'ไฟล์ไม่ถูกต้อง', detail: 'รองรับเฉพาะไฟล์ .xlsx / .xls', life: 3000 })
         return
       }
-      if (file.size > 200 * 1024 * 1024) {
-        this.$toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'ขนาดไฟล์ต้องไม่เกิน 200MB', life: 3000 })
+        if (file.size > 20 * 1024 * 1024) {
+          this.$toast.add({ severity: 'warn', summary: 'ไฟล์ใหญ่เกินไป', detail: 'ขนาดไฟล์ต้องไม่เกิน 20MB (จำกัดฝั่ง server สำหรับไฟล์ Excel)', life: 4000 })
         return
       }
       this.importLoading = true

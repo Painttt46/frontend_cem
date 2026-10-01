@@ -5,7 +5,7 @@ import store from '@/store'
 // Configure axios defaults
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
-axios.defaults.timeout = 60000 // 60 seconds
+axios.defaults.timeout = 120000 // 2 นาที (request ทั่วไป; จุด upload กำหนด timeout เอง)
 
 // Track pending requests for loading state
 let pendingRequests = 0

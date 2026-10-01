@@ -827,7 +827,8 @@ export default {
           const uploadResponse = await axios.post('/api/files/upload?type=leave', formData, {
             headers: {
               'Content-Type': 'multipart/form-data'
-            }
+            },
+            timeout: 600000 // 10 นาที สำหรับไฟล์ใหญ่
           })
           uploadedFiles = uploadResponse.data.files
         }
@@ -975,8 +976,12 @@ export default {
       }
     },
     handleFileUpload(event) {
-      const files = Array.from(event.target.files)
-      this.formData.attachments = [...this.formData.attachments, ...files]
+      const files = Array.from(event.target.files || [])
+      event.target.value = '' // reset ให้เลือกไฟล์เดิมซ้ำได้
+      files.forEach(file => { if (this.formData.attachments.length < 20) this.formData.attachments.push(file) })
+      if (files.length && this.formData.attachments.length >= 20) {
+        this.$toast.add({ severity: 'warn', summary: 'แนบได้สูงสุด 20 ไฟล์ต่อรายการ', life: 3000 })
+      }
     },
     removeFile(index) {
       this.formData.attachments.splice(index, 1)
