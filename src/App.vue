@@ -4,6 +4,9 @@
     <!-- Global Loading Overlay -->
     <div v-if="$store.state.loading" class="loading-overlay">
       <div class="spinner"></div>
+      <div v-if="uploadState.count > 0" class="upload-note">
+        กำลังอัปโหลดไฟล์ {{ uploadState.percent }}% — กรุณาอย่าปิดหรือรีเฟรชหน้านี้
+      </div>
     </div>
     
     <!-- Show only router-view for login page -->
@@ -23,7 +26,7 @@
 <script>
 import LayoutView from './components/LayoutView.vue';
 import ChatWidget from './components/ChatWidget.vue';
-import { resetLoading } from './utils/axiosConfig';
+import { resetLoading, uploadState } from './utils/axiosConfig';
 
 export default {
   name: 'App',
@@ -33,7 +36,8 @@ export default {
   },
   data() {
     return {
-      loadingTimeout: null
+      loadingTimeout: null,
+      uploadState
     }
   },
   watch: {
@@ -44,10 +48,16 @@ export default {
         this.loadingTimeout = null
       }
       if (isLoading) {
-        this.loadingTimeout = setTimeout(() => {
+        const check = () => {
+          // กำลังอัปโหลดไฟล์ใหญ่อยู่ (อาจใช้เวลาหลายนาที) — ห้ามรีเซ็ต ไม่งั้น spinner หายทั้งที่ไฟล์ยังส่งไม่เสร็จ
+          if (uploadState.count > 0) {
+            this.loadingTimeout = setTimeout(check, 15000)
+            return
+          }
           console.warn('Loading stuck - auto reset')
           resetLoading()
-        }, 15000)
+        }
+        this.loadingTimeout = setTimeout(check, 15000)
       }
     }
   },
@@ -172,7 +182,16 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
+  gap: 1rem;
   z-index: 9999;
+}
+
+.upload-note {
+  color: #fff;
+  font-size: 1rem;
+  text-align: center;
+  padding: 0 1rem;
 }
 
 .spinner {

@@ -1,6 +1,10 @@
 import axios from 'axios'
+import { reactive } from 'vue'
 import router from '@/router'
 import store from '@/store'
+
+// สถานะการอัปโหลดไฟล์ (request ที่ส่ง FormData) — ใช้แสดงความคืบหน้าและกัน watchdog ใน App.vue รีเซ็ต loading กลางคัน
+export const uploadState = reactive({ count: 0, percent: 0 })
 
 // Configure axios defaults
 axios.defaults.baseURL = ''
@@ -31,7 +35,19 @@ axios.interceptors.request.use(
       updateLoading(1)
       config._tracked = true
     }
-    
+
+    // request ที่ส่ง FormData = อัปโหลดไฟล์ → นับ + รายงาน % (ถ้าหน้านั้นไม่ได้กำหนด onUploadProgress เอง)
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config._upload = true
+      if (uploadState.count === 0) uploadState.percent = 0
+      uploadState.count++
+      if (!config.onUploadProgress) {
+        config.onUploadProgress = (e) => {
+          if (e.total) uploadState.percent = Math.min(100, Math.round((e.loaded * 100) / e.total))
+        }
+      }
+    }
+
     // Add token to Authorization header
     const token = localStorage.getItem('soc_token')
     if (token) {
@@ -53,13 +69,15 @@ axios.interceptors.response.use(
     if (response.config._tracked) {
       updateLoading(-1)
     }
+    if (response.config._upload) uploadState.count = Math.max(0, uploadState.count - 1)
     return response
   },
   (error) => {
     if (error.config?._tracked) {
       updateLoading(-1)
     }
-    
+    if (error.config?._upload) uploadState.count = Math.max(0, uploadState.count - 1)
+
     // Handle different error types
     if (error.response) {
       const { status, data } = error.response
