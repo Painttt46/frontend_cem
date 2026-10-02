@@ -3,7 +3,6 @@ import { usePermissions } from '@/composables/usePermissions'
 
 // Lazy load components
 const LoginPage = () => import('../views/LoginPage.vue')
-const TwoFAAuthPage = () => import('../views/TwoFAAuthPage.vue')
 const ProfileView = () => import('../views/profile/ProfileView.vue')
 const CarBookingHome = () => import('../views/car_booking/car_booking.vue')
 const LeaveWork = () => import('../views/leave_work/LeaveWork.vue')
@@ -42,12 +41,6 @@ const routes = [
     name: 'profile',
     component: ProfileView,
     meta: { requiresAuth: true, title: 'โปรไฟล์ - Gent-CEM' },
-  },
-  {
-    path: '/two-authentication',
-    name: 'two-authentication',
-    component: TwoFAAuthPage,
-    meta: { title: 'ยืนยันตัวตน 2 ขั้นตอน - Gent-CEM' },
   },
   {
     path: '/car_booking',
@@ -218,7 +211,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     // Skip permission check for basic pages (fix race condition after login)
-    const skipPermissionCheck = ['/profile', '/login', '/two-authentication'];
+    const skipPermissionCheck = ['/profile', '/login'];
     if (role && !skipPermissionCheck.includes(to.path) && to.meta.requiresPermission) {
       const { loadPermissions, canAccessRoute, permissionsLoaded } = usePermissions();
 

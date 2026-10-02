@@ -553,6 +553,7 @@
 </template>
 
 <script>
+import { isImageFile, fileUrlWithToken, downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
@@ -1063,12 +1064,10 @@ export default {
       return 'contrast'
     },
     isImageFile(fileName) {
-      const extension = fileName.split('.').pop()?.toLowerCase()
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+      return isImageFile(fileName)
     },
     getFileUrl(fileName) {
-      const token = localStorage.getItem('soc_token')
-      return `/api/files/download/${fileName}?token=${token}`
+      return fileUrlWithToken(fileName)
     },
     viewFullImage(fileName) {
       this.fullImageUrl = this.getFileUrl(fileName)
@@ -1104,17 +1103,7 @@ export default {
     },
     async downloadFile(fileName) {
       try {
-        const response = await this.$http.get(`/api/files/download/${fileName}`, {
-          responseType: 'blob'
-        })
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.download = fileName.split('-').slice(2).join('-') || fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
+        await downloadBlob(this.$http, `/api/files/download/${fileName}`, getOriginalFileName(fileName))
       } catch { // ignore
         
         this.$toast.add({

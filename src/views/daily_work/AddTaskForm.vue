@@ -85,9 +85,9 @@
           </div>
 
           <div class="input-group full-width">
-            <label class="input-label">แนบไฟล์ (รูปภาพ, เอกสาร)</label>
+            <label class="input-label">แนบไฟล์ (ทุกชนิดไฟล์)</label>
             <div class="file-upload-wrapper">
-              <input ref="fileInput" @change="handleFileUpload" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+              <input ref="fileInput" @change="handleFileUpload" type="file"
                 multiple class="file-input" id="fileUpload">
               <Button type="button"
                 :label="formData.files?.length > 0 ? `เลือกแล้ว ${formData.files.length} ไฟล์` : 'เลือกไฟล์'"
@@ -257,7 +257,7 @@ export default {
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         this.resetForm()
       } catch (err) {
-        this.$toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: err.response?.data?.error || err.message || 'ไม่สามารถเพิ่มงานได้', life: 5000 })
+        this.$toast.add({ severity: 'error', summary: 'เกิดข้อผิดพลาด', detail: err.response?.data?.error || err.userMessage || err.message || 'ไม่สามารถเพิ่มงานได้', life: 5000 })
       }
     },
     resetForm() {

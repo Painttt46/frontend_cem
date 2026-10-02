@@ -298,7 +298,6 @@ export default {
         startDate: new Date(),
         endDate: new Date()
       },
-      statusOptions: [],
       users: [],
       isSubmitting: false
     }
@@ -324,7 +323,6 @@ export default {
   async mounted() {
     await this.loadTasks()
     await this.loadUsers()
-    this.loadStatusOptions()
     // ตั้งค่าเริ่มต้นเวลาปัจจุบัน
     const now = new Date()
     const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
@@ -610,10 +608,6 @@ export default {
         entry.selectedAttendee = null
       })
     },
-    loadStatusOptions() {
-      const saved = localStorage.getItem('work_statuses')
-      this.statusOptions = saved ? JSON.parse(saved) : []
-    },
     async uploadFilesForEntry(entry) {
       if (!entry.files || entry.files.length === 0) return []
       
@@ -712,8 +706,10 @@ export default {
           return
         }
 
-        await Promise.all(datesToSubmit.map(async workDate => {
-          return Promise.all(validEntries.map(async entry => {
+        // allSettled: ถ้ารายการหนึ่งพัง รายการอื่นที่บันทึกไปแล้วต้องไม่ถูกบันทึกซ้ำเมื่อผู้ใช้กดบันทึกอีกครั้ง
+        // จึงนับสำเร็จ/ล้มเหลวแล้วแจ้งผู้ใช้ตรง ๆ แทนที่จะโยน error ทั้งชุด
+        const settled = await Promise.allSettled(datesToSubmit.map(async workDate => {
+          return Promise.allSettled(validEntries.map(async entry => {
           const uploadedFiles = uploadedFilesByEntry[entry.taskId] || []
           const eventDetails = entry.eventDetails || ''
 
@@ -755,16 +751,29 @@ export default {
           }))
         }))
 
+        const results = settled.flatMap(r => r.status === 'fulfilled' ? r.value : [r])
+        const failures = results.filter(r => r.status === 'rejected')
+
         const dateText = this.formData.useDateRange 
           ? `${datesToSubmit.length} วัน` 
           : '1 วัน'
-        
-        this.$toast.add({
-          severity: 'success',
-          summary: 'สำเร็จ',
-          detail: `บันทึกงานรายวัน ${validEntries.length} โครงการ × ${dateText} = ${totalSubmissions} รายการเรียบร้อยแล้ว`,
-          life: 5000
-        })
+
+        if (failures.length > 0) {
+          const firstErr = failures[0].reason
+          this.$toast.add({
+            severity: 'warn',
+            summary: `บันทึกสำเร็จ ${completedSubmissions} จาก ${totalSubmissions} รายการ`,
+            detail: `${failures.length} รายการบันทึกไม่สำเร็จ (${firstErr?.response?.data?.error || firstErr?.userMessage || 'เกิดข้อผิดพลาด'}) — กรุณาตรวจสอบรายการในหน้าลงงานก่อนบันทึกซ้ำ เพื่อไม่ให้เกิดรายการซ้ำ`,
+            life: 10000
+          })
+        } else {
+          this.$toast.add({
+            severity: 'success',
+            summary: 'สำเร็จ',
+            detail: `บันทึกงานรายวัน ${validEntries.length} โครงการ × ${dateText} = ${totalSubmissions} รายการเรียบร้อยแล้ว`,
+            life: 5000
+          })
+        }
 
         window.dispatchEvent(new CustomEvent('taskUpdated'))
         window.dispatchEvent(new CustomEvent('taskStatusChanged'))

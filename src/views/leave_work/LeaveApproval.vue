@@ -269,6 +269,7 @@
 </template>
 
 <script>
+import { isImageFile, fileUrlWithToken, getFileIcon, getFileType, downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
@@ -455,19 +456,8 @@ export default {
 
     async downloadFile(fileName) {
       try {
-        const response = await this.$http.get(`/api/files/download/${fileName}`, {
-          responseType: 'blob'
-        })
-        
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        const originalName = fileName.split('-').slice(2).join('-') || fileName
-        link.download = originalName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
+        const originalName = getOriginalFileName(fileName)
+        await downloadBlob(this.$http, `/api/files/download/${fileName}`, originalName)
 
         this.$toast.add({
           severity: 'success',
@@ -486,13 +476,11 @@ export default {
     },
 
     isImageFile(fileName) {
-      const extension = fileName.split('.').pop()?.toLowerCase()
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+      return isImageFile(fileName)
     },
 
     getFileUrl(fileName) {
-      const token = localStorage.getItem('soc_token')
-      return `/api/files/download/${fileName}?token=${token}`
+      return fileUrlWithToken(fileName)
     },
 
     viewFullImage(fileName) {
@@ -501,35 +489,11 @@ export default {
     },
 
     getFileIcon(fileName) {
-      const extension = fileName.split('.').pop()?.toLowerCase()
-      const icons = {
-        pdf: 'pi pi-file-pdf',
-        doc: 'pi pi-file-word',
-        docx: 'pi pi-file-word',
-        xls: 'pi pi-file-excel',
-        xlsx: 'pi pi-file-excel',
-        jpg: 'pi pi-image',
-        jpeg: 'pi pi-image',
-        png: 'pi pi-image',
-        gif: 'pi pi-image'
-      }
-      return icons[extension] || 'pi pi-file'
+      return getFileIcon(fileName)
     },
 
     getFileType(fileName) {
-      const extension = fileName.split('.').pop()?.toLowerCase()
-      const types = {
-        pdf: 'PDF Document',
-        doc: 'Word Document',
-        docx: 'Word Document',
-        xls: 'Excel Spreadsheet',
-        xlsx: 'Excel Spreadsheet',
-        jpg: 'JPEG Image',
-        jpeg: 'JPEG Image',
-        png: 'PNG Image',
-        gif: 'GIF Image'
-      }
-      return types[extension] || 'Unknown File'
+      return getFileType(fileName)
     },
     formatDateTime(datetime) {
       if (!datetime) return '-'

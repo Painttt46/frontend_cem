@@ -102,8 +102,16 @@ axios.interceptors.response.use(
           error.userMessage = 'ไม่พบข้อมูลที่ต้องการ'
           break
           
+        case 408:
+          error.userMessage = 'การอัปโหลดใช้เวลานานเกินไปและถูกตัดการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง'
+          break
+
+        case 413:
+          error.userMessage = 'ไฟล์หรือข้อมูลที่ส่งมีขนาดใหญ่เกินกว่าที่เซิร์ฟเวอร์รับได้ กรุณาลดขนาดหรือจำนวนไฟล์'
+          break
+          
         case 422:
-          error.userMessage = data.error || 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'
+          error.userMessage = (data && typeof data === 'object' && data.error) || 'ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง'
           break
           
         case 429:
@@ -118,7 +126,8 @@ axios.interceptors.response.use(
           break
           
         default:
-          error.userMessage = data.error || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+          // data อาจเป็นสตริง HTML (เช่นหน้า error ของ nginx) — อ่าน .error ได้เฉพาะเมื่อเป็น object
+          error.userMessage = (data && typeof data === 'object' && data.error) || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
       }
     } else if (error.request) {
       if (error.code === 'ECONNABORTED') {

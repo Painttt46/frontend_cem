@@ -37,7 +37,7 @@ import ProgressBar from 'primevue/progressbar';
 
 import {nextTick} from 'vue';
 
-const DEFAULT_TITLE = "Vue SOC Application";
+const DEFAULT_TITLE = "Gent-CEM";
 router.afterEach((to) => {
     nextTick(() => {
         document.title = to.meta.title || DEFAULT_TITLE;

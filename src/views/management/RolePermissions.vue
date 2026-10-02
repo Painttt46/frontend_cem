@@ -137,7 +137,10 @@ const pages = ref([
   { id: 15, name: 'ตั้งค่าผู้อนุมัติลา', path: '/management/settings/leave-approval', icon: 'pi pi-user-edit', hasAccess: false },
   { id: 16, name: 'ตั้งค่าเวลาทำงานตาม Role', path: '/management/settings/role-work-hours', icon: 'pi pi-clock', hasAccess: false },
   { id: 17, name: 'จัดซื้อ', path: '/procurement', icon: 'pi pi-shopping-cart', hasAccess: false },
-  { id: 18, name: 'เข้าพบลูกค้า', path: '/sales-activity', icon: 'pi pi-briefcase', hasAccess: false }
+  { id: 18, name: 'เข้าพบลูกค้า', path: '/sales-activity', icon: 'pi pi-briefcase', hasAccess: false },
+  // หน้าจัดการระบบที่มี route และตรวจสิทธิ์อยู่แล้ว แต่เดิมไม่อยู่ในรายการ ทำให้ role อื่นนอกจาก superadmin ติ๊กเปิดไม่ได้
+  { id: 19, name: 'รายการงาน (จัดการระบบ)', path: '/management/projects', icon: 'pi pi-list', hasAccess: false },
+  { id: 20, name: 'งานรายวัน (จัดการระบบ)', path: '/management/daily-work', icon: 'pi pi-calendar', hasAccess: false }
 ])
 
 onMounted(async () => {

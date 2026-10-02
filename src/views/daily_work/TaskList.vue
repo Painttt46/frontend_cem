@@ -254,7 +254,7 @@
     <div v-if="selectedTaskFiles && selectedTaskFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedTaskFiles" :key="index" class="file-item">
         <div class="file-info">
-          <img v-if="isImageFile(typeof file === 'object' ? file.name : file)" src="" class="file-preview" @click="viewFullImage(typeof file === 'object' ? file.name : file)" style="cursor:pointer" />
+          <img v-if="isImageFile(typeof file === 'object' ? file.name : file)" :src="getThumbUrl(file)" class="file-preview" @click="viewFullImage(typeof file === 'object' ? file.name : file)" style="cursor:pointer" />
           <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ typeof file === 'object' ? file.name : file.split('-').slice(2).join('-') || file }}</span>
         </div>
@@ -408,7 +408,7 @@
     <div v-if="selectedWorkFiles && selectedWorkFiles.length > 0" class="files-list">
       <div v-for="(file, index) in selectedWorkFiles" :key="index" class="file-item">
         <div class="file-info">
-          <img v-if="isImageFile(file)" src="" class="file-preview" @click="viewFullImage(file)" style="cursor:pointer" />
+          <img v-if="isImageFile(file)" :src="getThumbUrl(file)" class="file-preview" @click="viewFullImage(file)" style="cursor:pointer" />
           <i v-else class="pi pi-file file-icon"></i>
           <span class="file-name">{{ file }}</span>
         </div>
@@ -507,7 +507,7 @@
           <label class="input-label">ไฟล์แนบ</label>
           <div class="file-upload-section">
             <input type="file" ref="editFileInput" @change="handleEditFileUpload" 
-              accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" multiple class="file-input" style="display: none;">
+              multiple class="file-input" style="display: none;">
             <Button type="button" 
               label="เพิ่มไฟล์" 
               icon="pi pi-upload" 
@@ -560,6 +560,7 @@
 </template>
 
 <script>
+import { isImageFile, downloadBlob } from '@/utils/fileHelpers'
 import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
@@ -1056,12 +1057,19 @@ export default {
       this.detailDialog = true
     },
     isImageFile(fileName) {
-      const extension = fileName.split('.').pop()?.toLowerCase()
-      return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(extension)
+      return isImageFile(fileName)
     },
     getFileUrl(fileName) {
       // ใช้ blob URL แทนการใส่ token ใน URL
       return `/api/files/download/${fileName}`
+    },
+    // URL รูปตัวอย่างในกล่องไฟล์แนบ (เดิมเป็น src="" ทำให้รูปแตก)
+    // ไฟล์ปกติใช้ cookie ยืนยันตัวตน (same-origin) ไม่ต้องใส่ token ใน URL, ไฟล์จาก ERP ต้องผ่าน proxy ของ backend
+    getThumbUrl(file) {
+      if (file && typeof file === 'object') {
+        return file.erp ? `/api/erp-sync/file?path=${encodeURIComponent(file.url)}` : this.getFileUrl(file.name)
+      }
+      return this.getFileUrl(file)
     },
     async viewFullImage(fileName) {
       try {
@@ -1089,15 +1097,7 @@ export default {
           : `/api/files/download/${file}`
         const displayName = isErp ? file.name : (file.split('-').slice(2).join('-') || file)
 
-        const response = await this.$http.get(url, { responseType: 'blob' })
-        const blobUrl = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = blobUrl
-        link.download = displayName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(blobUrl)
+        await downloadBlob(this.$http, url, displayName)
       } catch (error) {
         this.$toast.add({
           severity: 'error',
@@ -1280,7 +1280,7 @@ export default {
         this.$toast.add({
           severity: 'error',
           summary: 'เกิดข้อผิดพลาด',
-          detail: error.response?.data?.error || 'ไม่สามารถแก้ไขงานได้',
+          detail: error.response?.data?.error || error.userMessage || 'ไม่สามารถแก้ไขงานได้',
           life: 5000
         })
       }
