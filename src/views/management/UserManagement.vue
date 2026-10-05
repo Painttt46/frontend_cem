@@ -1,6 +1,5 @@
 <template>
   <div class="user-management">
-    <Toast />
     
     <!-- Header Card -->
     <Card class="header-card mb-4">
@@ -410,7 +409,7 @@ onMounted(() => {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -420,7 +419,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-body) {
@@ -509,7 +508,7 @@ onMounted(() => {
 /* Filter Card */
 .filter-card {
   border: 1px solid #e9ecef;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .filter-content {
@@ -549,7 +548,7 @@ onMounted(() => {
 /* Table Styles */
 .table-card {
   border: 1px solid #e9ecef;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .responsive-table {

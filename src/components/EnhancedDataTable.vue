@@ -65,9 +65,13 @@
     </div>
 
     <!-- Pass through DataTable with filtered data -->
+    <!-- มือถือ (<768px): แถวตารางเปลี่ยนเป็นการ์ด แต่ละช่องมีชื่อคอลัมน์กำกับ (responsiveLayout=stack)
+         ประกาศหลัง v-bind="$attrs" เพื่อทับ responsiveLayout="scroll" ที่แต่ละหน้าส่งมา — เดสก์ท็อปไม่เปลี่ยน -->
     <DataTable
       :value="filteredData"
       v-bind="$attrs"
+      responsiveLayout="stack"
+      breakpoint="768px"
     >
       <slot />
       <template v-if="$slots.expansion" #expansion="slotProps">
@@ -79,7 +83,7 @@
 
 <script setup>
 /* eslint-disable no-undef */
-import { ref, computed, useSlots } from 'vue'
+import { ref, computed, useSlots, watch } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
@@ -98,12 +102,18 @@ const props = defineProps({
   columns: {
     type: Array,
     default: () => []
+  },
+  // ค่าเริ่มต้นของช่องค้นหา (เช่น มาจากลิงก์/ Ctrl+K) — เปลี่ยนค่านี้แล้วช่องค้นหาจะตามไปด้วย
+  initialSearch: {
+    type: String,
+    default: ''
   }
 })
 
 const slots = useSlots()
 
-const localSearch = ref('')
+const localSearch = ref(props.initialSearch)
+watch(() => props.initialSearch, (v) => { localSearch.value = v })
 const advancedMode = ref(false)
 const filterLogic = ref('AND') // AND or OR
 const filters = ref([

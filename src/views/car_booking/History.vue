@@ -447,15 +447,15 @@ export default {
 
 .clickable-card:hover {
   background: #e3f2fd;
-  border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+  border-color: #3a7bd0;
+  box-shadow: none;
 }
 
 
 .colleague-avatar {
   width: 50px;
   height: 50px;
-  background: #667eea;
+  background: #3a7bd0;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -496,7 +496,7 @@ export default {
 .history-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -512,7 +512,7 @@ export default {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 600;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .card-header i {
@@ -531,11 +531,11 @@ export default {
 .empty-state p {
   margin-top: 1rem;
   font-size: 1.1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable-header) {
@@ -584,14 +584,13 @@ export default {
 
 .view-icon {
   font-size: 1.2rem;
-  color: #667eea;
+  color: #3a7bd0;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .view-icon:hover {
   color: #5a67d8;
-  transform: scale(1.1);
 }
 
 .ticket-id {
@@ -673,13 +672,13 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #667eea;
+  color: #3a7bd0;
   font-weight: 600;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #764ba2;
+  color: #2f66b3;
   text-decoration: underline;
 }
 

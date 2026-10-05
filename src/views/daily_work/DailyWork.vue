@@ -1,6 +1,5 @@
 <template>
   <div class="daily-work-container">
-    <Toast />
     
     <Card class="header-card">
       <template #header>
@@ -68,11 +67,13 @@
       :dismissableMask="false">
       <template #header>
         <div class="dialog-header-custom">
-          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #3b82f6;"></i>
+          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #3a7bd0;"></i>
           <span class="dialog-title">ลงตารางงานรายวัน</span>
         </div>
       </template>
-      <div style="flex: 1; overflow-y: auto; padding: 1.5rem;">
+      <!-- ไม่เว้น padding ด้านล่าง: แถบปุ่ม (sticky) ต้องติดขอบล่างของ dialog พอดี ถ้าเว้นไว้แถบจะลอยสูงจากขอบล่าง
+           แล้วเนื้อหาฟอร์มโผล่ผ่านช่องว่างใต้แถบ (ดูเป็นแถบขาวบังเนื้อหา) -->
+      <div style="flex: 1; overflow-y: auto; padding: 1.5rem 1.5rem 0;">
         <DailyWorkForm :key="dialogKey" ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
       </div>
     </Dialog>
@@ -257,9 +258,9 @@ export default {
   
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
   overflow: auto;
 }
 
@@ -305,7 +306,7 @@ export default {
 }
 
 .filter-so-tag {
-  background: #3b82f6;
+  background: #4A90E2;
   color: #fff;
   padding: 1px 6px;
   border-radius: 4px;
@@ -323,7 +324,7 @@ export default {
   border-radius: 12px;
   padding: 4px;
   border: 1px solid #e2e8f0;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: none;
 }
 
 .filter-btn {
@@ -340,7 +341,7 @@ export default {
   align-items: center;
   gap: 0.4rem;
   white-space: nowrap;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .filter-btn:hover {
@@ -352,7 +353,7 @@ export default {
   background: white;
   color: #1e3a8a;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: none;
 }
 
 .filter-btn.filter-today.active {
@@ -394,13 +395,13 @@ export default {
 }
 
 .work-btn {
-  background: #1e3a8a !important;
+  background-color: #4A90E2 !important;
   border: none !important;
   color: white !important;
-  padding: 1rem 2rem !important;
+  padding: 0.85rem 1.8rem !important;
   font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   overflow: hidden !important;
@@ -409,18 +410,17 @@ export default {
 }
 
 .work-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(30, 58, 138, 0.6) !important;
+  filter: brightness(0.93) !important;
 }
 
 .task-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  background-color: #0aa875 !important;
   border: none !important;
   color: white !important;
   padding: 1rem 2rem !important;
   font-weight: 600 !important;
   border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   overflow: hidden !important;
@@ -429,8 +429,7 @@ export default {
 }
 
 .task-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6) !important;
+  filter: brightness(0.93) !important;
 }
 
 .btn-text {
@@ -442,7 +441,7 @@ export default {
 .main-content {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   overflow: hidden;
   padding: 2rem;
 }
@@ -482,15 +481,15 @@ export default {
 }
 
 .tab-navigation :deep(.p-tabview-nav-link:hover) {
-  background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  background: rgba(74, 144, 226, 0.1);
+  color: #3a7bd0;
 }
 
 .tab-navigation :deep(.p-tabview-nav-link.p-highlight) {
   background: white;
-  color: #667eea;
-  border-bottom: 2px solid #667eea;
-  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  color: #3a7bd0;
+  border-bottom: 2px solid #3a7bd0;
+  box-shadow: none;
 }
 
 .tab-navigation :deep(.p-tabview-panels) {
@@ -509,7 +508,7 @@ export default {
 
 .header-card {
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: none;
   background: transparent;
 }
@@ -531,7 +530,7 @@ export default {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border-radius: 15px 15px 0 0;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: none;
   overflow: hidden;
   min-height: 80px;
   flex-wrap: wrap;
@@ -647,7 +646,7 @@ export default {
 }
 
 .dialog-title {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #4A90E2, #3a7bd0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -656,11 +655,11 @@ export default {
 :deep(.work-dialog) {
   max-width: 95vw;
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 }
 
 :deep(.work-dialog .p-dialog-header) {
-  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%);
+  background-color: #ecf6fd;
   border-bottom: 2px solid #bfdbfe;
   padding: 1.25rem 1.5rem;
   border-radius: 16px 16px 0 0;
@@ -669,14 +668,13 @@ export default {
 :deep(.work-dialog .p-dialog-header-icon) {
   width: 2.5rem;
   height: 2.5rem;
-  color: #3b82f6;
+  color: #3a7bd0;
   transition: all 0.2s;
 }
 
 :deep(.work-dialog .p-dialog-header-icon:hover) {
   background: #dbeafe;
-  color: #1d4ed8;
-  transform: rotate(90deg);
+  color: #2a5490;
 }
 
 @media (max-width: 768px) {
@@ -707,6 +705,20 @@ export default {
   }
 }
 
+/* มือถือ: ปุ่มกรอง ทั้งหมด/วันนี้/งานล่วงหน้า แบ่งความกว้างเท่ากันและไม่ล้นกรอบ (เดิมปุ่มที่สามถูกตัดขอบขวา) */
+@media (max-width: 768px) {
+  .filter-buttons {
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 0.5rem 0.4rem;
+    font-size: 0.8rem;
+  }
+}
 </style>
 
 <style>

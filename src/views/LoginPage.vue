@@ -3,7 +3,7 @@
   <div class="">
     <!-- <div class="" style="margin-top: calc(20vh)"> -->
     <div class="row bg-card justify-content-center">
-      <div class="col-11 col-sm-8 col-md-6 col-xl-3 justify-content-center">
+      <div class="col-11 col-sm-8 col-md-6 col-xl-3 justify-content-center login-col">
         <div class="card-body-1 ">
           <div class="text-center mb-3">
             <img src="/NGENT.png" alt="GENT Logo" style="max-width: 200px; height: auto;" />
@@ -315,24 +315,91 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  position: relative;
 }
 
+/* ฟิล์มสีกรมท่าไล่เฉดทับภาพพื้นหลัง ให้การ์ดและตัวหนังสืออ่านง่ายขึ้นและโทนเข้ากับแบรนด์ (น้ำเงิน → แดงจาง ๆ) */
+.bg-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(160deg, rgba(8, 18, 38, 0.62) 0%, rgba(8, 18, 38, 0.28) 55%, rgba(120, 22, 22, 0.30) 100%);
+}
+
+.login-col {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto !important;
+  width: min(440px, 92vw) !important;
+  max-width: 440px !important;
+}
+
+/* การ์ดเดียว (เดิมเป็นกล่องซ้อนกล่อง) แบบกระจกฝ้า */
 .card-body-1 {
-  background-color: rgba(17, 25, 40, 0.25);
-  filter: drop-shadow(0 30px 10px rgba(0, 0, 0, 0.125));
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-radius: 12px;
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 24px;
+  padding: 2rem 2rem 1.5rem;
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.card-body-1 h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-shadow: none;
+  margin-bottom: 0.25rem;
 }
 
 .card-body-2 {
-  background-color: rgba(17, 25, 40, 0.25);
-  filter: drop-shadow(0 30px 10px rgba(0, 0, 0, 0.125));
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.card-body-1 .p-inputtext,
+.card-body-1 .p-password input {
+  height: 48px;
+  font-size: 0.95rem;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 12px;
-  padding: 20px;
+}
+
+.card-body-1 .p-inputgroup .p-inputtext,
+.card-body-1 .p-inputgroup .p-password input {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.card-body-1 .p-inputgroup-addon {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  color: var(--brand-blue-700);
+  min-width: 3rem;
+}
+
+.card-body-1 .p-inputtext:enabled:focus {
+  /* ช่องกรอกบนการ์ดกระจก: ใช้ขอบขาวหนา + outline น้ำเงิน แทนวงแสง (ไม่มีเงา) */
+  border-color: #fff;
+  outline: 2px solid #4A90E2;
+  outline-offset: 0;
+  box-shadow: none;
+}
+
+.card-body-1 a {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
+}
+
+.card-body-1 a:hover {
+  color: #fff !important;
 }
 
 /* Forgot Password Dialog Styles */
@@ -359,7 +426,7 @@ body {
   background: white !important;
   border-radius: 50% !important;
   color: #333 !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: none !important;
 }
 
 .forgot-password-dialog .p-dialog-header-close:hover {
@@ -512,7 +579,7 @@ body {
 
 .email-input:focus {
   border-color: #4A90E2 !important;
-  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1) !important;
+  box-shadow: none !important;
   background: white !important;
 }
 
@@ -521,7 +588,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 12px;
-  background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+  background-color: #ebecf9;
   border-radius: 8px;
   border-left: 4px solid #4A90E2;
   font-size: 12px;
@@ -535,7 +602,7 @@ body {
 
 .email-input:focus {
   border-color: #4A90E2 !important;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1) !important;
+  box-shadow: none !important;
 }
 
 .dialog-footer {
@@ -562,42 +629,44 @@ body {
 }
 
 .login-btn {
-  background: linear-gradient(135deg, #4A90E2, #357ABD) !important;
+  background: var(--brand-blue) !important;
   border: none !important;
-  padding: 12px 24px !important;
-  font-size: 16px !important;
+  padding: 0 24px !important;
+  height: 50px;
+  font-size: 1rem !important;
   font-weight: 600 !important;
-  border-radius: 8px !important;
+  letter-spacing: 0.02em;
+  border-radius: 14px !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
 }
 
 .login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+  box-shadow: none !important;
+  filter: brightness(1.05);
 }
 
 .login-success {
-  background: linear-gradient(135deg, #28a745, #20c997) !important;
+  background-color: #24b86e !important;
 }
 
 .login-error {
-  background: linear-gradient(135deg, #dc3545, #c82333) !important;
+  background-color: #d22c3c !important;
 }
 
 .send-btn {
-  background: linear-gradient(135deg, #4A90E2, #D73527) !important;
+  background: #4A90E2 !important;
   border: none !important;
   padding: 8px 20px !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
   font-size: 14px !important;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3) !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
 }
 
 .send-btn:hover:not(:disabled) {
-  transform: translateY(-1px) !important;
-  box-shadow: 0 3px 8px rgba(74, 144, 226, 0.4) !important;
+  filter: brightness(0.93) !important;
 }
 
 .send-btn:disabled {

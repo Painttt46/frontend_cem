@@ -5,6 +5,7 @@
       <div class="header-actions">
         <Button icon="pi pi-download" label="โหลด Template" @click="showLoadTemplate" size="small" severity="secondary" outlined />
         <Button v-if="steps.length > 0" icon="pi pi-save" label="บันทึก Template" @click="showSaveTemplate" size="small" severity="info" outlined />
+        <Button v-if="steps.length > 0" icon="pi pi-trash" label="ลบ Step ทั้งหมด" @click="deleteAllSteps" size="small" severity="danger" outlined />
         <Button icon="pi pi-plus" label="เพิ่ม Step" @click="addStep" size="small" />
       </div>
     </div>
@@ -208,6 +209,7 @@
 </template>
 
 <script>
+import { toDateKey } from '@/utils/dateUtils'
 import axios from '@/utils/axiosConfig'
 import { useConfirm } from 'primevue/useconfirm'
 
@@ -437,12 +439,34 @@ export default {
         message: 'คุณต้องการลบ step นี้หรือไม่?',
         header: 'ยืนยันการลบ',
         icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'ลบ',
+        acceptClass: 'p-button-danger',
         accept: () => {
           this.steps.splice(index, 1)
           // Update step_order
           this.steps.forEach((step, idx) => {
             step.step_order = idx
           })
+          this.$emit('update:modelValue', this.steps)
+        }
+      })
+    },
+    // ลบ step ทั้งหมดของโครงการนี้ในครั้งเดียว — ล้างเฉพาะรายการในหน้าจอ ระบบจะลบจริงตอนกด "บันทึก" ของหน้าต่างแก้ไขงาน
+    // (ใช้ทางเดียวกับการลบทีละ step: TaskList.updateTask ลบ step ที่หายไปจากรายการ)
+    deleteAllSteps() {
+      const total = this.steps.length
+      if (total === 0) return
+      const withWork = this.steps.filter(s => s.has_work_logged).length
+      this.$confirm.require({
+        message: `คุณต้องการลบ Workflow Step ทั้งหมด ${total} รายการของโครงการนี้หรือไม่?`
+          + (withWork > 0 ? ` (มี ${withWork} step ที่เคยลงงานไว้แล้ว)` : '')
+          + ' — การลบจะมีผลเมื่อกดบันทึกการแก้ไข',
+        header: 'ยืนยันการลบ Step ทั้งหมด',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'ลบทั้งหมด',
+        acceptClass: 'p-button-danger',
+        accept: () => {
+          this.steps.splice(0, this.steps.length)
           this.$emit('update:modelValue', this.steps)
         }
       })
@@ -463,12 +487,7 @@ export default {
       }
     },
     formatDate(date) {
-      if (!date) return null
-      const d = new Date(date)
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
+      return toDateKey(date)
     },
     formatDateRange(start, end) {
       if (!start && !end) return 'ไม่ระบุวันที่'
@@ -611,6 +630,8 @@ export default {
         message: 'คุณต้องการลบ template นี้หรือไม่?',
         header: 'ยืนยันการลบ',
         icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'ลบ',
+        acceptClass: 'p-button-danger',
         accept: async () => {
           try {
             await axios.delete(`/api/settings/workflow-templates/${id}`)
@@ -669,7 +690,7 @@ export default {
 }
 
 .workflow-step.drag-over .step-card {
-  border: 2px dashed #3b82f6;
+  border: 2px dashed #4A90E2;
   background: #eff6ff;
 }
 
@@ -686,7 +707,7 @@ export default {
 }
 
 .step-arrow i {
-  color: #3b82f6;
+  color: #3a7bd0;
   font-size: 1.5rem;
   font-weight: bold;
 }
@@ -706,7 +727,7 @@ export default {
   height: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-left: 10px solid #3b82f6;
+  border-left: 10px solid #4A90E2;
 }
 
 .workflow-step:not(:first-child)::after {
@@ -717,52 +738,51 @@ export default {
   transform: translateY(-50%);
   width: 12px;
   height: 3px;
-  background: #3b82f6;
+  background: #4A90E2;
 }
 
 .step-card {
   background: white;
   border-radius: 10px;
   padding: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border-left: 3px solid #3b82f6;
+  box-shadow: none;
+  border-left: 3px solid #4A90E2;
   transition: all 0.3s ease;
   min-height: fit-content;
 }
 
 .step-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
+  filter: brightness(0.97);
 }
 
 .step-card.status-completed {
   border-left-color: #10b981;
-  background: linear-gradient(to right, #f0fdf4 0%, white 10%);
+  background-color: #f0fdf4;
 }
 
 .step-card.status-working {
   border-left-color: #f59e0b;
-  background: linear-gradient(to right, #fefce8 0%, white 10%);
+  background-color: #fefce8;
 }
 
 .step-card.status-overdue {
   border-left-color: #ef4444;
-  background: linear-gradient(to right, #fef2f2 0%, white 10%);
+  background-color: #fef2f2;
 }
 
 .step-card.status-in_progress {
-  border-left-color: #3b82f6;
-  background: linear-gradient(to right, #eff6ff 0%, white 10%);
+  border-left-color: #4A90E2;
+  background-color: #eff6ff;
 }
 
 .step-card.status-pending {
   border-left-color: #9ca3af;
-  background: linear-gradient(to right, #f9fafb 0%, white 10%);
+  background-color: #f9fafb;
 }
 
 .step-card.status-on_hold {
   border-left-color: #6b7280;
-  background: linear-gradient(to right, #f9fafb 0%, white 10%);
+  background-color: #f9fafb;
 }
 
 .drag-handle {
@@ -774,7 +794,7 @@ export default {
 }
 
 .drag-handle:hover {
-  color: #3b82f6;
+  color: #3a7bd0;
 }
 
 .drag-handle:active {
@@ -792,38 +812,38 @@ export default {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-color: #3a7bd0;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
   font-size: 0.85rem;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: none;
 }
 
 .status-completed .step-number {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: #0aa875;
 }
 
 .status-working .step-number {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background-color: #e78a08;
 }
 
 .status-overdue .step-number {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background-color: #e63535;
 }
 
 .status-in_progress .step-number {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-color: #3a7bd0;
 }
 
 .status-pending .step-number {
-  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  background-color: #848a98;
 }
 
 .status-on_hold .step-number {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
+  background-color: #5b6472;
 }
 
 .step-status-badge {
@@ -854,7 +874,7 @@ export default {
 
 .step-status-badge.status-in_progress {
   background: #dbeafe;
-  color: #1d4ed8;
+  color: #2a5490;
 }
 
 .step-status-badge.status-pending {
@@ -911,7 +931,7 @@ export default {
 }
 
 .user-badge {
-  background: #3b82f6;
+  background: #4A90E2;
   color: #fff;
   padding: 0.125rem 0.5rem;
   border-radius: 10px;

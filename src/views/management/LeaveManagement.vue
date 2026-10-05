@@ -1,6 +1,5 @@
 <template>
   <div class="leave-management-container">
-    <Toast />
     
     <!-- Header -->
     <Card class="header-card mb-4">
@@ -253,7 +252,7 @@ const newLeaveTypeQuotaHours = ref(0)
 const newLeaveTypeAdvanceDays = ref(0)
 
 // Color options for leave types
-const colorOptions = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+const colorOptions = ['#ef4444', '#f59e0b', '#10b981', '#4A90E2', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
 // Edit leave type states
 const editingLeaveTypeData = ref(null)
@@ -715,7 +714,7 @@ const saveLeaveType = async () => {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -724,7 +723,7 @@ const saveLeaveType = async () => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-body) {
@@ -838,10 +837,6 @@ const saveLeaveType = async () => {
   cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s;
-}
-
-.color-option:hover {
-  transform: scale(1.1);
 }
 
 .color-option.selected {
@@ -1017,7 +1012,7 @@ const saveLeaveType = async () => {
 }
 
 .pending-holiday-date {
-  background-color: #3b82f6 !important;
+  background-color: #4A90E2 !important;
   color: #fff !important;
   font-weight: 600;
 }

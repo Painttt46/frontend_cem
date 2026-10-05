@@ -140,3 +140,17 @@ export const parseLocalDate = (dateStr) => {
   const datePart = dateStr.split('T')[0]
   return new Date(datePart + 'T00:00:00')
 }
+
+// YYYY-MM-DD ตามเวลาท้องถิ่น (คืน null เมื่อไม่มีค่า) — ใช้ส่งวันที่ให้ backend
+// เดิมเขียนซ้ำในหน้าเพิ่ม/แก้โครงการ, ฟอร์มลงงาน, WorkflowBuilder
+export const toDateKey = (date) => {
+  if (!date) return null
+  const d = new Date(date)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+// วัน + เดือนย่อภาษาไทย เช่น "5 ต.ค." (คืน '' เมื่อไม่มีค่า) — เดิมเขียนซ้ำในหน้าลงงานและขั้นตอนโครงการ
+export const formatDayMonthTH = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
+}

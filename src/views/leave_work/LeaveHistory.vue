@@ -231,54 +231,9 @@
     </template>
   </Dialog>
 
-  <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }"
-    :draggable="false">
-    <div class="attachments-content">
-      <!-- Upload zone (เจ้าของ + ช่วงเวลาที่อนุญาต) -->
-      <div v-if="canEditAttachments" class="upload-zone">
-        <label class="upload-label">
-          <i class="pi pi-upload"></i>
-          <span>{{ uploadingAttachments ? 'กำลังอัปโหลด...' : 'คลิกเพื่อเพิ่มเอกสาร' }}</span>
-          <input type="file" multiple :disabled="uploadingAttachments"
-            @change="uploadAttachmentFiles" class="upload-input" />
-        </label>
-        <small class="upload-hint">สามารถเพิ่มได้ถึง {{ attachmentDeadlineText }}</small>
-      </div>
-
-      <div v-if="selectedAttachments.length === 0" class="no-attachments">
-        <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
-        <p>ไม่มีเอกสารแนบ</p>
-      </div>
-      <div v-else class="attachments-list">
-        <div v-for="(file, index) in selectedAttachments" :key="index" class="attachment-item">
-          <div class="file-info">
-            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
-            <i v-else :class="getFileIcon(file)" class="file-icon"></i>
-            <div class="file-details">
-              <span class="file-name">{{ file }}</span>
-              <small class="file-type">{{ getFileType(file) }}</small>
-            </div>
-          </div>
-          <div class="file-actions">
-            <Button icon="pi pi-download" size="small" severity="success" outlined @click="downloadFile(file)"
-              v-tooltip="'ดาวน์โหลด'" />
-            <Button v-if="canEditAttachments" icon="pi pi-trash" size="small" severity="danger" outlined
-              @click="deleteAttachment(file)" v-tooltip="'ลบเอกสาร'" />
-          </div>
-        </div>
-      </div>
-    </div>
-    <template #footer>
-      <Button label="ปิด" icon="pi pi-times" @click="showAttachmentsDialog = false" />
-    </template>
-  </Dialog>
-
-  <!-- Full Image Dialog -->
-  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }"
-    :draggable="false">
-    <img :src="fullImageUrl" class="full-image" />
-  </Dialog>
+  <AttachmentsDialog v-model:visible="showAttachmentsDialog" :files="selectedAttachments" :can-edit="canEditAttachments"
+    :uploading="uploadingAttachments" :deadline-text="attachmentDeadlineText" @download="downloadFile"
+    @delete="deleteAttachment" @upload="uploadAttachmentFiles" />
 
   <!-- User Info Dialog -->
   <UserInfoDialog v-model:visible="showUserInfoDialog" :user-name="selectedUserName" :user-id="selectedUserId" />
@@ -317,7 +272,8 @@
 </template>
 
 <script>
-import { isImageFile, fileUrlWithToken, getFileIcon, getFileType, downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
+import { downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
+import AttachmentsDialog from '@/components/AttachmentsDialog.vue'
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
@@ -325,6 +281,7 @@ import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 export default {
   name: 'LeaveHistory',
   components: {
+    AttachmentsDialog,
     UserInfoDialog,
     EnhancedDataTable
   },
@@ -344,8 +301,6 @@ export default {
       selectedAttachments: [],
       selectedRecord: null,
       uploadingAttachments: false,
-      fullImageDialog: false,
-      fullImageUrl: '',
       leaveTypes: [],
       showUserInfoDialog: false,
       selectedUserName: '',
@@ -727,31 +682,11 @@ export default {
       }
     },
 
-    isImageFile(fileName) {
-      return isImageFile(fileName)
-    },
-
-    getFileUrl(fileName) {
-      return fileUrlWithToken(fileName)
-    },
-
-    viewFullImage(fileName) {
-      this.fullImageUrl = this.getFileUrl(fileName)
-      this.fullImageDialog = true
-    },
-
     handleImageError(e) {
       e.target.style.display = 'none'
       e.target.nextElementSibling?.style?.removeProperty('display')
     },
 
-    getFileIcon(fileName) {
-      return getFileIcon(fileName)
-    },
-
-    getFileType(fileName) {
-      return getFileType(fileName)
-    },
     formatDate(date) {
       if (!date) return '-'
       return new Date(date).toLocaleDateString('th-TH', {
@@ -798,7 +733,7 @@ export default {
           color: '#1f2937'
         },
         pending_level2: {
-          backgroundColor: '#3b82f6', // ฟ้า - รอ HR
+          backgroundColor: '#4A90E2', // ฟ้า - รอ HR
           color: '#ffffff'
         },
         approved: {
@@ -990,7 +925,7 @@ export default {
 .history-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -1006,11 +941,11 @@ export default {
 .empty-state p {
   margin-top: 1rem;
   font-size: 1.1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
@@ -1124,112 +1059,6 @@ export default {
   font-size: 0.95rem;
 }
 
-.attachments-content {
-  padding: 1rem;
-}
-
-.upload-zone {
-  border: 2px dashed #0ea5e9;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background: #f0f9ff;
-  text-align: center;
-}
-
-.upload-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.4rem;
-  cursor: pointer;
-  color: #0369a1;
-  font-weight: 500;
-}
-
-.upload-input {
-  display: none;
-}
-
-.upload-hint {
-  color: #6c757d;
-  font-size: 0.8rem;
-  margin-top: 0.25rem;
-  display: block;
-}
-
-.no-attachments {
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-}
-
-.attachments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.attachment-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.file-preview {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
-  cursor: pointer;
-}
-
-.file-preview:hover {
-  opacity: 0.8;
-}
-
-.full-image {
-  width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
-}
-
-.file-icon {
-  font-size: 2rem;
-  color: #6c757d;
-}
-
-.file-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.file-name {
-  font-weight: 600;
-  color: #495057;
-}
-
-.file-type {
-  color: #6c757d;
-  font-size: 0.85rem;
-}
-
-.file-actions {
-  display: flex;
-  gap: 0.5rem;
-}
-
 .approver-info {
   display: flex;
   align-items: center;
@@ -1276,7 +1105,6 @@ export default {
 
 .view-icon:hover {
   color: #20c997;
-  transform: scale(1.1);
 }
 
 .custom-id-badge :deep(.p-badge) {
@@ -1296,7 +1124,7 @@ export default {
 }
 
 .clickable-name:hover {
-  color: #2563eb;
+  color: #2f66b3;
   text-decoration: underline;
 }
 
@@ -1520,7 +1348,7 @@ export default {
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background-color: #f0f2f4;
   border-radius: 8px;
   border-left: 3px solid #94a3b8;
 }
@@ -1531,7 +1359,7 @@ export default {
 
 .approver-item.rejected {
   border-left-color: #ef4444;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background-color: #feeaea;
 }
 
 .approver-badge-wrapper {
@@ -1611,7 +1439,7 @@ export default {
 
 .approver-item.pending-cancel {
   border-left-color: #f59e0b;
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  background-color: #feeca8;
 }
 
 .reject-reason-content {
@@ -1660,11 +1488,11 @@ export default {
   padding: 1rem;
   background: #eff6ff;
   border-radius: 8px;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid #4A90E2;
 }
 
 .cancel-reason-view-content i {
-  color: #2563eb;
+  color: #2f66b3;
   font-size: 1.25rem;
   margin-top: 2px;
 }
@@ -1703,6 +1531,11 @@ export default {
 
   .date-search-cal {
     width: 100%;
+  }
+
+  /* ช่องวันที่เรียงบนลงล่าง — ขีด "—" คั่นกลางจะลอยโดดเดี่ยว ซ่อนไว้ */
+  .date-search-sep {
+    display: none;
   }
 }
 </style>

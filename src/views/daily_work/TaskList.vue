@@ -10,6 +10,7 @@
         :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20, 50, 100]" 
         responsiveLayout="scroll" class="history-table" stripedRows
         v-model:expandedRows="expandedRows" dataKey="id"
+        :initialSearch="String($route.query.q || '')"
         @row-click="onRowClick">
 
         <Column style="width: 3rem">
@@ -52,7 +53,7 @@
                   <component :is="'td'" style="padding:8px 12px;text-align:center"><Badge :value="child.id" class="custom-id-badge" /></component>
                   <component :is="'td'" style="padding:8px 12px"><div class="task-name"><i class="pi pi-briefcase" style="color:#4A90E2;margin-right:6px;font-size:0.85rem"></i>{{ child.task_name }}</div></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.so_number" class="so-number">{{ child.so_number }}</div><span v-else class="text-muted">-</span></component>
-                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.contract_number" style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #bbf7d0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ child.contract_number }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ child.contract_number }}</span><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><span v-if="child.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:0.85rem"></i>{{ child.customer_info }}</span><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.sale_owner" class="person-badge sale-badge" @click="showSaleUserInfo(child.sale_owner)"><i class="pi pi-user"></i> {{ child.sale_owner }}</div><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.project_manager" class="person-badge pm-badge" @click="showSaleUserInfo(child.project_manager)"><i class="pi pi-briefcase"></i> {{ child.project_manager }}</div><span v-else class="text-muted">-</span></component>
@@ -106,7 +107,7 @@
 
         <Column field="contract_number" header="เลขที่สัญญา" style="min-width: 150px;">
           <template #body="slotProps">
-            <span v-if="slotProps.data.contract_number" style="background:#f0fdf4;color:#166534;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #bbf7d0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ slotProps.data.contract_number }}</span><span v-else class="text-muted">-</span>
+            <span v-if="slotProps.data.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ slotProps.data.contract_number }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
@@ -355,7 +356,7 @@
                   </div>
                 </div>
                 <!-- Single step -->
-                <div v-else-if="work.step_name" class="step-badge-inline" :style="{ borderLeftColor: '#3b82f6' }">
+                <div v-else-if="work.step_name" class="step-badge-inline" :style="{ borderLeftColor: '#4A90E2' }">
                   <i class="pi pi-sitemap"></i> {{ work.step_name }}
                 </div>
                 <span v-else class="text-muted">-</span>
@@ -560,6 +561,7 @@
 </template>
 
 <script>
+import { toDateKey } from '@/utils/dateUtils'
 import { isImageFile, downloadBlob } from '@/utils/fileHelpers'
 import axios from '@/utils/axiosConfig'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
@@ -832,7 +834,7 @@ export default {
         // Fallback to default
         this.workStatuses = [
           { label: '⏳ รอดำเนินการ', value: 'pending', icon: 'emoji:⏳', color: '#f59e0b' },
-          { label: '🔄 กำลังดำเนินการ', value: 'in_progress', icon: 'emoji:🔄', color: '#3b82f6' },
+          { label: '🔄 กำลังดำเนินการ', value: 'in_progress', icon: 'emoji:🔄', color: '#3a7bd0' },
           { label: '✅ เสร็จสิ้น', value: 'completed', icon: 'emoji:✅', color: '#10b981' },
           { label: '⏸️ ระงับ', value: 'on_hold', icon: 'emoji:⏸️', color: '#6c757d' }
         ]
@@ -951,7 +953,7 @@ export default {
         workDate.setHours(0, 0, 0, 0)
         if (workDate <= today) return '#f59e0b'
       }
-      return '#3b82f6'
+      return '#4A90E2'
     },
     getStepLabelFromWork(step) {
       if (step.status === 'completed') return '(เสร็จสิ้น)'
@@ -994,7 +996,7 @@ export default {
       if (workingSteps.length === 0) return '#9ca3af'
       const latestStep = workingSteps[workingSteps.length - 1]
       if (latestStep.status === 'completed') return '#10b981'
-      return '#3b82f6'
+      return '#4A90E2'
     },
     async loadTasks() {
       try {
@@ -1203,14 +1205,7 @@ export default {
         const allFiles = [...this.editFormData.existingFiles, ...newUploadedFiles]
         
         // Format dates to YYYY-MM-DD
-        const formatDate = (date) => {
-          if (!date) return null
-          const d = new Date(date)
-          const year = d.getFullYear()
-          const month = String(d.getMonth() + 1).padStart(2, '0')
-          const day = String(d.getDate()).padStart(2, '0')
-          return `${year}-${month}-${day}`
-        }
+        const formatDate = toDateKey
         
         const updateData = {
           task_name: this.editFormData.task_name,
@@ -1427,7 +1422,7 @@ export default {
 .history-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -1443,11 +1438,11 @@ export default {
 .empty-state p {
   margin-top: 1rem;
   font-size: 1.1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
@@ -1476,7 +1471,7 @@ export default {
 }
 
 .custom-id-badge {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background-color: #24b86e;
   color: white;
   font-weight: 600;
   padding: 0.5rem 0.75rem;
@@ -1496,8 +1491,8 @@ export default {
 .so-number {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #1d4ed8;
-  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+  color: #2a5490;
+  background-color: #e5f0fe;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   display: inline-block;
@@ -1514,7 +1509,7 @@ export default {
 }
 
 .sale-info i {
-  color: #667eea;
+  color: #3a7bd0;
 }
 
 .text-muted {
@@ -1537,7 +1532,7 @@ export default {
 .dialog-content {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
   max-width: 600px;
   width: 90%;
   max-height: 80vh;
@@ -2082,13 +2077,13 @@ export default {
 }
 
 .clickable-name {
-  color: #2563eb;
+  color: #2f66b3;
   cursor: pointer;
   text-decoration: underline;
 }
 
 .clickable-name:hover {
-  color: #1d4ed8;
+  color: #2a5490;
 }
 
 .task-name {
@@ -2099,7 +2094,7 @@ export default {
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+  background-color: #f4f8fa !important;
   color: #334155 !important;
   font-weight: 700 !important;
   border-bottom: 2px solid #cbd5e1 !important;
@@ -2128,21 +2123,22 @@ export default {
   white-space: nowrap;
 }
 
+/* chip ชื่อบุคคล: sale = น้ำเงินอ่อน (กดดูข้อมูลได้), PM = เทาอ่อน — เดิมม่วง/ส้ม ปนกับสีสถานะในตารางเดียวกัน */
 .sale-badge {
-  background: linear-gradient(135deg, #fdf4ff, #fae8ff);
-  color: #7e22ce;
-  border: 1px solid #e9d5ff;
+  background: #eaf3fe;
+  color: #2f66b3;
+  border: 1px solid #d5e5fa;
   cursor: pointer;
 }
 
 .sale-badge:hover {
-  background: linear-gradient(135deg, #fae8ff, #f3e8ff);
-  box-shadow: 0 2px 8px rgba(126,34,206,0.2);
+  background: #deebfc;
+  box-shadow: none;
 }
 
 .pm-badge {
-  background: linear-gradient(135deg, #fff7ed, #ffedd5);
-  color: #c2410c;
-  border: 1px solid #fed7aa;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 </style>

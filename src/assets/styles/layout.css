@@ -126,7 +126,7 @@ select {
     align-items: center;
     height: 2rem;
     /* padding: 10px 20px; */
-    box-shadow: 5px 2px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     /* width: 100%; */
 }
 

@@ -6,6 +6,10 @@ import store from '@/store'
 // สถานะการอัปโหลดไฟล์ (request ที่ส่ง FormData) — ใช้แสดงความคืบหน้าและกัน watchdog ใน App.vue รีเซ็ต loading กลางคัน
 export const uploadState = reactive({ count: 0, percent: 0 })
 
+// จำนวนคำขอที่เขียนข้อมูล (POST/PUT/PATCH/DELETE) ที่ค้างอยู่ — ใช้ตัดสินใจว่าจะ "กันกด" ทั้งหน้าไหม
+// คำขออ่านข้อมูล (GET) แสดงแค่แถบโหลดบาง ๆ ด้านบน ไม่บังหน้าจอ (เดิมทุกคำขอทำให้จอมืดทั้งหน้า)
+export const loadingState = reactive({ writes: 0 })
+
 // Configure axios defaults
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
@@ -34,6 +38,10 @@ axios.interceptors.request.use(
     if (!config.silent) {
       updateLoading(1)
       config._tracked = true
+      if ((config.method || 'get').toLowerCase() !== 'get') {
+        config._write = true
+        loadingState.writes++
+      }
     }
 
     // request ที่ส่ง FormData = อัปโหลดไฟล์ → นับ + รายงาน % (ถ้าหน้านั้นไม่ได้กำหนด onUploadProgress เอง)
@@ -70,6 +78,7 @@ axios.interceptors.response.use(
       updateLoading(-1)
     }
     if (response.config._upload) uploadState.count = Math.max(0, uploadState.count - 1)
+    if (response.config._write) loadingState.writes = Math.max(0, loadingState.writes - 1)
     return response
   },
   (error) => {
@@ -77,6 +86,7 @@ axios.interceptors.response.use(
       updateLoading(-1)
     }
     if (error.config?._upload) uploadState.count = Math.max(0, uploadState.count - 1)
+    if (error.config?._write) loadingState.writes = Math.max(0, loadingState.writes - 1)
 
     // Handle different error types
     if (error.response) {
@@ -149,6 +159,7 @@ axios.interceptors.response.use(
 
 // Reset loading state (can be called manually if needed)
 export function resetLoading() {
+  loadingState.writes = 0
   pendingRequests = 0
   store.dispatch('setLoading', false)
 }

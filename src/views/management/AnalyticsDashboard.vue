@@ -1,6 +1,5 @@
 <template>
   <div class="analytics-container">
-    <Toast />
     
     <!-- Header -->
     <Card class="header-card mb-4">
@@ -605,14 +604,14 @@ onMounted(loadData)
 </script>
 
 <style scoped>
-.analytics-container { padding: 0.6rem 1rem; background: #e5e7eb; min-height: 100%; }
+.analytics-container { padding: 0.6rem 1rem; background: transparent; min-height: 100%; }
 
 /* Header - เหมือน ManagementView */
 .header-card { 
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 .header-card :deep(.p-card-content) { padding: 0; }
 .header-card :deep(.p-card-body) { padding: 1.05rem; }
@@ -661,10 +660,10 @@ onMounted(loadData)
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
 .stat-card { 
   border-radius: 12px; 
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: none;
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.stat-card:hover { box-shadow: none; }
 .stat-card .stat-content { display: flex; align-items: center; gap: 1rem; padding: 0.5rem; }
 .stat-content i { font-size: 2.5rem; opacity: 0.9; }
 .stat-content h3 { margin: 0; font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
@@ -704,7 +703,7 @@ onMounted(loadData)
 .gantt-bar {
   position: absolute; height: 28px; border-radius: 6px; 
   display: flex; align-items: center; overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: none;
   transition: transform 0.2s;
 }
 .bar-progress { height: 100%; background: rgba(255,255,255,0.25); }
@@ -716,7 +715,7 @@ onMounted(loadData)
   background: #fff;
   border: 1px solid #e9ecef;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: none;
   padding: 0.75rem 1rem;
   max-width: 350px;
   min-width: 200px;
@@ -738,7 +737,7 @@ onMounted(loadData)
 .no-data p { margin: 0; font-size: 1rem; }
 
 /* Cards */
-:deep(.p-card) { border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+:deep(.p-card) { border-radius: 12px; box-shadow: none; }
 
 /* Responsive */
 @media (max-width: 992px) {

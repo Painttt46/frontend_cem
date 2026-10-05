@@ -33,10 +33,10 @@
 }
 
 .header-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #4A90E2;
   color: white;
   border: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-body) {

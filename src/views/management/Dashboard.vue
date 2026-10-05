@@ -1,7 +1,6 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <div class="dashboard-container">
-    <Toast />
 
     <!-- Header -->
     <Card class="header-card mb-4">
@@ -230,7 +229,7 @@
           <Card class="summary-card clickable" @click="showDueSoonDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-clock summary-icon" style="color: #3b82f6"></i>
+                <i class="pi pi-clock summary-icon" style="color: #3a7bd0"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.dueSoon" /></h3>
                   <p>โครงการครบกำหนดสัปดาห์นี้</p>
@@ -308,8 +307,8 @@
         <template #content>
           <div class="stats-header mb-3">
             <h3>สถิติเวลาทำงานของพนักงาน</h3>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <InputText v-model="statsSearch" placeholder="ค้นหา ชื่อ / ชื่อเล่น / โครงการ / step..." style="font-size:0.85rem;padding:5px 10px;min-width:260px" />
+            <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
+              <InputText v-model="statsSearch" placeholder="ค้นหา ชื่อ / ชื่อเล่น / โครงการ / step..." style="font-size:0.85rem;min-width:min(260px,100%);flex:1 1 200px;height:36px" />
               <Dropdown v-model="selectedStatsYear" :options="statsYearOptions" optionLabel="label" optionValue="value" style="min-width:110px" />
             </div>
           </div>
@@ -1472,29 +1471,29 @@ const renderCharts = (leaves, tasks) => {
 
 <style scoped>
 .analytics-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background-color: #4A90E2 !important;
   border: none !important;
   color: #fff !important;
   font-weight: 500;
   padding: 0.6rem 1.25rem;
   font-size: 0.9rem;
   border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+  box-shadow: none;
 }
 
 .analytics-btn:hover {
-  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+  filter: brightness(0.93);
 }
 
 .clickable-name {
   cursor: pointer;
-  color: #667eea;
+  color: #3a7bd0;
   font-weight: 600;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #764ba2;
+  color: #2f66b3;
   text-decoration: underline;
 }
 
@@ -1504,7 +1503,7 @@ const renderCharts = (leaves, tasks) => {
   max-width: 100%;
   margin: 0 auto;
 
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -1513,7 +1512,7 @@ const renderCharts = (leaves, tasks) => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-content) {
@@ -1711,7 +1710,7 @@ const renderCharts = (leaves, tasks) => {
 .step-status-completed { border-left-color: #10b981 !important; background: #f0fdf4; color: #065f46; }
 .step-status-working   { border-left-color: #f59e0b !important; background: #fefce8; color: #92400e; }
 .step-status-overdue   { border-left-color: #ef4444 !important; background: #fef2f2; color: #991b1b; }
-.step-status-in_progress { border-left-color: #3b82f6 !important; background: #eff6ff; color: #1e40af; }
+.step-status-in_progress { border-left-color: #4A90E2 !important; background: #eff6ff; color: #1e40af; }
 .step-status-pending   { border-left-color: #9ca3af !important; background: #f9fafb; color: #374151; }
 
 .summary-grid {
@@ -1783,8 +1782,7 @@ canvas {
 }
 
 .summary-card.clickable:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #bcd6f6;
 }
 @media (min-width: 769px) {
   .charts-wrapper {
@@ -1804,6 +1802,26 @@ canvas {
 @media (max-width: 768px) {
   .dashboard-container {
     padding: 0.5rem;
+  }
+
+  /* แบนเนอร์: ชื่อหน้า + (ปุ่ม Analytics, เลือกพนักงาน) เดิมอยู่แถวเดียว ล้นกรอบขวาบนมือถือ → ให้ตัดลงบรรทัดใหม่และใช้เต็มความกว้าง */
+  .header-content {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .header-right {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .header-right .analytics-btn {
+    margin-right: 0 !important;
+  }
+
+  .header-right .user-filter {
+    flex: 1 1 10rem;
+    min-width: 0;
   }
 
   .summary-grid {
@@ -1882,7 +1900,7 @@ canvas {
 .wl-toggle:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .wl-badges { display: flex; gap: 3px; flex-wrap: wrap; }
 .wl-badge { padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
-.wl-dropdown { position: absolute; top: calc(100% + 4px); left: 0; z-index: 9999; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 260px; max-height: 320px; overflow-y: auto; padding: 4px; }
+.wl-dropdown { position: absolute; top: calc(100% + 4px); left: 0; z-index: 9999; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: none; min-width: 260px; max-height: 320px; overflow-y: auto; padding: 4px; }
 .workload-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: opacity 0.2s; margin-bottom: 2px; }
 .workload-item:hover { opacity: 0.8; filter: brightness(0.96); }
 .wl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: currentColor; margin-top: 3px; }
@@ -1903,7 +1921,7 @@ canvas {
 .project-name { font-weight: 600; font-size: 0.8rem; color: #1f2937; }
 .project-progress { font-size: 0.7rem; color: #6b7280; }
 .progress-bar { flex: 0 0 80px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.3s; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #4A90E2, #10b981); transition: width 0.3s; }
 .steps-list { padding: 4px; background: white; }
 .wl-status-badges { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
 .status-mini { padding: 1px 5px; border-radius: 8px; font-size: 0.65rem; color: white; font-weight: 500; }

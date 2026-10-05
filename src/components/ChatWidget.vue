@@ -227,7 +227,7 @@ export default {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  z-index: 9999;
+  z-index: 1000; /* ต่ำกว่า dialog/mask ของ PrimeVue (เริ่ม 1100) — เดิม 9999 ลอยทับปุ่มใน dialog */
   font-family: "Prompt", sans-serif;
 }
 
@@ -235,19 +235,18 @@ export default {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: #4A90E2;
   border: none;
   color: white;
   font-size: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+  box-shadow: none;
   transition: transform 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
 }
-.chat-toggle:hover { transform: scale(1.1); }
 .badge {
   position: absolute;
   top: -5px;
@@ -272,7 +271,7 @@ export default {
   height: 520px;
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  box-shadow: none;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -387,7 +386,7 @@ export default {
   word-break: break-word;
 }
 .user .bubble {
-  background: linear-gradient(135deg, #4A90E2, #3a7bc8);
+  background-color: #4A90E2;
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -395,7 +394,7 @@ export default {
   background: white;
   color: #333;
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: none;
 }
 
 .typing span {
@@ -434,7 +433,7 @@ export default {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: #4A90E2;
   border: none;
   color: white;
   cursor: pointer;
@@ -444,8 +443,13 @@ export default {
 }
 .chat-input button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* มือถือมีแถบเมนูล่างสูง ~64px — ยกปุ่มแชตขึ้นไม่ให้ทับ */
+@media (max-width: 768px) {
+  .chat-widget { bottom: calc(80px + env(safe-area-inset-bottom)); }
+}
+
 @media (max-width: 480px) {
-  .chat-widget { bottom: 16px; right: 16px; }
+  .chat-widget { bottom: calc(80px + env(safe-area-inset-bottom)); right: 16px; }
   .chat-panel { width: calc(100vw - 32px); height: 60vh; }
 }
 </style>

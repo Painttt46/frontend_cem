@@ -2,7 +2,7 @@
   <Card class="history-card">
     <template #content>
       <div v-if="records.length === 0" class="empty-state">
-        <i class="pi pi-calendar-clock" style="font-size: 4rem; color: #ccc;"></i>
+        <i class="pi pi-calendar-plus" style="font-size: 4rem; color: #ccc;"></i>
         <p>ยังไม่มีข้อมูลการลงงาน</p>
       </div>
 
@@ -54,7 +54,7 @@
 
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true">
           <template #body="slotProps">
-            <span v-if="slotProps.data.employee_position" style="display:inline-block;padding:2px 10px;border-radius:12px;background:#ede9fe;color:#6d28d9;font-size:0.75rem;font-weight:600;white-space:nowrap">
+            <span v-if="slotProps.data.employee_position" style="display:inline-block;padding:2px 10px;border-radius:12px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:0.75rem;font-weight:600;white-space:nowrap">
               {{ slotProps.data.employee_position }}
             </span>
             <span v-else style="color:#9ca3af;font-size:0.8rem">ไม่ระบุ</span>
@@ -559,7 +559,7 @@ import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import Checkbox from 'primevue/checkbox'
 
-import { addDays } from '@/utils/dateUtils'
+import { addDays, formatDayMonthTH } from '@/utils/dateUtils'
 import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
 
 export default {
@@ -744,7 +744,7 @@ export default {
           // Fallback to default
           this.statusOptions = [
             { label: '⏳ รอดำเนินการ', value: 'pending', color: '#f59e0b' },
-            { label: '🔄 กำลังดำเนินการ', value: 'in_progress', color: '#3b82f6' },
+            { label: '🔄 กำลังดำเนินการ', value: 'in_progress', color: '#3a7bd0' },
             { label: '✅ เสร็จสิ้น', value: 'completed', color: '#10b981' },
             { label: '⏸️ ระงับ', value: 'on_hold', color: '#6c757d' }
           ]
@@ -760,10 +760,7 @@ export default {
         })
     },
     formatStepDateRange(start, end) {
-      const formatDate = (date) => {
-        if (!date) return ''
-        return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
-      }
+      const formatDate = formatDayMonthTH
       if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
       if (start) return `เริ่ม ${formatDate(start)}`
       if (end) return `ถึง ${formatDate(end)}`
@@ -1344,7 +1341,7 @@ export default {
   display: flex; align-items: center; gap: 6px;
   margin-bottom: 6px;
 }
-.multi-proj-icon { color: #3b82f6; font-size: 0.75rem; }
+.multi-proj-icon { color: #3a7bd0; font-size: 0.75rem; }
 .multi-proj-count { font-weight: 700; font-size: 0.82rem; color: #1e40af; }
 .multi-proj-list { display: flex; flex-direction: column; gap: 4px; }
 .multi-proj-item {
@@ -1416,7 +1413,7 @@ export default {
 }.group-proj-dropdown {
   position: absolute; top: calc(100% + 4px); left: 0; z-index: 9999;
   background: white; border: 1px solid #e2e8f0; border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12); min-width: 280px;
+  box-shadow: none; min-width: 280px;
   max-height: 360px; overflow-y: auto; padding: 6px;
 }
 .group-proj-item {
@@ -1436,7 +1433,7 @@ export default {
 .history-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -1548,11 +1545,11 @@ export default {
 .empty-state p {
   margin-top: 1rem;
   font-size: 1.1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
@@ -1593,12 +1590,12 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #667eea;
+  color: #3a7bd0;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #764ba2;
+  color: #2f66b3;
   text-decoration: underline;
 }
 
@@ -1621,14 +1618,14 @@ export default {
 }
 
 .custom-id-badge {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  background-color: #3a7bd0 !important;
   color: white !important;
   font-weight: 700 !important;
   padding: 0.4rem 0.6rem !important;
   border-radius: 8px !important;
   font-size: 0.85rem !important;
-  border: 2px solid rgba(59, 130, 246, 0.2) !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+  border: 2px solid rgba(74, 144, 226, 0.2) !important;
+  box-shadow: none !important;
   letter-spacing: 0.5px !important;
   min-width: 50px !important;
   text-align: center !important;
@@ -1668,7 +1665,7 @@ export default {
 
 .time-info i {
   margin-right: 0.5rem;
-  color: #667eea;
+  color: #3a7bd0;
 }
 
 .total-hours {
@@ -1685,7 +1682,7 @@ export default {
 }
 
 .sale-info i {
-  color: #667eea;
+  color: #3a7bd0;
 }
 
 .text-muted {
@@ -1944,12 +1941,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #667eea;
+  color: #3a7bd0;
   font-size: 0.9rem;
 }
 
 .file-indicator i {
-  color: #667eea;
+  color: #3a7bd0;
 }
 
 .dialog-overlay {
@@ -1968,7 +1965,7 @@ export default {
 .dialog-content {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  box-shadow: none;
   max-width: 600px;
   width: 90%;
   max-height: 80vh;
@@ -2032,7 +2029,7 @@ export default {
   background: #f8f9fa;
   padding: 1rem;
   border-radius: 6px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #3a7bd0;
   white-space: pre-wrap;
   line-height: 1.6;
   color: #495057;
@@ -2053,14 +2050,14 @@ export default {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  background-color: #e5f0fe;
   border: 1.5px solid #bfdbfe;
   border-radius: 12px;
   padding: 0.85rem 1rem;
 }
 .dt-icon {
   width: 40px; height: 40px; border-radius: 11px;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-color: #3a7bd0;
   color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 1rem; flex-shrink: 0;
 }
@@ -2068,7 +2065,7 @@ export default {
 .dt-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 .dt-so {
   font-family: monospace; font-weight: 800; font-size: 0.7rem;
-  color: #fff; background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #fff; background-color: #3a7bd0;
   padding: 0.12rem 0.45rem; border-radius: 5px; white-space: nowrap;
 }
 .dt-task { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
@@ -2084,7 +2081,7 @@ export default {
 }
 .dt-status.st-completed { background: #dcfce7; color: #166534; }
 .dt-status.st-cancelled { background: #fee2e2; color: #b91c1c; }
-.dt-status.st-active { background: #dbeafe; color: #1d4ed8; }
+.dt-status.st-active { background: #dbeafe; color: #2a5490; }
 .dt-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;
 }
@@ -2101,7 +2098,7 @@ export default {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: 0.78rem; font-weight: 800; color: #334155;
 }
-.dt-section-title i { color: #3b82f6; font-size: 0.78rem; }
+.dt-section-title i { color: #3a7bd0; font-size: 0.78rem; }
 .dt-cats { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .dt-desc {
   background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px;
@@ -2116,7 +2113,7 @@ export default {
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
-.dt-file:hover { border-color: #3b82f6; transform: translateY(-1px); }
+.dt-file:hover { border-color: #4A90E2; }
 .dt-thumb { width: 100%; height: 100%; object-fit: cover; }
 .dt-file-icon { font-size: 1.4rem; color: #94a3b8; }
 .dt-footer { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
@@ -2209,10 +2206,12 @@ export default {
 }
 
 .so-badge {
-  background: #0ea5e9;
-  color: #fff;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
+  /* chip รหัส SO: โทนน้ำเงินแบรนด์อ่อน (เดิมฟ้าสด ตัวขาว สีชนกับ chip อื่นในแถว) */
+  background: #eaf3fe;
+  color: #2f66b3;
+  border: 1px solid #d5e5fa;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
   display: block;
@@ -2221,10 +2220,12 @@ export default {
 }
 
 .customer-badge {
-  background: #f59e0b;
-  color: #fff;
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
+  /* ข้อมูลลูกค้าเป็นข้อมูลรอง: เทาอ่อน (เดิมส้มสด ดึงสายตาเกินความสำคัญ) */
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 500;
   display: block;
@@ -2245,7 +2246,7 @@ export default {
   border-radius: 8px;
   padding: 0.5rem;
   border-left: 3px solid #9ca3af;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 .step-card-mini.clickable-step {
@@ -2255,8 +2256,7 @@ export default {
 
 .step-card-mini.clickable-step:hover {
   background: #f0f9ff;
-  transform: translateX(2px);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  box-shadow: none;
 }
 
 .step-header-mini {
@@ -2318,7 +2318,7 @@ export default {
 }
 
 .user-badge-mini {
-  background: #3b82f6;
+  background: #4A90E2;
   color: white;
   padding: 0.1rem 0.3rem;
   border-radius: 6px;
@@ -2339,21 +2339,21 @@ export default {
 /* ── Manage Group Dialog ── */
 .manage-group-wrap { display: flex; flex-direction: column; gap: 1rem; }
 .manage-group-date { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #374151; font-size: 0.95rem; }
-.manage-group-count { background: #dbeafe; color: #1d4ed8; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 700; margin-left: 4px; }
+.manage-group-count { background: #dbeafe; color: #2a5490; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 700; margin-left: 4px; }
 .manage-proj-list { display: flex; flex-direction: column; gap: 8px; }
 .manage-proj-item {
   display: flex; align-items: center; justify-content: space-between;
-  border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6;
+  border: 1px solid #e2e8f0; border-left: 4px solid #4A90E2;
   border-radius: 8px; padding: 0.75rem 1rem;
   background: #f8fafc;
 }
 .manage-proj-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #3b82f6; color: #fff; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #4A90E2; color: #fff; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .manage-proj-detail { flex: 1; min-width: 0; }
 .manage-proj-name { font-weight: 600; color: #1e293b; font-size: 0.875rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .manage-proj-time { font-size: 0.78rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 .manage-proj-actions { display: flex; gap: 4px; flex-shrink: 0; }
-.so-badge-sm { background: #3b82f6; color: #fff; padding: 1px 5px; border-radius: 4px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.so-badge-sm { background: #eaf3fe; color: #2f66b3; border: 1px solid #d5e5fa; padding: 1px 6px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
 
 /* ── Edit Dialog Dropdown custom styles ── */
 .edit-val-row,
@@ -2376,7 +2376,7 @@ export default {
 }
 
 .edit-so-tag {
-  background: #3b82f6;
+  background: #4A90E2;
   color: #fff;
   padding: 1px 6px;
   border-radius: 4px;

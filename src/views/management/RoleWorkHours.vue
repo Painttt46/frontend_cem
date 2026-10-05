@@ -1,6 +1,5 @@
 <template>
   <div class="work-hours-container">
-    <Toast />
     <ConfirmDialog />
     
     <!-- Header -->
@@ -461,7 +460,7 @@ const deleteUserWorkHours = async (userId) => {
 .work-hours-container {
   padding: 0.6rem 1rem;
   max-width: 100%;
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   min-height: 100%;
   overflow: auto;
 }

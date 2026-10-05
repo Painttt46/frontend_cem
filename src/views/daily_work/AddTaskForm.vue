@@ -114,6 +114,7 @@
 </template>
 
 <script>
+import { toDateKey } from '@/utils/dateUtils'
 import axios from '@/utils/axiosConfig'
 import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
 
@@ -225,11 +226,7 @@ export default {
       try {
         // uploadFiles จะ throw เมื่ออัปโหลดไม่สำเร็จ — submit หยุดทันที ไม่เซฟงานโดยไฟล์หาย
         const uploadedFiles = await this.uploadFiles()
-        const formatDate = (date) => {
-          if (!date) return null
-          const d = new Date(date)
-          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-        }
+        const formatDate = toDateKey
         const taskData = {
           task_name: this.formData.taskName,
           so_number: this.formData.soNumber,
@@ -279,7 +276,7 @@ export default {
 :deep(.p-dropdown-clear-icon) { margin-right: 1.2rem; }
 
 .form-card {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -307,7 +304,7 @@ export default {
 
 .corporate-input:focus {
   border-color: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+  box-shadow: none;
   outline: none;
 }
 
@@ -357,7 +354,7 @@ export default {
 
 .category-dropdown :deep(.p-dropdown-panel) {
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
 }
 
 .category-dropdown :deep(.p-dropdown-item) {

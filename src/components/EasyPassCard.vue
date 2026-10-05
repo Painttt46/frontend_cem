@@ -125,7 +125,7 @@ export default {
   border-radius: 16px;
   padding: 1.25rem;
   color: white;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.1) inset;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset;
   position: relative;
   overflow: hidden;
   min-height: 180px;
@@ -176,12 +176,12 @@ export default {
 .card-chip {
   width: 45px;
   height: 35px;
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  background-color: #ea9b15;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: none;
 }
 
 .chip-lines {
@@ -272,7 +272,7 @@ export default {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 2px 10px rgba(255,255,255,0.2);
+  text-shadow: none;
 }
 
 .card-bar {
@@ -311,7 +311,7 @@ export default {
   width: 100%;
   -webkit-appearance: none;
   height: 8px;
-  background: linear-gradient(90deg, #1e3a5f, #0c1929);
+  background-color: #152a44;
   border-radius: 4px;
   outline: none;
   border: 1px solid #334155;
@@ -321,11 +321,11 @@ export default {
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background-color: #3a7bd0;
   border-radius: 50%;
   cursor: pointer;
   border: 3px solid #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: none;
 }
 
 .card-slider:disabled {

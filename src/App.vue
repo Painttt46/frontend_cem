@@ -1,8 +1,14 @@
 <!-- App.vue -->
 <template>
   <div id="app" style="height: 100vh; overflow: hidden;">
-    <!-- Global Loading Overlay -->
-    <div v-if="$store.state.loading" class="loading-overlay">
+    <!-- แถบโหลดบางด้านบน: คำขออ่านข้อมูลทั่วไป ไม่บังหน้าจอ -->
+    <div v-if="$store.state.loading" class="top-loader" role="progressbar" aria-label="กำลังโหลด" aria-busy="true">
+      <div class="top-loader-bar"></div>
+    </div>
+
+    <!-- ฉากกันกดซ้ำ + สปินเนอร์: เฉพาะตอนบันทึก/แก้ไข/ลบ หรืออัปโหลดไฟล์
+         (ฉากค่อย ๆ ปรากฏหลังหน่วง 0.3 วินาที — งานที่เสร็จเร็วจึงไม่มีหน้าจอมืดแฟลช แต่ยังกันกดซ้ำได้ตั้งแต่แรก) -->
+    <div v-if="$store.state.loading && (loadingState.writes > 0 || uploadState.count > 0)" class="loading-overlay" role="alert" aria-busy="true">
       <div class="spinner"></div>
       <div v-if="uploadState.count > 0" class="upload-note">
         กำลังอัปโหลดไฟล์ {{ uploadState.percent }}% — กรุณาอย่าปิดหรือรีเฟรชหน้านี้
@@ -26,7 +32,7 @@
 <script>
 import LayoutView from './components/LayoutView.vue';
 import ChatWidget from './components/ChatWidget.vue';
-import { resetLoading, uploadState } from './utils/axiosConfig';
+import { resetLoading, uploadState, loadingState } from './utils/axiosConfig';
 
 export default {
   name: 'App',
@@ -37,7 +43,8 @@ export default {
   data() {
     return {
       loadingTimeout: null,
-      uploadState
+      uploadState,
+      loadingState
     }
   },
   watch: {
@@ -151,7 +158,7 @@ export default {
   --label-color: #64748b;
   --status-closed-red: #A90F0A;
   --table-font-size: 1rem;
-  --default-font-size: 0.8rem;
+  --default-font-size: 0.85rem;
   font-size: var(--default-font-size);
 }
 
@@ -168,7 +175,7 @@ label {
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-thai, 'Leelawadee UI', 'Segoe UI', Tahoma, sans-serif);
 }
 
 /* Loading Overlay */
@@ -178,13 +185,47 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   gap: 1rem;
   z-index: 9999;
+  /* ซ่อนไว้ก่อน 0.3 วินาทีแล้วค่อยปรากฏ (ยังรับการคลิกอยู่ จึงกันกดซ้ำได้) */
+  opacity: 0;
+  animation: overlay-in 0.25s ease 0.3s forwards;
+}
+
+@keyframes overlay-in {
+  to { opacity: 1; }
+}
+
+/* แถบโหลดบางด้านบนจอ */
+.top-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 10000;
+  overflow: hidden;
+  pointer-events: none;
+  background: rgba(74, 144, 226, 0.12);
+}
+
+.top-loader-bar {
+  height: 100%;
+  width: 38%;
+  border-radius: 999px;
+  background: var(--brand-gradient);
+  box-shadow: none;
+  animation: top-loader-slide 1.15s ease-in-out infinite;
+}
+
+@keyframes top-loader-slide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(300%); }
 }
 
 .upload-note {
@@ -207,23 +248,4 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
 </style>

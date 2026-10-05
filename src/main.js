@@ -7,6 +7,17 @@ import axios from './utils/axiosConfig';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
+// ฟอนต์ Prompt ฝังมากับแอป (เดิมโหลดจาก Google Fonts — เครื่องที่ออกอินเทอร์เน็ตไม่ได้จะได้ฟอนต์อื่น และมีคำขอออกภายนอก)
+import '@fontsource/prompt/thai-300.css';
+import '@fontsource/prompt/latin-300.css';
+import '@fontsource/prompt/thai-400.css';
+import '@fontsource/prompt/latin-400.css';
+import '@fontsource/prompt/thai-500.css';
+import '@fontsource/prompt/latin-500.css';
+import '@fontsource/prompt/thai-600.css';
+import '@fontsource/prompt/latin-600.css';
+import '@fontsource/prompt/thai-700.css';
+import '@fontsource/prompt/latin-700.css';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Calendar from 'primevue/calendar';
@@ -36,6 +47,7 @@ import Tooltip from 'primevue/tooltip';
 import ProgressBar from 'primevue/progressbar';
 
 import {nextTick} from 'vue';
+import { startA11yEnhancer } from './utils/a11y';
 
 const DEFAULT_TITLE = "Gent-CEM";
 router.afterEach((to) => {
@@ -49,8 +61,11 @@ const app = createApp(App);
 app.use(store);
 app.use(router);
 app.use(PrimeVue, {
-    ripple: true,
+    // ปิด ripple (วงคลื่นที่แผ่ออกมาหลังกดปุ่ม/แท็บ/แถวตาราง) — ดีไซน์แบบเรียบไม่ใช้ effect
+    ripple: false,
     locale: {
+        accept: 'ยืนยัน',
+        reject: 'ยกเลิก',
         firstDayOfWeek: 1,
         dayNames: ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'],
         dayNamesShort: ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'],
@@ -108,8 +123,20 @@ const SafeTooltip = {
 };
 app.directive('Tooltip', SafeTooltip);
 app.use(ConfirmationService);
+// ทุกหน้าต่างยืนยัน (ConfirmDialog) ของ PrimeVue ไม่มี icon บนปุ่มโดยปริยาย — ใส่ให้เป็นค่าเริ่มต้นที่เดียว
+// ยกเลิก = ✕, ยืนยัน = ✓ (ถ้าเป็นปุ่มสีแดง/ลบ ใช้ถังขยะ) หน้าไหนกำหนด acceptIcon/rejectIcon เองก็ใช้ตามนั้น
+{
+    const confirmService = app.config.globalProperties.$confirm;
+    const requireConfirm = confirmService.require.bind(confirmService);
+    confirmService.require = (options = {}) => requireConfirm({
+        rejectIcon: 'pi pi-times',
+        acceptIcon: /danger/.test(options.acceptClass || '') ? 'pi pi-trash' : 'pi pi-check',
+        ...options
+    });
+}
 app.use(ToastService);
 
 app.config.globalProperties.$http = axios;
 
 app.mount("#app");
+startA11yEnhancer();

@@ -217,45 +217,7 @@
     </template>
   </Dialog>
 
-  <!-- Attachments Dialog -->
-  <Dialog v-model:visible="showAttachmentsDialog" modal header="เอกสารแนบ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
-    <div class="attachments-content">
-      <div v-if="selectedAttachments.length === 0" class="no-attachments">
-        <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
-        <p>ไม่มีเอกสารแนบ</p>
-      </div>
-      <div v-else class="attachments-list">
-        <div v-for="(file, index) in selectedAttachments" :key="index" class="attachment-item">
-          <div class="file-info">
-            <img v-if="isImageFile(file)" :src="getFileUrl(file)" class="file-preview" @click="viewFullImage(file)" />
-            <i v-else :class="getFileIcon(file)" class="file-icon"></i>
-            <div class="file-details">
-              <span class="file-name">{{ file }}</span>
-              <small class="file-type">{{ getFileType(file) }}</small>
-            </div>
-          </div>
-          <div class="file-actions">
-            <Button 
-              icon="pi pi-download" 
-              size="small" 
-              severity="success" 
-              outlined
-              @click="downloadFile(file)"
-              v-tooltip="'ดาวน์โหลด'"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-    <template #footer>
-      <Button label="ปิด" icon="pi pi-times" @click="showAttachmentsDialog = false" />
-    </template>
-  </Dialog>
-
-  <!-- Full Image Dialog -->
-  <Dialog v-model:visible="fullImageDialog" modal header="รูปภาพ" :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false">
-    <img :src="fullImageUrl" class="full-image" />
-  </Dialog>
+  <AttachmentsDialog v-model:visible="showAttachmentsDialog" :files="selectedAttachments" @download="downloadFile" />
 
   <UserInfoDialog v-model:visible="showUserDialog" :userId="selectedUserId" />
 
@@ -269,13 +231,15 @@
 </template>
 
 <script>
-import { isImageFile, fileUrlWithToken, getFileIcon, getFileType, downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
+import { downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
+import AttachmentsDialog from '@/components/AttachmentsDialog.vue'
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 
 export default {
   name: 'LeaveApproval',
   components: {
+    AttachmentsDialog,
     UserInfoDialog
   },
   props: {
@@ -302,8 +266,6 @@ export default {
       selectedWorkDetails: '',
       showAttachmentsDialog: false,
       selectedAttachments: [],
-      fullImageDialog: false,
-      fullImageUrl: '',
       leaveTypes: [],
       showUserDialog: false,
       selectedUserId: null,
@@ -475,26 +437,6 @@ export default {
       }
     },
 
-    isImageFile(fileName) {
-      return isImageFile(fileName)
-    },
-
-    getFileUrl(fileName) {
-      return fileUrlWithToken(fileName)
-    },
-
-    viewFullImage(fileName) {
-      this.fullImageUrl = this.getFileUrl(fileName)
-      this.fullImageDialog = true
-    },
-
-    getFileIcon(fileName) {
-      return getFileIcon(fileName)
-    },
-
-    getFileType(fileName) {
-      return getFileType(fileName)
-    },
     formatDateTime(datetime) {
       if (!datetime) return '-'
       const date = new Date(datetime)
@@ -659,14 +601,14 @@ export default {
 }
 
 .ticket-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background-color: #4A90E2 !important;
   color: white !important;
   font-weight: 700 !important;
   font-size: 0.9rem !important;
   padding: 0.5rem 0.75rem !important;
   border-radius: 8px !important;
-  border: 2px solid rgba(102, 126, 234, 0.2) !important;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+  border: 2px solid rgba(74, 144, 226, 0.2) !important;
+  box-shadow: none !important;
   letter-spacing: 0.5px !important;
   min-width: 80px !important;
   text-align: center !important;
@@ -675,7 +617,7 @@ export default {
 .approval-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -691,11 +633,11 @@ export default {
 .empty-state p {
   margin-top: 1rem;
   font-size: 1.1rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .approval-table :deep(.p-datatable) {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .approval-table :deep(.p-datatable-thead > tr > th) {
@@ -823,7 +765,6 @@ export default {
 
 .view-icon:hover {
   color: #20c997;
-  transform: scale(1.1);
 }
 
 .action-buttons {
@@ -835,82 +776,6 @@ export default {
 .action-buttons .p-button {
   width: 2.5rem;
   height: 2.5rem;
-}
-
-.attachments-content {
-  padding: 1rem;
-}
-
-.no-attachments {
-  text-align: center;
-  padding: 2rem;
-  color: #6c757d;
-}
-
-.attachments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.attachment-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.file-preview {
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  border-radius: 6px;
-  border: 1px solid #e9ecef;
-  cursor: pointer;
-}
-
-.file-preview:hover {
-  opacity: 0.8;
-}
-
-.full-image {
-  width: 100%;
-  max-height: 80vh;
-  object-fit: contain;
-}
-
-.file-icon {
-  font-size: 2rem;
-  color: #6c757d;
-}
-
-.file-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.file-name {
-  font-weight: 600;
-  color: #495057;
-}
-
-.file-type {
-  color: #6c757d;
-  font-size: 0.85rem;
-}
-
-.file-actions {
-  display: flex;
-  gap: 0.5rem;
 }
 
 .delegate-compact {
@@ -955,13 +820,13 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #667eea;
+  color: #3a7bd0;
   font-weight: 600;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #764ba2;
+  color: #2f66b3;
   text-decoration: underline;
 }
 .status-badge {
@@ -1050,11 +915,11 @@ export default {
   padding: 1rem;
   background: #eff6ff;
   border-radius: 8px;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid #4A90E2;
 }
 
 .cancel-reason-view-content i {
-  color: #2563eb;
+  color: #2f66b3;
   font-size: 1.25rem;
   margin-top: 2px;
 }

@@ -22,12 +22,12 @@
   </Dialog>
   <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card" :class="{ 'sidebar-hidden': !sidebarVisible }" style="height: 100vh; width: 100%; overflow: hidden;">
-    <div class="row" style="height: 100%; overflow: hidden;">
+  <div class="flex flex-column card layout-shell" :class="{ 'sidebar-hidden': !sidebarVisible, 'rail-mode': railMode }" style="height: 100vh; width: 100%; overflow: hidden;">
+    <div class="row layout-row" style="height: 100%; overflow: hidden;">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
-        :icon="sidebarVisible ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
-        v-tooltip="sidebarVisible ? 'ซ่อนเมนู' : 'แสดงเมนู'" />
+        :icon="sidebarOpenState ? 'pi pi-chevron-left' : 'pi pi-chevron-right'" severity="secondary" text
+        v-tooltip="toggleLabel" :aria-label="toggleLabel" :aria-expanded="sidebarOpenState" />
 
       <Dialog v-model:visible="visible" header="Setting" 
         :style="{ width: isMobile ? '90vw' : '400px', maxWidth: '90vw', bottom: '20px' }" 
@@ -51,7 +51,7 @@
         </div>
       </Dialog>
 
-      <div v-show="sidebarVisible" class="col-3 col-sm-3 col-md-2 col-lg-2 col-xl-2 bg-light p-0 sidebar-column">
+      <div v-show="sidebarVisible" class="col-3 col-sm-3 col-md-2 col-lg-2 col-xl-2 bg-light p-0 sidebar-column" :class="{ 'is-collapsed': railMode }">
         <div class="p-4 sidebar-container" style="height: 100%; padding-top: 0px !important">
           <div class="logo-section">
             <img src="@/assets/images/NGENT.png" alt="GENT Logo" style="max-width: 150px; height: auto;" />
@@ -64,91 +64,87 @@
             </div>
           </div>
 
+          <button type="button" class="palette-trigger" @click="paletteOpen = true" aria-label="ค้นหาหน้าและโครงการ (Ctrl+K)" title="ค้นหา (Ctrl+K)">
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <span class="palette-label">ค้นหา…</span>
+            <kbd>Ctrl K</kbd>
+          </button>
+
           <ul class="nav-menu">
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/daily_work')">
-              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/daily_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="ลงงานรายวัน">
                 <h5 class="mt-2">
                   <i class="pi pi-calendar px-2" style="font-size: 1.5rem"></i>ลงงานรายวัน
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/car_booking')">
-              <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="เเจ้งใช้รถ">
                 <h5 class="mt-2">
                   <i class="pi pi-car px-2" style="font-size: 1.5rem"></i>เเจ้งใช้รถ
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/leave_work')">
-              <router-link to="/leave_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/leave_work" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="ลางาน">
                 <h5 class="mt-2">
                   <i class="pi pi-sign-out px-2" style="font-size: 1.5rem"></i>ลางาน
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/projects')">
-              <router-link to="/projects" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/projects" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="โครงการ">
                 <h5 class="mt-2">
                   <i class="pi pi-briefcase px-2" style="font-size: 1.5rem"></i>โครงการ
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/project-progress')">
-              <router-link to="/project-progress" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/project-progress" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="ขั้นตอนโครงการ">
                 <h5 class="mt-2">
                   <i class="pi pi-chart-line px-2" style="font-size: 1.5rem"></i>ขั้นตอนโครงการ
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/procurement')">
-              <router-link to="/procurement" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/procurement" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="จัดซื้อ">
                 <h5 class="mt-2">
                   <i class="pi pi-shopping-cart px-2" style="font-size: 1.5rem"></i>จัดซื้อ
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/sales-activity')">
-              <router-link to="/sales-activity" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/sales-activity" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="Sale">
                 <h5 class="mt-2">
                   <i class="pi pi-briefcase px-2" style="font-size: 1.5rem"></i>Sale
                 </h5>
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/management')">
-              <router-link to="/management" @click="closeSidebarOnMobile" class="nav-link" active-class="active">
+              <router-link to="/management" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="จัดการระบบ">
                 <h5 class="mt-2">
                   <i class="pi pi-cog px-2" style="font-size: 1.5rem"></i>จัดการระบบ
                 </h5>
               </router-link>
             </li>
           </ul>
-          <div class="nav-item ml-2"
-            style="width: 100%; color: white; vertical-align: bottom; display: flex; justify-content: center;">
-            <Button @click="openPosition('bottom')" style="
-                width: 80%;
-                min-width: 8rem;
-                color: white;
-                background: linear-gradient(135deg, #4A90E2, #D73527);
-                border: none;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 8px 16px;
-              " class="setting-button">
-              <h5 style="margin: 0; display: flex; align-items: center; justify-content: center;">
-                <i class="pi pi-cog px-2" style="font-size: 1.2rem"></i>Setting
-              </h5>
-            </Button>
+          <div class="sidebar-footer">
+            <router-link to="/profile" class="user-card" @click="closeSidebarOnMobile" aria-label="ไปที่โปรไฟล์ของฉัน">
+              <span class="user-avatar" aria-hidden="true">{{ userInitial }}</span>
+              <span class="user-meta">
+                <b>{{ userFullName }}</b>
+                <small>{{ soc_role || '' }}</small>
+              </span>
+              <i class="pi pi-angle-right" aria-hidden="true"></i>
+            </router-link>
+            <Button @click="openPosition('bottom')" class="setting-button" icon="pi pi-cog" label="Setting" />
             <!-- <router-link to="/login" class="nav-link"><h5><i class="pi pi-sign-out px-2" style="font-size: 1.2rem;"></i>Logout</h5></router-link> -->
             <!-- <router-link to="/login" class="btn btn-danger" style="width: 100%;">ออกจากระบบ</router-link> -->
           </div>
         </div>
       </div>
 
-      <div :class="mainContentClass" style="height: 100%; padding: 0; overflow: hidden;">
+      <div :class="[mainContentClass, 'main-column']" style="height: 100%; padding: 0; overflow: hidden;">
         <div class="pt-1 pb-3 container-fluid h-100 content-padding">
           <div class="main-content-wrapper">
             <ScrollPanel style="
@@ -163,6 +159,20 @@
         </div>
       </div>
     </div>
+
+    <CommandPalette v-model="paletteOpen" />
+
+    <!-- มือถือ: แถบเมนูล่าง (เมนูที่ใช้บ่อย) — เมนูที่เหลืออยู่ใต้ปุ่ม "เมนู" -->
+    <nav v-if="isMobile" class="mobile-tabbar" aria-label="เมนูหลัก">
+      <router-link v-for="item in mobileNav" :key="item.to" :to="item.to" class="mobile-tab" active-class="active">
+        <i :class="item.icon" aria-hidden="true"></i>
+        <span>{{ item.label }}</span>
+      </router-link>
+      <button type="button" class="mobile-tab" :class="{ active: sidebarVisible }" @click="toggleSidebar" aria-label="เมนูทั้งหมด">
+        <i class="pi pi-bars" aria-hidden="true"></i>
+        <span>เมนู</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -171,14 +181,26 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
+import CommandPalette from "@/components/CommandPalette.vue";
 
 const { loadPermissions, hasAccess } = usePermissions();
 
 const position = ref("center");
 const visible = ref(false);
 const sessionDialog = ref(false);
-const sidebarVisible = ref(true);
 const isMobile = ref(window.innerWidth <= 768);
+// มือถือ: เริ่มด้วยเมนูซ่อนอยู่ (เดิมเมนูเต็มจอปิดบังเนื้อหาทุกครั้งที่เปิดแอป) กดปุ่มขอบจอเพื่อเปิดได้
+const sidebarVisible = ref(!isMobile.value);
+const paletteOpen = ref(false);
+
+// เดสก์ท็อป: เมนูย่อเป็นแถบไอคอนได้ (จำค่าไว้ในเครื่อง) — มือถือใช้ซ่อน/แสดงเต็มจอเหมือนเดิม
+const readCollapsed = () => { try { return localStorage.getItem("ui_sidebar_collapsed") === "1"; } catch { return false; } };
+const sidebarCollapsed = ref(readCollapsed());
+const railMode = computed(() => !isMobile.value && sidebarCollapsed.value);
+// ลูกศรของปุ่ม: ชี้ซ้าย = กดแล้วจะย่อ/ซ่อน
+const sidebarOpenState = computed(() => (isMobile.value ? sidebarVisible.value : !sidebarCollapsed.value));
+// ข้อความของปุ่มพับเมนู (ใช้ทั้ง tooltip และ aria-label — เดิมตัวช่วยเข้าถึงอ่านเป็น "ก่อนหน้า/ถัดไป" จากรูปลูกศร)
+const toggleLabel = computed(() => (isMobile.value ? (sidebarVisible.value ? 'ซ่อนเมนู' : 'แสดงเมนู') : (sidebarCollapsed.value ? 'ขยายเมนู' : 'ย่อเมนู')));
 
 const openPosition = (pos) => {
   position.value = pos;
@@ -186,7 +208,12 @@ const openPosition = (pos) => {
 };
 
 const toggleSidebar = () => {
-  sidebarVisible.value = !sidebarVisible.value;
+  if (isMobile.value) {
+    sidebarVisible.value = !sidebarVisible.value;
+    return;
+  }
+  sidebarCollapsed.value = !sidebarCollapsed.value;
+  try { localStorage.setItem("ui_sidebar_collapsed", sidebarCollapsed.value ? "1" : "0"); } catch { /* ใช้ไม่ได้ก็ไม่เป็นไร */ }
 };
 
 const closeSidebarOnMobile = () => {
@@ -224,6 +251,18 @@ const currentDateTime = computed(() => {
     second: '2-digit'
   })
 });
+
+const userFullName = computed(() => [soc_firstname.value, soc_lastname.value].filter(v => v && v !== "No data").join(" ") || "ผู้ใช้งาน");
+const userInitial = computed(() => (userFullName.value.charAt(0) || "?").toUpperCase());
+
+// เมนูล่างบนมือถือ: เฉพาะที่ผู้ใช้มีสิทธิ์ (สูงสุด 4 รายการ + ปุ่ม "เมนู")
+const MOBILE_NAV = [
+  { to: "/daily_work", label: "งานรายวัน", icon: "pi pi-calendar" },
+  { to: "/car_booking", label: "จองรถ", icon: "pi pi-car" },
+  { to: "/leave_work", label: "ลางาน", icon: "pi pi-sign-out" },
+  { to: "/projects", label: "โครงการ", icon: "pi pi-briefcase" },
+];
+const mobileNav = computed(() => MOBILE_NAV.filter(item => hasAccess(item.to)).slice(0, 4));
 
 const resetTimer = () => {
   timeout.value = 300; // รีเซ็ตเวลาเป็น 5 นาที
@@ -315,47 +354,117 @@ const startCountdown = () => {
   color: black !important;
 }
 
+/* ===== Sidebar toggle (ปุ่มลอยกลางขอบ) ===== */
+/* ความกว้างแถบเมนูตอนนี้ — ใช้วางปุ่มพับให้คร่อมเส้นขอบขวาของแถบ (ตัวเลขต้องตรงกับ .sidebar-column ด้านล่าง) */
+.layout-shell {
+  --sidebar-w: 248px;
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+  .layout-shell {
+    --sidebar-w: 220px;
+  }
+}
+
+.layout-shell.rail-mode {
+  --sidebar-w: 80px;
+}
+
 .sidebar-toggle-btn {
   position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
+  /* กึ่งกลางจอด้วย calc ไม่ใช้ transform — กันปุ่มกระโดดตอน hover/คลิก */
+  top: calc(50% - 22px);
+  transform: none !important;
+  translate: none !important;
   right: var(--toggle-btn-right);
   left: var(--toggle-btn-left);
   z-index: 1001;
-  background: linear-gradient(135deg, #4A90E2, #D73527) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
-  box-shadow: -2px 2px 8px rgba(74, 144, 226, 0.3) !important;
-  width: 40px !important;
-  height: 40px !important;
+  background: #fff !important;
+  color: var(--brand-blue-700) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+  width: 34px !important;
+  height: 44px !important;
   padding: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  opacity: 0.3;
-  transition: opacity 0.3s ease, box-shadow 0.3s ease !important;
+  opacity: 0.55;
+  transition: opacity 0.25s ease, background-color 0.18s ease, border-color 0.18s ease !important;
 }
 
 .sidebar-toggle-btn:hover {
   opacity: 1;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+  box-shadow: none !important;
 }
-
 
 .sidebar-hidden .sidebar-toggle-btn {
   right: auto;
 }
 
+/* เดสก์ท็อป: วงกลมเล็กคร่อมเส้นขอบขวาของแถบเมนู (ครึ่งหนึ่งอยู่ในแถบ ครึ่งหนึ่งอยู่ฝั่งเนื้อหา) ขยับตามความกว้างแถบเอง
+   เดิมลอยอยู่ชิดขอบซ้ายสุดของจอ ทับบริเวณไอคอนเมนู -11px = ให้ขอบซ้ายของปุ่มล้ำเข้าในแถบ ~2px เกินปลายกล่องเมนู */
+@media (min-width: 769px) {
+  .sidebar-toggle-btn {
+    left: calc(var(--sidebar-w) - 11px);
+    right: auto;
+    top: calc(50% - 14px);
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    border-color: var(--line-strong) !important;
+    opacity: 0.9;
+  }
+
+  .sidebar-toggle-btn:hover {
+    background: var(--brand-blue-soft) !important;
+    border-color: var(--brand-blue) !important;
+  }
+
+  .sidebar-toggle-btn :deep(.p-button-icon) {
+    font-size: 0.78rem;
+  }
+}
+
 .main-content-wrapper {
+  --page-pad-x: 1rem; /* ระยะเว้นซ้าย-ขวาของเนื้อหาทุกหน้า (มือถือใช้ 0.5rem ด้านล่าง) */
   width: 100%;
   height: 100%;
   padding: 0;
   margin: 0;
 }
 
+/* ===== Sidebar ===== */
+/* เดสก์ท็อป/แท็บเล็ต: ความกว้างคงที่ (เดิมเป็นเปอร์เซ็นต์ของ bootstrap grid → จอเล็กเมนูแคบจนตัวหนังสือตกบรรทัด จอใหญ่กว้างเกินไป) */
+@media (min-width: 769px) {
+  .sidebar-column {
+    flex: 0 0 248px !important;
+    width: 248px !important;
+    max-width: 248px !important;
+  }
+  .main-column {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1100px) {
+  .sidebar-column {
+    flex-basis: 220px !important;
+    width: 220px !important;
+    max-width: 220px !important;
+  }
+}
+
 .sidebar-column {
-  transition: all 0.3s ease;
+  /* ไม่ทำ transition ความกว้างบนเดสก์ท็อป: ทุกเฟรมที่ความกว้างเปลี่ยน เนื้อหาหลัก (ตาราง/ฟอร์ม) ต้องจัด layout ใหม่ทั้งหน้า → กระตุก
+     ส่วนมือถือเลื่อนเมนูเข้า-ออกด้วย transform (กำหนดไว้ใน @media ด้านล่าง) */
+  background: #fff !important;
+  border-right: 1px solid var(--line);
+  box-shadow: none;
 }
 
 .sidebar-container {
@@ -366,33 +475,96 @@ const startCountdown = () => {
 
 .logo-section {
   text-align: center;
-  padding: 1.5rem 0;
-  border-bottom: 1px solid #e9ecef;
-  margin-bottom: 1rem;
+  padding: 1.4rem 0 1.1rem;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .datetime-section {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.1rem;
 }
 
 .datetime-display {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: 0.45rem;
+  font-size: 0.78rem;
   font-weight: 500;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
-  color: white;
-  padding: 0.75rem;
-  border-radius: 10px;
-  margin: 0 0.5rem;
-  box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+  white-space: nowrap;
+  background: var(--brand-blue-soft);
+  color: var(--brand-blue-700);
+  border: 1px solid #d5e5fa;
+  padding: 0.6rem 0.5rem;
+  border-radius: 12px;
+  margin: 0 0.15rem; /* ระยะเว้นขอบซ้าย-ขวาเท่ากับกล่องอื่นในแถบ (ปุ่มค้นหา, เมนู, การ์ดผู้ใช้) = 0.15rem */
+}
+
+.datetime-display i {
+  color: var(--brand-blue);
 }
 
 .nav-menu {
   flex: 1;
   overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 0 0.15rem;
+}
+
+.nav-menu .nav-item {
+  margin: 0.2rem 0 !important;
+  padding: 0;
+}
+
+.nav-menu .nav-link {
+  display: block;
+  border-radius: 12px;
+  padding: 0;
+  color: var(--ink-soft) !important;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.nav-menu .nav-link h5 {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 !important;
+  padding: 0.62rem 0.8rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: inherit !important;
+}
+
+.nav-menu .nav-link h5 i {
+  font-size: 1.1rem !important;
+  width: 1.6rem;
+  padding: 0 !important;
+  text-align: center;
+  color: var(--muted);
+  transition: color 0.18s ease;
+}
+
+.nav-menu .nav-link:hover {
+  background: #f1f6fd;
+  color: var(--brand-blue-700) !important;
+}
+
+.nav-menu .nav-link:hover h5 i {
+  color: var(--brand-blue);
+}
+
+.nav-menu .nav-link.active {
+  background: var(--brand-blue-soft);
+  color: var(--brand-blue-700) !important;
+}
+
+.nav-menu .nav-link.active h5 {
+  font-weight: 600;
+}
+
+.nav-menu .nav-link.active h5 i {
+  color: var(--brand-blue);
 }
 
 h1,
@@ -402,18 +574,266 @@ h4 {
   color: black !important;
 }
 
-.nav-link.active {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
-  color: white !important;
-  border-radius: 8px;
-  border-radius: 5px;
-  padding: 2px;
-  font-size: 20px;
+/* ===== ปุ่มค้นหา (Ctrl+K) ===== */
+.palette-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: calc(100% - 0.3rem);
+  margin: 0 0.15rem 0.9rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fafcff;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.palette-trigger:hover {
+  border-color: #cfe1f8;
+  background: #f1f6fd;
+  box-shadow: none;
+}
+
+.palette-trigger i {
+  color: var(--brand-blue);
+}
+
+.palette-label {
+  flex: 1;
+  text-align: left;
+}
+
+.palette-trigger kbd {
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 0.05rem 0.35rem;
+}
+
+/* ===== เมนูย่อเป็นแถบไอคอน (เดสก์ท็อป) ===== */
+@media (min-width: 769px) {
+  .sidebar-column.is-collapsed {
+    flex-basis: 80px !important;
+    width: 80px !important;
+    max-width: 80px !important;
+  }
+
+  .is-collapsed .sidebar-container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .is-collapsed .logo-section img {
+    max-width: 52px !important;
+  }
+
+  .is-collapsed .datetime-section,
+  .is-collapsed .palette-label,
+  .is-collapsed .palette-trigger kbd,
+  .is-collapsed .user-meta,
+  .is-collapsed .user-card > i,
+  .is-collapsed .setting-button :deep(.p-button-label) {
+    display: none;
+  }
+
+  .is-collapsed .palette-trigger {
+    justify-content: center;
+    padding: 0.6rem 0;
+  }
+
+  /* ไอคอนค้นหาและ Setting ใหญ่เท่าไอคอนเมนู (เดิม 14px vs 17px) ให้ทั้งแถบดูเป็นระเบียบเดียวกัน */
+  .is-collapsed .palette-trigger i {
+    font-size: 1.25rem;
+  }
+
+  .is-collapsed .nav-menu .nav-link h5 {
+    font-size: 0;
+    gap: 0;
+    justify-content: center;
+    padding: 0.7rem 0;
+  }
+
+  .is-collapsed .nav-menu .nav-link h5 i {
+    font-size: 1.25rem !important;
+    width: auto;
+  }
+
+  .is-collapsed .nav-menu .nav-link:hover {
+    transform: none;
+  }
+
+  .is-collapsed .user-card {
+    justify-content: center;
+    padding: 0.45rem 0;
+  }
+
+  .is-collapsed .setting-button {
+    padding: 0.6rem 0;
+  }
+
+  .is-collapsed .setting-button :deep(.p-button-icon) {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+}
+
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  margin-bottom: 0.6rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fafcff;
+  color: var(--ink) !important;
+  transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.user-card:hover {
+  background: #f1f6fd;
+  border-color: #cfe1f8;
+  box-shadow: none;
+}
+
+.user-avatar {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #fff;
+  background: var(--brand-blue);
+}
+
+.user-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.user-meta b {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-meta small {
+  font-size: 0.74rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-card > i {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ===== แถบเมนูล่าง (มือถือ) ===== */
+.mobile-tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 998;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  padding: 0.35rem 0.4rem calc(0.35rem + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.mobile-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.4rem 0.2rem;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted) !important;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.18s ease, background-color 0.18s ease;
+}
+
+.mobile-tab i {
+  font-size: 1.25rem;
+}
+
+.mobile-tab span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.mobile-tab.active {
+  color: var(--brand-blue-700) !important;
+  background: var(--brand-blue-soft);
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  /* ปุ่มลอยกลางขอบจอมีไว้ปิดเมนูเต็มจอเท่านั้น — ตอนเมนูซ่อนใช้แถบเมนูล่างแทน */
+  .sidebar-hidden .sidebar-toggle-btn {
+    display: none !important;
+  }
+
+  /* เนื้อหาเลื่อนสุดแล้วต้องไม่ถูกแถบเมนูล่างทับ */
+  .main-content-wrapper :deep(.p-scrollpanel-content) {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+    /* PrimeVue เว้นขวา 18px เพื่อซ่อนสกรอลล์บาร์ (เราซ่อนไว้แล้ว) — ถ้าไม่เอาออก ขอบขวาของทุกหน้าจะกว้างกว่าขอบซ้าย */
+    padding-right: 0 !important;
+  }
+}
+
+.sidebar-footer {
+  padding: 0.9rem 0.15rem 1rem; /* เดิม 0.4rem ทำให้การ์ดผู้ใช้/ปุ่ม Setting แคบกว่ากล่องอื่น ~3px ต่อข้าง */
+  border-top: 1px solid var(--line);
+  margin-top: 0.5rem;
+}
+
+.setting-button {
+  width: 100%;
+  justify-content: center;
+  background: #fff !important;
+  color: var(--ink-soft) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow-xs) !important;
 }
 
 .setting-button:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4) !important;
+  background: #f1f6fd !important;
+  color: var(--brand-blue-700) !important;
+  border-color: #cfe1f8 !important;
+  box-shadow: none !important;
 }
 
 .setting-button:active {
@@ -421,22 +841,46 @@ h4 {
 }
 
 .content-padding {
-  padding-right: 0;
-  padding-left: 1rem;
+  /* ขอบซ้าย-ขวาของพื้นที่เนื้อหา เท่ากัน (เดิมซ้าย 1rem แต่ขวา 0 แล้วไปชดเชยที่ ScrollPanel อีกที) */
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
+}
+
+/* bootstrap .row มี margin ซ้าย-ขวาติดลบ (-0.75rem) ทำให้ทั้งแถว (แถบเมนู + เนื้อหา) ล้นออกนอกจอข้างละ ~10px
+   แถบเมนูจึงถูกตัดขอบซ้ายทิ้ง ส่วนที่เห็นจริงแคบกว่าที่ออกแบบ — ไอคอนถูกจัดกึ่งกลางของแถบเต็ม แต่ตาเห็นแค่ส่วนที่เหลือ
+   เลยดูเยื้องซ้าย (ตอนย่อเมนู: ห่างขอบซ้าย ~22px แต่ห่างขอบขวา ~32px) → ตัด margin ติดลบออกทุกขนาดจอ */
+.layout-row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* ScrollPanel ของ PrimeVue เว้นขวา 18px ไว้ซ่อน scrollbar ของตัวเอง (เราซ่อน scrollbar ไว้แล้ว และ layout.css ตั้ง width:100%)
+   ถ้าไม่เอาออก ขอบขวาของทุกหน้าจะกว้างกว่าขอบซ้าย */
+.main-content-wrapper :deep(.p-scrollpanel-content) {
+  padding-right: 0 !important;
+}
+
+/* ทุกหน้า (root ของแต่ละ view) ตั้ง height:100% + overflow:auto ไว้เอง = เป็นกรอบเลื่อนของตัวเอง → scrollbar 8px กินที่ด้านขวาข้างเดียว
+   เนื้อหาเลยเยื้องซ้าย และกว้างไม่เท่ากันระหว่างหน้าที่มี/ไม่มี scrollbar
+   สำรองที่ของ scrollbar ไว้ "ทั้งสองข้าง" (stable both-edges) → ขอบซ้าย-ขวาเท่ากันทุกหน้า แม้เนื้อหายังสั้นจนไม่มี scrollbar
+   overflow-y:auto กำกับด้วย เพราะ scrollbar-gutter ใช้ได้เฉพาะ element ที่เป็นกรอบเลื่อน (หน้าโปรไฟล์/วิเคราะห์ ฯลฯ ไม่ได้ตั้งไว้) */
+.main-content-wrapper :deep(.p-scrollpanel-content) > * {
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  /* ระยะเว้นซ้าย-ขวาของ root ทุกหน้าใช้ค่าเดียวกัน (แต่ละหน้าตั้งไว้ต่างกันตั้งแต่ 0.25rem ถึง 2rem + โปรไฟล์ตั้ง max-width 96%)
+     เฉพาะแนวนอน — แนวตั้งยังเป็นของแต่ละหน้า (specificity สูงกว่ากฎของแต่ละหน้า จึงไม่ต้องใช้ !important) */
+  padding-left: var(--page-pad-x);
+  padding-right: var(--page-pad-x);
+  max-width: 100%;
 }
 
 /* Responsive - ทุก device ที่หน้าจอเล็ก */
 @media (max-width: 768px) {
   .content-padding {
-    padding-right: 1.3rem;
-    padding-left: 0;
+    padding-right: 0.75rem;
+    padding-left: 0.75rem;
   }
   
-  .sidebar-toggle-btn {
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
   :root {
     --toggle-btn-right: 0.5rem;
     --toggle-btn-left: auto;
@@ -454,7 +898,7 @@ h4 {
     height: 100% !important;
     width: 100% !important;
     z-index: 999;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     transform: translateX(0);
     transition: transform 0.3s ease;
     overflow-y: auto !important;
@@ -466,10 +910,20 @@ h4 {
   }
 
   .main-content-wrapper {
+    --page-pad-x: 0.5rem;
     padding: 0;
     margin-left: 0;
     margin-right: 0;
-    width: calc(100% + 2.4rem);
+    width: 100%;
+  }
+
+  /* มือถือ/จอแคบ: ซ่อน scrollbar ของ root แต่ละหน้า (เครื่องจริงเป็น overlay อยู่แล้ว) — ไม่ต้องสำรองที่ว่างสองข้างให้เสียความกว้าง */
+  .main-content-wrapper :deep(.p-scrollpanel-content) > * {
+    scrollbar-width: none;
+  }
+
+  .main-content-wrapper :deep(.p-scrollpanel-content) > *::-webkit-scrollbar {
+    display: none;
   }
 }
 

@@ -1,6 +1,5 @@
 <template>
   <div class="task-management">
-    <Toast />
     
     <!-- Header Card -->
     <Card class="header-card mb-4">
@@ -363,7 +362,7 @@ const categoryIcons = ref([
 
 const statusIcons = ref([
   { label: '⏳ รอดำเนินการ', value: 'emoji:⏳', color: '#f59e0b' },
-  { label: '🔄 กำลังดำเนินการ', value: 'emoji:🔄', color: '#3b82f6' },
+  { label: '🔄 กำลังดำเนินการ', value: 'emoji:🔄', color: '#3a7bd0' },
   { label: '✅ เสร็จสิ้น', value: 'emoji:✅', color: '#10b981' },
   { label: '⏸️ ระงับ', value: 'emoji:⏸️', color: '#6c757d' },
   { label: '❌ ยกเลิก', value: 'emoji:❌', color: '#ef4444' },
@@ -663,7 +662,7 @@ onMounted(() => {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -673,7 +672,7 @@ onMounted(() => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-body) {
@@ -757,8 +756,7 @@ onMounted(() => {
 }
 
 .action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   border-color: #4A90E2;
 }
 

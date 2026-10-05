@@ -1,6 +1,5 @@
 <template>
   <div class="project-progress">
-    <Toast />
     
     <Card class="header-card">
       <template #header>
@@ -369,7 +368,7 @@
                 <div v-show="isClusterExpanded(clusterKey(selectedStep.id, cluster))" class="proc-cluster-body" :class="{ 'is-nested': cluster.repeated }">
                   <!-- หมายเหตุระดับ vendor (ใช้ร่วมทุกรายการ) -->
                   <div v-if="getVendorNote(selectedStep.id, cluster.vendor_name)" class="vendor-note-bar">
-                    <i class="pi pi-shop"></i>
+                    <i class="pi pi-building"></i>
                     <div>
                       <span class="vnb-label">หมายเหตุ Vendor:</span>{{ getVendorNote(selectedStep.id, cluster.vendor_name).comment.trim() }}
                       <span v-if="getVendorNote(selectedStep.id, cluster.vendor_name).updated_by_name" class="vnb-meta">แก้ล่าสุดโดย {{ getVendorNote(selectedStep.id, cluster.vendor_name).updated_by_name }} • {{ formatHistoryTime(getVendorNote(selectedStep.id, cluster.vendor_name).updated_at) }}</span>
@@ -495,6 +494,7 @@
 </template>
 
 <script>
+import { formatDayMonthTH } from '@/utils/dateUtils'
 import { useConfirm } from 'primevue/useconfirm'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import Dropdown from 'primevue/dropdown'
@@ -1121,10 +1121,7 @@ export default {
       return 'pi pi-circle'
     },
     formatDateRange(start, end) {
-      const formatDate = (date) => {
-        if (!date) return ''
-        return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
-      }
+      const formatDate = formatDayMonthTH
       if (start && end) return `${formatDate(start)} - ${formatDate(end)}`
       if (start) return `เริ่ม ${formatDate(start)}`
       if (end) return `ถึง ${formatDate(end)}`
@@ -1159,16 +1156,16 @@ export default {
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
   overflow: auto;
 }
 
 .header-card {
   width: 100%;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: none;
   background: transparent;
 }
@@ -1190,7 +1187,7 @@ export default {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border-radius: 15px 15px 0 0;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: none;
   overflow: hidden;
   min-height: 80px;
   flex-wrap: wrap;
@@ -1433,7 +1430,7 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.75rem;
-  background: linear-gradient(90deg, #faf5ff 0%, #fff 100%);
+  background-color: #fcfaff;
   border: 1px solid #e9d5ff;
   border-radius: 8px;
   cursor: pointer;
@@ -1454,13 +1451,13 @@ export default {
   white-space: nowrap;
 }
 .proc-cluster-done { margin-left: auto; font-size: 0.8rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
-.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.74rem; font-weight: 700; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
+.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.74rem; font-weight: 700; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
 .cluster-files-badge i { font-size: 0.66rem; }
 .vendor-note-bar {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  background: linear-gradient(90deg, #f5f3ff 0%, #faf5ff 100%);
+  background-color: #f8f4ff;
   border: 1px solid #ede9fe;
   border-left: 3px solid #8b5cf6;
   border-radius: 8px;
@@ -1473,17 +1470,17 @@ export default {
 .vendor-note-bar i { color: #7c3aed; margin-top: 3px; font-size: 0.9rem; }
 .vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; white-space: nowrap; }
 .vnb-meta { display: block; font-size: 0.78rem; color: #64748b; margin-top: 3px; font-weight: 400; }
-.proc-cluster-file-chip { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
+.proc-cluster-file-chip { color: #2f66b3; background: #eff6ff; border-color: #bfdbfe; }
 .vendor-files-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.vfr-label { font-size: 0.84rem; font-weight: 800; color: #2563eb; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.vfr-label { font-size: 0.84rem; font-weight: 800; color: #2f66b3; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
 .vfr-label i { font-size: 0.66rem; }
-.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
-.file-chip:hover { background: #dbeafe; transform: translateY(-1px); }
+.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; font-weight: 600; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
+.file-chip:hover { background: #dbeafe; }
 .file-chip i { font-size: 0.66rem; flex-shrink: 0; }
 .file-chip-name { white-space: normal; word-break: break-word; line-height: 1.35; }
 .file-chip-size { font-size: 0.64rem; color: #64748b; font-weight: 400; flex-shrink: 0; }
 .file-chip-add { color: #4b5563; background: #f8fafc; border: 1px dashed #cbd5e1; }
-.file-chip-add:hover { background: #eef2f7; color: #1d4ed8; }
+.file-chip-add:hover { background: #eef2f7; color: #2a5490; }
 .file-chip-add:disabled { opacity: 0.6; cursor: wait; }
 .proc-cluster-body.is-nested {
   padding: 0.3rem 0 0.3rem 0.9rem;
@@ -1501,10 +1498,10 @@ export default {
   border-left: 3px solid #d1d5db;
   transition: box-shadow 0.15s;
 }
-.procurement-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.procurement-item:hover { border-color: #bcd6f6; }
 
 .procurement-item.pi-status-approved { border-left-color: #f59e0b; }
-.procurement-item.pi-status-ordered { border-left-color: #3b82f6; }
+.procurement-item.pi-status-ordered { border-left-color: #4A90E2; }
 .procurement-item.pi-status-waiting { border-left-color: #8b5cf6; }
 .procurement-item.pi-status-received { border-left-color: #10b981; }
 .procurement-item.pi-status-completed { border-left-color: #16a34a; }
@@ -1598,7 +1595,7 @@ export default {
 
 .pi-status-chip.chip-pending { background: #f1f5f9; color: #64748b; }
 .pi-status-chip.chip-approved { background: #fef3c7; color: #b45309; }
-.pi-status-chip.chip-ordered { background: #dbeafe; color: #1d4ed8; }
+.pi-status-chip.chip-ordered { background: #dbeafe; color: #2a5490; }
 .pi-status-chip.chip-waiting { background: #ede9fe; color: #6d28d9; }
 .pi-status-chip.chip-received { background: #d1fae5; color: #065f46; }
 .pi-status-chip.chip-completed { background: #dcfce7; color: #16a34a; }
@@ -1702,7 +1699,7 @@ export default {
 }
 .pi-history-dot.dot-pending { background: #94a3b8; }
 .pi-history-dot.dot-approved { background: #f59e0b; }
-.pi-history-dot.dot-ordered { background: #3b82f6; }
+.pi-history-dot.dot-ordered { background: #4A90E2; }
 .pi-history-dot.dot-waiting { background: #8b5cf6; }
 .pi-history-dot.dot-received { background: #06b6d4; }
 .pi-history-dot.dot-completed { background: #16a34a; }
@@ -1754,7 +1751,7 @@ export default {
 .content-card {
   width: 100%;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .project-info {
@@ -1795,7 +1792,7 @@ export default {
 /* Workflow Expansion */
 .workflow-expansion {
   padding: 1.5rem 2rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background-color: #f4f8fa;
   border-radius: 12px;
   margin: 0.5rem 0;
 }
@@ -1943,7 +1940,7 @@ export default {
   transform: translateY(-50%);
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-left: 10px solid #3b82f6;
+  border-left: 10px solid #4A90E2;
 }
 
 .workflow-step:not(:first-child)::after {
@@ -1954,47 +1951,47 @@ export default {
   transform: translateY(-50%);
   width: 12px;
   height: 3px;
-  background: #3b82f6;
+  background: #4A90E2;
 }
 
 .step-card {
   background: white;
   border-radius: 10px;
   padding: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: none;
   border-left: 3px solid #9ca3af;
   min-width: 180px;
   transition: box-shadow 0.3s, background 0.3s;
 }
 
 .step-card.step-highlight {
-  box-shadow: 0 0 0 3px #f59e0b, 0 4px 16px rgba(245,158,11,0.4);
+  box-shadow: 0 0 0 3px #f59e0b;
   background: #fffbeb;
 }
 
 .step-card.status-completed {
   border-left-color: #10b981;
-  background: linear-gradient(to right, #f0fdf4 0%, white 10%);
+  background-color: #f0fdf4;
 }
 
 .step-card.status-working {
   border-left-color: #f59e0b;
-  background: linear-gradient(to right, #fefce8 0%, white 10%);
+  background-color: #fefce8;
 }
 
 .step-card.status-overdue {
   border-left-color: #ef4444;
-  background: linear-gradient(to right, #fef2f2 0%, white 10%);
+  background-color: #fef2f2;
 }
 
 .step-card.status-in_progress {
-  border-left-color: #3b82f6;
-  background: linear-gradient(to right, #eff6ff 0%, white 10%);
+  border-left-color: #4A90E2;
+  background-color: #eff6ff;
 }
 
 .step-card.status-pending {
   border-left-color: #9ca3af;
-  background: linear-gradient(to right, #f9fafb 0%, white 10%);
+  background-color: #f9fafb;
 }
 
 .step-header {
@@ -2008,7 +2005,7 @@ export default {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #9ca3af, #6b7280);
+  background-color: #848a98;
   color: white;
   display: flex;
   align-items: center;
@@ -2018,19 +2015,19 @@ export default {
 }
 
 .status-completed .step-number {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: #0aa875;
 }
 
 .status-working .step-number {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background-color: #e78a08;
 }
 
 .status-overdue .step-number {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background-color: #e63535;
 }
 
 .status-in_progress .step-number {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-color: #3a7bd0;
 }
 
 .step-status-badge {
@@ -2061,7 +2058,7 @@ export default {
 
 .step-status-badge.status-in_progress {
   background: #dbeafe;
-  color: #1d4ed8;
+  color: #2a5490;
 }
 
 .step-content h4 {
@@ -2104,7 +2101,7 @@ export default {
 }
 
 .user-badge {
-  background: #3b82f6;
+  background: #4A90E2;
   color: #fff;
   padding: 0.1rem 0.4rem;
   border-radius: 8px;
@@ -2116,7 +2113,7 @@ export default {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: #0aa875;
   color: white;
   border: none;
   border-radius: 20px;
@@ -2124,13 +2121,12 @@ export default {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: none;
 }
 
 .complete-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  background-color: #048760;
+  box-shadow: none;
 }
 
 .complete-btn:disabled {
@@ -2143,31 +2139,30 @@ export default {
 }
 
 :deep(.my-project-row) {
-  background: linear-gradient(90deg, #fef3c7 0%, #fefce8 100%) !important;
+  background-color: #fef8d8 !important;
   border-left: 4px solid #f59e0b !important;
 }
 
 :deep(.my-project-row:hover) {
-  background: linear-gradient(90deg, #fde68a 0%, #fef9c3 100%) !important;
+  background-color: #fef0a6 !important;
 }
 
 /* ===== โครงการ CM ต่อเนื่อง (ปิดโครงการแล้วแต่ยังมีงาน CM) ===== */
 :deep(.cm-project-row) {
-  background: linear-gradient(90deg, #f5f3ff 0%, #faf5ff 100%) !important;
+  background-color: #f8f4ff !important;
   border-left: 4px solid #8b5cf6 !important;
 }
 :deep(.cm-project-row:hover) {
-  background: linear-gradient(90deg, #ede9fe 0%, #f5f3ff 100%) !important;
+  background-color: #f1eefe !important;
 }
 .clickable-name { color: #4A90E2; cursor: pointer; font-weight: 500; }
-.clickable-name:hover { text-decoration: underline; color: #2563eb; }
+.clickable-name:hover { text-decoration: underline; color: #2f66b3; }
 .completed-text { color: #16a34a; }
 .completed-text i { color: #16a34a; }
 
 /* Step Detail Dialog */
 .step-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-  transform: translateY(-2px);
+  filter: brightness(0.97);
 }
 </style>
 
@@ -2176,7 +2171,7 @@ export default {
 .step-detail-dlg .p-dialog {
   border-radius: 16px !important;
   overflow: hidden !important;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
@@ -2211,13 +2206,13 @@ export default {
 /* Dialog Header */
 .dlg-header {
   padding: 2.25rem 2rem 1.5rem;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  background-color: #f4f8fa;
   border-bottom: 1px solid #e2e8f0;
 }
-.dlg-header.status-completed { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom-color: #bbf7d0; }
-.dlg-header.status-working { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-bottom-color: #fde68a; }
-.dlg-header.status-overdue { background: linear-gradient(135deg, #fef2f2, #fee2e2); border-bottom-color: #fecaca; }
-.dlg-header.status-pending { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom-color: #e2e8f0; }
+.dlg-header.status-completed { background-color: #e6fcee; border-bottom-color: #bbf7d0; }
+.dlg-header.status-working { background-color: #fef7d9; border-bottom-color: #fde68a; }
+.dlg-header.status-overdue { background-color: #feeaea; border-bottom-color: #fecaca; }
+.dlg-header.status-pending { background-color: #f4f8fa; border-bottom-color: #e2e8f0; }
 
 .dlg-header-top {
   display: flex;
@@ -2234,7 +2229,7 @@ export default {
   background: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 .dlg-close-btn {
   background: none;
@@ -2348,13 +2343,13 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-color: #3a7bd0;
   color: white;
   padding: 0.4rem 0.9rem;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 500;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+  box-shadow: none;
 }
 .dlg-user-chip i { font-size: 0.75rem; }
 
@@ -2376,7 +2371,7 @@ export default {
   justify-content: center;
   gap: 0.6rem;
   padding: 0.7rem 1.5rem;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: #0aa875;
   color: white;
   border: none;
   border-radius: 14px;
@@ -2384,17 +2379,16 @@ export default {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+  box-shadow: none;
   letter-spacing: 0.3px;
 }
 .dlg-complete-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+  background-color: #048760;
+  box-shadow: none;
 }
 .dlg-complete-btn:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: none;
 }
 .dlg-complete-btn:disabled {
   opacity: 0.6;
@@ -2426,28 +2420,28 @@ export default {
   cursor: pointer;
 }
 .sale-badge {
-  background: linear-gradient(135deg, #fdf4ff, #fae8ff);
+  background-color: #fceeff;
   color: #7e22ce;
   border: 1px solid #e9d5ff;
 }
-.sale-badge:hover { background: linear-gradient(135deg, #fae8ff, #f3e8ff); box-shadow: 0 2px 8px rgba(126,34,206,0.2); }
+.sale-badge:hover { background-color: #f6e8ff; box-shadow: none; }
 .pm-badge {
-  background: linear-gradient(135deg, #fff7ed, #ffedd5);
+  background-color: #fff2e1;
   color: #c2410c;
   border: 1px solid #fed7aa;
 }
-.pm-badge:hover { background: linear-gradient(135deg, #ffedd5, #fed7aa); box-shadow: 0 2px 8px rgba(194,65,12,0.2); }
+.pm-badge:hover { background-color: #fee2c0; box-shadow: none; }
 .text-muted { color: #9ca3af; }
 
 .pm-teal-badge {
-  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  background-color: #b2f8ea;
   color: #0f766e;
   border: 1px solid #5eead4;
   cursor: pointer;
 }
 .pm-teal-badge:hover {
-  background: linear-gradient(135deg, #99f6e4, #5eead4);
-  box-shadow: 0 2px 8px rgba(15,118,110,0.2);
+  background-color: #7cf0dc;
+  box-shadow: none;
 }
 
 
@@ -2502,8 +2496,8 @@ export default {
   gap: 5px;
   margin-top: 4px;
   padding: 3px 8px;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  color: #1d4ed8;
+  background-color: #e5f0fe;
+  color: #2a5490;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
   font-size: 0.75rem;
@@ -2512,7 +2506,7 @@ export default {
 }
 .step-idx-badge {
   flex-shrink: 0;
-  background: #1d4ed8;
+  background: #2f66b3;
   color: #fff;
   border-radius: 50%;
   width: 18px;
@@ -2539,22 +2533,22 @@ export default {
   white-space: nowrap;
 }
 
-.latest-step-chip.status-completed { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color:#166534; border-color:#86efac; }
-.latest-step-chip.status-overdue   { background: linear-gradient(135deg,#fee2e2,#fecaca); color:#991b1b; border-color:#fca5a5; }
-.latest-step-chip.status-working   { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#b45309; border-color:#fcd34d; }
+.latest-step-chip.status-completed { background-color: #ccfadc; color:#166534; border-color:#86efac; }
+.latest-step-chip.status-overdue   { background-color: #fed6d6; color:#991b1b; border-color:#fca5a5; }
+.latest-step-chip.status-working   { background-color: #feeca8; color:#b45309; border-color:#fcd34d; }
 
 .latest-step-card {
   margin-top: 6px;
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px solid #bfdbfe;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  background-color: #e5f0fe;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.latest-step-card.status-completed { background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-color: #86efac; }
-.latest-step-card.status-overdue   { background: linear-gradient(135deg,#fef2f2,#fee2e2); border-color: #fca5a5; }
-.latest-step-card.status-working   { background: linear-gradient(135deg,#fffbeb,#fef3c7); border-color: #fcd34d; }
+.latest-step-card.status-completed { background-color: #e6fcee; border-color: #86efac; }
+.latest-step-card.status-overdue   { background-color: #feeaea; border-color: #fca5a5; }
+.latest-step-card.status-working   { background-color: #fef7d9; border-color: #fcd34d; }
 .latest-step-card .latest-step-chip { margin-top: 0; }
 </style>

@@ -1,6 +1,5 @@
 <template>
   <div class="profile-container">
-    <Toast />
     <transition-group name="p-message" tag="div">
         <Message v-for="msg of messages" :key="msg.id" :severity="msg.severity">{{ msg.content }}</Message>
     </transition-group>
@@ -104,7 +103,6 @@ import { useToast } from 'primevue/usetoast';
 import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Message from 'primevue/message';
-import Toast from "primevue/toast";
 import { useConfirm } from "primevue/useconfirm";
 import axios from '@/utils/axiosConfig';
 
@@ -304,7 +302,7 @@ function changePassword() {
 }
 
 .profile-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -320,7 +318,7 @@ function changePassword() {
 
 .card-header i {
   font-size: 1.5rem;
-  color: #3b82f6;
+  color: #3a7bd0;
 }
 
 .form-grid {

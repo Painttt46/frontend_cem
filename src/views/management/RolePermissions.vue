@@ -1,6 +1,5 @@
 <template>
   <div class="permissions-container">
-    <Toast />
     
     <!-- Header -->
     <Card class="header-card mb-4">
@@ -348,7 +347,7 @@ const savePermissions = async () => {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -357,7 +356,7 @@ const savePermissions = async () => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-body) {

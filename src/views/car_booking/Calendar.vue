@@ -530,7 +530,7 @@ export default {
 <style scoped>
 .status-card {
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   transition: all 0.3s ease;
 }
 
@@ -565,7 +565,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  background-color: #e5f0fe;
   border: 1.5px solid #93c5fd;
   border-radius: 12px;
   padding: 0.7rem 1rem;
@@ -573,14 +573,14 @@ export default {
   font-size: 0.85rem;
   color: #1e3a8a;
 }
-.active-countdown i { font-size: 1.3rem; color: #2563eb; flex-shrink: 0; }
+.active-countdown i { font-size: 1.3rem; color: #2f66b3; flex-shrink: 0; }
 .countdown-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
 .countdown-main { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; line-height: 1.4; }
 .countdown-main strong { white-space: nowrap; }
 .countdown-dot { color: #93c5fd; font-weight: 800; }
 .countdown-left {
   font-weight: 800;
-  color: #2563eb;
+  color: #2f66b3;
   background: rgba(37, 99, 235, 0.12);
   border: 1px solid #bfdbfe;
   padding: 0.1rem 0.55rem;
@@ -590,7 +590,7 @@ export default {
 }
 .countdown-text small { color: #b45309; font-weight: 600; }
 .active-countdown.countdown-urgent {
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  background-color: #fef7d9;
   border-color: #fbbf24;
   color: #92400e;
 }
@@ -672,7 +672,7 @@ export default {
 
 .calendar-container {
   background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
   overflow: hidden;
   margin: 2rem 0 0 0;
   width: 100%;
@@ -697,7 +697,7 @@ export default {
   margin: 0;
   font-size: 1.8rem;
   font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: none;
 }
 
 .calendar-subtitle {
@@ -720,14 +720,13 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 .nav-btn:hover {
   background: rgba(255, 255, 255, 0.25);
   border-color: rgba(255, 255, 255, 0.5);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
 }
 
 .calendar {
@@ -740,12 +739,13 @@ export default {
 }
 
 .day-header {
-  background: #6c757d;
-  color: white;
-  padding: 1rem 0.5rem;
+  background: #eef3fa;
+  color: var(--ink-soft);
+  padding: 0.8rem 0.5rem;
   text-align: center;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .calendar-day {
@@ -756,19 +756,20 @@ export default {
   position: relative;
   transition: background-color 0.2s ease;
   border: 1px solid #dee2e6;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 500;
-  min-height: 60px;
+  /* สูงขึ้น: ตัวเลขวันที่อยู่บน ป้ายสถานะอยู่ล่าง ไม่ซ้อนกันเมื่อฟอนต์กว้างขึ้น */
+  min-height: 86px;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 0.75rem;
+  padding-top: 0.6rem;
   color: #212529;
 }
 
 .calendar-day:hover {
-  background: #e9ecef;
-  border-color: #007bff;
+  background: #eef5fe;
+  border-color: var(--brand-blue);
 }
 
 .calendar-day.other-month {
@@ -778,7 +779,8 @@ export default {
 }
 
 .calendar-day.today {
-  background: #007bff;
+  background: var(--brand-gradient);
+  border-color: var(--brand-blue);
   color: white;
   font-weight: bold;
 }
@@ -803,21 +805,23 @@ export default {
 
 .booking-indicator {
   position: absolute;
-  top: 0.5rem;
-  right: 1rem;
+  top: 0.35rem;
+  right: 0.5rem;
+  font-size: 0.85rem;
 }
 
 .booking-text-center {
   position: absolute;
-  bottom: 1rem;
+  bottom: 0.45rem;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
 }
 
 .booking-text {
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 600;
+  white-space: nowrap;
   color: #2e7d32;
   padding: 0.1rem 0.3rem;
   border-radius: 3px;
@@ -855,7 +859,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: linear-gradient(135deg, #28a745, #20c997);
+  background-color: #24b86e;
   color: white;
   border-radius: 8px;
   margin-bottom: 1.5rem;

@@ -1623,7 +1623,7 @@ export default {
 
   border-color: #dee2e6;
 
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 
 }
 
@@ -1845,7 +1845,7 @@ export default {
 
   font-weight: 700;
 
-  color: #1d4ed8;
+  color: #2a5490;
 
   background: #eff6ff;
 
@@ -1940,7 +1940,7 @@ export default {
 
 .corporate-dialog {
 
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 
 }
 
@@ -1948,7 +1948,7 @@ export default {
 
 .corporate-dialog :deep(.p-dialog-header) {
 
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #4A90E2;
 
   color: white;
 
@@ -1988,7 +1988,7 @@ export default {
 
   border-radius: 8px;
 
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 
 }
 
@@ -2038,9 +2038,9 @@ export default {
 
 .corporate-dropdown:focus {
 
-  border-color: #667eea;
+  border-color: #3a7bd0;
 
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: none;
 
 }
 
@@ -2204,7 +2204,7 @@ export default {
 
 .confirm-dialog :deep(.p-dialog-header) {
 
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #4A90E2;
 
   color: white;
 
@@ -2238,7 +2238,7 @@ export default {
 
   font-size: 3rem;
 
-  color: #667eea;
+  color: #3a7bd0;
 
 }
 
@@ -2366,7 +2366,7 @@ export default {
 
   flex-shrink: 0;
 
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background-color: #3a7bd0;
 
   color: white;
 
@@ -2421,9 +2421,9 @@ export default {
 
   border-radius: 9px;
 
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  background-color: #cde2fe;
 
-  color: #2563eb;
+  color: #2f66b3;
 
   display: flex;
 

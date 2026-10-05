@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Toast />
     <Card class="form-card">
     <template #content>
       <form @submit.prevent="submitForm" class="leave-form">
@@ -1125,7 +1124,7 @@ export default {
 }
 
 .form-card {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -1199,7 +1198,7 @@ export default {
 .corporate-input:focus,
 .corporate-dropdown:focus {
   border-color: #28a745;
-  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+  box-shadow: none;
 }
 
 .readonly-field {

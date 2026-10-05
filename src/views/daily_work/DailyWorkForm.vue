@@ -1,6 +1,5 @@
 <template>
   <div class="form-wrap">
-    <Toast />
     <form @submit.prevent="submitForm" class="dwf">
 
       <!-- วันที่ -->
@@ -99,7 +98,7 @@
 
           <!-- Steps -->
           <div v-if="entry.taskId && getStepsForTask(entry.taskId).length > 0" class="field-row">
-            <label class="field-label"><i class="pi pi-list-check"></i> ขั้นตอน</label>
+            <label class="field-label"><i class="pi pi-list"></i> ขั้นตอน</label>
             <MultiSelect v-model="entry.stepIds" :options="getStepsForTask(entry.taskId)"
               optionLabel="step_name" optionValue="id" :optionDisabled="isStepCompleted"
               class="w-full" placeholder="เลือก step (ถ้ามี)"
@@ -259,6 +258,7 @@
   </div>
 </template>
 <script>
+import { toDateKey } from '@/utils/dateUtils'
 /* eslint-disable no-unused-vars */
 import axios from '@/utils/axiosConfig'
 import Checkbox from 'primevue/checkbox'
@@ -791,9 +791,7 @@ export default {
       }
     },
     formatDate(date) {
-      if (!date) return null
-      const d = new Date(date)
-      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+      return toDateKey(date)
     },
     formatTime(date) {
       if (!date) return null
@@ -892,20 +890,20 @@ export default {
 .date-range-info {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
-  border-left: 4px solid #3b82f6;
+  background-color: #deeefe;
+  border-left: 4px solid #4A90E2;
   border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   font-size: 0.875rem;
   color: #1e40af;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+  box-shadow: none;
 }
 
 .date-range-info i {
   font-size: 1.1rem;
-  color: #3b82f6;
+  color: #3a7bd0;
   flex-shrink: 0;
 }
 
@@ -941,18 +939,18 @@ export default {
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: none;
   transition: all 0.2s;
 }
 
 .section:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: none;
 }
 
 .date-section { 
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  background-color: #e5f0fe;
   border: 2px solid #bfdbfe;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  box-shadow: none;
 }
 
 .section-header {
@@ -974,26 +972,25 @@ export default {
 }
 
 .section-title i { 
-  color: #3b82f6; 
+  color: #3a7bd0; 
   font-size: 1.1rem;
 }
 
 /* ── Entry Card ── */
 .entry-card {
   border: 2px solid #e2e8f0;
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #4A90E2;
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  background-color: #fcfcfe;
+  box-shadow: none;
   transition: all 0.2s;
 }
 
 .entry-card:hover {
-  border-left-color: #2563eb;
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
-  transform: translateY(-2px);
+  border-left-color: #3a7bd0;
+  box-shadow: none;
 }
 
 .entry-card:last-child { 
@@ -1012,7 +1009,7 @@ export default {
   width: 32px; 
   height: 32px; 
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background-color: #3a7bd0;
   color: #fff; 
   font-size: 0.85rem; 
   font-weight: 700;
@@ -1020,7 +1017,7 @@ export default {
   align-items: center; 
   justify-content: center; 
   flex-shrink: 0;
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: none;
 }
 
 .entry-dropdown-wrap { 
@@ -1039,7 +1036,7 @@ export default {
 .time-sep { font-weight: 600; color: #94a3b8; padding-bottom: 4px; }
 .time-input { width: 72px !important; text-align: center; font-size: 1rem; padding: 0.4rem 0.3rem !important; }
 .time-total-pill {
-  background: #dbeafe; color: #1d4ed8; border-radius: 20px;
+  background: #dbeafe; color: #2a5490; border-radius: 20px;
   padding: 4px 12px; font-size: 0.82rem; font-weight: 600;
   display: flex; align-items: center; gap: 4px; white-space: nowrap;
 }
@@ -1060,7 +1057,7 @@ export default {
 /* ── Dropdown options ── */
 .val-row, .opt-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; overflow: hidden; }
 .opt-mine { background: #fefce8; border-left: 3px solid #f59e0b; padding: 3px 6px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-.so-tag { background: #3b82f6; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+.so-tag { background: #4A90E2; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
 .mine-tag { background: #f59e0b; color: #fff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
 .task-txt { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; overflow-wrap: anywhere; }
 .ph { color: #9ca3af; }
@@ -1092,17 +1089,17 @@ export default {
 
 /* ── Calendar section ── */
 .cal-section { 
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  background-color: #e8f6fe;
   border: 2px solid #bae6fd; 
   border-radius: 12px; 
   padding: 1rem; 
   margin-top: 1rem;
-  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.1);
+  box-shadow: none;
   transition: all 0.2s;
 }
 
 .cal-section:hover {
-  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
+  box-shadow: none;
 }
 
 .cal-header { 
@@ -1132,7 +1129,7 @@ export default {
 .cal-textarea:focus { 
   outline: none; 
   border-color: #38bdf8; 
-  box-shadow: 0 0 0 3px rgba(56,189,248,0.15); 
+  box-shadow: none; 
 }
 
 .teams-toggle { 
@@ -1148,7 +1145,7 @@ export default {
 .teams-label { 
   font-size: 0.9rem; 
   font-weight: 600; 
-  color: #1d4ed8; 
+  color: #2a5490; 
   cursor: pointer; 
   display: flex; 
   align-items: center; 
@@ -1166,7 +1163,7 @@ export default {
   gap: 0.75rem;
   margin-top: 1rem;
   padding: 1rem;
-  background: linear-gradient(135deg, rgba(254, 252, 232, 0.5), rgba(253, 246, 178, 0.3));
+  background-color: rgba(254, 249, 205, 0.40);
   border: 2px dashed #fbbf24;
   border-radius: 8px;
   animation: slideDown 0.3s ease-out;
@@ -1201,12 +1198,12 @@ export default {
 
 .meeting-time-input:focus {
   border-color: #f59e0b !important;
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2) !important;
+  box-shadow: none !important;
 }
 
 .meeting-time-input.p-invalid {
   border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+  box-shadow: none !important;
 }
 
 @keyframes slideDown {
@@ -1225,13 +1222,24 @@ export default {
   display: flex; 
   gap: 1rem; 
   justify-content: flex-end; 
-  padding: 1.5rem 0 0.5rem; 
+  padding: 0.9rem 0; 
   margin-top: 1rem;
-  border-top: 2px solid #e2e8f0; 
+  border-top: 1px solid var(--line, #e2e8f0); 
   position: sticky;
   bottom: 0;
-  background: linear-gradient(to top, #ffffff 80%, transparent);
+  /* พื้นทึบเหมือนแถบ footer ของ dialog อื่น (เดิมไล่สีโปร่งใส เนื้อหาเลยโผล่ทะลุแถบ) */
+  background: #fafbfd;
   z-index: 10;
+}
+
+/* เดสก์ท็อป: แถบปุ่มกว้างเต็ม dialog (ทะลุ padding ข้าง 1.5rem ของกล่องเลื่อน) เส้นขอบบนจะยาวเต็มความกว้างเหมือน footer ปกติ */
+@media (min-width: 769px) {
+  .form-actions {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 .form-actions :deep(.p-button) {
@@ -1243,15 +1251,14 @@ export default {
 }
 
 .form-actions :deep(.p-button-success) {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: #0aa875;
   border: none;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: none;
 }
 
 .form-actions :deep(.p-button-success:hover) {
-  background: linear-gradient(135deg, #059669, #047857);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-  transform: translateY(-2px);
+  background-color: #048760;
+  box-shadow: none;
 }
 
 .form-actions :deep(.p-button-secondary) {
@@ -1263,7 +1270,6 @@ export default {
 .form-actions :deep(.p-button-secondary:hover) {
   background: #e2e8f0;
   border-color: #cbd5e1;
-  transform: translateY(-2px);
 }
 
 /* ── Dropdown panel fix ── */
@@ -1323,7 +1329,7 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  background-color: #cde2fe;
   border: 1px solid #93c5fd;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -1332,8 +1338,8 @@ export default {
 }
 
 .attendee-chip:hover {
-  background: linear-gradient(135deg, #bfdbfe, #93c5fd);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  background-color: #a9d0fe;
+  box-shadow: none;
 }
 
 .attendee-chip i.pi-user {

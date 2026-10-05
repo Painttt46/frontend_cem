@@ -1,6 +1,5 @@
 <template>
   <div class="management-container">
-    <Toast />
     
     <!-- Header Card -->
     <Card class="header-card mb-4">
@@ -489,9 +488,9 @@ const navigateTo = (section) => {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
   overflow: auto;
 }
 
@@ -500,7 +499,7 @@ const navigateTo = (section) => {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border: none;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .header-card :deep(.p-card-content) {
@@ -564,17 +563,17 @@ const navigateTo = (section) => {
 /* Card Styles */
 .management-card {
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  border: 1px solid var(--line);
+  border-radius: 16px;
   overflow: hidden;
   height: 100%;
+  background: #fff;
 }
 
 .management-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-  border-color: #4A90E2;
+  box-shadow: none;
+  border-color: #bcd6f6;
 }
 
 .card-content {
@@ -590,16 +589,29 @@ const navigateTo = (section) => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
+  /* .card-header/.card-footer ซ้ำชื่อกับ Bootstrap (พื้นเทา + เส้นขอบ) — ปิดทิ้งเพราะการ์ดนี้ออกแบบเอง */
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .card-icon {
-  font-size: 2.5rem;
-  color: #4A90E2;
-  transition: color 0.3s ease;
+  /* ไอคอนในกรอบสี่เหลี่ยมมุมมน — ไล่สีแบรนด์เมื่อชี้ */
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  border-radius: 16px;
+  color: var(--brand-blue-700);
+  background: var(--brand-blue-soft);
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
 }
 
 .management-card:hover .card-icon {
-  color: #D73527;
+  color: #fff;
+  background: var(--brand-gradient);
 }
 
 .status-badge {
@@ -608,9 +620,9 @@ const navigateTo = (section) => {
 }
 
 .card-content h3 {
-  margin: 0 0 0.75rem 0;
-  color: #2c3e50;
-  font-size: 1.25rem;
+  margin: 0 0 0.5rem 0;
+  color: var(--ink);
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
@@ -626,19 +638,27 @@ const navigateTo = (section) => {
   display: flex;
   justify-content: flex-end;
   margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #f8f9fa;
+  padding: 0;
+  background: transparent;
+  border: none;
 }
 
 .card-footer i {
-  color: #4A90E2;
-  font-size: 1rem;
-  transition: transform 0.3s ease;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--brand-blue-700);
+  background: var(--brand-blue-soft);
+  font-size: 0.85rem;
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 
 .management-card:hover .card-footer i {
-  transform: translateX(4px);
-  color: #D73527;
+  color: #fff;
+  background: var(--brand-blue);
 }
 
 /* Mobile Responsive */
@@ -726,11 +746,11 @@ const navigateTo = (section) => {
 /* Audit Log Styles */
 .audit-card {
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
 }
 
 .filter-section {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background-color: #f4f8fa;
   border: 1px solid #e2e8f0;
 }
 
@@ -738,7 +758,7 @@ const navigateTo = (section) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4A90E2, #357ABD);
+  background-color: #4A90E2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -757,7 +777,7 @@ const navigateTo = (section) => {
 }
 
 :deep(.audit-table .p-datatable-thead > tr > th) {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background-color: #f4f8fa;
   border-bottom: 2px solid #e2e8f0;
   font-weight: 600;
   color: #475569;

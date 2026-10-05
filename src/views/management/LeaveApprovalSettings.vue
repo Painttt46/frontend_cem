@@ -1,6 +1,5 @@
 <template>
   <div class="settings-container">
-    <Toast />
 
     <!-- Header -->
     <Card class="header-card mb-4">
@@ -273,7 +272,7 @@ onMounted(() => {
   padding-bottom: 0;
   max-width: 100%;
   margin: 0 auto;
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -344,11 +343,11 @@ onMounted(() => {
 }
 
 .level-1 {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background-color: #3a7bd0;
 }
 
 .level-2 {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background-color: #0aa875;
 }
 
 .level-desc {
@@ -386,7 +385,7 @@ onMounted(() => {
 }
 
 :deep(.custom-multiselect .p-multiselect-token) {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  background-color: #3a7bd0;
   color: white;
   border-radius: 6px;
   padding: 0.25rem 0.5rem;
@@ -431,6 +430,6 @@ onMounted(() => {
 
 :deep(.p-multiselect-panel .p-multiselect-items .p-multiselect-item.p-highlight) {
   background: #eff6ff;
-  color: #1d4ed8;
+  color: #2a5490;
 }
 </style>

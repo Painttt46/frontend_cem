@@ -1,6 +1,5 @@
 <template>
   <div class="leave-work-container">
-    <Toast />
     <Card class="header-card">
       <template #header>
         <div class="main-header">
@@ -343,14 +342,14 @@ export default {
             <td colspan="11" align="center" style="text-align:center; padding:25px; border:3px solid #1e40af; background-color:#ffffff;">
                 <img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'" style="margin-bottom:10px;"/>
                 <div style="font-size:26pt; font-weight:bold; color:#1e40af; margin-bottom:8px;">GENT SOLUTION CO., LTD.</div>
-                <div style="font-size:20pt; font-weight:bold; color:#3b82f6; border-top:2px solid #3b82f6; border-bottom:2px solid #3b82f6; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
+                <div style="font-size:20pt; font-weight:bold; color:#3a7bd0; border-top:2px solid #4A90E2; border-bottom:2px solid #4A90E2; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
             </td>
         </tr>
         
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📊 สรุปภาพรวมการลางาน
             </td>
         </tr>
@@ -379,7 +378,7 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📋 สรุปตามประเภทการลา
             </td>
         </tr>
@@ -395,14 +394,14 @@ export default {
                 <td colspan="4" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${type}</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.days.toFixed(1)} วัน</td>
-                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3b82f6; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3a7bd0; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
                 🏢 สรุปตามแผนก
             </td>
         </tr>
@@ -416,14 +415,14 @@ export default {
         return `<tr>
                 <td colspan="5" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${dept}</td>
                 <td colspan="3" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
-                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3b82f6; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3a7bd0; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3b82f6; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📄 รายละเอียดการลาแต่ละรายการ
             </td>
         </tr>
@@ -455,7 +454,7 @@ export default {
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" class="font-bold" style="padding:8px; text-align:center; background-color:${bgColor};">${calcDays(r)}</td>
-                <td align="center" class="font-bold" style="padding:8px; color:#3b82f6; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
+                <td align="center" class="font-bold" style="padding:8px; color:#3a7bd0; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
                 <td align="left" style="padding:8px; text-align:left; background-color:${bgColor};">${r.reason || '-'}</td>
             </tr>`;
       }).join('')}
@@ -764,9 +763,9 @@ export default {
   max-width: 100%;
   margin: 0 auto;
 
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
   overflow: auto;
 }
 
@@ -800,7 +799,7 @@ export default {
   border-radius: 12px;
   padding: 4px;
   border: 1px solid #e2e8f0;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+  box-shadow: none;
 }
 
 .filter-btn {
@@ -817,7 +816,7 @@ export default {
   align-items: center;
   gap: 0.4rem;
   white-space: nowrap;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
 }
 
 .filter-btn:hover {
@@ -829,7 +828,7 @@ export default {
   background: white;
   color: #1e3a8a;
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-shadow: none;
 }
 
 .filter-btn.filter-today.active {
@@ -881,13 +880,13 @@ export default {
 }
 
 .leave-btn {
-  background: #3b82f6 !important;
+  background-color: #4A90E2 !important;
   border: none !important;
   color: white !important;
-  padding: 1rem 2rem !important;
+  padding: 0.85rem 1.8rem !important;
   font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4) !important;
+  border-radius: 14px !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   overflow: hidden !important;
@@ -896,8 +895,7 @@ export default {
 }
 
 .leave-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6) !important;
+  filter: brightness(0.93) !important;
 }
 
 .leave-btn:before {
@@ -916,13 +914,14 @@ export default {
 }
 
 .approval-btn {
-  background: #22c55e !important;
-  border: none !important;
-  color: white !important;
-  padding: 1rem 2rem !important;
+  /* ปุ่มรอง: ขาว ขอบน้ำเงินอ่อน (เดิมเขียวทึบ แข่งกับปุ่มหลัก) */
+  background: #fff !important;
+  border: 1.5px solid #bcd6f6 !important;
+  color: var(--brand-blue-700) !important;
+  padding: 0.8rem 1.7rem !important;
   font-weight: 600 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4) !important;
+  border-radius: 14px !important;
+  box-shadow: var(--shadow-xs) !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   overflow: hidden !important;
@@ -931,8 +930,9 @@ export default {
 }
 
 .approval-btn:hover {
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.6) !important;
+  background: #eaf3fe !important;
+  border-color: var(--brand-blue) !important;
+  box-shadow: none !important;
 }
 
 .approval-btn:before {
@@ -951,10 +951,19 @@ export default {
 }
 
 .export-btn {
+  /* ปุ่มลำดับสาม: ขาว ขอบเทา (เดิมส้มทึบ จาก severity=warning) */
   min-width: 160px;
   padding: 0.75rem 1.5rem !important;
-  border-radius: 12px !important;
+  border-radius: 14px !important;
   font-weight: 600 !important;
+  background: #fff !important;
+  border: 1.5px solid var(--line) !important;
+  color: var(--ink-soft) !important;
+  box-shadow: var(--shadow-xs) !important;
+}
+.export-btn:hover {
+  background: #f6f9fd !important;
+  border-color: #cdd8e8 !important;
 }
 
 .btn-text {
@@ -965,14 +974,14 @@ export default {
 
 .pending-badge {
   margin-left: 2rem !important;
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  background-color: #e63535 !important;
   color: white !important;
   font-weight: 700 !important;
   padding: 0.3rem !important;
   border-radius: 50% !important;
   font-size: 0.7rem !important;
   border: 2px solid rgba(239, 68, 68, 0.3) !important;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important;
+  box-shadow: none !important;
   animation: pulse 2s infinite;
   width: 22px !important;
   height: 22px !important;
@@ -1000,14 +1009,14 @@ export default {
 .main-content {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   padding: 2rem;
   min-height: 500px;
 }
 
 .header-card {
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: none;
   background: transparent;
 }
@@ -1029,7 +1038,7 @@ export default {
   background: linear-gradient(135deg, #4A90E2, #D73527);
   color: white;
   border-radius: 15px 15px 0 0;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: none;
   overflow: hidden;
   min-height: 80px;
   flex-wrap: wrap;
@@ -1058,7 +1067,7 @@ export default {
   background: rgba(255, 255, 255, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 20px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: none;
 }
 
 @media (max-width: 768px) {
@@ -1110,8 +1119,11 @@ export default {
     min-width: auto !important;
   }
 
+  /* ปุ่ม Export เต็มแถวเหมือนปุ่ม แจ้งลางาน / อนุมัติการลา (เดิมชิดขวาตัวเดียวโดดเดี่ยว) */
   .export-btn {
-    align-self: flex-end;
+    align-self: stretch;
+    width: 100% !important;
+    justify-content: center;
   }
 }
 

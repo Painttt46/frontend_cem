@@ -114,7 +114,6 @@
     </Dialog>
 
     <!-- Toast for notifications -->
-    <Toast />
   </div>
 </template>
 
@@ -742,7 +741,7 @@ export default {
 .calendar-card {
   width: 100%;
   margin: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none;
   border: 1px solid #e9ecef;
 }
 
@@ -752,15 +751,15 @@ export default {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: inherit;
   overflow: auto;
 }
 
 .main-tabs {
   margin-top: 0;
-  box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+  box-shadow: none;
   border-radius: 15px;
   overflow: hidden;
   border: 1px solid rgba(74, 144, 226, 0.2);
@@ -770,22 +769,22 @@ export default {
 .tabs-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   position: relative;
   flex-wrap: wrap;
   gap: 1rem;
 }
 
+/* เดิมวางชื่อหน้าแบบ absolute กลางแบนเนอร์ → ซ้อนทับกับแท็บ/ปุ่มเมื่อจอแคบหรือฟอนต์กว้างขึ้น
+   เปลี่ยนเป็นอยู่ในแถวเดียวกัน ถ้าที่ไม่พอจะขึ้นบรรทัดใหม่เอง */
 .header-title {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   color: white;
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   z-index: 2;
 }
 
@@ -830,14 +829,13 @@ export default {
 .tab-navigation :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
   background: rgba(255, 255, 255, 0.25);
   color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   transform: translateY(-2px);
   border-bottom: none !important;
 }
 
 .tab-navigation :deep(.p-tabview-nav-link:hover) {
   background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
 }
 
 .tab-navigation :deep(.p-tabview-ink-bar) {
@@ -862,13 +860,12 @@ export default {
   font-size: 0.95rem;
   border-radius: 8px;
   min-width: 140px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   border: 3px solid white;
 }
 
 .action-buttons-header .p-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: none;
   border: 3px solid white;
 }
 
@@ -919,7 +916,7 @@ export default {
 .main-tabs :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
   background: white;
   color: #4A90E2;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: none;
   transform: translateY(-2px);
   border-bottom: none !important;
   font-weight: 700;
@@ -928,7 +925,6 @@ export default {
 
 .main-tabs :deep(.p-tabview-nav-link:hover) {
   background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
   border-radius: 8px;
 }
 
@@ -1045,10 +1041,6 @@ export default {
   border: 1px dashed #dee2e6;
   border-radius: 6px;
   color: #6c757d;
-}
-
-.grid-image:hover {
-  transform: scale(1.05);
 }
 
 .full-size-image {

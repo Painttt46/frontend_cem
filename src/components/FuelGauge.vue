@@ -58,7 +58,7 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  background-color: #181e36;
   border-radius: 12px;
   border: 2px solid #334155;
 }
@@ -146,7 +146,7 @@ export default {
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  background: #3b82f6;
+  background: #4A90E2;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid #fff;

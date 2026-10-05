@@ -165,7 +165,7 @@ export default {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: #4A90E2;
   display: flex;
   align-items: center;
   justify-content: center;

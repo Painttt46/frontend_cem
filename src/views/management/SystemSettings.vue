@@ -1,6 +1,5 @@
 <template>
   <div class="settings-container">
-    <Toast />
     
     <!-- Header -->
     <Card class="header-card mb-4">
@@ -162,7 +161,7 @@ const showComingSoon = () => {
   max-width: 100%;
   margin: 0 auto;
   
-  background: #e5e7eb;
+  background: transparent; /* พื้นหลังหน้ามาจาก body (theme.css) */
   height: 100%;
   overflow: auto;
 }
@@ -221,8 +220,7 @@ const showComingSoon = () => {
 }
 
 .setting-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: none;
   border-color: #4A90E2;
 }
 
@@ -275,7 +273,6 @@ const showComingSoon = () => {
 }
 
 .setting-card:hover .card-footer i {
-  transform: translateX(4px);
   color: #D73527;
 }
 
