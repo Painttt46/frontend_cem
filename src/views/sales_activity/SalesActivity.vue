@@ -423,10 +423,14 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import { useConfirm } from 'primevue/useconfirm'
+import { usePermissions } from '@/composables/usePermissions'
 
 export default {
   name: 'SalesActivity',
-  setup() { return { $confirm: useConfirm() } },
+  setup() {
+    const { hasAccess } = usePermissions()
+    return { $confirm: useConfirm(), hasAccess }
+  },
   data() {
     return {
       visits: [], customers: [], tasks: [], users: [],
@@ -468,8 +472,9 @@ export default {
     }
   },
   computed: {
+    // เห็น/จัดการกิจกรรมของทุกคน: admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์ในหน้าจัดการสิทธิ์
     isAdmin() {
-      return ['superadmin', 'admin', 'hr'].includes(this.userRole)
+      return this.hasAccess('/sales-activity#manage-all')
     },
     // ชุดผลลัพธ์หลังตัวกรองทุกอย่าง "ยกเว้น" สถานะ — ใช้ทั้งแสดงรายการและนับ KPI
     baseFilteredVisits() {
@@ -809,14 +814,14 @@ export default {
 
 /* Modern Dialog — จัดสไตล์ให้เหมือน dialog อื่นในระบบ + scroll ภายในจอ */
 .modern-dialog :deep(.p-dialog) { border-radius: 18px; overflow: hidden; box-shadow: none; border: none; }
-.modern-dialog :deep(.p-dialog-header) { padding: 1.25rem 1.5rem; border-bottom: 1.5px solid #f1f5f9; background: #fff; }
+.modern-dialog :deep(.p-dialog-header) { padding: 1.1rem 1.4rem; border-bottom: 1.5px solid #f1f5f9; background: #fff; }
 .modern-dialog :deep(.p-dialog-title) { font-weight: 800; font-size: 1.05rem; color: #0f172a; letter-spacing: -0.02em; }
 .modern-dialog :deep(.p-dialog-header-icon) { width: 32px; height: 32px; border-radius: 50%; color: #64748b; transition: all 0.2s; }
 .modern-dialog :deep(.p-dialog-header-icon:hover) { background: #f1f5f9; color: #0f172a; }
-.modern-dialog :deep(.p-dialog-content) { padding: 1.5rem 1.5rem 1rem; max-height: calc(100vh - 230px); overflow-y: auto; }
+.modern-dialog :deep(.p-dialog-content) { padding: 1.2rem 1.4rem; max-height: calc(100vh - 230px); overflow-y: auto; }
 .modern-dialog :deep(.p-dialog-content::-webkit-scrollbar) { width: 6px; }
 .modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-thumb) { background: #e2e8f0; border-radius: 3px; }
-.modern-dialog :deep(.p-dialog-footer) { padding: 1rem 1.5rem 1.25rem; border-top: 1.5px solid #f1f5f9; background: #fafbfc; display: flex; justify-content: flex-end; gap: 0.65rem; }
+.modern-dialog :deep(.p-dialog-footer) { padding: 0.9rem 1.4rem; border-top: 1.5px solid #f1f5f9; background: #fafbfc; display: flex; justify-content: flex-end; gap: 0.65rem; }
 
 /* Header */
 .header-card { margin-bottom: 1.25rem; box-shadow: none; border: none; background: transparent; }
@@ -827,8 +832,8 @@ export default {
 .stat-item { color: rgba(255,255,255,0.85); font-size: 0.88rem; background: rgba(255,255,255,0.15); padding: 0.4rem 1rem; border-radius: 20px; }
 
 /* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.85rem; margin-bottom: 1.25rem; }
-.kpi-card { background: #fff; border-radius: 14px; padding: 1rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: none; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
+.kpi-card { background: #fff; border-radius: var(--radius-lg); padding: 1rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: none; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
 .kpi-card:hover { border-color: #bcd6f6; }
 .kpi-card.kpi-active { border-color: #4A90E2; background: #f8fbff; }
 .kpi-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
@@ -841,7 +846,7 @@ export default {
 .kpi-label { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
 /* Filter Panel */
-.filter-panel { background: #fff; border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; border: 1.5px solid #f1f5f9; box-shadow: none; }
+.filter-panel { background: #fff; border-radius: var(--radius-lg); padding: var(--panel-pad-compact); margin-bottom: var(--section-gap); border: 1.5px solid #f1f5f9; box-shadow: none; }
 .filter-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
 .filter-left { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
 .filter-right { display: flex; gap: 0.75rem; align-items: center; margin-left: auto; /* ถูกบีบลงบรรทัดใหม่แล้วยังชิดขวา ไม่ลอยมาชิดซ้าย */ }
@@ -892,8 +897,8 @@ export default {
 .form-section-title { font-size: 0.78rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin: 1.15rem 0 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
 .form-section-title i { color: #3a7bd0; font-size: 0.8rem; }
 .form-section-title:first-child { margin-top: 0; }
-.field { margin-bottom: 1rem; }
-.field label { display: block; font-weight: 600; font-size: 0.82rem; color: #334155; margin-bottom: 0.45rem; }
+.field { margin-bottom: var(--field-gap); }
+.field label { display: block; font-weight: 600; font-size: 0.82rem; color: #334155; margin-bottom: 0.5rem; }
 .field-with-action { display: flex; gap: 0.4rem; align-items: center; }
 .flex-1 { flex: 1; min-width: 0; }
 .field-action-btn { flex-shrink: 0; }
@@ -1053,10 +1058,10 @@ export default {
 .form-col :deep(.p-inputtext), .form-col :deep(.p-dropdown), .form-col :deep(.p-calendar .p-inputtext), .form-col :deep(.p-inputtextarea), .form-col :deep(.p-multiselect) { border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 0.86rem; background: #fafbfc; transition: all 0.2s; }
 .form-col :deep(.p-inputtext:focus), .form-col :deep(.p-inputtextarea:focus), .form-col :deep(.p-dropdown:not(.p-disabled).p-focus), .form-col :deep(.p-multiselect:not(.p-disabled).p-focus) { background: #fff; border-color: #4A90E2; box-shadow: none; }
 .item-form :deep(.p-inputtext), .item-form :deep(.p-dropdown), .item-form :deep(.p-inputtextarea) { border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 0.86rem; background: #fafbfc; }
-.item-form .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1rem; }
+.item-form .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: var(--field-gap); margin-bottom: var(--field-gap); }
 .item-form .field-group .field { margin-bottom: 0; }
-.item-form .field { margin-bottom: 1rem; }
-.item-form .field label { display: block; font-weight: 600; font-size: 0.82rem; color: #334155; margin-bottom: 0.45rem; }
+.item-form .field { margin-bottom: var(--field-gap); }
+.item-form .field label { display: block; font-weight: 600; font-size: 0.82rem; color: #334155; margin-bottom: 0.5rem; }
 
 /* Responsive */
 @media (max-width: 768px) {

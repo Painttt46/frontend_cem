@@ -155,6 +155,12 @@
               ">
               <RouterView />
             </ScrollPanel>
+            <!-- ฉากโหลดตอนเข้าหน้า: บังเนื้อหาจนข้อมูลมาครบ (กันเห็นหน้าว่าง/สถานะ "ไม่มีข้อมูล" แวบก่อนข้อมูลมา) -->
+            <div class="page-loading" :class="{ 'page-loading--done': !pageLoading }" role="status" aria-live="polite"
+              :aria-busy="pageLoading" :aria-hidden="!pageLoading">
+              <div class="page-loading-spinner" aria-hidden="true"></div>
+              <div class="page-loading-text">กำลังโหลดข้อมูล…</div>
+            </div>
           </div>
         </div>
       </div>
@@ -177,13 +183,20 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
+import { useRoute } from "vue-router";
 import axios from "axios";
 import ConfirmDialog from "primevue/confirmdialog";
 import { usePermissions } from "@/composables/usePermissions";
+import { usePageLoading } from "@/composables/usePageLoading";
 import CommandPalette from "@/components/CommandPalette.vue";
 
 const { loadPermissions, hasAccess } = usePermissions();
+
+// ทุกหน้า: โชว์ฉากโหลดจนกว่าข้อมูลของหน้านั้นจะมาครบ (ดู composables/usePageLoading.js)
+const { pageLoading, beginPageLoading } = usePageLoading();
+const route = useRoute();
+watch(() => route.path, beginPageLoading);
 
 const position = ref("center");
 const visible = ref(false);
@@ -269,6 +282,7 @@ const resetTimer = () => {
 };
 
 onMounted(() => {
+  beginPageLoading();
   loadPermissions();
   startCountdown();
   window.addEventListener("mousemove", resetTimer);
@@ -429,10 +443,53 @@ const startCountdown = () => {
 
 .main-content-wrapper {
   --page-pad-x: 1rem; /* ระยะเว้นซ้าย-ขวาของเนื้อหาทุกหน้า (มือถือใช้ 0.5rem ด้านล่าง) */
+  position: relative; /* เป็นกรอบให้ฉากโหลด .page-loading */
   width: 100%;
   height: 100%;
   padding: 0;
   margin: 0;
+}
+
+/* ฉากโหลดตอนเข้าหน้า — ทึบ (สีพื้นหน้า) เพื่อไม่ให้เห็นหน้าว่างข้างใต้ */
+.page-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  background: var(--page-bg, #f4f7fb);
+  color: var(--muted, #64748b);
+}
+.page-loading-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid var(--line, #e2e8f0);
+  border-top-color: var(--brand-blue-700, #2f66b3);
+  border-radius: 50%;
+  animation: page-loading-spin 0.8s linear infinite;
+}
+.page-loading-text {
+  font-size: 0.9rem;
+}
+@keyframes page-loading-spin {
+  to { transform: rotate(360deg); }
+}
+/* ปิดฉาก: จางหาย แล้วซ่อน (ใช้ CSS ล้วน ไม่พึ่ง JS animation — ขึ้นทันทีตอนเปลี่ยนหน้า, จางออกตอนข้อมูลมาครบ) */
+.page-loading--done {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s ease, visibility 0s linear 0.15s;
+}
+.page-loading--done .page-loading-spinner {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-loading-spinner { animation-duration: 2.4s; }
+  .page-loading--done { transition: none; }
 }
 
 /* ===== Sidebar ===== */
@@ -871,7 +928,28 @@ h4 {
      เฉพาะแนวนอน — แนวตั้งยังเป็นของแต่ละหน้า (specificity สูงกว่ากฎของแต่ละหน้า จึงไม่ต้องใช้ !important) */
   padding-left: var(--page-pad-x);
   padding-right: var(--page-pad-x);
+  /* ระยะบนสุดถึงแบนเนอร์หัวหน้าก็ใช้ค่าเดียวกันทุกหน้า (เดิม 0.5–1.5rem ต่างกัน ทำให้แบนเนอร์อยู่สูงต่ำไม่เท่ากัน) */
+  padding-top: var(--page-pad-top, 1rem);
+  /* ระยะล่างสุดเท่ากันทุกหน้า (เดิม 0–20px: บางหน้าการ์ดสุดท้ายชิดขอบล่างของจอ) */
+  padding-bottom: var(--page-pad-bottom, 1.5rem);
   max-width: 100%;
+}
+
+/* ระยะใต้บล็อกสุดท้ายของหน้าให้เหลือแค่ระยะล่างสุดข้างบน (กัน margin-bottom ของแต่ละหน้าซ้อนทับจนล่างหนากว่าหน้าอื่น) */
+.main-content-wrapper :deep(.p-scrollpanel-content) > * > :last-child {
+  margin-bottom: 0;
+}
+
+/* utility ของ bootstrap (.mb-4 / .mt-4 ตายตัว 1.5rem + !important) ที่ใช้คั่นบล็อกระดับหน้า → ใช้ระยะมาตรฐานเดียวกับที่เหลือ
+   (บนมือถือ token เป็น 1rem จึงไม่โตกว่าหน้าอื่น); บล็อกสุดท้ายไม่ต้องเว้นล่างซ้ำกับระยะล่างสุดของหน้า */
+.main-content-wrapper :deep(.p-scrollpanel-content) > * > .mb-4 {
+  margin-bottom: var(--section-gap) !important;
+}
+.main-content-wrapper :deep(.p-scrollpanel-content) > * > .mt-4 {
+  margin-top: var(--section-gap) !important;
+}
+.main-content-wrapper :deep(.p-scrollpanel-content) > * > .mb-4:last-child {
+  margin-bottom: 0 !important;
 }
 
 /* Responsive - ทุก device ที่หน้าจอเล็ก */

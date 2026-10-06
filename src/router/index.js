@@ -213,11 +213,13 @@ router.beforeEach(async (to, from, next) => {
     // Skip permission check for basic pages (fix race condition after login)
     const skipPermissionCheck = ['/profile', '/login'];
     if (role && !skipPermissionCheck.includes(to.path) && to.meta.requiresPermission) {
-      const { loadPermissions, canAccessRoute, permissionsLoaded } = usePermissions();
+      const { ensureFreshPermissions, canAccessRoute, isFullAccess } = usePermissions();
 
-      if (!permissionsLoaded.value) {
-        const loaded = await loadPermissions();
-        // ถ้า load ไม่สำเร็จ ให้ผ่านไปก่อน (ไม่ block user)
+      // admin / superadmin มีสิทธิ์ทุกอย่างเสมอ — ไม่ต้องรอโหลดสิทธิ์
+      if (!isFullAccess()) {
+        // โหลดใหม่ถ้ายังไม่เคยโหลด / เปลี่ยน role / ข้อมูลเก่าเกิน 1 นาที (ผู้ดูแลเพิ่งแก้สิทธิ์ที่หน้า "จัดการสิทธิ์")
+        const loaded = await ensureFreshPermissions();
+        // ถ้า load ไม่สำเร็จ ให้ผ่านไปก่อน (ไม่ block user) — backend ยังตรวจสิทธิ์ทุกคำขออยู่
         if (!loaded) {
           next();
           return;

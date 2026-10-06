@@ -575,12 +575,14 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap; /* เบอร์โทรห้ามแตกบรรทัดที่ขีด (เดิมจอแคบแตกเป็น 4 บรรทัด) — ตารางเลื่อนแนวนอนได้อยู่แล้ว */
 }
 
 .email-wrapper {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .email-icon {
@@ -617,13 +619,13 @@ onMounted(() => {
 .user-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--field-gap);
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: var(--field-gap);
 }
 
 .field {

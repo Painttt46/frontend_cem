@@ -53,6 +53,7 @@
 
 <script>
 import axios from 'axios';
+import { isFullAccessRole } from '@/composables/usePermissions';
 
 const GENT_URL = process.env.VUE_APP_GENT_URL || 'http://localhost:3002/webhook';
 
@@ -105,13 +106,13 @@ export default {
         const notifs = [];
 
         // เช็คสิทธิ์จาก role_permissions
-        const { data: permData } = await chatAxios.get(`/api/role-permissions/${role}`, {
+        const { data: permData } = await chatAxios.get('/api/role-permissions/me', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const permissions = permData.permissions || [];
         
         // เช็คลางานรออนุมัติ - ถ้ามีสิทธิ์เข้าหน้า /leave_work/approve
-        const canApproveLeave = permissions.some(p => p.page_path === '/leave_work/approve' && p.has_access);
+        const canApproveLeave = isFullAccessRole(role) || permissions.some(p => p.page_path === '/leave_work/approve' && p.has_access);
         if (canApproveLeave) {
           // เช็ค level จาก leave_approval_settings
           const { data: approvalSettings } = await chatAxios.get('/api/settings/leave-approval', {
@@ -125,7 +126,7 @@ export default {
           });
           
           let pending = [];
-          if (role === 'admin') {
+          if (isFullAccessRole(role)) {
             pending = leaves?.filter(l => l.status === 'pending' || l.status === 'pending_level2') || [];
           } else {
             if (isLevel1) pending = leaves?.filter(l => l.status === 'pending') || [];
@@ -139,7 +140,7 @@ export default {
         }
 
         // เช็คการจองรถรออนุมัติ
-        const canViewCarBooking = permissions.some(p => p.page_path === '/car_booking' && p.has_access) || role === 'admin';
+        const canViewCarBooking = permissions.some(p => p.page_path === '/car_booking' && p.has_access) || isFullAccessRole(role);
         if (canViewCarBooking) {
           const { data: bookings } = await chatAxios.get('/api/car-booking', {
             headers: { Authorization: `Bearer ${token}` }

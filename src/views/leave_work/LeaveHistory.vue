@@ -1213,7 +1213,7 @@ export default {
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     min-width: 100px;
   }
 
@@ -1222,13 +1222,13 @@ export default {
   }
 
   .delegate-info {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     padding: 0.25rem;
   }
 
   .history-table :deep(.p-badge) {
     padding: 0.3rem 0.5rem;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 
   .empty-state {
@@ -1244,7 +1244,7 @@ export default {
   }
 
   .approver-info {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .history-table :deep(.p-paginator) {
@@ -1345,8 +1345,9 @@ export default {
 
 .approver-item {
   display: flex;
+  flex-wrap: wrap; /* จอแคบ: ชื่อ/สถานะขึ้นบรรทัดใหม่ แทนที่จะถูกบีบจนข้อความแตกเป็นตัว ๆ */
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.35rem 0.75rem;
   padding: 0.5rem;
   background-color: #f0f2f4;
   border-radius: 8px;
@@ -1390,6 +1391,7 @@ export default {
   font-size: 0.9rem;
   color: #1e293b;
   font-weight: 500;
+  min-width: 7em; /* ไม่แคบกว่าคำสั้น ๆ เช่น "รอดำเนินการ" — ถ้าที่ไม่พอจะย้ายลงบรรทัดใหม่ */
 }
 
 .no-approver {

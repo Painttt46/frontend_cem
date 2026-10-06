@@ -674,7 +674,7 @@ onMounted(loadData)
 .chart-container { position: relative; }
 .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
 .chart-header h3 { margin: 0; color: #1a1a2e; }
-.chart-row { display: flex; gap: 2rem; align-items: flex-start; }
+.chart-row { display: flex; gap: var(--section-gap); align-items: flex-start; }
 
 /* Legend */
 .leave-type-legend { min-width: 220px; background: #f8f9fa; border-radius: 8px; padding: 1rem; }

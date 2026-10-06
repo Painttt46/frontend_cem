@@ -1848,7 +1848,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .chart-dots {
@@ -2065,7 +2065,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .chart-card {
@@ -2081,7 +2081,7 @@ canvas {
   }
 
   :deep(.p-datatable .p-column-title) {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   :deep(.p-paginator) {
@@ -2095,7 +2095,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 
   .header-title h1 {

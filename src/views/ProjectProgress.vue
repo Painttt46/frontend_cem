@@ -498,6 +498,7 @@ import { formatDayMonthTH } from '@/utils/dateUtils'
 import { useConfirm } from 'primevue/useconfirm'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import Dropdown from 'primevue/dropdown'
+import { isFullAccessRole } from '@/composables/usePermissions'
 
 export default {
   name: 'ProjectProgress',
@@ -849,7 +850,7 @@ export default {
       const currentUser = `${localStorage.getItem('soc_firstname') || ''} ${localStorage.getItem('soc_lastname') || ''}`.trim()
       const role = localStorage.getItem('soc_role')
       // superadmin/admin หรือ PM ของโครงการนั้น
-      if (role === 'superadmin' || role === 'admin') return true
+      if (isFullAccessRole(role)) return true
       return step._task.project_manager === currentUser
     },
     goToEditStep(step) {
@@ -1211,7 +1212,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: var(--section-gap);
   flex-wrap: wrap;
   gap: 1rem;
 }
@@ -1229,6 +1230,7 @@ export default {
 }
 
 .filter-tab {
+  white-space: nowrap; /* ป้ายตัวกรองห้ามตัดคำกลางข้อความ (จอแคบเดิมแตกเป็น "ของ/ฉัน") */
   padding: 0.4rem 1rem;
   border-radius: 20px;
   border: 1.5px solid #d1d5db;
@@ -1349,6 +1351,30 @@ export default {
   color: rgba(255,255,255,0.9);
   font-size: 1rem;
   font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .filter-tab {
+    padding: 0.4rem 0.7rem;
+    gap: 0.25rem;
+  }
+}
+
+/* มือถือ: ชื่อหน้ายาว + ตัวนับ "n โครงการ" ไม่พอในแถวเดียวจนแบนเนอร์สูงกว่าหน้าอื่น — ให้ตัวนับเล็กลงและอยู่ชิดขวาแถวเดียวกับชื่อ
+   (ชื่อหน้าตัดเป็น 2 บรรทัดได้แทน; ตัวนับนี้แสดงที่เดียวในหน้า จึงไม่ซ่อน) */
+@media (max-width: 768px) {
+  .main-header {
+    flex-wrap: nowrap;
+  }
+  .main-header h1 {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .main-header .stat-item {
+    flex: none;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
 }
 
 .category-badge {

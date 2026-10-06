@@ -328,7 +328,7 @@
 </Dropdown>
                         <Button icon="pi pi-history" v-tooltip.top="'ประวัติ'" @click="openHistory(item)" text size="small" class="icon-btn" />
                         <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditItem(item)" text size="small" class="icon-btn" />
-                        <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteItem(item)" text severity="danger" size="small" class="icon-btn" />
+                        <Button v-if="hasAccess('/procurement#delete')" icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteItem(item)" text severity="danger" size="small" class="icon-btn" />
                       </div>
                     </div>
                   </div>
@@ -834,11 +834,13 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import { useConfirm } from 'primevue/useconfirm'
+import { usePermissions } from '@/composables/usePermissions'
 
 export default {
   name: 'ProcurementView',
   setup() {
-    return { $confirm: useConfirm() }
+    const { hasAccess } = usePermissions()
+    return { $confirm: useConfirm(), hasAccess }
   },
   data() {
     return {
@@ -1757,10 +1759,10 @@ const data = {
 }
 
 /* ===== KPI Cards ===== */
-.kpi-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.9rem; margin-bottom: 1.75rem; }
+.kpi-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
 .kpi-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 1.15rem 1rem;
   display: flex;
   align-items: center;
@@ -1816,9 +1818,9 @@ const data = {
 /* ===== Filters ===== */
 .filter-panel {
   background: #fff;
-  border-radius: 16px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1.5rem;
+  border-radius: var(--radius-lg);
+  padding: var(--panel-pad-compact);
+  margin-bottom: var(--section-gap);
   border: 1.5px solid #f1f5f9;
   box-shadow: none;
 }
@@ -1931,7 +1933,7 @@ const data = {
 .btn-confirm:disabled { opacity: 0.5; box-shadow: none; }
 
 /* ===== Section Block ===== */
-.section-block { margin-bottom: 1.75rem; }
+.section-block { margin-bottom: var(--section-gap); }
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem; }
 .section-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; display: flex; align-items: center; gap: 0.55rem; }
 .section-title i { color: #3a7bd0; font-size: 0.95rem; }
@@ -2299,11 +2301,11 @@ const data = {
 .action-btn.btn-awaiting_payment { background-color: #f26611; color: #fff; }
 
 /* ===== Calendar Section ===== */
-.calendar-section { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; margin-top: 1.75rem; padding-bottom: 2.5rem; }
+.calendar-section { display: grid; grid-template-columns: 1fr 380px; gap: var(--section-gap); margin-top: var(--section-gap); }
 .calendar-events {
   background: #fff;
-  border-radius: 18px;
-  padding: 1.65rem;
+  border-radius: var(--radius-lg);
+  padding: var(--panel-pad);
   box-shadow: none;
   border: 1.5px solid #f1f5f9;
 }
@@ -2373,8 +2375,8 @@ const data = {
 /* Mini Calendar */
 .calendar-mini {
   background: #fff;
-  border-radius: 18px;
-  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: var(--panel-pad);
   box-shadow: none;
   border: 1.5px solid #f1f5f9;
   height: fit-content;
@@ -2432,16 +2434,16 @@ const data = {
 
 /* ===== Modern Dialogs ===== */
 .modern-dialog :deep(.p-dialog) { border-radius: 18px; overflow: hidden; box-shadow: none; border: none; }
-.modern-dialog :deep(.p-dialog-header) { padding: 1.25rem 1.5rem; border-bottom: 1.5px solid #f1f5f9; background: #fff; }
+.modern-dialog :deep(.p-dialog-header) { padding: 1.1rem 1.4rem; border-bottom: 1.5px solid #f1f5f9; background: #fff; }
 .modern-dialog :deep(.p-dialog-title) { font-weight: 800; font-size: 1.05rem; color: #0f172a; letter-spacing: -0.02em; }
 .modern-dialog :deep(.p-dialog-header-icon) { width: 32px; height: 32px; border-radius: 50%; color: #64748b; transition: all 0.2s; }
 .modern-dialog :deep(.p-dialog-header-icon:hover) { background: #f1f5f9; color: #0f172a; }
-.modern-dialog :deep(.p-dialog-content) { padding: 1.5rem 1.5rem 1rem; max-height: calc(100vh - 230px); overflow-y: auto; }
+.modern-dialog :deep(.p-dialog-content) { padding: 1.2rem 1.4rem; max-height: calc(100vh - 230px); overflow-y: auto; }
 .modern-dialog :deep(.p-dialog-content::-webkit-scrollbar) { width: 6px; }
 .modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-track) { background: transparent; }
 .modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-thumb) { background: #e2e8f0; border-radius: 3px; }
 .modern-dialog :deep(.p-dialog-content::-webkit-scrollbar-thumb:hover) { background: #cbd5e1; }
-.modern-dialog :deep(.p-dialog-footer) { padding: 1rem 1.5rem 1.25rem; border-top: 1.5px solid #f1f5f9; background: #fafbfc; display: flex; justify-content: flex-end; gap: 0.65rem; }
+.modern-dialog :deep(.p-dialog-footer) { padding: 0.9rem 1.4rem; border-top: 1.5px solid #f1f5f9; background: #fafbfc; display: flex; justify-content: flex-end; gap: 0.65rem; }
 .dialog-desc { margin: 0 0 1rem; font-size: 0.84rem; color: #64748b; }
 .history-vendor-info { margin-bottom: 1rem; padding-bottom: 0.85rem; border-bottom: 1.5px solid #f1f5f9; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
 .history-vendor-info strong { color: #0f172a; }
@@ -2506,12 +2508,12 @@ const data = {
 .empty-state-sm i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; opacity: 0.4; }
 .empty-state-sm p { font-size: 0.85rem; margin: 0; }
 
-.item-form .field { margin-bottom: 1.1rem; }
+.item-form .field { margin-bottom: var(--field-gap); }
 .item-form .field:last-child { margin-bottom: 0; }
 .item-form .field label { display: block; font-weight: 600; font-size: 0.83rem; color: #334155; margin-bottom: 0.5rem; line-height: 1.3; }
 .item-form .field .required { color: #dc2626; font-size: 0.75rem; }
 .item-form .field .optional { color: #94a3b8; font-weight: 400; font-size: 0.75rem; }
-.item-form .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 1rem; }
+.item-form .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: var(--field-gap); margin-bottom: var(--field-gap); }
 .item-form .field-group .field { margin-bottom: 0; }
 .form-divider { height: 1px; background: #f1f5f9; margin: 0.5rem 0 1rem; }
 .item-form .field > .w-full,
@@ -2575,12 +2577,12 @@ const data = {
   .procurement-page { padding: 1rem; }
   .main-header { padding: 1.4rem 1.6rem; border-radius: 16px; }
   .main-header h1 { font-size: 1.35rem; }
-  .main-header .stat-item { font-size: 0.78rem; padding: 0.4rem 0.9rem; }
+  .main-header .stat-item { font-size: 0.8rem; padding: 0.4rem 0.9rem; }
   .kpi-row { grid-template-columns: repeat(4, 1fr); gap: 0.55rem; }
   .kpi-card { padding: 0.8rem 0.7rem; border-radius: 12px; gap: 0.6rem; }
   .kpi-icon { width: 36px; height: 36px; font-size: 0.95rem; border-radius: 10px; }
   .kpi-value { font-size: 1.2rem; }
-  .kpi-label { font-size: 0.6rem; }
+  .kpi-label { font-size: 0.8rem; }
   .filter-panel { padding: 0.85rem 1rem; border-radius: 12px; }
   .filter-row { flex-direction: column; align-items: stretch; }
   .filter-left { flex-direction: column; }
@@ -2592,7 +2594,7 @@ const data = {
   .clear-all-btn { width: 100%; }
   .add-btn { flex: 1; justify-content: center; }
   .active-filters { gap: 0.4rem; }
-  .active-chip { font-size: 0.7rem; max-width: 100%; }
+  .active-chip { font-size: 0.8rem; max-width: 100%; }
   .item-form .field-group { grid-template-columns: 1fr; }
   .group-header { flex-direction: column; align-items: flex-start; gap: 0.85rem; padding: 1rem 1.15rem; }
   .group-right { width: 100%; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; }
@@ -2604,7 +2606,7 @@ const data = {
   .vendor-col { flex-wrap: wrap; }
   .vendor-row::before { left: 1.15rem; top: 1.35rem; }
   .vendor-actions { justify-content: flex-start; flex-wrap: wrap; }
-  .action-btn { font-size: 0.68rem; padding: 0.35rem 0.7rem; }
+  .action-btn { font-size: 0.8rem; padding: 0.35rem 0.7rem; }
   .cal-event { flex-wrap: wrap; }
   .calendar-events { padding: 1.25rem; }
 }
@@ -2618,7 +2620,7 @@ const data = {
   .kpi-card { padding: 0.6rem 0.5rem; gap: 0.45rem; border-radius: 10px; }
   .kpi-icon { width: 30px; height: 30px; font-size: 0.82rem; border-radius: 8px; }
   .kpi-value { font-size: 1rem; }
-  .kpi-label { font-size: 0.55rem; }
+  .kpi-label { font-size: 0.8rem; }
   .calendar-events { padding: 1.1rem; border-radius: 14px; }
   .calendar-mini { padding: 1rem; border-radius: 14px; }
   .step-select-item { padding: 0.8rem 0.95rem; }

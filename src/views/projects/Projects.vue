@@ -11,10 +11,11 @@
 
     <div class="main-content">
       <div class="tab-action-buttons">
-        <Button @click="showTaskDialog = true" class="task-btn" icon="pi pi-plus-circle" raised>
+        <Button @click="showTaskDialog = true" class="task-btn" icon="pi pi-plus-circle" label="เพิ่มโครงการ" raised>
+          <i class="pi pi-plus-circle"></i>
           <span class="btn-text">เพิ่มโครงการ</span>
         </Button>
-        <Button @click="syncERP" :loading="syncing" icon="pi pi-refresh" label="Sync ERP" class="sync-btn" raised />
+        <Button v-if="canSyncERP" @click="syncERP" :loading="syncing" icon="pi pi-refresh" label="Sync ERP" class="sync-btn" raised />
         <Button @click="showHistory = true" icon="pi pi-history" label="ประวัติ Sync" class="history-btn" raised />
       </div>
       <TaskList ref="taskList" />
@@ -349,6 +350,7 @@ import axios from '@/utils/axiosConfig'
 import Dialog from 'primevue/dialog'
 import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
 import TaskList from '@/views/daily_work/TaskList.vue'
+import { usePermissions } from '@/composables/usePermissions'
 
 export default {
   name: 'ProjectsView',
@@ -362,6 +364,16 @@ export default {
   },
   mounted() {
     this.handleQueryParams()
+  },
+  setup() {
+    const { hasAccess } = usePermissions()
+    return { hasAccess }
+  },
+  computed: {
+    // ซิงค์ ERP: admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์ "ซิงค์ข้อมูลโครงการจาก ERP" (backend ตรวจสิทธิ์เดียวกัน) — ซ่อนปุ่มแทนการกดแล้วโดน 403
+    canSyncERP() {
+      return this.hasAccess('/projects#sync-erp')
+    }
   },
   data() {
     return {
@@ -437,7 +449,9 @@ export default {
         this.$toast.add({
           severity: 'error',
           summary: 'Sync ล้มเหลว',
-          detail: e.response?.data?.error || 'ไม่สามารถ sync ข้อมูลจาก ERP ได้',
+          detail: e.response?.status === 403
+            ? 'บัญชีนี้ไม่มีสิทธิ์ Sync ERP (เฉพาะ admin / superadmin)'
+            : (e.response?.data?.error || 'ไม่สามารถ sync ข้อมูลจาก ERP ได้'),
           life: 5000
         })
       } finally {
@@ -535,13 +549,13 @@ export default {
   background: white;
   border-radius: 12px;
   box-shadow: none;
-  padding: 2rem;
+  padding: var(--panel-pad);
 }
 
 .tab-action-buttons {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--section-gap);
   margin-top: 0rem;
   justify-content: space-between;
   align-items: center;

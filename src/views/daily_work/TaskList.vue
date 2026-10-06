@@ -74,7 +74,7 @@
                     <div class="action-buttons">
                       <Button icon="pi pi-eye" size="small" severity="info" outlined @click="viewTaskWorks(child)" v-tooltip="'ดูงานรายวัน'" />
                       <Button icon="pi pi-pencil" size="small" severity="warning" outlined @click="editTask(child)" v-tooltip="'แก้ไข'" />
-                      <Button icon="pi pi-trash" size="small" severity="danger" outlined @click="confirmDeleteTask(child)" v-tooltip="'ลบ'" />
+                      <Button v-if="hasAccess('/projects#delete')" icon="pi pi-trash" size="small" severity="danger" outlined @click="confirmDeleteTask(child)" v-tooltip="'ลบ'" />
                     </div>
                   </component>
                   <component :is="'td'" style="padding:8px 12px"><Button v-if="hasFiles(child)" icon="pi pi-paperclip" size="small" severity="info" outlined @click="downloadTaskFiles(child)" v-tooltip="`${child.files.length} ไฟล์`" /><span v-else class="no-files">-</span></component>
@@ -211,6 +211,7 @@
                 v-tooltip="'แก้ไข'"
               />
               <Button 
+                v-if="hasAccess('/projects#delete')"
                 icon="pi pi-trash" 
                 size="small" 
                 severity="danger" 
@@ -568,9 +569,14 @@ import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
 import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
+import { usePermissions } from '@/composables/usePermissions'
 
 export default {
   name: 'TaskList',
+  setup() {
+    const { hasAccess } = usePermissions()
+    return { hasAccess }
+  },
   components: {
     EnhancedDataTable,
     UserInfoDialog,
@@ -2009,7 +2015,7 @@ export default {
   }
   
   .custom-id-badge {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     padding: 0.3rem 0.5rem;
   }
 }

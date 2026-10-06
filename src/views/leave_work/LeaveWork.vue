@@ -11,10 +11,12 @@
     <!-- Action Buttons -->
     <div class="action-buttons" v-if="permissionsLoaded">
       <div class="left-buttons">
-        <Button @click="showLeaveForm" class="leave-btn" icon="pi pi-plus" raised>
+        <Button @click="showLeaveForm" class="leave-btn" icon="pi pi-plus" label="แจ้งลางาน" raised>
+          <i class="pi pi-plus"></i>
           <span class="btn-text">แจ้งลางาน</span>
         </Button>
-        <Button v-if="canApproveLeave" @click="showApprovalForm" class="approval-btn" icon="pi pi-check-circle" raised>
+        <Button v-if="canApproveLeave" @click="showApprovalForm" class="approval-btn" icon="pi pi-check-circle" label="อนุมัติการลา" raised>
+          <i class="pi pi-check-circle"></i>
           <span class="btn-text">อนุมัติการลา</span>
           <Badge v-if="pendingLeaveCount > 0" :value="pendingLeaveCount" severity="danger" class="pending-badge" />
         </Button>
@@ -37,8 +39,9 @@
             <span class="filter-count">{{ futureCount }}</span>
           </button>
         </div>
-        <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" severity="warning"
+        <Button v-if="canApproveLeave" @click="exportReport" class="export-btn" icon="pi pi-file-excel" label="Export" severity="warning"
           size="small">
+          <i class="pi pi-file-excel"></i>
           <span class="btn-text">Export</span>
         </Button>
       </div>
@@ -46,7 +49,7 @@
 
     <!-- Main Content - History -->
     <div class="main-content">
-      <LeaveHistory :records="filteredLeaveRecords" :showSensitiveColumns="isInApprovalList || currentUserRole === 'admin'"
+      <LeaveHistory :records="filteredLeaveRecords" :showSensitiveColumns="isInApprovalList || isFullAccess()"
         @view-attachments="viewAttachments" @request-deleted="loadLeaveRecords" />
     </div>
 
@@ -60,7 +63,7 @@
     <Dialog v-if="canApproveLeave" v-model:visible="showApprovalDialog" modal header="อนุมัติการลา"
       :style="{ width: '98vw', maxWidth: '1600px' }" class="approval-dialog" :draggable="false">
       <LeaveApproval v-if="showApprovalDialog" :records="pendingLeaveRecords" :approver-level="approverLevel" :disabled="approving"
-        :is-admin="currentUserRole === 'admin'" @approve-leave="approveLeave" @reject-leave="openRejectDialog"
+        :is-admin="isFullAccess()" @approve-leave="approveLeave" @reject-leave="openRejectDialog"
         @close-form="showApprovalDialog = false" />
     </Dialog>
 
@@ -114,8 +117,8 @@ export default {
     LeaveApproval
   },
   setup() {
-    const { hasAccess, loadPermissions, permissionsLoaded } = usePermissions()
-    return { hasAccess, loadPermissions, permissionsLoaded }
+    const { hasAccess, loadPermissions, permissionsLoaded, isFullAccess } = usePermissions()
+    return { hasAccess, loadPermissions, permissionsLoaded, isFullAccess }
   },
   provide() {
     return {
@@ -194,8 +197,8 @@ export default {
         record.status === 'pending' || record.status === 'pending_level2' || record.status === 'cancel'
       )
 
-      // Admin เห็นทุกรายการ
-      if (this.currentUserRole === 'admin') return pending
+      // admin / superadmin เห็นทุกรายการ
+      if (this.isFullAccess()) return pending
 
       // Filter ตาม approver level และ department/position
       if (this.approverLevel === 0) return []
@@ -772,7 +775,7 @@ export default {
 .action-buttons {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--section-gap);
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
@@ -1010,7 +1013,7 @@ export default {
   background: white;
   border-radius: 12px;
   box-shadow: none;
-  padding: 2rem;
+  padding: var(--panel-pad);
   min-height: 500px;
 }
 
@@ -1150,7 +1153,7 @@ export default {
   }
 
   .filter-btn {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     padding: 0.4rem 0.8rem;
   }
 

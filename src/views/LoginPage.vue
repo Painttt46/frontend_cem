@@ -485,7 +485,7 @@ body {
 
   .info-text {
     padding: 10px 12px !important;
-    font-size: 11px !important;
+    font-size: 0.8rem !important;
     gap: 6px !important;
   }
 

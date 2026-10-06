@@ -732,6 +732,9 @@ export default {
 .calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  /* แถวหัววัน (อา–ส) สูงตามเนื้อหา แถวที่เหลือแบ่งพื้นที่เท่า ๆ กัน — เดิมทุกแถวรวมแถวหัววันถูกยืดเท่ากัน บนมือถือหัววันสูงเกือบเท่าช่องวันที่ */
+  grid-template-rows: auto;
+  grid-auto-rows: 1fr;
   gap: 1px;
   background: #f0f0f0;
   padding: 1px;
@@ -901,6 +904,45 @@ export default {
 
 
 @media (max-width: 768px) {
+  .calendar-day {
+    justify-content: flex-start;
+    padding: 0.3rem 0.35rem;
+    line-height: 1.1;
+  }
+  .booking-indicator {
+    top: 0.2rem;
+    right: 0.25rem;
+    font-size: 0.8rem;
+  }
+  .booking-emoji {
+    font-size: 1rem;
+  }
+  .booking-text-center {
+    bottom: 0.2rem;
+    left: 0.1rem;
+    right: 0.1rem;
+    transform: none;
+  }
+  .booking-text {
+    white-space: normal;
+    font-size: 0.8rem;
+    line-height: 1.15;
+    padding: 0;
+  }
+  .car-indicator {
+    bottom: 0.2rem;
+    left: 0.1rem;
+    right: 0.1rem;
+  }
+  .car-emoji {
+    font-size: 1.1rem;
+    margin-bottom: 0.1rem;
+  }
+  .car-indicator p {
+    font-size: 0.8rem;
+    line-height: 1.15;
+  }
+
   .calendar-container {
     margin: 0.5rem;
   }
@@ -921,12 +963,12 @@ export default {
 
   .day-header {
     padding: 0.4rem 0.2rem;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 
   .calendar-day {
     padding: 0.3rem;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     min-height: 50px;
   }
 
@@ -954,6 +996,10 @@ export default {
   }
   .countdown-left {
     align-self: flex-start;
+    white-space: normal;
+    max-width: 100%;
+    font-size: 0.82rem;
+    line-height: 1.35;
   }
 
   .calendar-header {
@@ -972,12 +1018,12 @@ export default {
 
   .day-header {
     padding: 0.3rem 0.1rem;
-    font-size: 0.6rem;
+    font-size: 0.8rem;
   }
 
   .calendar-day {
     padding: 0.2rem;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     min-height: 42px;
   }
 

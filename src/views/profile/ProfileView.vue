@@ -1,5 +1,14 @@
 <template>
   <div class="profile-container">
+    <!-- แบนเนอร์หัวหน้า: ขนาดมาตรฐานเดียวกับทุกหน้า (กำหนดใน theme.css) -->
+    <Card class="header-card">
+      <template #header>
+        <div class="main-header">
+          <h1><i class="pi pi-user"></i> โปรไฟล์ส่วนตัว</h1>
+        </div>
+      </template>
+    </Card>
+
     <transition-group name="p-message" tag="div">
         <Message v-for="msg of messages" :key="msg.id" :severity="msg.severity">{{ msg.content }}</Message>
     </transition-group>

@@ -113,6 +113,13 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: none;
   background: var(--card-bg);
 }
+/* ระยะขอบในของการ์ดทุกใบเท่ากัน (PrimeVue ค่าเดิม 1.25rem บางหน้าแก้เองเป็น 1.5–2rem) */
+.p-card .p-card-body {
+  padding: var(--panel-pad);
+}
+.p-card .p-card-content {
+  padding: 0;
+}
 
 /* ===== Buttons ===== */
 .p-button {
@@ -509,6 +516,22 @@ h1, h2, h3, h4, h5, h6 {
 .p-badge {
   font-weight: 700;
 }
+/* ตัวอักษรในป้ายต้องอยู่กึ่งกลางทั้งแนวตั้ง/แนวนอน: PrimeVue กำหนดความสูงตายตัว + line-height และหลายหน้าเติม padding แนวตั้งเพิ่ม
+ * (เช่น badge "Active" ในหน้าจัดการระบบ ตัวหนังสือตกลงต่ำกว่ากึ่งกลาง ~3px) → ใช้ flex จัดกึ่งกลางเสมอ ไม่ว่า padding/ความสูงจะเป็นเท่าไร */
+.p-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+/* ตัวนับ/สถิติในแบนเนอร์หัวหน้า (ไอคอน + ข้อความ) ให้ไอคอนอยู่กึ่งกลางแนวเดียวกับตัวอักษร */
+.main-header .stat-item,
+.main-header .header-actions .stat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
 .p-progressbar {
   border-radius: 999px;
   background: #e9eef6;
@@ -591,6 +614,13 @@ h1, h2, h3, h4, h5, h6 {
   border: none !important;
   box-shadow: none !important;
 }
+.header-card.p-card:has(.main-header) .p-card-body {
+  padding: 0 !important;
+  background: transparent;
+}
+.header-card.p-card:has(.main-header) .p-card-content {
+  padding: 0 !important;
+}
 .main-header {
   background: var(--brand-gradient) !important;
   border-radius: var(--radius-lg) !important;
@@ -602,49 +632,162 @@ h1, h2, h3, h4, h5, h6 {
 .main-header::after {
   content: none;
 }
+/* ===== ขนาดแบนเนอร์หัวหน้า "มาตรฐานเดียว" ทุกหน้า =====
+ * เดิมแต่ละหน้ากำหนดเอง (สูง 34–84px, ตัวหนังสือ 17–29px, น้ำหนัก 600/700/800, ไอคอนมี/ไม่มีกรอบ, ระยะใต้แบนเนอร์ 17–28px)
+ * ทุกหน้าใช้ token เหล่านี้ — ถ้าจะปรับขนาดแบนเนอร์ทั้งระบบ แก้ที่ token ในบล็อกนี้ที่เดียว
+ * ครอบคลุม 3 รูปแบบ: .main-header (หน้าใช้งาน), .header-card ที่เป็นตัวไล่สีเอง (หน้าจัดการระบบ), .tabs-header (จองรถ) */
+:root {
+  --banner-min-h: 4.85rem;     /* ความสูงต่ำสุดของแบนเนอร์ */
+  --banner-px: 1.6rem;         /* ระยะซ้าย-ขวาในแบนเนอร์ */
+  --banner-gap: 1.5rem;        /* ระยะใต้แบนเนอร์ถึงเนื้อหา (เท่ากับ --section-gap) */
+  --banner-title-size: 1.45rem;
+  --banner-icon-box: 2.65rem;  /* กรอบไอคอนหน้า */
+  --page-pad-top: 1rem;        /* ระยะบนสุดของหน้าถึงแบนเนอร์ (ใช้ใน LayoutView) */
+  --page-pad-bottom: 1.5rem;   /* ระยะล่างสุดของหน้า (การ์ดสุดท้ายไม่ชิดขอบจอ) */
+  --section-gap: 1.5rem;       /* ระยะระหว่างบล็อกใหญ่ในหน้า: แบนเนอร์ → แถบเครื่องมือ → การ์ด/ตาราง */
+  --grid-gap: 1rem;            /* ช่องว่างระหว่างการ์ดตัวเลข (KPI) ในแถวเดียวกัน */
+  --panel-pad: 1.5rem;         /* ระยะขอบในของการ์ด/แผงเนื้อหาหลัก (.main-content, ปฏิทิน ฯลฯ) */
+  --panel-pad-compact: 1rem 1.25rem; /* แผงเครื่องมือ/ตัวกรอง */
+  --field-gap: 0.75rem;        /* ระยะแนวตั้งระหว่างช่องกรอกในฟอร์ม/dialog */
+}
+
+.main-header,
+.header-card.p-card:not(:has(.main-header)),
+.tabs-header {
+  min-height: var(--banner-min-h) !important;
+  box-sizing: border-box;
+}
+
+/* (1) .main-header */
+.main-header {
+  display: flex !important;
+  align-items: center !important;
+  padding: 0.75rem var(--banner-px) !important;
+  gap: 1rem !important;
+}
+.header-card.p-card:has(.main-header) {
+  margin-bottom: var(--banner-gap) !important;
+}
+
+/* (2) หน้าจัดการระบบ: .header-card เป็นตัวไล่สีเอง — จัดเนื้อหาให้อยู่กึ่งกลางแนวตั้งและกำหนด padding ที่ p-card-content */
+.header-card.p-card:not(:has(.main-header)) {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: var(--banner-gap) !important;
+}
+.header-card.p-card:not(:has(.main-header)) .p-card-body {
+  padding: 0 !important;
+}
+.header-card.p-card:not(:has(.main-header)) .p-card-content {
+  padding: 0.75rem var(--banner-px) !important;
+}
+.header-card.p-card:not(:has(.main-header)) .header-content {
+  padding: 0 !important;
+  min-height: var(--banner-icon-box);
+  align-items: center !important;
+}
+
+/* (3) จองรถ: แบนเนอร์อยู่ในการ์ด .main-tabs (มีแท็บและปุ่มอยู่ในแถบเดียวกัน) */
+.tabs-header {
+  padding: 0.5rem var(--banner-px) !important;
+}
+.main-tabs {
+  border-radius: var(--radius-lg) !important;
+}
+
+/* ชื่อหน้า + ไอคอน: ขนาด/น้ำหนัก/กรอบเหมือนกันทุกหน้า */
 .main-header h1,
-.header-card .header-title h1 {
-  font-weight: 600;
-  letter-spacing: 0;
+.header-card .header-title h1,
+.tabs-header .header-title h1 {
+  font-size: var(--banner-title-size) !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
   text-shadow: none;
+  margin: 0 !important;
+}
+.main-header h1 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem !important;
 }
 .main-header h1 > i,
-.header-card .header-icon {
+.header-card .header-icon,
+.header-card .header-title > i,
+.tabs-header .header-title > i {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--banner-icon-box);
+  height: var(--banner-icon-box);
+  padding: 0 !important;
+  font-size: 1.5rem !important;
+  color: #fff !important;
+  opacity: 1 !important;
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 12px;
-  padding: 0.5rem;
 }
 
-/* ===== แบนเนอร์เตี้ยลง (เดิมสูง ~15% ของจอ เหลือพื้นที่เนื้อหาน้อย) ===== */
-.main-header {
-  padding: 1.1rem 1.6rem !important;
-  min-height: 0 !important;
-  gap: 1rem !important;
-}
-.main-header h1 {
-  font-size: 1.45rem !important;
-}
-.header-card.p-card:not(:has(.main-header)) .p-card-body,
-.header-card.p-card:not(:has(.main-header)) .p-card-content {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-/* มือถือ: แบนเนอร์แนวนอนกะทัดรัด (เดิมวางไอคอนเหนือชื่อและกินที่เกือบ 1 ใน 4 ของจอ) */
+/* มือถือ: แบนเนอร์แนวนอนกะทัดรัด (เดิมวางไอคอนเหนือชื่อและกินที่เกือบ 1 ใน 4 ของจอ) — ปรับที่ token ทีเดียวทุกหน้า */
 @media (max-width: 768px) {
+  :root {
+    --banner-min-h: 3.9rem;
+    --banner-px: 1rem;
+    --banner-gap: 1rem;
+    --banner-title-size: 1.15rem;
+    --banner-icon-box: 2.2rem;
+    --page-pad-top: 0.5rem;
+    --page-pad-bottom: 1rem;
+    --section-gap: 1rem;
+    --grid-gap: 0.6rem;
+    --panel-pad: 1rem;
+    --panel-pad-compact: 0.85rem 1rem;
+  }
   .main-header {
     flex-direction: row !important;
     justify-content: flex-start !important;
     text-align: left !important;
-    padding: 0.85rem 1rem !important;
+    padding: 0.6rem var(--banner-px) !important;
     gap: 0.6rem !important;
   }
   .main-header h1 {
     flex-direction: row !important;
-    font-size: 1.15rem !important;
     gap: 0.6rem !important;
     text-align: left !important;
+  }
+  /* หน้าจัดการระบบ: เดิมบางหน้าซ้อนปุ่มย้อนกลับไว้เหนือชื่อหน้า (แบนเนอร์สูง 130–150px) → ให้อยู่แถวเดียวกัน
+     ส่วนตัวกรอง/ปุ่มด้านขวาจะขึ้นแถวใหม่ก็ต่อเมื่อที่ไม่พอ */
+  .header-card.p-card:not(:has(.main-header)) .header-content {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 0.75rem !important;
+    text-align: left !important;
+  }
+  .header-card .header-left {
+    flex-direction: row !important;
+    align-items: center !important;
+    width: auto !important;
+    gap: 0.5rem !important;
+  }
+  .header-card .header-stats {
+    width: auto !important;
+    flex: 0 1 auto;
+  }
+  .header-card .header-stats > * {
+    font-size: 0.8rem !important;
+    padding: 0.3rem 0.6rem !important;
+    white-space: nowrap;
+  }
+  .main-header h1 > i,
+  .header-card .header-icon,
+  .header-card .header-title > i,
+  .tabs-header .header-title > i {
+    font-size: 1.15rem !important;
   }
 }
 
@@ -701,7 +844,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 0 0 36%;
     max-width: 36%;
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 600;
   }
   .p-datatable.p-datatable-responsive-stack .p-datatable-tbody > tr > td:empty,
@@ -774,4 +917,51 @@ h1, h2, h3, h4, h5, h6 {
 .dropdown-menu,
 .card {
   box-shadow: none !important;
+}
+
+/* ===== มือถือ: ขนาดตัวอักษรต่ำสุด ===== */
+/* ป้าย/ตัวช่วยเล็ก ๆ ที่แต่ละหน้ากำหนดไว้ 0.6–0.7rem (ที่ root มือถือ 15.2px ยังเหลือ 9–10.6px) อ่านไม่ออกบนจอมือถือ → ขั้นต่ำ 0.75rem (11.4px)
+   เฉพาะ class ที่เล็กกว่านี้จริง — class ที่ใหญ่กว่าอยู่แล้วไม่ถูกแตะ */
+@media (max-width: 768px) {
+  .step-status-badge-mini,
+  .step-status-mini,
+  .step-number-mini,
+  .step-idx-badge,
+  .step-status-tag,
+  .pending-badge,
+  .legend-item,
+  .kpi-label,
+  .status-badge,
+  .filter-count,
+  .latest-work-date,
+  .assigned-chip,
+  .p-datepicker table th > span {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* ===== มือถือ: พื้นที่แตะขั้นต่ำ ===== */
+/* ปุ่มเล็กกว่า ~32px แตะพลาดง่ายบนจอสัมผัส (ตัวกรอง "ทั้งหมด/วันนี้", ปุ่มขยายแถว, ปุ่มย้อนกลับ) → ขยายให้ไม่ต่ำกว่า ~36px โดยไม่เปลี่ยนหน้าตา */
+@media (max-width: 768px) {
+  .filter-btn,
+  .expand-toggle {
+    min-height: 2.4rem;
+  }
+  .p-row-toggler.p-link {
+    min-width: 2.4rem;
+    min-height: 2.4rem;
+  }
+  .p-button.p-button-icon-only.p-button-rounded {
+    min-width: 2.4rem;
+    min-height: 2.4rem;
+  }
+}
+
+/* มือถือ: ปุ่มหลักเต็มความกว้าง (แจ้งลางาน/ลงตารางงาน/เพิ่มโครงการ/Export) ให้ไอคอน+ข้อความอยู่กึ่งกลางปุ่ม ไม่ชิดซ้าย */
+@media (max-width: 768px) {
+  .action-buttons .p-button,
+  .tab-action-buttons > .p-button {
+    justify-content: center !important;
+    gap: 0.5rem;
+  }
 }

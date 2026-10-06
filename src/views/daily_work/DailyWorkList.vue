@@ -558,12 +558,17 @@ import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import Checkbox from 'primevue/checkbox'
+import { usePermissions } from '@/composables/usePermissions'
 
 import { addDays, formatDayMonthTH } from '@/utils/dateUtils'
 import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
 
 export default {
   name: 'DailyWorkList',
+  setup() {
+    const { hasAccess } = usePermissions()
+    return { hasAccess }
+  },
   components: {
     UserInfoDialog,
     EnhancedDataTable,
@@ -774,9 +779,9 @@ export default {
       const currentUserId = localStorage.getItem('soc_user_id')
       return record.user_id == currentUserId
     },
+    // แก้ไข/ลบงานรายวันของผู้อื่นได้: admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์ "แก้ไข/ลบงานรายวันของผู้อื่น" (เดิมเช็คเฉพาะ role === 'admin' → superadmin ใช้ไม่ได้)
     isAdmin() {
-      const role = localStorage.getItem('soc_role')
-      return role === 'admin'
+      return this.hasAccess('/daily_work#manage-all')
     },
     isEditDisabled(record) {
       if (!record || !record.work_date) {
@@ -2164,33 +2169,33 @@ export default {
   }
 
   .step-status-tag {
-    font-size: 0.6rem;
+    font-size: 0.8rem;
     padding: 0.1rem 0.3rem;
   }
 
   .step-detail {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
   }
 }
 
 @media (max-width: 480px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .custom-id-badge {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     padding: 0.25rem 0.4rem;
   }
 
   .step-name {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   .step-status-tag {

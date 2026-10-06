@@ -20,8 +20,8 @@
         <div class="table-header">
           <h3>โควต้าการลาของพนักงาน</h3>
           <div class="header-actions">
-            <Button label="กำหนดวันหยุด" icon="pi pi-calendar" @click="showHolidayDialog = true" severity="warning" />
-            <Button label="เพิ่มประเภทการลา" icon="pi pi-plus" @click="showAddLeaveTypeDialog = true" />
+            <Button v-if="canManageHolidays" label="กำหนดวันหยุด" icon="pi pi-calendar" @click="showHolidayDialog = true" severity="warning" />
+            <Button v-if="canManageLeaveTypes" label="เพิ่มประเภทการลา" icon="pi pi-plus" @click="showAddLeaveTypeDialog = true" />
           </div>
         </div>
         
@@ -53,7 +53,7 @@
               <template #header>
                 <div class="leave-type-header">
                   <Badge :value="type.label" :style="{ backgroundColor: type.color, color: '#fff', fontWeight: 'bold' }" />
-                  <div class="leave-type-actions">
+                  <div v-if="canManageLeaveTypes" class="leave-type-actions">
                     <Button icon="pi pi-pencil" size="small" text severity="info" @click="editLeaveType(type)" v-tooltip="'แก้ไข'" />
                     <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" v-tooltip="'ลบ'" />
                   </div>
@@ -225,6 +225,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
+import { usePermissions } from '@/composables/usePermissions'
 import Calendar from 'primevue/calendar'
 import Chip from 'primevue/chip'
 import InputNumber from 'primevue/inputnumber'
@@ -232,6 +233,11 @@ import Divider from 'primevue/divider'
 
 const toast = useToast()
 const confirm = useConfirm()
+
+// สิทธิ์รายฟีเจอร์ตั้งได้ที่หน้า "จัดการสิทธิ์" (backend ตรวจสิทธิ์เดียวกันนี้อีกชั้น — ที่นี่แค่ซ่อนปุ่มไม่ให้กดแล้วโดน 403)
+const { hasAccess } = usePermissions()
+const canManageHolidays = computed(() => hasAccess('/management/leave#holidays'))
+const canManageLeaveTypes = computed(() => hasAccess('/management/leave#leave-types'))
 const users = ref([])
 const leaveTypes = ref([])
 const showAddLeaveTypeDialog = ref(false)

@@ -30,13 +30,15 @@
 
         <div v-if="activeTabIndex === 0" class="action-buttons-header">
           <Button @click="showReturnForm" :disabled="availableBorrows.length === 0" severity="warning"
-            icon="pi pi-upload" raised>
+            icon="pi pi-upload" label="แจ้งคืนรถ" raised>
+            <i class="pi pi-upload"></i>
             <Badge v-if="availableBorrows.length > 0" :value="availableBorrows.length" severity="warning" />
             แจ้งคืนรถ
           </Button>
 
           <Button @click="showCancelForm" :disabled="pendingBorrows.length === 0" severity="danger"
-            icon="pi pi-times-circle" raised>
+            icon="pi pi-times-circle" label="ยกเลิกการจอง" raised>
+            <i class="pi pi-times-circle"></i>
             ยกเลิกการจอง
             <Badge v-if="pendingBorrows.length > 0" :value="pendingBorrows.length" 
                    :style="{ backgroundColor: 'white', color: 'black', fontSize: '0.75rem', 
@@ -435,60 +437,6 @@ export default {
       const day = String(bangkokTime.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     },
-    async handleAdditionalImageUpload(event, bookingId) {
-      const files = Array.from(event.target.files)
-      if (files.length === 0) return
-
-      try {
-        // Find the booking record
-        const booking = this.records.find(r => r.id === bookingId)
-        if (!booking) return
-
-        // Convert files to base64
-        const newImages = []
-        for (const file of files) {
-          const reader = new FileReader()
-          const base64 = await new Promise((resolve) => {
-            reader.onload = () => resolve(reader.result)
-            reader.readAsDataURL(file)
-          })
-          newImages.push({
-            name: file.name,
-            src: base64,
-            type: 'เพิ่มเติม',
-            timestamp: new Date(Date.now() + this.serverTimeOffset).toLocaleString('th-TH')
-          })
-        }
-
-        // Update booking with new images
-        const currentImages = booking.images || []
-        const updatedImages = [...currentImages, ...newImages]
-
-        // Update in database via API (need to add PUT endpoint)
-        await this.$http.put(`/api/car-booking/${bookingId}`, {
-          images: updatedImages
-        })
-
-        await this.loadRecords()
-
-        this.$toast.add({
-          severity: 'success',
-          summary: 'สำเร็จ',
-          detail: `อัปโหลดรูปภาพ ${files.length} ไฟล์เรียบร้อย`,
-          life: 3000
-        })
-
-        // Clear file input
-        event.target.value = ''
-      } catch { // ignore
-        this.$toast.add({
-          severity: 'error',
-          summary: 'อัปโหลดไม่สำเร็จ',
-          detail: 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
-          life: 4000
-        })
-      }
-    },
     async submitBorrow(payload = {}) {
       try {
         const images = await this.convertImagesToBase64(this.borrowForm.images || [])
@@ -770,6 +718,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin: -1px -1px 0;
   padding: 0.75rem 1.5rem;
   background: var(--brand-gradient);
   position: relative;
@@ -855,18 +804,23 @@ export default {
 }
 
 .action-buttons-header .p-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   font-weight: 700;
-  padding: 0.75rem 1.25rem;
+  padding: 0.55rem 1.25rem;
   font-size: 0.95rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   min-width: 140px;
+  min-height: 2.6rem;
   box-shadow: none;
-  border: 3px solid white;
+  border: 2px solid white;
 }
 
 .action-buttons-header .p-button:hover {
   box-shadow: none;
-  border: 3px solid white;
+  border: 2px solid white;
 }
 
 .tab-content-area {
@@ -881,7 +835,7 @@ export default {
   background: transparent;
   border: none;
   margin: 0;
-  padding: 0.5rem;
+  padding: 0;
   gap: 0.5rem;
 }
 
@@ -889,7 +843,7 @@ export default {
   color: black !important;
   border: none;
   font-weight: 800 !important;
-  padding: 1rem 1.5rem;
+  padding: 0.6rem 1.25rem;
   font-size: 1rem;
   transition: all 0.3s ease;
   border-radius: 8px;
@@ -1111,18 +1065,19 @@ export default {
     align-items: center;
   }
 
+  /* มือถือ: ชื่อหน้าอยู่แถวบนชิดซ้าย (เหมือนแบนเนอร์หน้าอื่น) — แท็บและปุ่มวางเป็นแถวเรียงกัน ไม่ซ้อนเป็นคอลัมน์สูง ๆ */
   .tabs-header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    text-align: center;
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem !important;
+    text-align: left;
   }
 
   .header-title {
     order: 1;
     position: static;
     transform: none;
-    justify-content: center;
+    justify-content: flex-start;
     width: 100%;
   }
 
@@ -1133,38 +1088,42 @@ export default {
   }
 
   .tab-navigation :deep(.p-tabview-nav) {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     gap: 0.5rem;
-    padding: 0.5rem;
+    padding: 0;
+  }
+
+  .tab-navigation :deep(.p-tabview-nav li) {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .tab-navigation :deep(.p-tabview-nav-link) {
-    padding: 0.75rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.5rem 0.5rem;
+    font-size: 0.9rem;
     margin: 0;
     width: 100%;
+    justify-content: center;
     text-align: center;
   }
 
   .action-buttons-header {
     order: 3;
     width: 100%;
+    gap: 0.5rem;
     justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .action-buttons-header {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .action-buttons-header .p-button {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.5rem 0.5rem;
     font-size: 0.9rem;
-    padding: 0.75rem 1rem;
-    min-width: auto;
+    min-height: 2.7rem;
   }
+
 }
 
 @media (max-width: 480px) {
@@ -1196,20 +1155,13 @@ export default {
     font-size: 1rem;
   }
 
-  .action-buttons-header {
-    flex-direction: column;
-    gap: 0.8rem;
-  }
-
   .action-buttons-header .p-button {
-    width: 100%;
     font-size: 0.85rem;
-    padding: 0.75rem;
   }
 
   .tab-navigation :deep(.p-tabview-nav-link) {
     padding: 0.6rem 0.8rem;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 
   .tab-header {

@@ -162,6 +162,14 @@ export default {
   font-size: var(--default-font-size);
 }
 
+/* มือถือ: ขนาดฐานใหญ่ขึ้น ~12% — ฐาน 13.6px ทำให้ตัวหนังสือที่กำหนดเป็น rem เล็ก (0.6–0.75rem = 8–10px) อ่านบนจอมือถือไม่ออก
+   ทุกขนาดที่เป็น rem (ฟอนต์ ระยะ ขนาดปุ่ม) ขยายตามกัน จึงไม่ต้องไล่แก้ทีละหน้า */
+@media (max-width: 768px) {
+  :root {
+    --default-font-size: 0.95rem;
+  }
+}
+
 label {
   margin-bottom: 2px;
   color: var(--label-color);

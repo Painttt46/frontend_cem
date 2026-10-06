@@ -28,6 +28,12 @@
     <!-- Permissions Table -->
     <Card v-if="selectedRole">
       <template #content>
+        <Message v-if="isFixedRole" severity="info" :closable="false" class="mb-3">
+          บทบาท <b>{{ selectedRole }}</b> มีสิทธิ์ทุกอย่างในระบบเสมอ — ไม่ต้องตั้งค่าและแก้ไขไม่ได้ (บทบาทอื่นเป็นไปตามที่ติ๊กไว้ในตารางนี้)
+        </Message>
+        <Message v-else severity="secondary" :closable="false" class="mb-3">
+          ติ๊กเฉพาะสิ่งที่บทบาทนี้ทำได้ — ไม่ติ๊ก = ทำไม่ได้ ผลมีกับผู้ใช้ที่เปิดระบบค้างอยู่ภายใน ~1 นาที หรือทันทีเมื่อเปิดหน้าใหม่
+        </Message>
         <div class="table-header">
           <Button label="เพิ่ม Permission" icon="pi pi-plus" @click="showAddDialog = true" severity="success" size="small" />
         </div>
@@ -58,7 +64,7 @@
           </Column>
           <Column header="สิทธิ์การเข้าถึง" style="width: 150px">
             <template #body="{ data }">
-              <InputSwitch v-model="data.hasAccess" />
+              <InputSwitch v-model="data.hasAccess" :disabled="isFixedRole" />
             </template>
           </Column>
         </DataTable>
@@ -67,7 +73,7 @@
 
     <!-- Save Button -->
     <div class="action-bar" v-if="selectedRole">
-      <Button label="บันทึกการเปลี่ยนแปลง" icon="pi pi-save" @click="confirmSave" :loading="saving" />
+      <Button label="บันทึกการเปลี่ยนแปลง" icon="pi pi-save" @click="confirmSave" :loading="saving" :disabled="isFixedRole" />
     </div>
 
     <!-- Add Permission Dialog -->
@@ -99,7 +105,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import Message from 'primevue/message'
+import { isFullAccessRole } from '@/composables/usePermissions'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
@@ -109,6 +117,8 @@ const confirm = useConfirm()
 const selectedRole = ref(null)
 const saving = ref(false)
 const roles = ref([])
+// admin / superadmin มีสิทธิ์ทุกอย่างเสมอ (ทั้งหน้าเว็บและ API) — แสดงเป็นเปิดทั้งหมดและแก้ไม่ได้
+const isFixedRole = computed(() => isFullAccessRole(selectedRole.value))
 const editingCell = ref(null)
 const showAddDialog = ref(false)
 const newPermission = ref({
@@ -139,7 +149,18 @@ const pages = ref([
   { id: 18, name: 'เข้าพบลูกค้า', path: '/sales-activity', icon: 'pi pi-briefcase', hasAccess: false },
   // หน้าจัดการระบบที่มี route และตรวจสิทธิ์อยู่แล้ว แต่เดิมไม่อยู่ในรายการ ทำให้ role อื่นนอกจาก superadmin ติ๊กเปิดไม่ได้
   { id: 19, name: 'รายการงาน (จัดการระบบ)', path: '/management/projects', icon: 'pi pi-list', hasAccess: false },
-  { id: 20, name: 'งานรายวัน (จัดการระบบ)', path: '/management/daily-work', icon: 'pi pi-calendar', hasAccess: false }
+  { id: 20, name: 'งานรายวัน (จัดการระบบ)', path: '/management/daily-work', icon: 'pi pi-calendar', hasAccess: false },
+  // สิทธิ์รายฟีเจอร์ (ไม่ใช่หน้า): backend ตรวจ path เหล่านี้ใน role_permissions ก่อนให้เพิ่ม/แก้/ลบ — ต้องตรงกับ config/permissionKeys.js ฝั่ง backend
+  // role ที่เข้าหน้า "จัดการการลา" ได้อยู่แล้วจะถูก seed ให้สองสิทธิ์นี้เป็นเปิดตอนอัปเดตครั้งแรก
+  { id: 21, name: 'จัดการวันหยุดนักขัตฤกษ์ (ในหน้าจัดการการลา)', path: '/management/leave#holidays', icon: 'pi pi-calendar-plus', hasAccess: false },
+  { id: 22, name: 'จัดการประเภทการลา (ในหน้าจัดการการลา)', path: '/management/leave#leave-types', icon: 'pi pi-tags', hasAccess: false },
+  // ความสามารถที่เดิมทำได้เฉพาะ admin/superadmin (หรือ role hr แบบฮาร์ดโค้ด) — ตอนนี้ตั้งต่อ role ได้ที่นี่ และ backend ตรวจสิทธิ์เดียวกัน
+  { id: 23, name: 'ซิงค์ข้อมูลโครงการจาก ERP (หน้าโครงการ)', path: '/projects#sync-erp', icon: 'pi pi-refresh', hasAccess: false },
+  { id: 24, name: 'ลบโครงการ / ขั้นตอนงาน', path: '/projects#delete', icon: 'pi pi-trash', hasAccess: false },
+  { id: 25, name: 'ลบรายการจัดซื้อ / ไฟล์ผู้ขาย', path: '/procurement#delete', icon: 'pi pi-trash', hasAccess: false },
+  { id: 26, name: 'แก้ไข/ลบงานรายวันของผู้อื่น', path: '/daily_work#manage-all', icon: 'pi pi-users', hasAccess: false },
+  { id: 27, name: 'จัดการการจองรถของผู้อื่น', path: '/car_booking#manage', icon: 'pi pi-car', hasAccess: false },
+  { id: 28, name: 'ดู/จัดการกิจกรรมเข้าพบลูกค้าของทุกคน', path: '/sales-activity#manage-all', icon: 'pi pi-briefcase', hasAccess: false }
 ])
 
 onMounted(async () => {
@@ -191,6 +212,8 @@ const loadPermissions = async (role) => {
         }
       })
     }
+    // admin / superadmin มีสิทธิ์ทุกอย่างเสมอ — แสดงเป็นเปิดทั้งหมด (ไม่ขึ้นกับแถวในฐานข้อมูล)
+    if (isFullAccessRole(role)) pages.value.forEach(page => { page.hasAccess = true })
   } catch (error) {
     // If no permissions exist yet, set defaults based on role
     setDefaultPermissions(role)
@@ -199,10 +222,8 @@ const loadPermissions = async (role) => {
 
 const setDefaultPermissions = (role) => {
   pages.value.forEach(page => {
-    if (role === 'superadmin') {
+    if (isFullAccessRole(role)) {
       page.hasAccess = true
-    } else if (role === 'admin') {
-      page.hasAccess = !page.path.includes('role-permissions')
     } else if (role === 'manager') {
       page.hasAccess = !['/management/users', '/management/settings'].some(p => page.path.includes(p))
     } else {
@@ -251,6 +272,7 @@ const saveEdit = (data, field) => {
 }
 
 const confirmSave = () => {
+  if (isFixedRole.value) return // admin / superadmin แก้ไม่ได้
   confirm.require({
     message: `ต้องการบันทึกสิทธิ์การเข้าถึงสำหรับ Role "${selectedRole.value}" หรือไม่?`,
     header: 'ยืนยันการบันทึก',
@@ -606,7 +628,7 @@ code:hover {
   }
 
   code {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     word-break: break-all;
     max-width: 100%;
   }
@@ -652,12 +674,12 @@ code:hover {
   }
 
   :deep(.p-datatable) {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   :deep(.p-datatable .p-datatable-thead > tr > th) {
     padding: 0.4rem;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
 
   :deep(.p-datatable .p-datatable-tbody > tr > td) {

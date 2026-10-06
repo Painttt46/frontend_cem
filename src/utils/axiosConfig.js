@@ -10,6 +10,10 @@ export const uploadState = reactive({ count: 0, percent: 0 })
 // คำขออ่านข้อมูล (GET) แสดงแค่แถบโหลดบาง ๆ ด้านบน ไม่บังหน้าจอ (เดิมทุกคำขอทำให้จอมืดทั้งหน้า)
 export const loadingState = reactive({ writes: 0 })
 
+// คำขออ่านข้อมูล (GET/HEAD) ที่ค้างอยู่ "ทุกตัว รวม silent" — ใช้ให้ usePageLoading รู้ว่าหน้าใหม่ยังโหลดข้อมูลไม่เสร็จ
+// (ไม่ใช้ reactive: usePageLoading โพลเอา; ใส่ { background: true } ที่ request เพื่อไม่ให้นับ เช่นตัวโพลเบื้องหลัง)
+export const activity = { reads: 0, lastChange: 0 }
+
 // Configure axios defaults
 axios.defaults.baseURL = ''
 axios.defaults.withCredentials = true
@@ -21,6 +25,13 @@ let pendingRequests = 0
 function updateLoading(increment) {
   pendingRequests = Math.max(0, pendingRequests + increment)
   store.dispatch('setLoading', pendingRequests > 0)
+}
+
+function endRead(config) {
+  if (!config?._read) return
+  config._read = false // กันนับซ้ำถ้า interceptor ถูกเรียกทั้งสองทาง
+  activity.reads = Math.max(0, activity.reads - 1)
+  activity.lastChange = Date.now()
 }
 
 // Request interceptor
@@ -35,6 +46,13 @@ axios.interceptors.request.use(
       return Promise.reject(error)
     }
     
+    const method = (config.method || 'get').toLowerCase()
+    if ((method === 'get' || method === 'head') && !config.background) {
+      config._read = true
+      activity.reads++
+      activity.lastChange = Date.now()
+    }
+
     if (!config.silent) {
       updateLoading(1)
       config._tracked = true
@@ -67,6 +85,7 @@ axios.interceptors.request.use(
     if (error.config?._tracked) {
       updateLoading(-1)
     }
+    endRead(error.config)
     return Promise.reject(error)
   }
 )
@@ -77,6 +96,7 @@ axios.interceptors.response.use(
     if (response.config._tracked) {
       updateLoading(-1)
     }
+    endRead(response.config)
     if (response.config._upload) uploadState.count = Math.max(0, uploadState.count - 1)
     if (response.config._write) loadingState.writes = Math.max(0, loadingState.writes - 1)
     return response
@@ -85,6 +105,7 @@ axios.interceptors.response.use(
     if (error.config?._tracked) {
       updateLoading(-1)
     }
+    endRead(error.config)
     if (error.config?._upload) uploadState.count = Math.max(0, uploadState.count - 1)
     if (error.config?._write) loadingState.writes = Math.max(0, loadingState.writes - 1)
 
@@ -160,6 +181,7 @@ axios.interceptors.response.use(
 // Reset loading state (can be called manually if needed)
 export function resetLoading() {
   loadingState.writes = 0
+  activity.reads = 0
   pendingRequests = 0
   store.dispatch('setLoading', false)
 }

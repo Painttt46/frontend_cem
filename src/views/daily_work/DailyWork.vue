@@ -11,7 +11,8 @@
 
     <div class="main-content">
       <div class="tab-action-buttons">
-        <Button @click="showWorkForm" class="work-btn" icon="pi pi-clock" raised>
+        <Button @click="showWorkForm" class="work-btn" icon="pi pi-clock" label="ลงตารางงาน" raised>
+          <i class="pi pi-clock"></i>
           <span class="btn-text">ลงตารางงาน</span>
         </Button>
         <div class="right-filters">
@@ -107,7 +108,6 @@ export default {
   },
   data() {
     return {
-      currentTime: new Date(),
       workRecords: [],
       loading: false,
       showWorkDialog: false,
@@ -173,16 +173,6 @@ export default {
         (Array.isArray(r.steps_data) && r.steps_data.some(s => String(s.id) === String(this.filterStep)))
       )
       return records
-    },
-    currentDateTime() {
-      return this.currentTime.toLocaleString('th-TH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      })
     }
   },
   watch: {
@@ -235,16 +225,11 @@ export default {
     this.loadWorkRecords()
   },
   mounted() {
-    this._clockInterval = setInterval(() => {
-      this.currentTime = new Date()
-    }, 1000)
-    
     // Listen for work record updates
     window.addEventListener('workRecordUpdated', this.handleWorkRecordUpdate)
     window.addEventListener('taskUpdated', this.handleWorkRecordUpdate)
   },
   beforeUnmount() {
-    clearInterval(this._clockInterval)
     window.removeEventListener('workRecordUpdated', this.handleWorkRecordUpdate)
     window.removeEventListener('taskUpdated', this.handleWorkRecordUpdate)
   },
@@ -267,7 +252,7 @@ export default {
 .tab-action-buttons {
   display: flex;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--section-gap);
   margin-top: 0rem;
   justify-content: space-between;
   align-items: center;
@@ -443,7 +428,7 @@ export default {
   border-radius: 12px;
   box-shadow: none;
   overflow: hidden;
-  padding: 2rem;
+  padding: var(--panel-pad);
 }
 
 .tab-navigation {
@@ -709,14 +694,17 @@ export default {
 @media (max-width: 768px) {
   .filter-buttons {
     width: 100%;
+    flex-wrap: wrap; /* จอแคบ: ปุ่มที่ไม่พอขึ้นบรรทัดใหม่ แทนการถูกตัดขอบขวา */
+    gap: 4px;
   }
 
   .filter-btn {
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-width: 0;
     justify-content: center;
-    padding: 0.5rem 0.4rem;
-    font-size: 0.8rem;
+    white-space: nowrap;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.85rem;
   }
 }
 </style>
