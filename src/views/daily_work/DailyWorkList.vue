@@ -2141,6 +2141,59 @@ export default {
     font-size: max(0.8rem, var(--min-fs));
   }
 
+  /* วันที่ลงงานหลายโครงการ — ส่วนขยาย (กดลูกศรที่แถว): เดิมเป็น grid 8 คอลัมน์แบบ fr ในกรอบกว้างแค่ ~200px บนมือถือ
+     แต่ละคอลัมน์เหลือ 8–55px หัวตาราง/ข้อมูลถูกบีบจนอ่านไม่ออก → ให้คอลัมน์กว้างคงที่ (ไม่บีบ/ไม่ตัดบรรทัดแคบ ๆ)
+     แล้วเลื่อนซ้าย-ขวาในส่วนขยายเพื่อดูข้อมูลที่เหลือ ไม่ต้องยัดให้หมดในหน้าจอเดียว */
+  .expansion-projects {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding: 10px 10px 12px;
+  }
+  .expansion-projects::before {
+    content: "↔ เลื่อนซ้าย-ขวาเพื่อดูข้อมูลต่อ";
+    display: block;
+    position: sticky;
+    left: 0;
+    width: max-content;
+    margin-bottom: 8px;
+    font-size: max(0.78rem, var(--min-fs));
+    font-weight: 600;
+    color: #2a5a96;
+  }
+  .expansion-proj-row {
+    grid-template-columns: 110px 220px 230px 140px 110px 140px 90px 100px;
+    width: max-content;
+    min-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* กล่องสรุป "N โครงการ" ในการ์ดมือถือ: เดิมอยู่ในช่องค่ากว้างแค่ ~140px → รหัส SO แตกเป็น "S O 2 51 01" ตั้งเรียง ชื่อโครงการเหลือคอลัมน์ ~50px
+     ให้ช่องนี้กว้างเต็มการ์ด (ป้ายชื่ออยู่บน) แต่ละโครงการอยู่บรรทัดเดียว ไม่ตัดบรรทัด แล้วเลื่อนซ้าย-ขวาดูส่วนที่เหลือ */
+  .history-card :deep(.p-datatable-tbody > tr > td:has(.multi-proj-summary)) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+  .history-card :deep(.p-datatable-tbody > tr > td:has(.multi-proj-summary) > .p-column-title) { text-align: left; }
+  .multi-proj-summary {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .multi-proj-list { width: max-content; min-width: 100%; }
+  .multi-proj-item { white-space: nowrap; }
+  .multi-proj-item .so-badge,
+  .multi-proj-name { white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+
   .task-info {
     max-width: 150px;
   }
@@ -2340,8 +2393,9 @@ export default {
 
 /* ── Manage Group Dialog ── */
 .manage-group-wrap { display: flex; flex-direction: column; gap: 1rem; }
-.manage-group-date { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #374151; font-size: 0.95rem; }
-.manage-group-count { background: #dbeafe; color: #2a5490; border-radius: 12px; padding: 2px 10px; font-size: max(0.78rem, var(--min-fs)); font-weight: 700; margin-left: 4px; }
+.manage-group-date { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #374151; font-size: 0.95rem; flex-wrap: wrap; }
+.manage-group-date .p-button { white-space: nowrap; }
+.manage-group-count { background: #dbeafe; color: #2a5490; border-radius: 12px; padding: 2px 10px; font-size: max(0.78rem, var(--min-fs)); font-weight: 700; margin-left: 4px; white-space: nowrap; }
 .manage-proj-list { display: flex; flex-direction: column; gap: 8px; }
 .manage-proj-item {
   display: flex; align-items: center; justify-content: space-between;
