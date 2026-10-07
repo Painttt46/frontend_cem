@@ -2,7 +2,7 @@
   <Card class="history-card">
     <template #content>
       <div v-if="records.length === 0" class="empty-state">
-        <i class="pi pi-calendar-times" style="font-size: 4rem; color: #ccc;"></i>
+        <i class="pi pi-calendar-times" style="font-size: 4rem; color: #55657a;"></i>
         <p>ยังไม่มีข้อมูลการลางาน</p>
       </div>
 
@@ -36,7 +36,7 @@
         <Column field="leave_type" header="ประเภทการลา" :sortable="true">
           <template #body="slotProps">
             <Badge :value="getLeaveTypeLabel(slotProps.data.leave_type)"
-              :style="{ backgroundColor: getLeaveTypeColor(slotProps.data.leave_type), color: '#fff', fontWeight: 'bold' }" />
+              :style="{ backgroundColor: $accessibleBg(getLeaveTypeColor(slotProps.data.leave_type)), color: '#fff', fontWeight: 'bold' }" />
           </template>
         </Column>
 
@@ -146,10 +146,10 @@
                 'rejected': slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1
               }">
                 <div class="approver-badge-wrapper">
-                  <i v-if="slotProps.data.approved_by_level1" class="pi pi-check-circle" style="color: #10b981;"></i>
+                  <i v-if="slotProps.data.approved_by_level1" class="pi pi-check-circle" style="color: #047857;"></i>
                   <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1"
-                    class="pi pi-times-circle" style="color: #ef4444;"></i>
-                  <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
+                    class="pi pi-times-circle" style="color: #dc2626;"></i>
+                  <i v-else class="pi pi-clock" style="color: #55657a;"></i>
                   <Badge value="หัวหน้างาน"
                     :severity="slotProps.data.approved_by_level1 ? 'info' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 1 ? 'danger' : 'secondary')" />
                 </div>
@@ -176,12 +176,12 @@
                   'disabled': !slotProps.data.approved_by_level1 && !(slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2) && slotProps.data.status !== 'cancel'
                 }">
                 <div class="approver-badge-wrapper">
-                  <i v-if="slotProps.data.approved_by_level2" class="pi pi-check-circle" style="color: #10b981;"></i>
+                  <i v-if="slotProps.data.approved_by_level2" class="pi pi-check-circle" style="color: #047857;"></i>
                   <i v-else-if="slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2"
-                    class="pi pi-times-circle" style="color: #ef4444;"></i>
+                    class="pi pi-times-circle" style="color: #dc2626;"></i>
                   <i v-else-if="slotProps.data.status === 'cancel' && slotProps.data.approved_by_level1"
-                    class="pi pi-exclamation-triangle" style="color: #f59e0b;"></i>
-                  <i v-else class="pi pi-clock" style="color: #94a3b8;"></i>
+                    class="pi pi-exclamation-triangle" style="color: #b45309;"></i>
+                  <i v-else class="pi pi-clock" style="color: #55657a;"></i>
                   <Badge value="HR"
                     :severity="slotProps.data.approved_by_level2 ? 'success' : (slotProps.data.status === 'rejected' && slotProps.data.rejected_level === 2 ? 'danger' : (slotProps.data.status === 'cancel' && slotProps.data.approved_by_level1 ? 'warning' : 'secondary'))" />
                 </div>
@@ -277,6 +277,7 @@ import AttachmentsDialog from '@/components/AttachmentsDialog.vue'
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
+import { accessibleBg } from '@/utils/color'
 
 export default {
   name: 'LeaveHistory',
@@ -320,6 +321,7 @@ export default {
         lunch_end: '13:00'
       },
       workHoursCache: {},
+      workHoursPending: {},
       // Date search
       dateSearchStart: null,
       dateSearchEnd: null
@@ -418,18 +420,26 @@ export default {
     async getWorkHoursForRole(role) {
       if (!role) return this.workHours
       if (this.workHoursCache[role]) return this.workHoursCache[role]
-      try {
-        const response = await this.$http.get(`/api/settings/role-work-hours/${role}`)
-        const wh = {
-          start_time: response.data.start_time?.substring(0, 5) || '09:00',
-          end_time: response.data.end_time?.substring(0, 5) || '18:00',
-          lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
-          lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
-        }
-        this.workHoursCache[role] = wh
-        return wh
-      } catch { /* ignore */ }
-      return this.workHours
+      // คำขอที่ยังค้างอยู่ของ role เดียวกันใช้ร่วมกัน — calculateHours() ถูกเรียกทุกครั้งที่ตารางวาดแถว จึงเคยยิงคำขอซ้ำเป็นสิบ ๆ ครั้งต่อหน้า
+      // (และถ้าโหลดไม่สำเร็จก็ยิงซ้ำไม่จบ เพราะ cache ไม่เคยถูกเติม) — ตอนนี้โหลดพลาดจะจำค่าเริ่มต้นไว้ ไม่ยิงซ้ำ
+      if (!this.workHoursPending[role]) {
+        this.workHoursPending[role] = this.$http.get(`/api/settings/role-work-hours/${role}`)
+          .then((response) => {
+            const wh = {
+              start_time: response.data.start_time?.substring(0, 5) || '09:00',
+              end_time: response.data.end_time?.substring(0, 5) || '18:00',
+              lunch_start: response.data.lunch_start?.substring(0, 5) || '12:00',
+              lunch_end: response.data.lunch_end?.substring(0, 5) || '13:00'
+            }
+            this.workHoursCache[role] = wh
+            return wh
+          })
+          .catch(() => {
+            this.workHoursCache[role] = this.workHours
+            return this.workHours
+          })
+      }
+      return this.workHoursPending[role]
     },
     async preloadWorkHoursForRecords(records) {
       try {
@@ -517,7 +527,7 @@ export default {
     },
     getLeaveTypeColor(type) {
       const leaveType = this.leaveTypes.find(lt => lt.value === type)
-      return leaveType?.color || '#6c757d'
+      return accessibleBg(leaveType?.color || '#6c757d')
     },
     canDeleteRequest(record) {
       // ตรวจสอบว่าเป็นคำขอของตัวเองและยัง pending
@@ -733,19 +743,19 @@ export default {
           color: '#1f2937'
         },
         pending_level2: {
-          backgroundColor: '#4A90E2', // ฟ้า - รอ HR
+          backgroundColor: '#3d78bc', // ฟ้า - รอ HR
           color: '#ffffff'
         },
         approved: {
-          backgroundColor: '#22c55e', // เขียว - อนุมัติแล้ว
+          backgroundColor: '#178841', // เขียว - อนุมัติแล้ว
           color: '#ffffff'
         },
         rejected: {
-          backgroundColor: '#ef4444', // แดง - ไม่อนุมัติ
+          backgroundColor: '#d73d3d', // แดง - ไม่อนุมัติ
           color: '#ffffff'
         },
         cancel: {
-          backgroundColor: '#a855f7', // ม่วง - รออนุมัติการยกเลิก
+          backgroundColor: '#9333ea', // ม่วง - รออนุมัติการยกเลิก
           color: '#ffffff'
         },
         cancelled: {
@@ -932,7 +942,7 @@ export default {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6c757d;
+  color: #525f70;
   background: #f8f9fa;
   border-radius: 8px;
   margin: 1rem;
@@ -949,10 +959,7 @@ export default {
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
-  background: #f8f9fa;
-  color: #495057;
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
   padding: 1rem 0.75rem;
   font-size: 0.9rem;
 }
@@ -966,10 +973,6 @@ export default {
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
   text-align: center;
-}
-
-.history-table :deep(.p-datatable-tbody > tr:hover) {
-  background: #f8f9fa;
 }
 
 .history-table :deep(.p-badge) {
@@ -1021,7 +1024,7 @@ export default {
 }
 
 .delegate-info i {
-  color: #6c757d;
+  color: #525f70;
   width: 16px;
   text-align: center;
 }
@@ -1032,7 +1035,7 @@ export default {
 }
 
 .delegate-role small {
-  color: #6c757d;
+  color: #525f70;
   font-weight: 500;
 }
 
@@ -1046,7 +1049,7 @@ export default {
 }
 
 .work-details-btn .p-button {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   padding: 0.25rem 0.5rem;
 }
 
@@ -1072,12 +1075,12 @@ export default {
 }
 
 .no-approver {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
 }
 
 .no-delegation {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
   display: flex;
   align-items: center;
@@ -1093,7 +1096,7 @@ export default {
 }
 
 .attachments-info i {
-  color: #6c757d;
+  color: #525f70;
 }
 
 .view-icon {
@@ -1113,11 +1116,11 @@ export default {
   font-weight: 600 !important;
   border-radius: 20px !important;
   padding: 0.5rem 0.75rem !important;
-  font-size: 0.875rem !important;
+  font-size: max(0.875rem, var(--min-fs)) !important;
 }
 
 .clickable-name {
-  color: #4A90E2;
+  color: #2f66b3;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
@@ -1129,7 +1132,7 @@ export default {
 }
 
 .no-delegation {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
 }
 
@@ -1165,17 +1168,17 @@ export default {
   }
 
   .delegate-info {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .history-table :deep(.p-badge) {
     padding: 0.4rem 0.6rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .empty-state {
@@ -1187,7 +1190,7 @@ export default {
   }
 
   .approver-info {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -1198,7 +1201,7 @@ export default {
   }
 
   .history-table :deep(.p-datatable) {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .history-table :deep(.p-datatable-wrapper) {
@@ -1207,13 +1210,13 @@ export default {
 
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     min-width: 100px;
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     min-width: 100px;
   }
 
@@ -1222,13 +1225,13 @@ export default {
   }
 
   .delegate-info {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     padding: 0.25rem;
   }
 
   .history-table :deep(.p-badge) {
     padding: 0.3rem 0.5rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .empty-state {
@@ -1244,7 +1247,7 @@ export default {
   }
 
   .approver-info {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .history-table :deep(.p-paginator) {
@@ -1255,7 +1258,7 @@ export default {
   .history-table :deep(.p-paginator .p-paginator-pages .p-paginator-page) {
     min-width: 2rem;
     height: 2rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 }
 
@@ -1282,7 +1285,7 @@ export default {
 
 .action-btn {
   min-width: 100px !important;
-  font-size: 0.85rem !important;
+  font-size: max(0.85rem, var(--min-fs)) !important;
   padding: 0.5rem 1rem !important;
   border-radius: 8px !important;
   font-weight: 600 !important;
@@ -1290,12 +1293,12 @@ export default {
 }
 
 .action-btn.p-button-danger {
-  background: #ef4444 !important;
+  background: #d73d3d !important;
   color: white !important;
 }
 
 .action-btn.p-button-warning {
-  background: #f59e0b !important;
+  background: #a46a07 !important;
   color: white !important;
 }
 
@@ -1372,12 +1375,12 @@ export default {
 }
 
 .approver-badge-wrapper i {
-  color: #10b981;
+  color: #047857;
   font-size: 1rem;
 }
 
 .approver-badge-wrapper .p-badge {
-  font-size: 0.75rem !important;
+  font-size: max(0.75rem, var(--min-fs)) !important;
   padding: 0.3rem 0.6rem !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
@@ -1398,8 +1401,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #94a3b8;
-  font-size: 0.85rem;
+  color: #55657a;
+  font-size: max(0.85rem, var(--min-fs));
   font-style: italic;
   padding: 0.5rem;
 }
@@ -1409,32 +1412,33 @@ export default {
 }
 
 .approver-name {
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   color: #495057;
 }
 
 .no-approver {
-  color: #adb5bd;
+  color: #55657a;
 }
 
 .approver-item.disabled {
-  opacity: 0.5;
+  /* ขั้นที่ยังไม่ถึง: เดิมจางด้วย opacity 0.5 ทำให้อ่านไม่ออก (contrast ~2) — ใช้สีตัวหนังสือที่อ่อนกว่าแต่ยังอ่านได้แทน */
+  opacity: 1;
 }
 
 .rejected-text {
-  color: #ef4444;
+  color: #dc2626;
   display: flex;
   align-items: center;
   gap: 0.25rem;
 }
 
 .pending-text {
-  color: #94a3b8;
+  color: #55657a;
   font-style: italic;
 }
 
 .cancel-pending-text {
-  color: #f59e0b;
+  color: #b45309;
   font-weight: 600;
   font-style: italic;
 }
@@ -1455,7 +1459,7 @@ export default {
 }
 
 .reject-reason-content i {
-  color: #ef4444;
+  color: #dc2626;
   font-size: 1.25rem;
   margin-top: 2px;
 }
@@ -1521,7 +1525,7 @@ export default {
 }
 
 .date-search-sep {
-  color: #94a3b8;
+  color: #55657a;
   font-weight: 300;
   flex-shrink: 0;
 }

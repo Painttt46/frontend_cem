@@ -46,7 +46,7 @@ const routes = [
     path: '/car_booking',
     name: 'car booking',
     component: CarBookingHome,
-    meta: { requiresAuth: true, requiresPermission: '/car_booking', title: 'ระบบเเจ้งใช้งานรถ - Gent-CEM' },
+    meta: { requiresAuth: true, requiresPermission: '/car_booking', title: 'ระบบแจ้งใช้งานรถ - Gent-CEM' },
   },
   {
     path: '/leave_work',
@@ -88,7 +88,7 @@ const routes = [
     path: '/management',
     name: 'management',
     component: ManagementView,
-    meta: { requiresAuth: true, title: 'ระบบจัดการ - Gent-CEM' },
+    meta: { requiresAuth: true, requiresPermission: '/management', title: 'ระบบจัดการ - Gent-CEM' },
   },
   {
     path: '/management/users',
@@ -218,10 +218,12 @@ router.beforeEach(async (to, from, next) => {
       // admin / superadmin มีสิทธิ์ทุกอย่างเสมอ — ไม่ต้องรอโหลดสิทธิ์
       if (!isFullAccess()) {
         // โหลดใหม่ถ้ายังไม่เคยโหลด / เปลี่ยน role / ข้อมูลเก่าเกิน 1 นาที (ผู้ดูแลเพิ่งแก้สิทธิ์ที่หน้า "จัดการสิทธิ์")
+        // (ถ้าโหลดพลาดแต่เคยโหลดสำเร็จมาแล้ว จะใช้สิทธิ์ล่าสุดที่รู้ตัดสินต่อ — ดู loadPermissions)
         const loaded = await ensureFreshPermissions();
-        // ถ้า load ไม่สำเร็จ ให้ผ่านไปก่อน (ไม่ block user) — backend ยังตรวจสิทธิ์ทุกคำขออยู่
+        // ไม่เคยโหลดสิทธิ์สำเร็จเลย = ยังไม่รู้ว่าได้สิทธิ์อะไร → ไม่ปล่อยเข้าหน้าที่ต้องมีสิทธิ์ (เดิมปล่อยผ่านทุกหน้า)
+        // ไปหน้าโปรไฟล์ (เข้าได้เสมอ) แล้วลองโหลดสิทธิ์ใหม่ทุกครั้งที่เปลี่ยนหน้า
         if (!loaded) {
-          next();
+          next("/profile");
           return;
         }
       }

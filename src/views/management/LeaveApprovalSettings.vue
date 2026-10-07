@@ -343,15 +343,15 @@ onMounted(() => {
 }
 
 .level-1 {
-  background-color: #3a7bd0;
+  background-color: #3369ac;
 }
 
 .level-2 {
-  background-color: #0aa875;
+  background-color: #0c875e;
 }
 
 .level-desc {
-  color: #6b7280;
+  color: #525f70;
   margin-bottom: 1rem;
 }
 
@@ -385,11 +385,11 @@ onMounted(() => {
 }
 
 :deep(.custom-multiselect .p-multiselect-token) {
-  background-color: #3a7bd0;
+  background-color: #3369ac;
   color: white;
   border-radius: 6px;
   padding: 0.25rem 0.5rem;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   margin: 2px;
 }
 
@@ -398,20 +398,13 @@ onMounted(() => {
 }
 
 :deep(.p-datatable .p-datatable-thead > tr > th) {
-  background: #f8fafc;
-  color: #374151;
   font-weight: 600;
   padding: 1rem;
-  border-bottom: 2px solid #e5e7eb;
 }
 
 :deep(.p-datatable .p-datatable-tbody > tr > td) {
   padding: 0.75rem 1rem;
   vertical-align: middle;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:hover) {
-  background: #f1f5f9 !important;
 }
 
 :deep(.p-inputswitch.p-inputswitch-checked .p-inputswitch-slider) {

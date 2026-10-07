@@ -4,6 +4,7 @@ import App from './App.vue';
 import router from './router';
 import store from './store';
 import axios from './utils/axiosConfig';
+import { accessibleBg, accessibleText } from './utils/color';
 import PrimeVue from 'primevue/config';
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
@@ -137,6 +138,9 @@ app.use(ConfirmationService);
 app.use(ToastService);
 
 app.config.globalProperties.$http = axios;
+// ใช้ในเทมเพลต: ทำสีพื้นของป้ายที่ตั้งเองได้ (หมวดหมู่/สถานะ/ประเภทการลา) ให้ตัวหนังสือขาวบนสีนั้นอ่านออก — ดู utils/color.js
+app.config.globalProperties.$accessibleBg = accessibleBg;
+app.config.globalProperties.$accessibleText = accessibleText;
 
 app.mount("#app");
 startA11yEnhancer();

@@ -345,14 +345,14 @@ export default {
             <td colspan="11" align="center" style="text-align:center; padding:25px; border:3px solid #1e40af; background-color:#ffffff;">
                 <img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'" style="margin-bottom:10px;"/>
                 <div style="font-size:26pt; font-weight:bold; color:#1e40af; margin-bottom:8px;">GENT SOLUTION CO., LTD.</div>
-                <div style="font-size:20pt; font-weight:bold; color:#3a7bd0; border-top:2px solid #4A90E2; border-bottom:2px solid #4A90E2; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
+                <div style="font-size:20pt; font-weight:bold; color:#2f66b3; border-top:2px solid #4A90E2; border-bottom:2px solid #4A90E2; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
             </td>
         </tr>
         
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📊 สรุปภาพรวมการลางาน
             </td>
         </tr>
@@ -360,15 +360,15 @@ export default {
             <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
                 <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รายการทั้งหมด</div>
                 <div style="font-size:24pt; color:#1e40af; font-weight:bold;">${summary.total}</div>
-                <div style="font-size:12pt; color:#64748b;">รายการ</div>
+                <div style="font-size:12pt; color:#526074;">รายการ</div>
             </td>
             <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
-                <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมวันลา</div>
-                <div style="font-size:24pt; color:#0891b2; font-weight:bold;">${summary.totalDays}</div>
-                <div style="font-size:12pt; color:#64748b;">วัน</div>
+                <div style="color:#526074; font-size:13pt; margin-bottom:6px;">รวมวันลา</div>
+                <div style="font-size:24pt; color:#0e7490; font-weight:bold;">${summary.totalDays}</div>
+                <div style="font-size:12pt; color:#526074;">วัน</div>
             </td>
             <td colspan="3" align="center" style="padding:18px; text-align:center; background-color:#eff6ff;">
-                <div style="color:#64748b; font-size:13pt; margin-bottom:6px;">รวมชั่วโมง</div>
+                <div style="color:#526074; font-size:13pt; margin-bottom:6px;">รวมชั่วโมง</div>
                 <div style="font-size:24pt; color:#7c3aed; font-weight:bold;">${summary.totalHours}</div>
                 <div style="font-size:12pt; color:#64748b;">ชั่วโมง</div>
             </td>
@@ -381,7 +381,7 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📋 สรุปตามประเภทการลา
             </td>
         </tr>
@@ -397,14 +397,14 @@ export default {
                 <td colspan="4" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${type}</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.days.toFixed(1)} วัน</td>
-                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3a7bd0; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#2f66b3; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
                 🏢 สรุปตามแผนก
             </td>
         </tr>
@@ -418,14 +418,14 @@ export default {
         return `<tr>
                 <td colspan="5" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${dept}</td>
                 <td colspan="3" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
-                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#3a7bd0; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#2f66b3; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#4A90E2; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📄 รายละเอียดการลาแต่ละรายการ
             </td>
         </tr>
@@ -457,7 +457,7 @@ export default {
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" class="font-bold" style="padding:8px; text-align:center; background-color:${bgColor};">${calcDays(r)}</td>
-                <td align="center" class="font-bold" style="padding:8px; color:#3a7bd0; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
+                <td align="center" class="font-bold" style="padding:8px; color:#2f66b3; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
                 <td align="left" style="padding:8px; text-align:left; background-color:${bgColor};">${r.reason || '-'}</td>
             </tr>`;
       }).join('')}
@@ -470,10 +470,14 @@ export default {
       // ส่วน Export ไฟล์
       const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' })
       const link = document.createElement('a')
-      link.href = URL.createObjectURL(blob)
+      const blobUrl = URL.createObjectURL(blob)
+      link.href = blobUrl
       link.download = `รายงานการลา_อนุมัติแล้ว_${new Date().toISOString().slice(0, 10)}.xls`
+      link.style.display = 'none'
+      document.body.appendChild(link)
       link.click()
-      URL.revokeObjectURL(link.href)
+      // อย่า revoke ทันที: เบราว์เซอร์อ่านบล็อบหลังคลิกแบบ async — ยกเลิก URL เร็วเกินไปทำให้ดาวน์โหลดล้มเหลว (Failed - Network error)
+      setTimeout(() => { link.remove(); URL.revokeObjectURL(blobUrl) }, 60000)
 
       this.showExportDialog = false
       this.$toast.add({ severity: 'success', summary: 'สำเร็จ', detail: `Export รายงานเรียบร้อย (${records.length} รายการ)`, life: 3000 })
@@ -808,10 +812,10 @@ export default {
 .filter-btn {
   background: transparent;
   border: none;
-  color: #64748b;
+  color: #526074;
   padding: 0.5rem 1rem;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -835,7 +839,7 @@ export default {
 }
 
 .filter-btn.filter-today.active {
-  color: #059669;
+  color: #047857;
 }
 
 .filter-btn.filter-future.active {
@@ -847,10 +851,10 @@ export default {
   align-items: center;
   justify-content: center;
   background: #e2e8f0;
-  color: #64748b;
+  color: #526074;
   border-radius: 20px;
   padding: 0.1rem 0.5rem;
-  font-size: 0.72rem;
+  font-size: max(0.72rem, var(--min-fs));
   font-weight: 700;
   min-width: 22px;
   line-height: 1.4;
@@ -879,11 +883,11 @@ export default {
 
 .export-btn .btn-text {
   margin-left: 0.3rem;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .leave-btn {
-  background-color: #4A90E2 !important;
+  background-color: #3d78bc !important;
   border: none !important;
   color: white !important;
   padding: 0.85rem 1.8rem !important;
@@ -977,12 +981,12 @@ export default {
 
 .pending-badge {
   margin-left: 2rem !important;
-  background-color: #e63535 !important;
+  background-color: #c62d2d !important;
   color: white !important;
   font-weight: 700 !important;
   padding: 0.3rem !important;
   border-radius: 50% !important;
-  font-size: 0.7rem !important;
+  font-size: max(0.7rem, var(--min-fs)) !important;
   border: 2px solid rgba(239, 68, 68, 0.3) !important;
   box-shadow: none !important;
   animation: pulse 2s infinite;
@@ -1153,7 +1157,7 @@ export default {
   }
 
   .filter-btn {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     padding: 0.4rem 0.8rem;
   }
 

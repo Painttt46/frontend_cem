@@ -24,7 +24,7 @@
     <!-- Action Cards -->
     <div class="action-grid">
       <!-- All Projects Card -->
-      <Card class="action-card" @click="$router.push('/management/projects')">
+      <Card v-if="hasAccess('/management/projects')" class="action-card" @click="$router.push('/management/projects')">
         <template #content>
           <div class="action-content">
             <div class="action-header">
@@ -40,7 +40,7 @@
       </Card>
 
       <!-- Daily Work Card -->
-      <Card class="action-card" @click="$router.push('/management/daily-work')">
+      <Card v-if="hasAccess('/management/daily-work')" class="action-card" @click="$router.push('/management/daily-work')">
         <template #content>
           <div class="action-content">
             <div class="action-header">
@@ -106,13 +106,13 @@
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="icon-display">
                     <Badge :value="slotProps.value.label" 
-                           :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
+                           :style="{ backgroundColor: $accessibleBg(slotProps.value.color), color: '#fff' }" />
                   </div>
                   <span v-else>เลือกสีและหมวดหมู่</span>
                 </template>
                 <template #option="slotProps">
                   <Badge :value="slotProps.option.label" 
-                         :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
+                         :style="{ backgroundColor: $accessibleBg(slotProps.option.color), color: '#fff' }" />
                 </template>
               </Dropdown>
               <Button icon="pi pi-plus" @click="addCategory" :disabled="!newCategory.trim() || !newCategoryIcon" />
@@ -120,7 +120,7 @@
             <div class="color-preview" v-if="newCategoryIcon">
               <span>ตัวอย่าง:</span>
               <Badge :value="newCategory || 'หมวดหมู่ใหม่'" 
-                     :style="{ backgroundColor: newCategoryIcon.color, color: '#fff' }" />
+                     :style="{ backgroundColor: $accessibleBg(newCategoryIcon.color), color: '#fff' }" />
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@
             <div v-for="(category, index) in categories" :key="category.value" 
                  class="category-item">
               <div class="category-info">
-                <Badge :value="category.label" :style="{ backgroundColor: category.color || '#6c757d', color: '#fff' }" />
+                <Badge :value="category.label" :style="{ backgroundColor: $accessibleBg(category.color || '#6c757d'), color: '#fff' }" />
               </div>
               <div class="item-actions">
                 <Button icon="pi pi-pencil" class="p-button-text p-button-sm" 
@@ -169,14 +169,14 @@
                 <template #value="slotProps">
                   <div v-if="slotProps.value" class="icon-display">
                     <Badge :value="slotProps.value.label" 
-                           :style="{ backgroundColor: slotProps.value.color, color: '#fff' }" />
+                           :style="{ backgroundColor: $accessibleBg(slotProps.value.color), color: '#fff' }" />
                   </div>
                   <span v-else>เลือกสีและไอคอน</span>
                 </template>
                 <template #option="slotProps">
                   <div class="icon-option">
                     <Badge :value="slotProps.option.label" 
-                           :style="{ backgroundColor: slotProps.option.color, color: '#fff' }" />
+                           :style="{ backgroundColor: $accessibleBg(slotProps.option.color), color: '#fff' }" />
                   </div>
                 </template>
               </Dropdown>
@@ -185,7 +185,7 @@
             <div class="color-preview" v-if="newStatusIcon">
               <span>ตัวอย่าง:</span>
               <Badge :value="newStatus || 'สถานะใหม่'" 
-                     :style="{ backgroundColor: newStatusIcon.color, color: '#fff' }" />
+                     :style="{ backgroundColor: $accessibleBg(newStatusIcon.color), color: '#fff' }" />
             </div>
           </div>
         </div>
@@ -196,7 +196,7 @@
             <div v-for="(status, index) in workStatuses" :key="status.value" 
                  class="status-item">
               <div class="status-info">
-                <Badge :value="status.label" :style="{ backgroundColor: status.color || '#6c757d', color: '#fff' }" />
+                <Badge :value="status.label" :style="{ backgroundColor: $accessibleBg(status.color || '#6c757d'), color: '#fff' }" />
               </div>
               <div class="item-actions">
                 <Button icon="pi pi-pencil" class="p-button-text p-button-sm" 
@@ -252,7 +252,7 @@
         <div class="edit-preview" v-if="editingCategoryName">
           <label class="edit-label">ตัวอย่าง</label>
           <Badge :value="getIconFromLabel(editingCategoryColor?.label) + ' ' + editingCategoryName" 
-                 :style="{ backgroundColor: editingCategoryColor?.color || '#6c757d', color: '#fff' }" />
+                 :style="{ backgroundColor: $accessibleBg(editingCategoryColor?.color || '#6c757d'), color: '#fff' }" />
         </div>
       </div>
       <template #footer>
@@ -295,7 +295,7 @@
         <div class="edit-preview" v-if="editingStatusName">
           <label class="edit-label">ตัวอย่าง</label>
           <Badge :value="getIconFromLabel(editingStatusColor?.label) + ' ' + editingStatusName" 
-                 :style="{ backgroundColor: editingStatusColor?.color || '#6c757d', color: '#fff' }" />
+                 :style="{ backgroundColor: $accessibleBg(editingStatusColor?.color || '#6c757d'), color: '#fff' }" />
         </div>
       </div>
       <template #footer>
@@ -312,9 +312,12 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import axios from '@/utils/axiosConfig'
+import { usePermissions } from '@/composables/usePermissions'
 
 const toast = useToast()
 const http = axios
+// การ์ดไป "รายการงาน" / "งานรายวัน" แสดงเฉพาะ role ที่ถูกติ๊กสิทธิ์หน้านั้นที่หน้า "จัดการสิทธิ์" (admin/superadmin ผ่านเสมอ)
+const { hasAccess } = usePermissions()
 
 // Data
 const showCategoriesDialog = ref(false)
@@ -730,7 +733,7 @@ onMounted(() => {
 }
 
 .task-count {
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   padding: 0.75rem 1.25rem;
   background: rgba(255, 255, 255, 0.2);
   color: white;
@@ -773,7 +776,7 @@ onMounted(() => {
 
 .action-icon {
   font-size: 2rem;
-  color: #4A90E2;
+  color: #2f66b3;
   transition: color 0.3s ease;
 }
 
@@ -790,7 +793,7 @@ onMounted(() => {
 
 .action-content p {
   margin: 0 0 1rem 0;
-  color: #6c757d;
+  color: #525f70;
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -804,12 +807,12 @@ onMounted(() => {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #4A90E2;
+  color: #2f66b3;
 }
 
 .stat-label {
-  font-size: 0.875rem;
-  color: #6c757d;
+  font-size: max(0.875rem, var(--min-fs));
+  color: #525f70;
 }
 
 /* Dialog Styles */
@@ -892,7 +895,7 @@ onMounted(() => {
 
 .category-info i,
 .status-info i {
-  color: #4A90E2;
+  color: #2f66b3;
 }
 
 .color-preview {

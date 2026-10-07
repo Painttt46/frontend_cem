@@ -1,6 +1,6 @@
 <!-- App.vue -->
 <template>
-  <div id="app" style="height: 100vh; overflow: hidden;">
+  <div id="app" style="height: 100vh; height: 100dvh; overflow: hidden;">
     <!-- แถบโหลดบางด้านบน: คำขออ่านข้อมูลทั่วไป ไม่บังหน้าจอ -->
     <div v-if="$store.state.loading" class="top-loader" role="progressbar" aria-label="กำลังโหลด" aria-busy="true">
       <div class="top-loader-bar"></div>
@@ -159,6 +159,8 @@ export default {
   --status-closed-red: #A90F0A;
   --table-font-size: 1rem;
   --default-font-size: 0.85rem;
+  /* พื้นขนาดตัวอักษร: ทุก font-size ที่เล็กกว่านี้ถูกยกขึ้นด้วย max(<เดิม>, var(--min-fs)) — ตัวหนังสือไทยเล็กกว่า ~11-12px อ่านไม่ออก */
+  --min-fs: 11px;
   font-size: var(--default-font-size);
 }
 
@@ -167,13 +169,14 @@ export default {
 @media (max-width: 768px) {
   :root {
     --default-font-size: 0.95rem;
+    --min-fs: 12px;
   }
 }
 
 label {
   margin-bottom: 2px;
   color: var(--label-color);
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 * {

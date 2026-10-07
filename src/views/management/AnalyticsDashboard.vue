@@ -45,7 +45,7 @@
               <Card class="stat-card">
                 <template #content>
                   <div class="stat-content">
-                    <i class="pi pi-clock" style="color: #4A90E2"></i>
+                    <i class="pi pi-clock" style="color: #2f66b3"></i>
                     <div>
                       <h3><CountUp :value="workloadStats.totalHours" /></h3>
                       <p>ชั่วโมงทำงานรวม</p>
@@ -56,7 +56,7 @@
               <Card class="stat-card">
                 <template #content>
                   <div class="stat-content">
-                    <i class="pi pi-users" style="color: #10b981"></i>
+                    <i class="pi pi-users" style="color: #047857"></i>
                     <div>
                       <h3><CountUp :value="workloadStats.activeUsers" /></h3>
                       <p>พนักงานที่บันทึกงาน</p>
@@ -67,7 +67,7 @@
               <Card class="stat-card">
                 <template #content>
                   <div class="stat-content">
-                    <i class="pi pi-chart-bar" style="color: #f59e0b"></i>
+                    <i class="pi pi-chart-bar" style="color: #b45309"></i>
                     <div>
                       <h3><CountUp :value="workloadStats.avgHours" /></h3>
                       <p>เฉลี่ยต่อคน/เดือน</p>
@@ -78,7 +78,7 @@
               <Card class="stat-card">
                 <template #content>
                   <div class="stat-content">
-                    <i class="pi pi-calendar" style="color: #8b5cf6"></i>
+                    <i class="pi pi-calendar" style="color: #7c3aed"></i>
                     <div>
                       <h3><CountUp :value="workloadStats.workDays" /></h3>
                       <p>วันทำงานรวม</p>
@@ -155,8 +155,8 @@
                 <Column field="employee_name" header="พนักงาน" sortable />
                 <Column field="leave_type" header="ประเภท" sortable>
                   <template #body="{ data }">
-                    <span class="leave-badge" :style="{ background: (leaveTypeColors[data.leave_type] || '#6c757d') + '20', color: leaveTypeColors[data.leave_type] || '#6c757d' }">
-                      {{ data.leave_type }}
+                    <span class="leave-badge" :style="{ background: (leaveTypeColors[data.leave_type] || '#6c757d') + '20', color: $accessibleText(leaveTypeColors[data.leave_type] || '#6c757d') }">
+                      {{ leaveTypeLabels[data.leave_type] || data.leave_type }}
                     </span>
                   </template>
                 </Column>
@@ -194,7 +194,7 @@
                 <div class="leave-type-legend">
                   <div v-for="(data, type) in leaveByType" :key="type" class="legend-item" @click="filterLeaveByType(type)" style="cursor: pointer;">
                     <span class="legend-color" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }"></span>
-                    <span class="legend-label">{{ type }}</span>
+                    <span class="legend-label">{{ leaveTypeLabels[type] || type }}</span>
                     <span class="legend-value">{{ data.days }} วัน ({{ data.count }} ครั้ง)</span>
                   </div>
                 </div>
@@ -243,6 +243,8 @@ const dailyWork = ref([])
 const leaves = ref([])
 const tasks = ref([])
 const leaveTypeColors = ref({})
+// รหัสประเภทลา (sick, vacation, …) → ชื่อที่ตั้งไว้ในระบบ
+const leaveTypeLabels = ref({})
 
 // Tooltip
 
@@ -453,7 +455,7 @@ const loadData = async () => {
     departmentOptions.value = depts.map(d => ({ label: d, value: d }))
 
     // Leave type colors
-    leaveTypesRes.data.forEach(t => { leaveTypeColors.value[t.value] = t.color })
+    leaveTypesRes.data.forEach(t => { leaveTypeColors.value[t.value] = t.color; leaveTypeLabels.value[t.value] = t.label })
 
     await nextTick()
     renderCharts()
@@ -571,7 +573,7 @@ const renderLeaveTypeChart = () => {
   charts.leaveType = new Chart(leaveTypeChart.value, {
     type: 'pie',
     data: {
-      labels: types,
+      labels: types.map(t => leaveTypeLabels.value[t] || t),
       datasets: [{ data, backgroundColor: colors }]
     },
     options: {
@@ -667,7 +669,7 @@ onMounted(loadData)
 .stat-card .stat-content { display: flex; align-items: center; gap: 1rem; padding: 0.5rem; }
 .stat-content i { font-size: 2.5rem; opacity: 0.9; }
 .stat-content h3 { margin: 0; font-size: 1.75rem; font-weight: 700; color: #1a1a2e; }
-.stat-content p { margin: 0.25rem 0 0; color: #6c757d; font-size: 0.875rem; }
+.stat-content p { margin: 0.25rem 0 0; color: #525f70; font-size: max(0.875rem, var(--min-fs)); }
 
 /* Charts */
 .chart-section h3 { color: #1a1a2e; font-weight: 600; margin-bottom: 1rem; }
@@ -683,22 +685,22 @@ onMounted(loadData)
 .legend-item:last-child { border-bottom: none; }
 .legend-color { width: 18px; height: 18px; border-radius: 4px; flex-shrink: 0; }
 .legend-label { flex: 1; font-weight: 500; color: #333; }
-.legend-value { color: #6c757d; font-size: 0.8rem; }
+.legend-value { color: #525f70; font-size: max(0.8rem, var(--min-fs)); }
 
 /* Leave Detail */
 .leave-detail-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .leave-detail-header h3 { margin: 0; display: flex; align-items: center; gap: 0.5rem; }
-.leave-badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500; }
-.leave-detail-table { font-size: 0.875rem; }
+.leave-badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: max(0.8rem, var(--min-fs)); font-weight: 500; }
+.leave-detail-table { font-size: max(0.875rem, var(--min-fs)); }
 
 /* Gantt */
 
 
 
 .task-info { display: flex; flex-direction: column; gap: 0.125rem; overflow: hidden; }
-.task-name { font-size: 0.875rem; font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-.task-name:hover { color: #4A90E2; text-decoration: underline; }
-.task-dates { font-size: 0.7rem; color: #6c757d; }
+.task-name { font-size: max(0.875rem, var(--min-fs)); font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.task-name:hover { color: #2f66b3; text-decoration: underline; }
+.task-dates { font-size: max(0.7rem, var(--min-fs)); color: #525f70; }
 
 .gantt-bar {
   position: absolute; height: 28px; border-radius: 6px; 
@@ -727,12 +729,12 @@ onMounted(loadData)
   background: none;
   border: none;
   cursor: pointer;
-  color: #6c757d;
+  color: #525f70;
   padding: 0.25rem;
   border-radius: 4px;
 }
 
-.no-data { padding: 3rem; text-align: center; color: #6c757d; }
+.no-data { padding: 3rem; text-align: center; color: #525f70; }
 .no-data i { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.5; }
 .no-data p { margin: 0; font-size: 1rem; }
 

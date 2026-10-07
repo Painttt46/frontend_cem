@@ -2,7 +2,7 @@
   <Card class="history-card">
     <template #content>
       <div v-if="groupedRecordsWithDuration.length === 0" class="empty-state">
-        <i class="pi pi-car" style="font-size: 4rem; color: #ccc;"></i>
+        <i class="pi pi-car" style="font-size: 4rem; color: #55657a;"></i>
         <p>ยังไม่มีข้อมูลการใช้รถ</p>
       </div>
 
@@ -401,24 +401,24 @@ export default {
 .colleague-name {
   font-weight: 600;
   color: #495057;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   margin-bottom: 0.125rem;
 }
 
 .colleague-info {
-  color: #6c757d;
-  font-size: 0.65rem;
+  color: #525f70;
+  font-size: max(0.65rem, var(--min-fs));
   line-height: 1.2;
 }
 
 .no-colleagues {
-  color: #a0aec0;
-  font-size: 0.75rem;
+  color: #55657a;
+  font-size: max(0.75rem, var(--min-fs));
   text-align: center;
 }
 
 .no-colleagues i {
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   margin-right: 0.25rem;
 }
 
@@ -455,7 +455,7 @@ export default {
 .colleague-avatar {
   width: 50px;
   height: 50px;
-  background: #3a7bd0;
+  background: #3369ac;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -482,13 +482,13 @@ export default {
 }
 
 .position {
-  color: #6c757d;
+  color: #525f70;
   font-size: 0.95rem;
   font-weight: 500;
 }
 
 .department {
-  color: #868e96;
+  color: #55657a;
   font-size: 0.9rem;
 }
 </style>
@@ -522,7 +522,7 @@ export default {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6c757d;
+  color: #525f70;
   background: #f8f9fa;
   border-radius: 8px;
   margin: 1rem;
@@ -545,10 +545,7 @@ export default {
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
-  background: #f8f9fa;
-  color: #495057;
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
   padding: 1rem 0.75rem;
   font-size: 0.9rem;
 }
@@ -558,16 +555,6 @@ export default {
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
   text-align: center;
-}
-
-.history-table :deep(.p-datatable-tbody > tr:hover) {
-  background: #f8f9fa;
-}
-
-.history-table :deep(.p-paginator) {
-  background: #f8f9fa;
-  border-top: 2px solid #e9ecef;
-  padding: 1rem;
 }
 
 .history-table :deep(.p-badge) {
@@ -584,7 +571,7 @@ export default {
 
 .view-icon {
   font-size: 1.2rem;
-  color: #3a7bd0;
+  color: #2f66b3;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -605,12 +592,12 @@ export default {
 @media (max-width: 768px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
   
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
   
   .history-table :deep(.hide-mobile) {
@@ -618,11 +605,11 @@ export default {
   }
   
   .clickable-name {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
   
   .ticket-id {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     padding: 0.2rem 0.4rem;
   }
 }
@@ -641,7 +628,7 @@ export default {
 }
 
 .no-description {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
 }
 
@@ -656,7 +643,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.66rem;
+  font-size: max(0.66rem, var(--min-fs));
   font-weight: 700;
   color: #6d28d9;
   background: #f5f3ff;
@@ -667,12 +654,12 @@ export default {
 }
 
 .auto-return-badge i {
-  font-size: 0.6rem;
+  font-size: max(0.6rem, var(--min-fs));
 }
 
 .clickable-name {
   cursor: pointer;
-  color: #3a7bd0;
+  color: #2f66b3;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -695,11 +682,11 @@ export default {
 }
 
 .so-badge {
-  background: #0ea5e9;
+  background: #0b7db1;
   color: #fff;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
   display: block;
   width: fit-content;
@@ -707,11 +694,11 @@ export default {
 }
 
 .customer-badge {
-  background: #f59e0b;
+  background: #a46a07;
   color: #fff;
   padding: 0.15rem 0.4rem;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
   display: block;
   width: fit-content;

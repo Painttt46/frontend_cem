@@ -14,7 +14,7 @@
   <Dialog v-model:visible="sessionDialog" header="Session หมดอายุ!" modal :closable="false" :closeOnEscape="false">
     <div class="flex align-items-center gap-2">
       <i class="pi pi-info-circle text-primary text-xl" />
-      <span>session หมดอายุ! กรุณาทําการล็อกอินใหม่อีกครั้ง</span>
+      <span>session หมดอายุ! กรุณาทำการล็อกอินใหม่อีกครั้ง</span>
     </div>
     <template #footer>
       <Button label="OK" class="p-button-danger" @click="locationLogout" />
@@ -22,7 +22,7 @@
   </Dialog>
   <!-- Dialog Session หมดอายุ -->
 
-  <div class="flex flex-column card layout-shell" :class="{ 'sidebar-hidden': !sidebarVisible, 'rail-mode': railMode }" style="height: 100vh; width: 100%; overflow: hidden;">
+  <div class="flex flex-column card layout-shell" :class="{ 'sidebar-hidden': !sidebarVisible, 'rail-mode': railMode }" style="height: 100vh; height: 100dvh; width: 100%; overflow: hidden;">
     <div class="row layout-row" style="height: 100%; overflow: hidden;">
       <!-- Toggle Button - แสดงด้านซ้ายเสมอ -->
       <Button @click="toggleSidebar" class="sidebar-toggle-btn"
@@ -79,9 +79,9 @@
               </router-link>
             </li>
             <li class="nav-item ml-2 mt-2" v-if="hasAccess('/car_booking')">
-              <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="เเจ้งใช้รถ">
+              <router-link to="/car_booking" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="แจ้งใช้รถ">
                 <h5 class="mt-2">
-                  <i class="pi pi-car px-2" style="font-size: 1.5rem"></i>เเจ้งใช้รถ
+                  <i class="pi pi-car px-2" style="font-size: 1.5rem"></i>แจ้งใช้รถ
                 </h5>
               </router-link>
             </li>
@@ -147,21 +147,24 @@
       <div :class="[mainContentClass, 'main-column']" style="height: 100%; padding: 0; overflow: hidden;">
         <div class="pt-1 pb-3 container-fluid h-100 content-padding">
           <div class="main-content-wrapper">
+            <!-- ความสูง = กรอบเนื้อหาพอดี (เดิม calc(100vh) สูงกว่ากรอบ: ล้นลงล่าง 15–20px และบนมือถือ 100vh รวมพื้นที่ใต้แถบเบราว์เซอร์ ทำให้ท้ายหน้าถูกบัง) -->
             <ScrollPanel style="
                 width: 100%;
-                height: calc(100vh);
+                height: 100%;
                 padding-right: 0;
                 padding-bottom: 0.5rem;
               ">
               <RouterView />
             </ScrollPanel>
-            <!-- ฉากโหลดตอนเข้าหน้า: บังเนื้อหาจนข้อมูลมาครบ (กันเห็นหน้าว่าง/สถานะ "ไม่มีข้อมูล" แวบก่อนข้อมูลมา) -->
-            <div class="page-loading" :class="{ 'page-loading--done': !pageLoading }" role="status" aria-live="polite"
-              :aria-busy="pageLoading" :aria-hidden="!pageLoading">
-              <div class="page-loading-spinner" aria-hidden="true"></div>
-              <div class="page-loading-text">กำลังโหลดข้อมูล…</div>
-            </div>
           </div>
+        </div>
+        <!-- ฉากโหลดตอนเข้าหน้า: บังเนื้อหาจนข้อมูลมาครบ (กันเห็นหน้าว่าง/สถานะ "ไม่มีข้อมูล" แวบก่อนข้อมูลมา)
+             วางไว้ใน .main-column (ไม่ใช่ใน .main-content-wrapper) เพื่อคลุมเต็มพื้นที่จนถึงขอบล่างสุด — เดิมกรอบ wrapper เหลื่อมจากขอบล่าง
+             (padding ของ container) ~15px ทำให้เห็นเนื้อหาโผล่ที่ขอบล่างทั้งที่ยังหมุนโหลดอยู่ -->
+        <div class="page-loading" :class="{ 'page-loading--done': !pageLoading }" role="status" aria-live="polite"
+          :aria-busy="pageLoading" :aria-hidden="!pageLoading">
+          <div class="page-loading-spinner" aria-hidden="true"></div>
+          <div class="page-loading-text">กำลังโหลดข้อมูล…</div>
         </div>
       </div>
     </div>
@@ -197,6 +200,8 @@ const { loadPermissions, hasAccess } = usePermissions();
 const { pageLoading, beginPageLoading } = usePageLoading();
 const route = useRoute();
 watch(() => route.path, beginPageLoading);
+// มือถือ: เปลี่ยนหน้าแล้วปิดเมนูเต็มจอเสมอ (เดิมปิดเฉพาะตอนกดลิงก์ในเมนู — เปลี่ยนหน้าด้วยวิธีอื่น เช่น ค้นหา Ctrl+K / ปุ่มในหน้า / แถบล่าง เมนูค้างบังหน้าใหม่)
+watch(() => route.fullPath, () => { if (window.innerWidth <= 768) sidebarVisible.value = false; });
 
 const position = ref("center");
 const visible = ref(false);
@@ -236,7 +241,11 @@ const closeSidebarOnMobile = () => {
 };
 
 const updateIsMobile = () => {
+  const wasMobile = isMobile.value;
   isMobile.value = window.innerWidth <= 768;
+  // เปลี่ยนโหมด (หมุนมือถือแนวนอน↔แนวตั้ง, ย่อ/ขยายหน้าต่าง): มือถือเริ่มด้วยเมนูปิด เดสก์ท็อปเริ่มด้วยแถบเมนูเปิด
+  // เดิมค่า sidebarVisible ค้างจากโหมดก่อน → หมุนจอกลับเป็นแนวตั้งแล้วเมนูเต็มจอเปิดค้างบังเนื้อหาทั้งหน้า (หรือกลับเป็นเดสก์ท็อปแล้วไม่มีแถบเมนู)
+  if (wasMobile !== isMobile.value) sidebarVisible.value = !isMobile.value;
 };
 
 const mainContentClass = computed(() => {
@@ -268,25 +277,33 @@ const currentDateTime = computed(() => {
 const userFullName = computed(() => [soc_firstname.value, soc_lastname.value].filter(v => v && v !== "No data").join(" ") || "ผู้ใช้งาน");
 const userInitial = computed(() => (userFullName.value.charAt(0) || "?").toUpperCase());
 
-// เมนูล่างบนมือถือ: เฉพาะที่ผู้ใช้มีสิทธิ์ (สูงสุด 4 รายการ + ปุ่ม "เมนู")
+// เมนูล่างบนมือถือ: เอา 4 รายการแรกที่ผู้ใช้มีสิทธิ์ (+ ปุ่ม "เมนู" เปิดรายการทั้งหมด)
+// เดิมมีแค่ 4 หน้าตายตัว → role ที่ไม่มีสิทธิ์หน้าพวกนี้ (เช่นฝ่ายขายที่เข้าได้แค่ "เข้าพบลูกค้า"/"จัดซื้อ") แถบล่างว่างเหลือแต่ปุ่ม "เมนู"
 const MOBILE_NAV = [
   { to: "/daily_work", label: "งานรายวัน", icon: "pi pi-calendar" },
   { to: "/car_booking", label: "จองรถ", icon: "pi pi-car" },
   { to: "/leave_work", label: "ลางาน", icon: "pi pi-sign-out" },
   { to: "/projects", label: "โครงการ", icon: "pi pi-briefcase" },
+  { to: "/project-progress", label: "ขั้นตอน", icon: "pi pi-chart-line" },
+  { to: "/procurement", label: "จัดซื้อ", icon: "pi pi-shopping-cart" },
+  { to: "/sales-activity", label: "Sale", icon: "pi pi-briefcase" },
+  { to: "/management", label: "จัดการ", icon: "pi pi-cog" },
 ];
 const mobileNav = computed(() => MOBILE_NAV.filter(item => hasAccess(item.to)).slice(0, 4));
 
 const resetTimer = () => {
   timeout.value = 300; // รีเซ็ตเวลาเป็น 5 นาที
 };
+// การใช้งานที่นับว่า "ยังอยู่": เดิมนับแค่ mousemove/keydown → บนมือถือ/แท็บเล็ต (ใช้นิ้วเลื่อน/แตะ ไม่มีเมาส์) ผู้ใช้ที่กำลังอ่านหรือเลื่อนหน้าอยู่
+// ถูกเด้ง "session หมดอายุ" ทุก 5 นาที — scroll ไม่ bubble จึงต้องฟังแบบ capture
+const ACTIVITY_EVENTS = ["mousemove", "keydown", "pointerdown", "touchstart", "wheel", "scroll"];
+const ACTIVITY_OPTIONS = { capture: true, passive: true };
 
 onMounted(() => {
   beginPageLoading();
   loadPermissions();
   startCountdown();
-  window.addEventListener("mousemove", resetTimer);
-  window.addEventListener("keydown", resetTimer);
+  ACTIVITY_EVENTS.forEach((e) => window.addEventListener(e, resetTimer, ACTIVITY_OPTIONS));
   window.addEventListener("resize", updateIsMobile);
   
   soc_user_id.value = localStorage.getItem("soc_user_id");
@@ -306,8 +323,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearInterval(countdownTimer);
-  window.removeEventListener("mousemove", resetTimer);
-  window.removeEventListener("keydown", resetTimer);
+  ACTIVITY_EVENTS.forEach((e) => window.removeEventListener(e, resetTimer, ACTIVITY_OPTIONS));
   window.removeEventListener("resize", updateIsMobile);
 });
 
@@ -437,7 +453,7 @@ const startCountdown = () => {
   }
 
   .sidebar-toggle-btn :deep(.p-button-icon) {
-    font-size: 0.78rem;
+    font-size: max(0.78rem, var(--min-fs));
   }
 }
 
@@ -524,10 +540,22 @@ const startCountdown = () => {
   box-shadow: none;
 }
 
+/* กรอบเมนูทั้งแถบเลื่อนได้ และรายการเมนูแสดงเต็ม (ไม่เลื่อนซ้อนในกรอบเล็ก)
+ * เดิม .sidebar-container สูงตายตัว 100% + .nav-menu เลื่อนเองข้างใน → จอเตี้ย (มือถือ ~560px / หน้าต่างย่อ) รายการเมนูเหลือโผล่แค่ 2 แถว
+ * ที่เหลือถูกการ์ดผู้ใช้/ปุ่ม Setting กินที่ และเมนูที่เหลือต้องเลื่อนในกรอบเล็กที่หาไม่เจอ */
+.sidebar-column {
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
 .sidebar-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: auto !important;
+  min-height: 100%;
+}
+.main-column {
+  position: relative; /* เป็นกรอบให้ฉากโหลด .page-loading ครอบเต็มพื้นที่เนื้อหา */
 }
 
 .logo-section {
@@ -546,7 +574,7 @@ const startCountdown = () => {
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
   font-weight: 500;
   white-space: nowrap;
   background: var(--brand-blue-soft);
@@ -562,8 +590,8 @@ const startCountdown = () => {
 }
 
 .nav-menu {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1 0 auto;
+  overflow: visible;
   list-style: none;
   margin: 0;
   padding: 0 0.15rem;
@@ -644,7 +672,7 @@ h4 {
   background: #fafcff;
   color: var(--muted);
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   cursor: pointer;
   transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
 }
@@ -666,7 +694,7 @@ h4 {
 
 .palette-trigger kbd {
   font-family: inherit;
-  font-size: 0.66rem;
+  font-size: max(0.66rem, var(--min-fs));
   font-weight: 600;
   color: var(--muted);
   background: #fff;
@@ -784,7 +812,7 @@ h4 {
 }
 
 .user-meta b {
-  font-size: 0.88rem;
+  font-size: max(0.88rem, var(--min-fs));
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -792,7 +820,7 @@ h4 {
 }
 
 .user-meta small {
-  font-size: 0.74rem;
+  font-size: max(0.74rem, var(--min-fs));
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -834,7 +862,7 @@ h4 {
   background: transparent;
   color: var(--muted) !important;
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 500;
   cursor: pointer;
   transition: color 0.18s ease, background-color 0.18s ease;

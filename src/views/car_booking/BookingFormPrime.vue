@@ -1651,9 +1651,9 @@ export default {
 
 .colleague-info {
 
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
 
-  color: #6c757d;
+  color: #525f70;
 
 }
 
@@ -1663,9 +1663,9 @@ export default {
 
 .colleague-department {
 
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 
-  color: #6c757d;
+  color: #525f70;
 
   display: flex;
 
@@ -1683,7 +1683,7 @@ export default {
 
 .colleague-department i {
 
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 
 }
 
@@ -1703,7 +1703,7 @@ export default {
 
   padding: 2rem;
 
-  color: #6c757d;
+  color: #525f70;
 
   font-style: italic;
 
@@ -1743,9 +1743,9 @@ export default {
 
 .user-role {
 
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 
-  color: #6c757d;
+  color: #525f70;
 
 }
 
@@ -1787,9 +1787,9 @@ export default {
 
   margin-top: 0.3rem;
 
-  font-size: 0.72rem;
+  font-size: max(0.72rem, var(--min-fs));
 
-  color: #64748b;
+  color: #526074;
 
 }
 
@@ -1817,7 +1817,7 @@ export default {
 
   font-weight: 800;
 
-  font-size: 0.72rem;
+  font-size: max(0.72rem, var(--min-fs));
 
   color: #4f46e5;
 
@@ -1837,11 +1837,11 @@ export default {
 
 .return-option-top { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 
-.return-option-name { font-weight: 600; color: #1e293b; font-size: 0.84rem; }
+.return-option-name { font-weight: 600; color: #1e293b; font-size: max(0.84rem, var(--min-fs)); }
 
 .return-option-project {
 
-  font-size: 0.66rem;
+  font-size: max(0.66rem, var(--min-fs));
 
   font-weight: 700;
 
@@ -1877,17 +1877,17 @@ export default {
 
   margin-top: 0.2rem;
 
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
 
-  color: #64748b;
+  color: #526074;
 
 }
 
-.return-option-meta i { font-size: 0.62rem; color: #94a3b8; }
+.return-option-meta i { font-size: max(0.62rem, var(--min-fs)); color: #55657a; }
 
-.return-option-when { font-size: 0.74rem; color: #64748b; white-space: nowrap; margin-left: auto; }
+.return-option-when { font-size: max(0.74rem, var(--min-fs)); color: #526074; white-space: nowrap; margin-left: auto; }
 
-.return-placeholder { color: #94a3b8; }
+.return-placeholder { color: #55657a; }
 
 .return-summary {
 
@@ -1909,7 +1909,7 @@ export default {
 
   padding: 0.5rem 0.75rem;
 
-  font-size: 0.76rem;
+  font-size: max(0.76rem, var(--min-fs));
 
   color: #475569;
 
@@ -1917,7 +1917,7 @@ export default {
 
 .rs-item { display: inline-flex; align-items: center; gap: 0.3rem; }
 
-.rs-item i { font-size: 0.68rem; color: #94a3b8; }
+.rs-item i { font-size: max(0.68rem, var(--min-fs)); color: #55657a; }
 
 /* ฟอร์มยกเลิก: summary + hint โทนแดง/ส้มเตือน */
 .cancel-summary {
@@ -1934,7 +1934,7 @@ export default {
   color: #b45309;
   font-weight: 600;
 }
-.cancel-hint i { color: #f59e0b; }
+.cancel-hint i { color: #b45309; }
 
 
 
@@ -1948,7 +1948,7 @@ export default {
 
 .corporate-dialog :deep(.p-dialog-header) {
 
-  background-color: #4A90E2;
+  background-color: #3d78bc;
 
   color: white;
 
@@ -2050,7 +2050,7 @@ export default {
 
   background: #f8f9fa;
 
-  color: #6c757d;
+  color: #525f70;
 
 }
 
@@ -2146,7 +2146,7 @@ export default {
 
   height: 20px;
 
-  background: #ef4444;
+  background: #d73d3d;
 
   border-radius: 50%;
 
@@ -2160,7 +2160,7 @@ export default {
 
   color: white;
 
-  font-size: 10px;
+  font-size: max(10px, var(--min-fs));
 
 }
 
@@ -2204,7 +2204,7 @@ export default {
 
 .confirm-dialog :deep(.p-dialog-header) {
 
-  background-color: #4A90E2;
+  background-color: #3d78bc;
 
   color: white;
 
@@ -2238,7 +2238,7 @@ export default {
 
   font-size: 3rem;
 
-  color: #3a7bd0;
+  color: #2f66b3;
 
 }
 
@@ -2366,7 +2366,7 @@ export default {
 
   flex-shrink: 0;
 
-  background-color: #3a7bd0;
+  background-color: #3369ac;
 
   color: white;
 
@@ -2374,7 +2374,7 @@ export default {
 
   border-radius: 4px;
 
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 
   font-weight: 600;
 
@@ -2431,7 +2431,7 @@ export default {
 
   justify-content: center;
 
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
 
   flex-shrink: 0;
 
@@ -2445,9 +2445,9 @@ export default {
 
   gap: 0.25rem;
 
-  font-size: 0.68rem;
+  font-size: max(0.68rem, var(--min-fs));
 
-  color: #64748b;
+  color: #526074;
 
   margin-top: 0.15rem;
 
@@ -2461,7 +2461,7 @@ export default {
 
 }
 
-.proj-sub i { font-size: 0.6rem; color: #94a3b8; flex-shrink: 0; }
+.proj-sub i { font-size: max(0.6rem, var(--min-fs)); color: #55657a; flex-shrink: 0; }
 
 .proj-meta {
 
@@ -2475,9 +2475,9 @@ export default {
 
   margin-top: 0.2rem;
 
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
 
-  color: #64748b;
+  color: #526074;
 
 }
 
@@ -2499,7 +2499,7 @@ export default {
 
 }
 
-.proj-meta-item i { font-size: 0.6rem; color: #94a3b8; flex-shrink: 0; }
+.proj-meta-item i { font-size: max(0.6rem, var(--min-fs)); color: #55657a; flex-shrink: 0; }
 
 /* Responsive: dialog แจ้งคืนรถบนมือถือ */
 @media (max-width: 768px) {

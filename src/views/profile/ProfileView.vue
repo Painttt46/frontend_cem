@@ -327,7 +327,7 @@ function changePassword() {
 
 .card-header i {
   font-size: 1.5rem;
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .form-grid {
@@ -350,7 +350,7 @@ function changePassword() {
 }
 
 .required {
-  color: #ef4444;
+  color: #dc2626;
 }
 
 .form-actions {

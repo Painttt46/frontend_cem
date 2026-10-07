@@ -236,7 +236,7 @@ export default {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #4A90E2;
+  background: #3d78bc;
   border: none;
   color: white;
   font-size: 24px;
@@ -252,12 +252,15 @@ export default {
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #e74c3c;
+  background: #c0392b;
   color: white;
   font-size: 12px;
   font-weight: bold;
   min-width: 20px;
   height: 20px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  line-height: 1;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -369,7 +372,7 @@ export default {
   transition: all 0.2s;
 }
 .quick-actions button:hover {
-  background: #4A90E2;
+  background: #3d78bc;
   color: white;
   border-color: #4A90E2;
 }
@@ -387,7 +390,7 @@ export default {
   word-break: break-word;
 }
 .user .bubble {
-  background-color: #4A90E2;
+  background-color: #3d78bc;
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -402,7 +405,7 @@ export default {
   display: inline-block;
   width: 8px;
   height: 8px;
-  background: #4A90E2;
+  background: #3d78bc;
   border-radius: 50%;
   margin: 0 2px;
   animation: bounce 1.4s infinite ease-in-out both;
@@ -434,7 +437,7 @@ export default {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #4A90E2;
+  background: #3d78bc;
   border: none;
   color: white;
   cursor: pointer;

@@ -25,8 +25,8 @@
               class="corporate-input w-full">
               <template #option="{ option }">
                 <div style="line-height:1.4">
-                  <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
-                  <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+                  <div><i class="pi pi-user" style="font-size:max(0.8rem, var(--min-fs));margin-right:4px"></i><b>{{ option.label }}</b></div>
+                  <small v-if="option.position || option.department" style="color:#55657a">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
                 </div>
               </template>
             </Dropdown>
@@ -40,8 +40,8 @@
               class="corporate-input w-full">
               <template #option="{ option }">
                 <div style="line-height:1.4">
-                  <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
-                  <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+                  <div><i class="pi pi-user" style="font-size:max(0.8rem, var(--min-fs));margin-right:4px"></i><b>{{ option.label }}</b></div>
+                  <small v-if="option.position || option.department" style="color:#55657a">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
                 </div>
               </template>
             </Dropdown>
@@ -342,7 +342,7 @@ export default {
   border: 1px solid #e9ecef;
 }
 
-.file-item i { color: #6c757d; font-size: 1rem; }
+.file-item i { color: #525f70; font-size: 1rem; }
 .file-name { flex: 1; font-size: 0.9rem; color: #495057; word-break: break-all; }
 
 @media (max-width: 768px) {

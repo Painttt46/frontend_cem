@@ -23,7 +23,7 @@
 
     <!-- History Dialog -->
     <Dialog v-model:visible="showHistory" header="📋 ประวัติ Sync ERP" :style="{width:'800px'}" modal :draggable="false">
-      <div v-if="syncHistory.length === 0" style="text-align:center;color:#94a3b8;padding:2rem">
+      <div v-if="syncHistory.length === 0" style="text-align:center;color:#55657a;padding:2rem">
         <i class="pi pi-inbox" style="font-size:3rem;margin-bottom:0.5rem"></i>
         <div>ยังไม่มีประวัติการ Sync</div>
       </div>
@@ -35,22 +35,22 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:2px solid #f1f5f9">
             <div>
               <div style="font-weight:700;color:#1e293b;font-size:1rem;display:flex;align-items:center;gap:0.5rem">
-                <i class="pi pi-calendar" style="color:#3a7bd0"></i>
+                <i class="pi pi-calendar" style="color:#2f66b3"></i>
                 {{ h.syncedAt }}
               </div>
-              <div style="font-size:0.8rem;color:#64748b;margin-top:2px">
+              <div style="font-size:max(0.8rem, var(--min-fs));color:#526074;margin-top:2px">
                 Sync ครั้งที่ {{ syncHistory.length - i }}
               </div>
             </div>
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-              <span style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;border-radius:20px;padding:4px 12px;font-size:0.85rem;font-weight:700">
-                <i class="pi pi-plus-circle" style="font-size:0.75rem"></i> {{ h.created }} ใหม่
+              <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
+                <i class="pi pi-plus-circle" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.created }} ใหม่
               </span>
-              <span style="background:#dbeafe;color:#2f66b3;border:1px solid #93c5fd;border-radius:20px;padding:4px 12px;font-size:0.85rem;font-weight:700">
-                <i class="pi pi-refresh" style="font-size:0.75rem"></i> {{ h.updated }} อัปเดต
+              <span style="background:#dbeafe;color:#2f66b3;border:1px solid #93c5fd;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
+                <i class="pi pi-refresh" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.updated }} อัปเดต
               </span>
-              <span style="background:#fef3c7;color:#ca8a04;border:1px solid #fde047;border-radius:20px;padding:4px 12px;font-size:0.85rem;font-weight:700">
-                <i class="pi pi-database" style="font-size:0.75rem"></i> {{ h.total }} ทั้งหมด
+              <span style="background:#fef3c7;color:#ca8a04;border:1px solid #fde047;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
+                <i class="pi pi-database" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.total }} ทั้งหมด
               </span>
             </div>
           </div>
@@ -59,47 +59,47 @@
           <div style="background:#f8fafc;border-radius:8px;padding:0.75rem;margin-bottom:1rem">
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;text-align:center">
               <div>
-                <div style="font-size:0.75rem;color:#64748b;margin-bottom:2px">โครงการก่อน Sync</div>
+                <div style="font-size:max(0.75rem, var(--min-fs));color:#526074;margin-bottom:2px">โครงการก่อน Sync</div>
                 <div style="font-size:1.3rem;font-weight:700;color:#475569">{{ h.total - h.created }}</div>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:#64748b;margin-bottom:2px">เพิ่มใหม่</div>
-                <div style="font-size:1.3rem;font-weight:700;color:#16a34a">+{{ h.created }}</div>
+                <div style="font-size:max(0.75rem, var(--min-fs));color:#526074;margin-bottom:2px">เพิ่มใหม่</div>
+                <div style="font-size:1.3rem;font-weight:700;color:#15803d">+{{ h.created }}</div>
               </div>
               <div>
-                <div style="font-size:0.75rem;color:#64748b;margin-bottom:2px">โครงการหลัง Sync</div>
-                <div style="font-size:1.3rem;font-weight:700;color:#3a7bd0">{{ h.total }}</div>
+                <div style="font-size:max(0.75rem, var(--min-fs));color:#526074;margin-bottom:2px">โครงการหลัง Sync</div>
+                <div style="font-size:1.3rem;font-weight:700;color:#2f66b3">{{ h.total }}</div>
               </div>
             </div>
           </div>
           <!-- Created Projects -->
           <div v-if="h.createdList && h.createdList.length" style="margin-bottom:1rem">
             <div style="background:#dcfce7;border-left:4px solid #16a34a;padding:0.5rem 0.75rem;border-radius:6px;margin-bottom:0.5rem">
-              <div style="font-size:0.85rem;color:#15803d;font-weight:700;display:flex;align-items:center;gap:0.5rem">
+              <div style="font-size:max(0.85rem, var(--min-fs));color:#15803d;font-weight:700;display:flex;align-items:center;gap:0.5rem">
                 <i class="pi pi-plus-circle"></i> 
                 เพิ่มโครงการใหม่ {{ h.createdList.length }} โครงการ
-                <span style="font-size:0.75rem;font-weight:400">(จาก {{ h.total - h.created }} → {{ h.total }} โครงการ)</span>
+                <span style="font-size:max(0.75rem, var(--min-fs));font-weight:400">(จาก {{ h.total - h.created }} → {{ h.total }} โครงการ)</span>
               </div>
             </div>
             <div style="display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;padding:4px">
               <div v-for="item in h.createdList" :key="item.so || item"
                 style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 10px">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:4px">
-                  <span style="background:#16a34a;color:white;border-radius:4px;padding:2px 6px;font-size:0.7rem;font-weight:700">NEW</span>
-                  <span style="font-weight:700;color:#15803d;font-size:0.85rem">
+                  <span style="background:#16a34a;color:white;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:700">NEW</span>
+                  <span style="font-weight:700;color:#15803d;font-size:max(0.85rem, var(--min-fs))">
                     <b>{{ item.so || item }}</b> — {{ item.name && item.name !== item.so ? item.name : '' }}
                   </span>
                 </div>
-                <div v-if="item.sales_person || item.customer" style="display:flex;gap:1rem;font-size:0.75rem;color:#166534;margin-top:4px;padding-left:8px">
-                  <span v-if="item.sales_person"><i class="pi pi-user" style="font-size:0.65rem"></i> {{ item.sales_person }}</span>
-                  <span v-if="item.customer"><i class="pi pi-building" style="font-size:0.65rem"></i> {{ item.customer }}</span>
+                <div v-if="item.sales_person || item.customer" style="display:flex;gap:1rem;font-size:max(0.75rem, var(--min-fs));color:#166534;margin-top:4px;padding-left:8px">
+                  <span v-if="item.sales_person"><i class="pi pi-user" style="font-size:max(0.65rem, var(--min-fs))"></i> {{ item.sales_person }}</span>
+                  <span v-if="item.customer"><i class="pi pi-building" style="font-size:max(0.65rem, var(--min-fs))"></i> {{ item.customer }}</span>
                 </div>
                 <div v-if="item.files?.length" style="margin-top:6px;padding-left:8px">
-                  <div style="color:#166534;font-weight:600;margin-bottom:3px;font-size:0.75rem">
-                    <i class="pi pi-paperclip" style="font-size:0.65rem"></i> ไฟล์แนบ ({{ item.files.length }}):
+                  <div style="color:#166534;font-weight:600;margin-bottom:3px;font-size:max(0.75rem, var(--min-fs))">
+                    <i class="pi pi-paperclip" style="font-size:max(0.65rem, var(--min-fs))"></i> ไฟล์แนบ ({{ item.files.length }}):
                   </div>
                   <div style="display:flex;flex-wrap:wrap;gap:3px;padding-left:12px">
-                    <span v-for="f in item.files" :key="f" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:2px 6px;font-size:0.7rem;font-weight:600">
+                    <span v-for="f in item.files" :key="f" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:600">
                       📎 {{ f }}
                     </span>
                   </div>
@@ -111,7 +111,7 @@
           <!-- Updated Projects -->
           <div v-if="h.updatedList && h.updatedList.length">
             <div style="background:#dbeafe;border-left:4px solid #3a7bd0;padding:0.5rem 0.75rem;border-radius:6px;margin-bottom:0.5rem">
-              <div style="font-size:0.85rem;color:#2a5490;font-weight:700;display:flex;align-items:center;gap:0.5rem">
+              <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490;font-weight:700;display:flex;align-items:center;gap:0.5rem">
                 <i class="pi pi-refresh"></i> 
                 อัปเดตโครงการ {{ h.updatedList.length }} โครงการ
               </div>
@@ -120,43 +120,43 @@
               <div v-for="item in h.updatedList" :key="item.so || item"
                 style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:6px">
-                  <span style="background:#3a7bd0;color:white;border-radius:4px;padding:2px 6px;font-size:0.7rem;font-weight:700">UPDATE</span>
-                  <span style="font-weight:700;color:#2a5490;font-size:0.85rem">
+                  <span style="background:#3369ac;color:white;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:700">UPDATE</span>
+                  <span style="font-weight:700;color:#2a5490;font-size:max(0.85rem, var(--min-fs))">
                     <b>{{ item.so || item }}</b> — {{ item.name }}
                   </span>
                 </div>
                 <div v-if="item.changes" style="margin-top:6px;display:flex;flex-direction:column;gap:5px;padding-left:8px">
                   <template v-for="(label, key) in {task_name:'ชื่อโครงการ',sale_owner:'Sales Owner',customer_info:'ลูกค้า',status:'สถานะ'}" :key="key">
-                    <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:8px;font-size:0.78rem">
+                    <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:8px;font-size:max(0.78rem, var(--min-fs))">
                       <span style="color:#475569;font-weight:600;min-width:80px">{{ label }}:</span>
                       <div style="display:flex;align-items:center;gap:6px">
-                        <span style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;padding:2px 8px;text-decoration:line-through;font-size:0.75rem">
+                        <span style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;padding:2px 8px;text-decoration:line-through;font-size:max(0.75rem, var(--min-fs))">
                           {{ item.changes[key].old || '(ไม่มี)' }}
                         </span>
-                        <i class="pi pi-arrow-right" style="color:#94a3b8;font-size:0.7rem"></i>
-                        <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:2px 8px;font-weight:700;font-size:0.75rem">
+                        <i class="pi pi-arrow-right" style="color:#55657a;font-size:max(0.7rem, var(--min-fs))"></i>
+                        <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:2px 8px;font-weight:700;font-size:max(0.75rem, var(--min-fs))">
                           {{ item.changes[key].new || '(ไม่มี)' }}
                         </span>
                       </div>
                     </div>
                   </template>
-                  <div v-if="item.changes.files" style="font-size:0.78rem;margin-top:4px">
+                  <div v-if="item.changes.files" style="font-size:max(0.78rem, var(--min-fs));margin-top:4px">
                     <div v-if="item.changes.files.added?.length" style="margin-bottom:4px">
                       <div style="color:#475569;font-weight:600;margin-bottom:3px">
-                        <i class="pi pi-plus" style="font-size:0.65rem;color:#16a34a"></i> ไฟล์ที่เพิ่ม ({{ item.changes.files.added.length }}):
+                        <i class="pi pi-plus" style="font-size:max(0.65rem, var(--min-fs));color:#15803d"></i> ไฟล์ที่เพิ่ม ({{ item.changes.files.added.length }}):
                       </div>
                       <div style="display:flex;flex-wrap:wrap;gap:3px;padding-left:12px">
-                        <span v-for="f in item.changes.files.added" :key="f" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:2px 8px;font-weight:600;font-size:0.72rem">
+                        <span v-for="f in item.changes.files.added" :key="f" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:2px 8px;font-weight:600;font-size:max(0.72rem, var(--min-fs))">
                           + {{ f }}
                         </span>
                       </div>
                     </div>
                     <div v-if="item.changes.files.removed?.length">
                       <div style="color:#475569;font-weight:600;margin-bottom:3px">
-                        <i class="pi pi-minus" style="font-size:0.65rem;color:#dc2626"></i> ไฟล์ที่ลบ ({{ item.changes.files.removed.length }}):
+                        <i class="pi pi-minus" style="font-size:max(0.65rem, var(--min-fs));color:#dc2626"></i> ไฟล์ที่ลบ ({{ item.changes.files.removed.length }}):
                       </div>
                       <div style="display:flex;flex-wrap:wrap;gap:3px;padding-left:12px">
-                        <span v-for="f in item.changes.files.removed" :key="f" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;padding:2px 8px;text-decoration:line-through;font-size:0.72rem">
+                        <span v-for="f in item.changes.files.removed" :key="f" style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:4px;padding:2px 8px;text-decoration:line-through;font-size:max(0.72rem, var(--min-fs))">
                           - {{ f }}
                         </span>
                       </div>
@@ -176,7 +176,7 @@
         <!-- Summary -->
         <div style="background:#fffbeb;border:2px solid #fbbf24;border-radius:10px;padding:1rem;margin-bottom:1.5rem">
           <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
-            <i class="pi pi-exclamation-triangle" style="color:#f59e0b;font-size:1.5rem"></i>
+            <i class="pi pi-exclamation-triangle" style="color:#b45309;font-size:1.5rem"></i>
             <div>
               <div style="font-weight:700;color:#92400e;font-size:1.1rem">ยืนยันการ Sync ERP</div>
               <div style="color:#78350f;font-size:0.9rem;margin-top:2px">กรุณาตรวจสอบการเปลี่ยนแปลงก่อนยืนยัน</div>
@@ -184,38 +184,38 @@
           </div>
           <div style="display:flex;gap:1rem;margin-top:1rem">
             <div style="flex:1;text-align:center">
-              <div style="font-size:1.6rem;font-weight:700;color:#16a34a">{{ previewData.created }}</div>
-              <div style="font-size:0.85rem;color:#15803d">โครงการใหม่</div>
+              <div style="font-size:1.6rem;font-weight:700;color:#15803d">{{ previewData.created }}</div>
+              <div style="font-size:max(0.85rem, var(--min-fs));color:#15803d">โครงการใหม่</div>
             </div>
             <div style="flex:1;text-align:center">
               <div style="font-size:1.6rem;font-weight:700;color:#2f66b3">{{ previewData.updated }}</div>
-              <div style="font-size:0.85rem;color:#2a5490">อัปเดต</div>
+              <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490">อัปเดต</div>
             </div>
             <div style="flex:1;text-align:center">
               <div style="font-size:1.6rem;font-weight:700;color:#ca8a04">{{ previewData.total }}</div>
-              <div style="font-size:0.85rem;color:#a16207">ทั้งหมด</div>
+              <div style="font-size:max(0.85rem, var(--min-fs));color:#a16207">ทั้งหมด</div>
             </div>
           </div>
         </div>
         
         <!-- Created List -->
         <div v-if="previewData.createdList.length" style="margin-bottom:1rem">
-          <div style="font-weight:600;color:#16a34a;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
+          <div style="font-weight:600;color:#15803d;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
             <i class="pi pi-plus-circle"></i> โครงการใหม่ ({{ previewData.createdList.length }})
           </div>
           <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
             <div v-for="item in previewData.createdList" :key="item.so"
-              style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;font-size:0.85rem">
+              style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 12px;font-size:max(0.85rem, var(--min-fs))">
               <div style="font-weight:600;color:#15803d;margin-bottom:4px">
-                <i class="pi pi-briefcase" style="font-size:0.75rem;margin-right:4px"></i>
+                <i class="pi pi-briefcase" style="font-size:max(0.75rem, var(--min-fs));margin-right:4px"></i>
                 <b>{{ item.so }}</b> — {{ item.name }}
               </div>
-              <div v-if="item.sales_person || item.customer" style="display:flex;gap:1rem;font-size:0.8rem;color:#166534;margin-top:4px">
-                <span v-if="item.sales_person"><i class="pi pi-user" style="font-size:0.7rem"></i> {{ item.sales_person }}</span>
-                <span v-if="item.customer"><i class="pi pi-building" style="font-size:0.7rem"></i> {{ item.customer }}</span>
+              <div v-if="item.sales_person || item.customer" style="display:flex;gap:1rem;font-size:max(0.8rem, var(--min-fs));color:#166534;margin-top:4px">
+                <span v-if="item.sales_person"><i class="pi pi-user" style="font-size:max(0.7rem, var(--min-fs))"></i> {{ item.sales_person }}</span>
+                <span v-if="item.customer"><i class="pi pi-building" style="font-size:max(0.7rem, var(--min-fs))"></i> {{ item.customer }}</span>
               </div>
               <div v-if="item.files?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">
-                <span v-for="f in item.files" :key="f" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:1px 6px;font-size:0.75rem">📎 {{ f }}</span>
+                <span v-for="f in item.files" :key="f" style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:1px 6px;font-size:max(0.75rem, var(--min-fs))">📎 {{ f }}</span>
               </div>
             </div>
           </div>
@@ -228,26 +228,26 @@
           </div>
           <div style="max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
             <div v-for="item in previewData.updatedList" :key="item.so"
-              style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:0.82rem">
+              style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px 12px;font-size:max(0.82rem, var(--min-fs))">
               <div style="font-weight:600;color:#2a5490;margin-bottom:4px">
                 <b>{{ item.so }}</b> — {{ item.name }}
               </div>
               <div v-if="item.changes" style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
                 <template v-for="(label, key) in {task_name:'ชื่อ',sale_owner:'Sales',customer_info:'ลูกค้า',status:'สถานะ'}" :key="key">
-                  <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:6px;font-size:0.78rem">
-                    <span style="color:#64748b;min-width:50px">{{ label }}:</span>
+                  <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:6px;font-size:max(0.78rem, var(--min-fs))">
+                    <span style="color:#526074;min-width:50px">{{ label }}:</span>
                     <span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 7px;text-decoration:line-through">{{ item.changes[key].old || '-' }}</span>
-                    <i class="pi pi-arrow-right" style="color:#94a3b8;font-size:0.65rem"></i>
+                    <i class="pi pi-arrow-right" style="color:#55657a;font-size:max(0.65rem, var(--min-fs))"></i>
                     <span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">{{ item.changes[key].new || '-' }}</span>
                   </div>
                 </template>
-                <div v-if="item.changes.files" style="font-size:0.78rem;margin-top:2px">
+                <div v-if="item.changes.files" style="font-size:max(0.78rem, var(--min-fs));margin-top:2px">
                   <div v-if="item.changes.files.added?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:2px">
-                    <span style="color:#64748b;min-width:50px">ไฟล์ใหม่:</span>
+                    <span style="color:#526074;min-width:50px">ไฟล์ใหม่:</span>
                     <span v-for="f in item.changes.files.added" :key="f" style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">+ {{ f }}</span>
                   </div>
                   <div v-if="item.changes.files.removed?.length" style="display:flex;flex-wrap:wrap;gap:3px">
-                    <span style="color:#64748b;min-width:50px">ลบออก:</span>
+                    <span style="color:#526074;min-width:50px">ลบออก:</span>
                     <span v-for="f in item.changes.files.removed" :key="f" style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 7px;text-decoration:line-through">- {{ f }}</span>
                   </div>
                 </div>
@@ -258,8 +258,8 @@
         
         <!-- No Changes -->
         <div v-if="!previewData.createdList.length && !previewData.updatedList.length"
-          style="text-align:center;padding:2rem;color:#64748b;background:#f8fafc;border-radius:8px">
-          <i class="pi pi-check-circle" style="font-size:3rem;color:#10b981;margin-bottom:0.5rem"></i>
+          style="text-align:center;padding:2rem;color:#526074;background:#f8fafc;border-radius:8px">
+          <i class="pi pi-check-circle" style="font-size:3rem;color:#047857;margin-bottom:0.5rem"></i>
           <div style="font-weight:600;font-size:1.1rem">ไม่มีการเปลี่ยนแปลง</div>
           <div style="font-size:0.9rem;margin-top:4px">ข้อมูลในระบบตรงกับ ERP แล้ว</div>
         </div>
@@ -276,30 +276,30 @@
         <!-- Summary -->
         <div style="display:flex;gap:1rem;margin-bottom:1.25rem">
           <div style="flex:1;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:1rem;text-align:center">
-            <div style="font-size:1.8rem;font-weight:700;color:#16a34a">{{ syncData.created }}</div>
-            <div style="font-size:0.85rem;color:#15803d;margin-top:2px">โครงการใหม่</div>
+            <div style="font-size:1.8rem;font-weight:700;color:#15803d">{{ syncData.created }}</div>
+            <div style="font-size:max(0.85rem, var(--min-fs));color:#15803d;margin-top:2px">โครงการใหม่</div>
           </div>
           <div style="flex:1;background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:1rem;text-align:center">
             <div style="font-size:1.8rem;font-weight:700;color:#2f66b3">{{ syncData.updated }}</div>
-            <div style="font-size:0.85rem;color:#2a5490;margin-top:2px">อัปเดต</div>
+            <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490;margin-top:2px">อัปเดต</div>
           </div>
           <div style="flex:1;background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:1rem;text-align:center">
             <div style="font-size:1.8rem;font-weight:700;color:#ca8a04">{{ syncData.total }}</div>
-            <div style="font-size:0.85rem;color:#a16207;margin-top:2px">ทั้งหมด</div>
+            <div style="font-size:max(0.85rem, var(--min-fs));color:#a16207;margin-top:2px">ทั้งหมด</div>
           </div>
         </div>
         <!-- Created List -->
         <div v-if="syncData.createdList.length" style="margin-bottom:1rem">
-          <div style="font-weight:600;color:#16a34a;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
+          <div style="font-weight:600;color:#15803d;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
             <i class="pi pi-plus-circle"></i> โครงการใหม่ ({{ syncData.createdList.length }})
           </div>
           <div style="max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
             <div v-for="item in syncData.createdList" :key="item.so">
-              <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:0.8rem">
+              <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:3px 10px;font-size:max(0.8rem, var(--min-fs))">
                 <b>{{ item.so }}</b> {{ item.name !== item.so ? '— ' + item.name : '' }}
               </span>
               <div v-if="item.files?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;padding-left:8px">
-                <span v-for="f in item.files" :key="f" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:1px 7px;font-size:0.75rem">📎 {{ f }}</span>
+                <span v-for="f in item.files" :key="f" style="background:#f0fdf4;color:#15803d;border:1px solid #86efac;border-radius:4px;padding:1px 7px;font-size:max(0.75rem, var(--min-fs))">📎 {{ f }}</span>
               </div>
             </div>
           </div>
@@ -311,24 +311,24 @@
           </div>
           <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
             <div v-for="item in syncData.updatedList" :key="item.so"
-              style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:0.82rem">
+              style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;font-size:max(0.82rem, var(--min-fs))">
               <div style="font-weight:600;color:#2a5490"><b>{{ item.so }}</b> — {{ item.name }}</div>
               <div v-if="item.changes" style="margin-top:6px;display:flex;flex-direction:column;gap:4px">
                 <template v-for="(label, key) in {task_name:'ชื่อ',sale_owner:'Sales',customer_info:'ลูกค้า',status:'สถานะ'}" :key="key">
-                  <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:6px;font-size:0.78rem">
-                    <span style="color:#64748b;min-width:50px">{{ label }}:</span>
+                  <div v-if="item.changes[key]" style="display:flex;align-items:center;gap:6px;font-size:max(0.78rem, var(--min-fs))">
+                    <span style="color:#526074;min-width:50px">{{ label }}:</span>
                     <span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 7px;text-decoration:line-through">{{ item.changes[key].old || '-' }}</span>
-                    <i class="pi pi-arrow-right" style="color:#94a3b8;font-size:0.65rem"></i>
+                    <i class="pi pi-arrow-right" style="color:#55657a;font-size:max(0.65rem, var(--min-fs))"></i>
                     <span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">{{ item.changes[key].new || '-' }}</span>
                   </div>
                 </template>
-                <div v-if="item.changes.files" style="font-size:0.78rem;margin-top:2px">
+                <div v-if="item.changes.files" style="font-size:max(0.78rem, var(--min-fs));margin-top:2px">
                   <div v-if="item.changes.files.added?.length" style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:2px">
-                    <span style="color:#64748b;min-width:50px">ไฟล์ใหม่:</span>
+                    <span style="color:#526074;min-width:50px">ไฟล์ใหม่:</span>
                     <span v-for="f in item.changes.files.added" :key="f" style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 7px;font-weight:600">+ {{ f }}</span>
                   </div>
                   <div v-if="item.changes.files.removed?.length" style="display:flex;flex-wrap:wrap;gap:3px">
-                    <span style="color:#64748b;min-width:50px">ลบออก:</span>
+                    <span style="color:#526074;min-width:50px">ลบออก:</span>
                     <span v-for="f in item.changes.files.removed" :key="f" style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 7px;text-decoration:line-through">- {{ f }}</span>
                   </div>
                 </div>
@@ -597,7 +597,7 @@ export default {
 }
 .task-btn {
   /* ปุ่มหลัก: น้ำเงินแบรนด์ (เดิมเขียวทึบ ไม่ใช่สีหลักของระบบ) */
-  background-color: #4A90E2 !important;
+  background-color: #3d78bc !important;
   border: none !important;
   color: white !important;
   padding: 0.85rem 1.8rem !important;
@@ -698,7 +698,7 @@ export default {
   }
 
   .btn-text {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 

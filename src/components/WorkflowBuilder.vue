@@ -50,7 +50,7 @@
               <div class="step-info">
                 <div class="info-item" v-if="step.project_statuses && step.project_statuses.length > 0">
                   <span v-for="ps in step.project_statuses" :key="ps" class="project-badge" 
-                        :style="{ background: getStatusColor(ps) + '20', color: getStatusColor(ps) }">
+                        :style="{ background: getStatusColor(ps) + '20', color: $accessibleText(getStatusColor(ps)) }">
                     <i class="pi pi-folder"></i> {{ getProjectStatusLabel(ps) }}
                   </span>
                 </div>
@@ -137,7 +137,7 @@
                     placeholder="เลือกสถานะโครงการ" class="w-full" display="chip">
             <template #option="slotProps">
               <span class="project-badge" 
-                    :style="{ background: slotProps.option.color + '20', color: slotProps.option.color }">
+                    :style="{ background: slotProps.option.color + '20', color: $accessibleText(slotProps.option.color) }">
                 {{ slotProps.option.label }}
               </span>
             </template>
@@ -211,15 +211,10 @@
 <script>
 import { toDateKey } from '@/utils/dateUtils'
 import axios from '@/utils/axiosConfig'
-import { useConfirm } from 'primevue/useconfirm'
+import { accessibleBg } from '@/utils/color'
 
 export default {
   name: 'WorkflowBuilder',
-  setup() {
-    return {
-      $confirm: useConfirm()
-    }
-  },
   props: {
     taskId: {
       type: Number,
@@ -571,7 +566,7 @@ export default {
     },
     getStatusColor(status) {
       const found = this.projectStatusOptions.find(opt => opt.value === status)
-      return found?.color || '#6b7280'
+      return accessibleBg(found?.color || '#6b7280')
     },
     getStepTypeLabel(type) {
       const found = this.stepTypeOptions.find(opt => opt.value === type)
@@ -707,7 +702,7 @@ export default {
 }
 
 .step-arrow i {
-  color: #3a7bd0;
+  color: #2f66b3;
   font-size: 1.5rem;
   font-weight: bold;
 }
@@ -738,7 +733,7 @@ export default {
   transform: translateY(-50%);
   width: 12px;
   height: 3px;
-  background: #4A90E2;
+  background: #3d78bc;
 }
 
 .step-card {
@@ -788,13 +783,13 @@ export default {
 .drag-handle {
   cursor: grab;
   padding: 0.25rem;
-  color: #9ca3af;
+  color: #55657a;
   display: flex;
   align-items: center;
 }
 
 .drag-handle:hover {
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .drag-handle:active {
@@ -812,18 +807,18 @@ export default {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: #3a7bd0;
+  background-color: #3369ac;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   box-shadow: none;
 }
 
 .status-completed .step-number {
-  background-color: #0aa875;
+  background-color: #0c875e;
 }
 
 .status-working .step-number {
@@ -831,11 +826,11 @@ export default {
 }
 
 .status-overdue .step-number {
-  background-color: #e63535;
+  background-color: #c62d2d;
 }
 
 .status-in_progress .step-number {
-  background-color: #3a7bd0;
+  background-color: #3369ac;
 }
 
 .status-pending .step-number {
@@ -850,11 +845,11 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   padding: 0.125rem 0.5rem;
   border-radius: 12px;
   background: #f1f5f9;
-  color: #64748b;
+  color: #526074;
 }
 
 .step-status-badge.status-completed {
@@ -896,9 +891,9 @@ export default {
 }
 
 .step-description {
-  color: #64748b;
+  color: #526074;
   margin: 0;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   line-height: 1.3;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -916,12 +911,12 @@ export default {
   align-items: center;
   gap: 0.5rem;
   color: #475569;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .info-item i {
-  color: #94a3b8;
-  font-size: 0.7rem;
+  color: #55657a;
+  font-size: max(0.7rem, var(--min-fs));
 }
 
 .assigned-users {
@@ -931,11 +926,11 @@ export default {
 }
 
 .user-badge {
-  background: #4A90E2;
+  background: #3d78bc;
   color: #fff;
   padding: 0.125rem 0.5rem;
   border-radius: 10px;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 500;
 }
 
@@ -945,14 +940,14 @@ export default {
   gap: 0.25rem;
   padding: 0.2rem 0.5rem;
   border-radius: 10px;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 500;
 }
 
 .empty-workflow {
   text-align: center;
   padding: 2rem 1rem;
-  color: #94a3b8;
+  color: #55657a;
 }
 
 .empty-workflow i {
@@ -994,7 +989,7 @@ export default {
 }
 
 .required {
-  color: #ef4444;
+  color: #dc2626;
 }
 
 .field-group {
@@ -1015,8 +1010,8 @@ export default {
 }
 
 .user-option .user-info {
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #525f70;
 }
 
 .header-actions {
@@ -1053,17 +1048,17 @@ export default {
 }
 
 .template-info small {
-  color: #6b7280;
+  color: #525f70;
 }
 
 .template-info .meta {
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
 }
 
 .empty-templates {
   text-align: center;
   padding: 2rem;
-  color: #9ca3af;
+  color: #55657a;
 }
 
 .empty-templates i {
@@ -1072,17 +1067,17 @@ export default {
 }
 
 .created-by {
-  color: #6b7280;
-  font-size: 0.8rem;
+  color: #525f70;
+  font-size: max(0.8rem, var(--min-fs));
   margin-left: 0.5rem;
 }
 
 .completed-text {
-  color: #16a34a;
+  color: #15803d;
 }
 
 .completed-text i {
-  color: #16a34a;
+  color: #15803d;
 }
 
 @media (max-width: 768px) {
@@ -1099,7 +1094,7 @@ export default {
   color: #7c3aed;
   padding: 0.2rem 0.6rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
   margin-bottom: 0.3rem;
 }

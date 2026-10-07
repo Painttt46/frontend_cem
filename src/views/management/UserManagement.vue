@@ -476,7 +476,7 @@ onMounted(() => {
 }
 
 .user-count {
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   padding: 0.75rem 1.25rem;
   background: rgba(255, 255, 255, 0.2);
   color: white;
@@ -495,7 +495,7 @@ onMounted(() => {
 }
 
 .add-btn {
-  background: #4A90E2;
+  background: #3d78bc;
   border: 1px solid #4A90E2;
   color: white;
 }
@@ -535,7 +535,7 @@ onMounted(() => {
 }
 
 .add-btn {
-  background: #4A90E2;
+  background: #3d78bc;
   border: 1px solid #4A90E2;
   color: white;
 }
@@ -552,7 +552,7 @@ onMounted(() => {
 }
 
 .responsive-table {
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .user-info {
@@ -564,11 +564,13 @@ onMounted(() => {
 .user-name {
   font-weight: 600;
   color: #2c3e50;
+  /* ตารางผู้ใช้เลื่อนแนวนอนบนมือถือ: คอลัมน์ชื่อไม่ควรแคบกว่านี้ ไม่งั้นชื่อไทยถูกบีบเป็นคอลัมน์สูง 3 บรรทัด */
+  min-width: 8.5rem;
 }
 
 .user-username {
-  font-size: 0.75rem;
-  color: #6c757d;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #525f70;
 }
 
 .phone-wrapper {
@@ -586,8 +588,8 @@ onMounted(() => {
 }
 
 .email-icon {
-  color: #6c757d;
-  font-size: 0.75rem;
+  color: #525f70;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .position-info {
@@ -602,8 +604,8 @@ onMounted(() => {
 }
 
 .department {
-  font-size: 0.75rem;
-  color: #6c757d;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #525f70;
 }
 
 .action-buttons {
@@ -740,12 +742,12 @@ onMounted(() => {
 .p-datatable .p-datatable-emptymessage {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 /* Badge Customization */
 .p-badge {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
 }
 
@@ -753,14 +755,14 @@ onMounted(() => {
   display: inline-block;
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 /* Tooltip Styling */
 .p-tooltip .p-tooltip-text {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 /* Role Input Group */

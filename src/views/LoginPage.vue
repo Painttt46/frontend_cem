@@ -315,6 +315,7 @@ body {
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100dvh;
   position: relative;
 }
 
@@ -485,7 +486,7 @@ body {
 
   .info-text {
     padding: 10px 12px !important;
-    font-size: 0.8rem !important;
+    font-size: max(0.8rem, var(--min-fs)) !important;
     gap: 6px !important;
   }
 

@@ -14,7 +14,7 @@
       </div>
 
       <div v-if="files.length === 0" class="no-attachments">
-        <i class="pi pi-file" style="font-size: 3rem; color: #ccc;"></i>
+        <i class="pi pi-file" style="font-size: 3rem; color: #55657a;"></i>
         <p>ไม่มีเอกสารแนบ</p>
       </div>
       <div v-else class="attachments-list">
@@ -98,8 +98,8 @@ const viewFullImage = (file) => {
 }
 
 .upload-hint {
-  color: #6c757d;
-  font-size: 0.8rem;
+  color: #525f70;
+  font-size: max(0.8rem, var(--min-fs));
   margin-top: 0.25rem;
   display: block;
 }
@@ -107,7 +107,7 @@ const viewFullImage = (file) => {
 .no-attachments {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .attachments-list {
@@ -153,7 +153,7 @@ const viewFullImage = (file) => {
 
 .file-icon {
   font-size: 2rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .file-details {
@@ -167,8 +167,8 @@ const viewFullImage = (file) => {
 }
 
 .file-type {
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .file-actions {

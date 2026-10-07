@@ -140,12 +140,12 @@
               <div class="status-badges-column">
                 <Badge v-if="slotProps.data.status === 'completed'"
                   value="เสร็จสิ้น"
-                  :style="{ backgroundColor: '#10b981', color: '#fff', fontWeight: 'bold' }" />
+                  :style="{ backgroundColor: '#0c855d', color: '#fff', fontWeight: 'bold' }" />
                 <template v-else-if="getLatestProjectStatuses(slotProps.data).length > 0">
                   <Badge
                     v-for="ps in getLatestProjectStatuses(slotProps.data)" :key="ps"
                     :value="getProjectStatusLabel(ps)"
-                    :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
+                    :style="{ backgroundColor: $accessibleBg(getProjectStatusColor(ps)), color: '#fff', fontWeight: 'bold' }" />
                 </template>
                 <span v-else class="text-muted">-</span>
               </div>
@@ -200,13 +200,13 @@
                       <div class="step-info">
                         <div class="info-item" v-if="step.project_statuses && step.project_statuses.length > 0">
                           <span v-for="ps in step.project_statuses" :key="ps" class="project-badge" 
-                                :style="{ background: getProjectStatusColor(ps) + '20', color: getProjectStatusColor(ps) }">
+                                :style="{ background: getProjectStatusColor(ps) + '20', color: $accessibleText(getProjectStatusColor(ps)) }">
                             <i class="pi pi-folder"></i> {{ getProjectStatusLabel(ps) }}
                           </span>
                         </div>
 
                         <div class="info-item" v-if="slotProps.data.project_manager">
-                          <div class="person-badge pm-teal-badge" style="font-size:0.78rem;padding:3px 10px" @click.stop="showSaleUserInfo(slotProps.data.project_manager)">
+                          <div class="person-badge pm-teal-badge" style="font-size:max(0.78rem, var(--min-fs));padding:3px 10px" @click.stop="showSaleUserInfo(slotProps.data.project_manager)">
                             <i class="pi pi-briefcase"></i> {{ slotProps.data.project_manager }}
                           </div>
                         </div>
@@ -297,7 +297,7 @@
           <div v-if="selectedStep._task && selectedStep._task.project_manager" class="dlg-grid-item">
             <div class="dlg-label"><i class="pi pi-briefcase"></i> Project Manager</div>
             <div class="dlg-value">
-              <span class="person-badge pm-teal-badge" style="font-size:0.78rem;padding:3px 10px;cursor:pointer" @click="showSaleUserInfo(selectedStep._task.project_manager)">
+              <span class="person-badge pm-teal-badge" style="font-size:max(0.78rem, var(--min-fs));padding:3px 10px;cursor:pointer" @click="showSaleUserInfo(selectedStep._task.project_manager)">
                 <i class="pi pi-briefcase"></i> {{ selectedStep._task.project_manager }}
               </span>
             </div>
@@ -324,7 +324,7 @@
           <div class="dlg-label"><i class="pi pi-folder"></i> สถานะโครงการ</div>
           <div class="dlg-chips">
             <span v-for="ps in selectedStep.project_statuses" :key="ps" class="dlg-chip"
-              :style="{ background: getProjectStatusColor(ps) + '18', color: getProjectStatusColor(ps), border: '1px solid ' + getProjectStatusColor(ps) + '40' }">
+              :style="{ background: getProjectStatusColor(ps) + '18', color: $accessibleText(getProjectStatusColor(ps)), border: '1px solid ' + getProjectStatusColor(ps) + '40' }">
               {{ getProjectStatusLabel(ps) }}
             </span>
           </div>
@@ -495,17 +495,14 @@
 
 <script>
 import { formatDayMonthTH } from '@/utils/dateUtils'
-import { useConfirm } from 'primevue/useconfirm'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import Dropdown from 'primevue/dropdown'
 import { isFullAccessRole } from '@/composables/usePermissions'
+import { accessibleBg } from '@/utils/color'
 
 export default {
   name: 'ProjectProgress',
   components: { UserInfoDialog, Dropdown },
-  setup() {
-    return { $confirm: useConfirm() }
-  },
   data() {
     return {
       projects: [],
@@ -965,7 +962,7 @@ export default {
     },
     getCategoryColor(category) {
       const cat = this.categories.find(c => c.label === category || c.value === category)
-      return cat?.color || '#6c757d'
+      return accessibleBg(cat?.color || '#6c757d')
     },
     getStepStatusLabel(step) {
       if (step.status === 'completed') return 'เสร็จสิ้น'
@@ -1145,7 +1142,7 @@ export default {
     },
     getProjectStatusColor(status) {
       const found = this.statuses.find(s => s.value === status)
-      return found?.color || '#6b7280'
+      return accessibleBg(found?.color || '#6b7280')
     }
   }
 }
@@ -1235,8 +1232,8 @@ export default {
   border-radius: 20px;
   border: 1.5px solid #d1d5db;
   background: white;
-  color: #6b7280;
-  font-size: 0.875rem;
+  color: #525f70;
+  font-size: max(0.875rem, var(--min-fs));
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1246,11 +1243,11 @@ export default {
 
 .filter-tab:hover {
   border-color: #4A90E2;
-  color: #4A90E2;
+  color: #2f66b3;
 }
 
 .filter-tab.active {
-  background: #4A90E2;
+  background: #3d78bc;
   border-color: #4A90E2;
   color: white;
   font-weight: 600;
@@ -1272,19 +1269,19 @@ export default {
   left: 0.75rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #9ca3af;
+  color: #55657a;
 }
 
 .filter-dropdown {
   border-radius: 8px;
   height: 38px;
   min-width: 170px;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .filter-dropdown :deep(.p-dropdown-label) {
   padding: 0.4rem 0.75rem;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .status-dropdown-value,
@@ -1292,7 +1289,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .status-dot {
@@ -1312,7 +1309,7 @@ export default {
   border: 1.5px solid #fca5a5;
   background: #fff;
   color: #dc2626;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -1327,7 +1324,7 @@ export default {
   gap: 0.35rem;
   padding: 0.25rem 0.65rem;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1343,7 +1340,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #6b7280;
+  color: #525f70;
   font-size: 0.95rem;
 }
 
@@ -1372,7 +1369,7 @@ export default {
   }
   .main-header .stat-item {
     flex: none;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     white-space: nowrap;
   }
 }
@@ -1382,7 +1379,7 @@ export default {
   padding: 0.25rem 0.6rem;
   border-radius: 4px;
   color: #fff;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   font-weight: 600;
   white-space: normal;
   word-break: break-word;
@@ -1397,7 +1394,7 @@ export default {
   color: #7c3aed;
   padding: 0.2rem 0.6rem;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
   margin-bottom: 0.3rem;
 }
@@ -1425,7 +1422,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.74rem;
+  font-size: max(0.74rem, var(--min-fs));
   font-weight: 600;
   color: #7c3aed;
   background: #f3e8ff;
@@ -1433,12 +1430,12 @@ export default {
   padding: 0.22rem 0.6rem;
   border-radius: 12px;
 }
-.proc-stat i { font-size: 0.68rem; opacity: 0.85; }
+.proc-stat i { font-size: max(0.68rem, var(--min-fs)); opacity: 0.85; }
 .proc-stat-amount { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
 
 .procurement-progress {
-  font-size: 0.75rem;
-  color: #6b7280;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #525f70;
   background: #f3e8ff;
   padding: 0.15rem 0.5rem;
   border-radius: 10px;
@@ -1465,7 +1462,7 @@ export default {
   row-gap: 0.3rem;
 }
 .proc-cluster-header:hover { background: #f3e8ff; }
-.proc-cluster-header .cluster-chevron { color: #94a3b8; font-size: 0.7rem; flex-shrink: 0; width: 14px; }
+.proc-cluster-header .cluster-chevron { color: #55657a; font-size: max(0.7rem, var(--min-fs)); flex-shrink: 0; width: 14px; }
 .proc-cluster-name {
   font-weight: 700;
   font-size: 1rem;
@@ -1476,9 +1473,9 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.proc-cluster-done { margin-left: auto; font-size: 0.8rem; color: #16a34a; font-weight: 700; white-space: nowrap; }
-.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.74rem; font-weight: 700; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
-.cluster-files-badge i { font-size: 0.66rem; }
+.proc-cluster-done { margin-left: auto; font-size: max(0.8rem, var(--min-fs)); color: #15803d; font-weight: 700; white-space: nowrap; }
+.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: max(0.74rem, var(--min-fs)); font-weight: 700; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
+.cluster-files-badge i { font-size: max(0.66rem, var(--min-fs)); }
 .vendor-note-bar {
   display: flex;
   align-items: flex-start;
@@ -1495,16 +1492,16 @@ export default {
 }
 .vendor-note-bar i { color: #7c3aed; margin-top: 3px; font-size: 0.9rem; }
 .vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; white-space: nowrap; }
-.vnb-meta { display: block; font-size: 0.78rem; color: #64748b; margin-top: 3px; font-weight: 400; }
+.vnb-meta { display: block; font-size: max(0.78rem, var(--min-fs)); color: #526074; margin-top: 3px; font-weight: 400; }
 .proc-cluster-file-chip { color: #2f66b3; background: #eff6ff; border-color: #bfdbfe; }
 .vendor-files-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.vfr-label { font-size: 0.84rem; font-weight: 800; color: #2f66b3; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
-.vfr-label i { font-size: 0.66rem; }
-.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.84rem; font-weight: 600; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
+.vfr-label { font-size: max(0.84rem, var(--min-fs)); font-weight: 800; color: #2f66b3; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.vfr-label i { font-size: max(0.66rem, var(--min-fs)); }
+.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: max(0.84rem, var(--min-fs)); font-weight: 600; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
 .file-chip:hover { background: #dbeafe; }
-.file-chip i { font-size: 0.66rem; flex-shrink: 0; }
+.file-chip i { font-size: max(0.66rem, var(--min-fs)); flex-shrink: 0; }
 .file-chip-name { white-space: normal; word-break: break-word; line-height: 1.35; }
-.file-chip-size { font-size: 0.64rem; color: #64748b; font-weight: 400; flex-shrink: 0; }
+.file-chip-size { font-size: max(0.64rem, var(--min-fs)); color: #526074; font-weight: 400; flex-shrink: 0; }
 .file-chip-add { color: #4b5563; background: #f8fafc; border: 1px dashed #cbd5e1; }
 .file-chip-add:hover { background: #eef2f7; color: #2a5490; }
 .file-chip-add:disabled { opacity: 0.6; cursor: wait; }
@@ -1551,8 +1548,8 @@ export default {
 .pi-header:hover { background: #f8fafc; }
 
 .pi-header-chevron {
-  font-size: 0.65rem;
-  color: #94a3b8;
+  font-size: max(0.65rem, var(--min-fs));
+  color: #55657a;
   flex-shrink: 0;
   width: 14px;
 }
@@ -1569,7 +1566,7 @@ export default {
 }
 .pi-vendor-desc {
   display: block;
-  font-size: 0.88rem;
+  font-size: max(0.88rem, var(--min-fs));
   color: #1e293b;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1580,7 +1577,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.86rem;
+  font-size: max(0.86rem, var(--min-fs));
   padding: 0.14rem 0.45rem;
   border-radius: 8px;
   white-space: nowrap;
@@ -1588,10 +1585,10 @@ export default {
 }
 .pi-header-po { color: #0f766e; background: #f0fdfa; border: 1px solid #99f6e4; }
 .pi-header-amount { color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; font-weight: 700; }
-.pi-header-po i, .pi-header-amount i { font-size: 0.62rem; opacity: 0.8; }
+.pi-header-po i, .pi-header-amount i { font-size: max(0.62rem, var(--min-fs)); opacity: 0.8; }
 
 .pi-header-date {
-  font-size: 0.84rem;
+  font-size: max(0.84rem, var(--min-fs));
   color: #1e293b;
   display: inline-flex;
   align-items: center;
@@ -1612,19 +1609,19 @@ export default {
 }
 
 .pi-status-chip {
-  font-size: 0.82rem;
+  font-size: max(0.82rem, var(--min-fs));
   padding: 0.15rem 0.45rem;
   border-radius: 10px;
   font-weight: 600;
   flex-shrink: 0;
 }
 
-.pi-status-chip.chip-pending { background: #f1f5f9; color: #64748b; }
+.pi-status-chip.chip-pending { background: #f1f5f9; color: #526074; }
 .pi-status-chip.chip-approved { background: #fef3c7; color: #b45309; }
 .pi-status-chip.chip-ordered { background: #dbeafe; color: #2a5490; }
 .pi-status-chip.chip-waiting { background: #ede9fe; color: #6d28d9; }
 .pi-status-chip.chip-received { background: #d1fae5; color: #065f46; }
-.pi-status-chip.chip-completed { background: #dcfce7; color: #16a34a; }
+.pi-status-chip.chip-completed { background: #dcfce7; color: #15803d; }
 .pi-status-chip.chip-ready_to_ship { background: #cffafe; color: #0e7490; }
 .pi-history-dot.dot-negotiating { background: #d946ef; }
 .pi-history-dot.dot-awaiting_payment { background: #f97316; }
@@ -1649,7 +1646,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.88rem;
+  font-size: max(0.88rem, var(--min-fs));
   color: #1e293b;
   background: #f8fafc;
   padding: 0.1rem 0.4rem;
@@ -1660,8 +1657,8 @@ export default {
 
 .procurement-detail-empty {
   margin-top: 0.5rem;
-  font-size: 0.78rem;
-  color: #94a3b8;
+  font-size: max(0.78rem, var(--min-fs));
+  color: #55657a;
   text-align: center;
   padding: 0.5rem;
   background: #faf5ff;
@@ -1676,8 +1673,8 @@ export default {
   margin: 0.4rem 0;
 }
 .pi-progress-text {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: max(0.7rem, var(--min-fs));
+  color: #526074;
   font-weight: 600;
   min-width: 30px;
 }
@@ -1704,7 +1701,7 @@ export default {
   border-top: 1px dashed #e2e8f0;
 }
 .pi-history-title {
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   font-weight: 700;
   color: #475569;
   margin-bottom: 0.3rem;
@@ -1713,7 +1710,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.82rem;
+  font-size: max(0.82rem, var(--min-fs));
   padding: 0.2rem 0;
   flex-wrap: wrap;
 }
@@ -1725,28 +1722,28 @@ export default {
 }
 .pi-history-dot.dot-pending { background: #94a3b8; }
 .pi-history-dot.dot-approved { background: #f59e0b; }
-.pi-history-dot.dot-ordered { background: #4A90E2; }
+.pi-history-dot.dot-ordered { background: #3d78bc; }
 .pi-history-dot.dot-waiting { background: #8b5cf6; }
 .pi-history-dot.dot-received { background: #06b6d4; }
 .pi-history-dot.dot-completed { background: #16a34a; }
 .pi-history-text {
   color: #1e293b;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
 }
 .pi-history-remark {
   color: #92400e;
   font-weight: 600;
   font-style: normal;
-  font-size: 0.86rem;
+  font-size: max(0.86rem, var(--min-fs));
   background: #fef3c7;
   border: 1px solid #fde68a;
   padding: 0.15rem 0.45rem;
   border-radius: 5px;
 }
 .pi-history-time {
-  color: #64748b;
-  font-size: 0.78rem;
+  color: #526074;
+  font-size: max(0.78rem, var(--min-fs));
   margin-left: auto;
 }
 
@@ -1762,15 +1759,15 @@ export default {
   background: #fff;
   border: 1.5px solid #4A90E2;
   border-radius: 6px;
-  color: #4A90E2;
-  font-size: 0.82rem;
+  color: #2f66b3;
+  font-size: max(0.82rem, var(--min-fs));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .dlg-edit-btn:hover {
-  background: #4A90E2;
+  background: #3d78bc;
   color: #fff;
 }
 
@@ -1801,12 +1798,12 @@ export default {
 }
 
 .progress-text {
-  font-size: 0.8rem;
-  color: #6b7280;
+  font-size: max(0.8rem, var(--min-fs));
+  color: #525f70;
 }
 
 .text-muted {
-  color: #9ca3af;
+  color: #55657a;
 }
 
 .status-badges {
@@ -1833,7 +1830,7 @@ export default {
 }
 
 .workflow-expansion h4 i {
-  color: #4A90E2;
+  color: #2f66b3;
 }
 
 .no-steps {
@@ -1841,20 +1838,20 @@ export default {
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  color: #94a3b8;
+  color: #55657a;
   padding: 2rem;
   text-align: center;
 }
 
 .no-steps i {
   font-size: 2.5rem;
-  color: #cbd5e1;
+  color: #55657a;
 }
 
 .empty-state {
   text-align: center;
   padding: 3rem;
-  color: #9ca3af;
+  color: #55657a;
 }
 
 .empty-state i {
@@ -1919,7 +1916,7 @@ export default {
   }
 
   .stat-item {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -1933,7 +1930,7 @@ export default {
   gap: 0.25rem;
   padding: 0.2rem 0.5rem;
   border-radius: 10px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
 }
 
@@ -1977,7 +1974,7 @@ export default {
   transform: translateY(-50%);
   width: 12px;
   height: 3px;
-  background: #4A90E2;
+  background: #3d78bc;
 }
 
 .step-card {
@@ -2037,11 +2034,11 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .status-completed .step-number {
-  background-color: #0aa875;
+  background-color: #0c875e;
 }
 
 .status-working .step-number {
@@ -2049,18 +2046,18 @@ export default {
 }
 
 .status-overdue .step-number {
-  background-color: #e63535;
+  background-color: #c62d2d;
 }
 
 .status-in_progress .step-number {
-  background-color: #3a7bd0;
+  background-color: #3369ac;
 }
 
 .step-status-badge {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   padding: 0.125rem 0.5rem;
   border-radius: 12px;
   background: #e5e7eb;
@@ -2089,13 +2086,13 @@ export default {
 
 .step-content h4 {
   margin: 0 0 0.25rem 0;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   color: #1e293b;
 }
 
 .step-description {
-  color: #64748b;
-  font-size: 0.7rem;
+  color: #526074;
+  font-size: max(0.7rem, var(--min-fs));
   margin: 0 0 0.5rem 0;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -2111,13 +2108,13 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   color: #475569;
 }
 
 .info-item i {
-  color: #94a3b8;
-  font-size: 0.65rem;
+  color: #55657a;
+  font-size: max(0.65rem, var(--min-fs));
 }
 
 .assigned-users {
@@ -2127,11 +2124,11 @@ export default {
 }
 
 .user-badge {
-  background: #4A90E2;
+  background: #3d78bc;
   color: #fff;
   padding: 0.1rem 0.4rem;
   border-radius: 8px;
-  font-size: 0.65rem;
+  font-size: max(0.65rem, var(--min-fs));
 }
 
 .complete-btn {
@@ -2139,11 +2136,11 @@ export default {
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  background-color: #0aa875;
+  background-color: #0c875e;
   color: white;
   border: none;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -2181,10 +2178,10 @@ export default {
 :deep(.cm-project-row:hover) {
   background-color: #f1eefe !important;
 }
-.clickable-name { color: #4A90E2; cursor: pointer; font-weight: 500; }
+.clickable-name { color: #2f66b3; cursor: pointer; font-weight: 500; }
 .clickable-name:hover { text-decoration: underline; color: #2f66b3; }
-.completed-text { color: #16a34a; }
-.completed-text i { color: #16a34a; }
+.completed-text { color: #15803d; }
+.completed-text i { color: #15803d; }
 
 /* Step Detail Dialog */
 .step-card:hover {
@@ -2247,11 +2244,11 @@ export default {
   margin-bottom: 0.75rem;
 }
 .dlg-step-badge {
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #64748b;
+  color: #526074;
   background: white;
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -2267,7 +2264,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
+  color: #55657a;
   transition: all 0.2s;
   font-size: 1rem;
 }
@@ -2286,7 +2283,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   font-weight: 600;
   padding: 0.3rem 0.85rem;
   border-radius: 20px;
@@ -2296,7 +2293,7 @@ export default {
 .dlg-status-chip.status-completed { background: #d1fae5; color: #047857; }
 .dlg-status-chip.status-working { background: #fef3c7; color: #b45309; }
 .dlg-status-chip.status-overdue { background: #fee2e2; color: #dc2626; }
-.dlg-status-chip.status-pending { background: #e5e7eb; color: #6b7280; }
+.dlg-status-chip.status-pending { background: #e5e7eb; color: #525f70; }
 
 /* Dialog Body */
 .dlg-body {
@@ -2314,13 +2311,13 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   font-weight: 600;
-  color: #94a3b8;
+  color: #55657a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.dlg-label i { font-size: 0.75rem; }
+.dlg-label i { font-size: max(0.75rem, var(--min-fs)); }
 .dlg-desc {
   font-size: 0.95rem;
   color: #334155;
@@ -2362,22 +2359,22 @@ export default {
   gap: 0.3rem;
   padding: 0.35rem 0.85rem;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
 }
 .dlg-user-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background-color: #3a7bd0;
+  background-color: #3369ac;
   color: white;
   padding: 0.4rem 0.9rem;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
   box-shadow: none;
 }
-.dlg-user-chip i { font-size: 0.75rem; }
+.dlg-user-chip i { font-size: max(0.75rem, var(--min-fs)); }
 
 /* Approve Button */
 .dlg-approve-section {
@@ -2397,7 +2394,7 @@ export default {
   justify-content: center;
   gap: 0.6rem;
   padding: 0.7rem 1.5rem;
-  background-color: #0aa875;
+  background-color: #0c875e;
   color: white;
   border: none;
   border-radius: 14px;
@@ -2440,7 +2437,7 @@ export default {
   gap: 6px;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: max(0.82rem, var(--min-fs));
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -2457,7 +2454,7 @@ export default {
   border: 1px solid #fed7aa;
 }
 .pm-badge:hover { background-color: #fee2c0; box-shadow: none; }
-.text-muted { color: #9ca3af; }
+.text-muted { color: #55657a; }
 
 .pm-teal-badge {
   background-color: #b2f8ea;
@@ -2477,25 +2474,25 @@ export default {
 .late-warning i { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
 .late-reason-field { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.9rem; color: #374151; }
 .late-reason-field label { font-weight: 600; }
-.late-reason-field .optional { color: #9ca3af; font-size: 0.8rem; }
+.late-reason-field .optional { color: #55657a; font-size: max(0.8rem, var(--min-fs)); }
 .late-reason-text { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.6rem 0.85rem; font-size: 0.9rem; color: #374151; min-height: 2.5rem; white-space: pre-wrap; }
-.late-badge { display: inline-flex; align-items: center; gap: 4px; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; border-radius: 20px; padding: 2px 8px; font-size: 0.72rem; font-weight: 600; cursor: pointer; }
+.late-badge { display: inline-flex; align-items: center; gap: 4px; background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; border-radius: 20px; padding: 2px 8px; font-size: max(0.72rem, var(--min-fs)); font-weight: 600; cursor: pointer; }
 .late-badge:hover { background: #ffedd5; }
-.late-reason-hint { font-size: 0.68rem; text-decoration: underline; }
+.late-reason-hint { font-size: max(0.68rem, var(--min-fs)); text-decoration: underline; }
 .dlg-grid-item--late { background: #fff7ed; border-color: #fed7aa; }
-.dlg-late-reason { margin-top: 0.4rem; font-size: 0.85rem; color: #374151; background: #f9fafb; border-radius: 6px; padding: 0.4rem 0.6rem; white-space: pre-wrap; }
-.dlg-late-reason--none { color: #9ca3af; font-style: italic; }
+.dlg-late-reason { margin-top: 0.4rem; font-size: max(0.85rem, var(--min-fs)); color: #374151; background: #f9fafb; border-radius: 6px; padding: 0.4rem 0.6rem; white-space: pre-wrap; }
+.dlg-late-reason--none { color: #55657a; font-style: italic; }
 .latest-work-date {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.72rem;
-  color: #6b7280;
+  font-size: max(0.72rem, var(--min-fs));
+  color: #525f70;
   margin-top: 3px;
 }
-.latest-work-date i { font-size: 0.68rem; color: #9ca3af; }
-.latest-completed-info { color: #16a34a; }
-.latest-completed-info i { color: #16a34a; }
+.latest-work-date i { font-size: max(0.68rem, var(--min-fs)); color: #55657a; }
+.latest-completed-info { color: #15803d; }
+.latest-completed-info i { color: #15803d; }
 .assigned-chips {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2511,7 +2508,7 @@ export default {
   color: #166534;
   border: 1px solid #bbf7d0;
   border-radius: 20px;
-  font-size: 0.72rem;
+  font-size: max(0.72rem, var(--min-fs));
   font-weight: 500;
   white-space: nowrap;
 }
@@ -2526,7 +2523,7 @@ export default {
   color: #2a5490;
   border: 1px solid #bfdbfe;
   border-radius: 8px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   width: 100%;
   box-sizing: border-box;
 }
@@ -2540,7 +2537,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 700;
   margin-top: 1px;
 }
@@ -2554,8 +2551,7 @@ export default {
 
 .step-status-mini {
   flex-shrink: 0;
-  font-size: 0.68rem;
-  opacity: 0.8;
+  font-size: max(0.68rem, var(--min-fs));
   white-space: nowrap;
 }
 

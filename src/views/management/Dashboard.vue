@@ -43,8 +43,7 @@
           <h3>สรุปการลาประจำปี {{ currentYear }}</h3>
           <div class="user-leave-summary">
             <div v-for="(days, type) in userLeaveData" :key="type" class="leave-item">
-              <span class="leave-type" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }">{{ type
-                }}</span>
+              <span class="leave-type" :style="{ backgroundColor: leaveTypeColors[type] || '#6c757d' }">{{ leaveTypeLabels[type] || type }}</span>
               <span class="leave-days">{{ days }} วัน</span>
             </div>
             <div v-if="Object.keys(userLeaveData).length === 0" class="no-data">ไม่มีข้อมูลการลา</div>
@@ -61,14 +60,14 @@
           <h3>Timesheet ประจำปี {{ currentYear }}</h3>
           <div class="timesheet-summary">
             <div class="summary-item">
-              <i class="pi pi-clock" style="color: #4A90E2"></i>
+              <i class="pi pi-clock" style="color: #2f66b3"></i>
               <div>
                 <h4>{{ formatHoursMinutes(userTimesheetSummary.totalHours) }}</h4>
                 <p>ชั่วโมงทำงานจริง</p>
               </div>
             </div>
             <div class="summary-item">
-              <i class="pi pi-calendar" style="color: #f59e0b"></i>
+              <i class="pi pi-calendar" style="color: #b45309"></i>
               <div>
                 <h4>{{ formatHoursMinutes(userTimesheetSummary.expectedHours) }}</h4>
                 <p>ชั่วโมงที่ควรทำ</p>
@@ -76,10 +75,10 @@
             </div>
             <div class="summary-item">
               <i class="pi pi-percentage"
-                :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }"></i>
+                :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#047857' : '#dc2626' }"></i>
               <div>
                 <h4
-                  :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#10b981' : '#ef4444' }">
+                  :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#047857' : '#dc2626' }">
                   {{ userTimesheetSummary.expectedHours > 0 ? Math.round(userTimesheetSummary.totalHours /
                     userTimesheetSummary.expectedHours * 100) : 0 }}%
                 </h4>
@@ -87,7 +86,7 @@
               </div>
             </div>
             <div class="summary-item">
-              <i class="pi pi-briefcase" style="color: #8b5cf6"></i>
+              <i class="pi pi-briefcase" style="color: #7c3aed"></i>
               <div>
                 <h4>{{ userTimesheetSummary.totalTasks }}</h4>
                 <p>จำนวนงาน</p>
@@ -114,7 +113,7 @@
                 <div v-if="data.steps_data && data.steps_data.length > 0" class="steps-mini">
                   <span v-for="step in data.steps_data" :key="step.id" class="step-tag step-tag-link"
                     :class="'step-status-' + (step.status || 'pending')"
-                    @click="$router.push({ path: '/project-progress', query: { taskId: data.task_id, stepId: step.id } })">
+                    @click="goToStepProgress(data.task_id, step.id)">
                     {{ step.step_name }}
                   </span>
                 </div>
@@ -125,7 +124,7 @@
               <template #body="{ data }">
                 <div class="category-badges-small">
                   <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge"
-                    :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
+                    :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff' }">{{ cat }}</span>
                 </div>
               </template>
             </Column>
@@ -134,13 +133,13 @@
                 <template v-if="data.steps_data && data.steps_data.length > 0">
                   <div v-for="step in data.steps_data" :key="'st-' + step.id">
                     <Badge v-for="ps in (step.project_statuses || [])" :key="ps" :value="ps"
-                      :style="{ backgroundColor: getStatusColor(ps), color: '#fff', fontSize: '0.75rem' }" />
+                      :style="{ backgroundColor: $accessibleBg(getStatusColor(ps)), color: '#fff', fontSize: 'max(0.75rem, var(--min-fs))' }" />
                     <span v-if="!step.project_statuses || step.project_statuses.length === 0"
                       class="text-muted">-</span>
                   </div>
                 </template>
                 <Badge v-else-if="data.work_status" :value="data.work_status"
-                  :style="{ backgroundColor: getStatusColor(data.work_status), color: '#fff' }" />
+                  :style="{ backgroundColor: $accessibleBg(getStatusColor(data.work_status)), color: '#fff' }" />
                 <span v-else class="text-muted">-</span>
               </template>
             </Column>
@@ -149,7 +148,7 @@
             <Column field="end_time" header="สิ้นสุด" style="min-width: 70px" />
             <Column field="hours" header="ชั่วโมง" sortable style="min-width: 100px">
               <template #body="{ data }">
-                <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(data.hours) }}</span>
+                <span style="font-weight: 600; color: #047857">{{ formatHoursMinutes(data.hours) }}</span>
               </template>
             </Column>
           </DataTable>
@@ -181,7 +180,7 @@
           <Card class="summary-card clickable" >
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-users summary-icon" style="color: #4A90E2"></i>
+                <i class="pi pi-users summary-icon" style="color: #2f66b3"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.totalUsers" /></h3>
                   <p>ผู้ใช้งานทั้งหมด</p>
@@ -193,7 +192,7 @@
           <Card class="summary-card clickable" @click="showWorkingDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-user-plus summary-icon" style="color: #10b981"></i>
+                <i class="pi pi-user-plus summary-icon" style="color: #047857"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.workingToday" />/<CountUp :value="stats.totalEngineers" /></h3>
                   <p>Engineer ลงงานวันนี้</p>
@@ -205,7 +204,7 @@
           <Card class="summary-card clickable" @click="showLeavesDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-calendar-times summary-icon" style="color: #f59e0b"></i>
+                <i class="pi pi-calendar-times summary-icon" style="color: #b45309"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.todayLeaves" /></h3>
                   <p>ลางานวันนี้</p>
@@ -217,7 +216,7 @@
           <Card class="summary-card clickable" >
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-car summary-icon" style="color: #06b6d4"></i>
+                <i class="pi pi-car summary-icon" style="color: #0e7490"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.activeCars" /></h3>
                   <p>รถกำลังใช้งาน</p>
@@ -229,7 +228,7 @@
           <Card class="summary-card clickable" @click="showDueSoonDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-clock summary-icon" style="color: #3a7bd0"></i>
+                <i class="pi pi-clock summary-icon" style="color: #2f66b3"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.dueSoon" /></h3>
                   <p>โครงการครบกำหนดสัปดาห์นี้</p>
@@ -241,10 +240,10 @@
           <Card class="summary-card clickable" @click="showOverdueDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-exclamation-triangle summary-icon" style="color: #ef4444"></i>
+                <i class="pi pi-exclamation-triangle summary-icon" style="color: #dc2626"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.overdue" /></h3>
-                  <p>โครงการที่พ้นกําหนดระยะเวลาตามสัญญา</p>
+                  <p>โครงการที่พ้นกำหนดระยะเวลาตามสัญญา</p>
                 </div>
               </div>
             </template>
@@ -253,7 +252,7 @@
           <Card class="summary-card clickable" @click="showActiveTasksDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-briefcase summary-icon" style="color: #8b5cf6"></i>
+                <i class="pi pi-briefcase summary-icon" style="color: #7c3aed"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.activeTasks" /></h3>
                   <p>โครงการที่กำลังดำเนินการ</p>
@@ -265,7 +264,7 @@
           <Card class="summary-card clickable" @click="showCompletedDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-check-circle summary-icon" style="color: #22c55e"></i>
+                <i class="pi pi-check-circle summary-icon" style="color: #15803d"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.completedTasks" /></h3>
                   <p>โครงการเสร็จสิ้น</p>
@@ -308,7 +307,7 @@
           <div class="stats-header mb-3">
             <h3>สถิติเวลาทำงานของพนักงาน</h3>
             <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
-              <InputText v-model="statsSearch" placeholder="ค้นหา ชื่อ / ชื่อเล่น / โครงการ / step..." style="font-size:0.85rem;min-width:min(260px,100%);flex:1 1 200px;height:36px" />
+              <InputText v-model="statsSearch" placeholder="ค้นหา ชื่อ / ชื่อเล่น / โครงการ / step..." style="font-size:max(0.85rem, var(--min-fs));min-width:min(260px,100%);flex:1 1 200px;height:36px" />
               <Dropdown v-model="selectedStatsYear" :options="statsYearOptions" optionLabel="label" optionValue="value" style="min-width:110px" />
             </div>
           </div>
@@ -326,26 +325,26 @@
             <Column field="taskCount" header="งาน" sortable style="min-width: 60px" />
             <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
               <template #body="{ data }">
-                <span style="font-weight: 600; color: #4A90E2">{{ formatHoursMinutes(data.totalHours) }}</span>
+                <span style="font-weight: 600; color: #2f66b3">{{ formatHoursMinutes(data.totalHours) }}</span>
               </template>
             </Column>
             <Column field="expectedHours" header="ควรทำ" sortable style="min-width: 100px">
               <template #body="{ data }">
-                <span style="font-weight: 600; color: #f59e0b">{{ formatHoursMinutes(data.expectedHours) }}</span>
+                <span style="font-weight: 600; color: #b45309">{{ formatHoursMinutes(data.expectedHours) }}</span>
               </template>
             </Column>
                     <Column field="percentage" header="%" sortable style="min-width: 80px">
               <template #body="{ data }">
-                <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#10b981' : '#ef4444' }">{{ data.percentage }}%</span>
+                <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#047857' : '#dc2626' }">{{ data.percentage }}%</span>
               </template>
             </Column>
             <Column header="Workload" style="min-width: 220px">
               <template #body="{ data }">
-                <span v-if="!data.workload || data.workload.length === 0" class="text-muted" style="font-size:0.8rem">ไม่มีงาน</span>
+                <span v-if="!data.workload || data.workload.length === 0" class="text-muted" style="font-size:max(0.8rem, var(--min-fs))">ไม่มีงาน</span>
                 <div v-else class="workload-dropdown-wrap">
                   <button class="wl-toggle" @click.stop="openWorkloadUserId = openWorkloadUserId === data.userId ? null : data.userId">
                     <span>โครงการ {{ data.workload.length }} รายการ</span>
-                    <i :class="openWorkloadUserId === data.userId ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="font-size:0.7rem;margin-left:auto"></i>
+                    <i :class="openWorkloadUserId === data.userId ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="font-size:max(0.7rem, var(--min-fs));margin-left:auto"></i>
                   </button>
                   <div v-if="openWorkloadUserId === data.userId" class="wl-dropdown">
                     <div v-for="proj in data.workload" :key="proj.taskId" class="project-group">
@@ -357,12 +356,12 @@
                         <div class="progress-bar">
                           <div class="progress-fill" :style="{ width: proj.progress + '%' }"></div>
                         </div>
-                        <i :class="proj._expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="font-size:0.65rem;color:#6b7280"></i>
+                        <i :class="proj._expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" style="font-size:max(0.65rem, var(--min-fs));color:#525f70"></i>
                       </div>
                       <div v-if="proj._expanded" class="steps-list">
                         <div v-for="step in proj.steps" :key="step.stepId" class="workload-item"
                           :class="'wl-' + step.stepStatus"
-                          @click="$router.push({ path: '/project-progress', query: { taskId: step.taskId, stepId: step.stepId } })"
+                          @click="goToStepProgress(step.taskId, step.stepId)"
                           :title="step.stepName">
                           <span class="wl-dot"></span>
                           <div class="wl-info">
@@ -386,7 +385,7 @@
                   <Column field="taskName" header="ชื่องาน" style="min-width: 200px" />
                   <Column field="hours" header="ชั่วโมง" sortable>
                     <template #body="{ data: task }">
-                      <span style="font-weight: 600; color: #10b981">{{ formatHoursMinutes(task.hours) }}</span>
+                      <span style="font-weight: 600; color: #047857">{{ formatHoursMinutes(task.hours) }}</span>
                     </template>
                   </Column>
                   <Column field="percentage" header="สัดส่วน" sortable>
@@ -421,7 +420,7 @@
         <template #body="{ data }">
           <div class="category-badges-small">
             <span v-for="cat in parseCategoryArray(data.category)" :key="cat" class="cat-badge"
-              :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }">{{ cat }}</span>
+              :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff' }">{{ cat }}</span>
           </div>
         </template>
       </Column>
@@ -434,7 +433,7 @@
   </Dialog>
 
   <!-- Overdue Projects Dialog -->
-  <Dialog v-model:visible="showOverdueDialog" modal header="โครงการที่พ้นกําหนดระยะเวลาตามสัญญา"
+  <Dialog v-model:visible="showOverdueDialog" modal header="โครงการที่พ้นกำหนดระยะเวลาตามสัญญา"
     :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
     <DataTable :value="overdueProjects" paginator :rows="10" sortField="project_end_date" :sortOrder="1">
       <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
@@ -457,7 +456,7 @@
   <Dialog v-model:visible="showWorkingDialog" modal header="Engineer ลงงานวันนี้"
     :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false" position="center">
     <div class="work-status-section">
-      <h4 style="color: #10b981; margin-bottom: 10px;">✅ ลงงานแล้ว ({{ workingTodayUsers.length }})</h4>
+      <h4 style="color: #047857; margin-bottom: 10px;">✅ ลงงานแล้ว ({{ workingTodayUsers.length }})</h4>
       <DataTable :value="workingTodayUsers" :rows="5" :paginator="workingTodayUsers.length > 5">
         <Column field="firstname" header="ชื่อ" sortable />
         <Column field="lastname" header="นามสกุล" sortable />
@@ -465,7 +464,7 @@
       </DataTable>
     </div>
     <div class="work-status-section" style="margin-top: 20px;">
-      <h4 style="color: #ef4444; margin-bottom: 10px;">❌ ยังไม่ได้ลงงาน ({{ notWorkingUsers.length }})</h4>
+      <h4 style="color: #dc2626; margin-bottom: 10px;">❌ ยังไม่ได้ลงงาน ({{ notWorkingUsers.length }})</h4>
       <DataTable :value="notWorkingUsers" :rows="5" :paginator="notWorkingUsers.length > 5">
         <Column field="firstname" header="ชื่อ" sortable />
         <Column field="lastname" header="นามสกุล" sortable />
@@ -481,7 +480,9 @@
       <Column header="ชื่อ-นามสกุล">
         <template #body="{ data }">{{ data.firstname }} {{ data.lastname }}{{ data.nickname ? ` (${data.nickname})` : '' }}</template>
       </Column>
-      <Column field="leave_type" header="ประเภทการลา" />
+      <Column field="leave_type" header="ประเภทการลา">
+        <template #body="{ data }">{{ leaveTypeLabels[data.leave_type] || data.leave_type }}</template>
+      </Column>
     </DataTable>
   </Dialog>
 
@@ -532,10 +533,28 @@ import userService from '@/services/userService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import CountUp from '@/components/CountUp.vue'
 import { isCompleted, isActive } from '@/utils/statusHelper'
+import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
+import { usePermissions } from '@/composables/usePermissions'
+import { accessibleBg } from '@/utils/color'
 
 const { handleError } = useErrorHandler()
+const router = useRouter()
+const toast = useToast()
+const { hasAccess } = usePermissions()
+
+// ไปหน้า "ขั้นตอนการดำเนินการโครงการ" ได้เฉพาะ role ที่ถูกติ๊กสิทธิ์หน้านั้น (ไม่งั้น route guard จะเด้งไปหน้าอื่นโดยไม่บอกเหตุผล)
+const goToStepProgress = (taskId, stepId) => {
+  if (!hasAccess('/project-progress')) {
+    toast.add({ severity: 'warn', summary: 'ไม่มีสิทธิ์เข้าถึง', detail: 'บัญชีนี้ไม่มีสิทธิ์เปิดหน้า "ขั้นตอนการดำเนินการโครงการ"', life: 3000 })
+    return
+  }
+  router.push({ path: '/project-progress', query: { taskId, stepId } })
+}
 const loading = ref(false)
 const leaveTypeColors = ref({})
+// ค่าที่เก็บในใบลาคือ "รหัส" ประเภท (เช่น sick, vacation) — แสดงเป็นชื่อประเภทที่ตั้งไว้ (ลาป่วย, ลาพักร้อน) ไม่ใช่รหัสดิบ
+const leaveTypeLabels = ref({})
 const showUserDialog = ref(false)
 const selectedUserId = ref(null)
 
@@ -831,7 +850,7 @@ const renderUserLeaveChart = () => {
   userLeaveChartInstance = new Chart(userLeaveChart.value, {
     type: 'doughnut',
     data: {
-      labels,
+      labels: labels.map(l => leaveTypeLabels.value[l] || l),
       datasets: [{ data, backgroundColor: colors }]
     },
     options: {
@@ -937,10 +956,13 @@ const loadLeaveTypeColors = async () => {
   try {
     const response = await axios.get('/api/leave/leave-types')
     const colorMap = {}
+    const labelMap = {}
     response.data.forEach(type => {
       colorMap[type.value] = type.color
+      labelMap[type.value] = type.label
     })
     leaveTypeColors.value = colorMap
+    leaveTypeLabels.value = labelMap
   } catch (error) {
     handleError(error, {
       customMessage: 'ไม่สามารถโหลดสีประเภทการลาได้',
@@ -982,7 +1004,7 @@ const loadCategoryColors = async () => {
 }
 
 const getCategoryColor = (cat) => {
-  return categoryColors.value[cat] || '#6c757d'
+  return accessibleBg(categoryColors.value[cat] || '#6c757d')
 }
 
 const calcStepStatus = (step) => {
@@ -1003,7 +1025,7 @@ const calcStepStatus = (step) => {
 }
 
 const getStatusColor = (status) => {
-  return workStatusColors.value[status] || '#6c757d'
+  return accessibleBg(workStatusColors.value[status] || '#6c757d')
 }
 
 const loadData = async () => {
@@ -1307,6 +1329,8 @@ const loadData = async () => {
     renderCharts(leaves, tasks)
   } catch (error) {
     loading.value = false
+    // บันทึกสาเหตุจริงลง console — เดิมกลืนข้อผิดพลาดไว้หมด เหลือแต่ toast ทั่วไป ทำให้หาต้นเหตุไม่ได้
+    console.error('[Dashboard] load failed:', error)
     handleError(error, {
       customMessage: 'ไม่สามารถโหลดข้อมูล Dashboard ได้ กรุณาลองใหม่อีกครั้ง'
     })
@@ -1363,7 +1387,7 @@ const renderCharts = (leaves, tasks) => {
 
   // สร้าง datasets สำหรับแต่ละประเภทการลา
   const datasets = Array.from(leaveTypes).map(type => ({
-    label: type,
+    label: leaveTypeLabels.value[type] || type,
     data: sortedUserKeys.map(key => users[key][type] || 0),
     backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random() * 16777215).toString(16)
   }))
@@ -1471,7 +1495,7 @@ const renderCharts = (leaves, tasks) => {
 
 <style scoped>
 .analytics-btn {
-  background-color: #4A90E2 !important;
+  background-color: #3d78bc !important;
   border: none !important;
   color: #fff !important;
   font-weight: 500;
@@ -1487,7 +1511,7 @@ const renderCharts = (leaves, tasks) => {
 
 .clickable-name {
   cursor: pointer;
-  color: #3a7bd0;
+  color: #2f66b3;
   font-weight: 600;
   transition: all 0.2s;
 }
@@ -1586,7 +1610,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #4A90E2;
+  color: #2f66b3;
 }
 
 .user-leave-summary {
@@ -1606,7 +1630,7 @@ const renderCharts = (leaves, tasks) => {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
   color: white;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .leave-days {
@@ -1614,7 +1638,7 @@ const renderCharts = (leaves, tasks) => {
 }
 
 .no-data {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
 }
 
@@ -1645,8 +1669,8 @@ const renderCharts = (leaves, tasks) => {
 
 .summary-item p {
   margin: 0;
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .chart-container {
@@ -1679,7 +1703,7 @@ const renderCharts = (leaves, tasks) => {
   color: #374151;
   padding: 2px 8px;
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .steps-mini {
@@ -1694,7 +1718,7 @@ const renderCharts = (leaves, tasks) => {
   background: #f1f5f9;
   border-left: 3px solid;
   border-radius: 4px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .step-tag-link {
@@ -1770,7 +1794,7 @@ canvas {
 }
 
 .chart-dots span.active {
-  background: #4A90E2;
+  background: #3d78bc;
   width: 24px;
   border-radius: 4px;
 }
@@ -1848,7 +1872,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .chart-dots {
@@ -1870,7 +1894,7 @@ canvas {
   }
 
   :deep(.p-datatable) {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   :deep(.p-datatable-tbody > tr) {
@@ -1892,25 +1916,26 @@ canvas {
   }
 }
 
-.stats-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-.stats-header h3 { margin: 0; }
+.stats-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem 0.9rem; margin-bottom: 0.75rem; }
+/* จอแคบ: หัวข้อและช่องค้นหา/ตัวเลือกปีอยู่แถวเดียวกันทำให้หัวข้อถูกบีบเหลือ ~100px แตก 3 บรรทัด → ให้ห่อลงบรรทัดใหม่ */
+.stats-header h3 { margin: 0; flex: 1 1 14rem; min-width: 0; }
 
 .workload-dropdown-wrap { position: relative; }
-.wl-toggle { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: 0.8rem; width: 100%; text-align: left; color: #374151; font-weight: 500; }
+.wl-toggle { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 5px 10px; cursor: pointer; font-size: max(0.8rem, var(--min-fs)); width: 100%; text-align: left; color: #374151; font-weight: 500; }
 .wl-toggle:hover { background: #f1f5f9; border-color: #cbd5e1; }
 .wl-badges { display: flex; gap: 3px; flex-wrap: wrap; }
-.wl-badge { padding: 1px 6px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; }
+.wl-badge { padding: 1px 6px; border-radius: 10px; font-size: max(0.7rem, var(--min-fs)); font-weight: 600; }
 .wl-dropdown { position: absolute; top: calc(100% + 4px); left: 0; z-index: 9999; background: white; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: none; min-width: 260px; max-height: 320px; overflow-y: auto; padding: 4px; }
-.workload-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; transition: opacity 0.2s; margin-bottom: 2px; }
+.workload-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: max(0.78rem, var(--min-fs)); transition: opacity 0.2s; margin-bottom: 2px; }
 .workload-item:hover { opacity: 0.8; filter: brightness(0.96); }
 .wl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: currentColor; margin-top: 3px; }
 .wl-info { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
 .wl-task { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wl-step { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wl-step { font-size: max(0.78rem, var(--min-fs)); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wl-working    { background: #fefce8; color: #92400e; }
 .wl-in_progress { background: #eff6ff; color: #1e40af; }
 .wl-overdue    { background: #fef2f2; color: #991b1b; }
-.wl-pending    { background: #f9fafb; color: #6b7280; }
+.wl-pending    { background: #f9fafb; color: #525f70; }
 .wl-completed  { background: #f0fdf4; color: #065f46; }
 
 
@@ -1918,13 +1943,13 @@ canvas {
 .project-header { padding: 8px 10px; background: #f9fafb; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: background 0.2s; }
 .project-header:hover { background: #f3f4f6; }
 .project-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.project-name { font-weight: 600; font-size: 0.8rem; color: #1f2937; }
-.project-progress { font-size: 0.7rem; color: #6b7280; }
+.project-name { font-weight: 600; font-size: max(0.8rem, var(--min-fs)); color: #1f2937; }
+.project-progress { font-size: max(0.7rem, var(--min-fs)); color: #525f70; }
 .progress-bar { flex: 0 0 80px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, #4A90E2, #10b981); transition: width 0.3s; }
 .steps-list { padding: 4px; background: white; }
 .wl-status-badges { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
-.status-mini { padding: 1px 5px; border-radius: 8px; font-size: 0.65rem; color: white; font-weight: 500; }
+.status-mini { padding: 1px 5px; border-radius: 8px; font-size: max(0.65rem, var(--min-fs)); color: white; font-weight: 500; }
 
 .task-breakdown {
   padding: 1rem;
@@ -1994,7 +2019,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .chart-dots {
@@ -2018,7 +2043,7 @@ canvas {
   }
 
   :deep(.p-datatable .p-column-title) {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -2065,7 +2090,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .chart-card {
@@ -2077,15 +2102,15 @@ canvas {
   }
 
   :deep(.p-datatable) {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   :deep(.p-datatable .p-column-title) {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   :deep(.p-paginator) {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 }
 
@@ -2095,7 +2120,7 @@ canvas {
   }
 
   .summary-info p {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .header-title h1 {

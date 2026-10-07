@@ -2,7 +2,7 @@
   <Card class="history-card">
     <template #content>
       <div v-if="records.length === 0" class="empty-state">
-        <i class="pi pi-calendar-plus" style="font-size: 4rem; color: #ccc;"></i>
+        <i class="pi pi-calendar-plus" style="font-size: 4rem; color: #55657a;"></i>
         <p>ยังไม่มีข้อมูลการลงงาน</p>
       </div>
 
@@ -23,7 +23,7 @@
         <Column header="#" style="width: 70px; text-align: center;">
           <template #body="slotProps">
             <Badge :value="`#${slotProps.data.projects[0]?.id || slotProps.index + 1}`"
-              style="background:#e5e7eb;color:#374151;font-size:0.75rem;font-weight:600" />
+              style="background:#e5e7eb;color:#374151;font-size:max(0.75rem, var(--min-fs));font-weight:600" />
           </template>
         </Column>
 
@@ -54,10 +54,10 @@
 
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true">
           <template #body="slotProps">
-            <span v-if="slotProps.data.employee_position" style="display:inline-block;padding:2px 10px;border-radius:12px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:0.75rem;font-weight:600;white-space:nowrap">
+            <span v-if="slotProps.data.employee_position" style="display:inline-block;padding:2px 10px;border-radius:12px;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;font-size:max(0.75rem, var(--min-fs));font-weight:600;white-space:nowrap">
               {{ slotProps.data.employee_position }}
             </span>
-            <span v-else style="color:#9ca3af;font-size:0.8rem">ไม่ระบุ</span>
+            <span v-else style="color:#55657a;font-size:max(0.8rem, var(--min-fs))">ไม่ระบุ</span>
           </template>
         </Column>
 
@@ -98,7 +98,7 @@
                   <div class="step-header-mini">
                     <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">{{ (step.step_order || 0) + 1 }}</span>
                     <span class="step-name-mini">{{ step.step_name }}</span>
-                    <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">{{ getStepLabelFromData(step) }}</span>
+                    <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: $accessibleText(getStepColorFromData(step)) }">{{ getStepLabelFromData(step) }}</span>
                   </div>
                 </div>
               </div>
@@ -107,7 +107,7 @@
                 <div class="step-header-mini">
                   <span class="step-number-mini" :style="{ background: getStepColor(slotProps.data.projects[0]) }">{{ (slotProps.data.projects[0].step_order || 0) + 1 }}</span>
                   <span class="step-name-mini">{{ slotProps.data.projects[0].step_name }}</span>
-                  <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data.projects[0]) + '20', color: getStepColor(slotProps.data.projects[0]) }">{{ getStepLabel(slotProps.data.projects[0]) }}</span>
+                  <span class="step-status-badge-mini" :style="{ background: getStepColor(slotProps.data.projects[0]) + '20', color: $accessibleText(getStepColor(slotProps.data.projects[0])) }">{{ getStepLabel(slotProps.data.projects[0]) }}</span>
                 </div>
               </div>
               <span v-else class="text-muted"></span>
@@ -122,15 +122,15 @@
               <template v-if="slotProps.data.projects.length === 1">
                 <template v-if="slotProps.data.projects[0].work_status === 'cancelled'">
                 <Badge :value="getStatusLabel('cancelled')"
-                  :style="{ backgroundColor: getStatusColor('cancelled'), color: '#fff' }" />
+                  :style="{ backgroundColor: $accessibleBg(getStatusColor('cancelled')), color: '#fff' }" />
               </template>
               <template v-else-if="getWorkflowStatuses(slotProps.data.projects[0]).length > 0">
                   <Badge v-for="ps in getWorkflowStatuses(slotProps.data.projects[0])" :key="ps" :value="getStatusLabel(ps)"
-                    :style="{ backgroundColor: getStatusColor(ps), color: '#fff' }" />
+                    :style="{ backgroundColor: $accessibleBg(getStatusColor(ps)), color: '#fff' }" />
                 </template>
                 <span v-else-if="hasWorkflowStep(slotProps.data.projects[0])" class="text-muted"></span>
                 <Badge v-else-if="slotProps.data.projects[0].work_status" :value="getStatusLabel(slotProps.data.projects[0].work_status)"
-                  :style="{ backgroundColor: getStatusColor(slotProps.data.projects[0].work_status), color: '#fff' }" />
+                  :style="{ backgroundColor: $accessibleBg(getStatusColor(slotProps.data.projects[0].work_status)), color: '#fff' }" />
                 <span v-else class="text-muted"></span>
               </template>
               <span v-else class="text-muted"></span>
@@ -151,7 +151,7 @@
               <div class="badge-container category-badges">
                 <Badge v-for="cat in parseCategoryArray(slotProps.data.projects[0].category)" :key="cat"
                   :value="getCategoryLabel(cat)"
-                  :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '2px' }" />
+                  :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff', margin: '2px' }" />
               </div>
             </template>
             <span v-else class="text-muted"></span>
@@ -227,7 +227,7 @@
                     <div class="step-header-mini">
                       <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">{{ (step.step_order || 0) + 1 }}</span>
                       <span class="step-name-mini">{{ step.step_name }}</span>
-                      <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">{{ getStepLabelFromData(step) }}</span>
+                      <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: $accessibleText(getStepColorFromData(step)) }">{{ getStepLabelFromData(step) }}</span>
                     </div>
                   </div>
                 </div>
@@ -235,21 +235,21 @@
               <div class="exp-cell">
                 <template v-if="proj.work_status === 'cancelled'">
                   <Badge :value="getStatusLabel('cancelled')"
-                    :style="{ backgroundColor: getStatusColor('cancelled'), color: '#fff' }" />
+                    :style="{ backgroundColor: $accessibleBg(getStatusColor('cancelled')), color: '#fff' }" />
                 </template>
                 <template v-else-if="getWorkflowStatuses(proj).length > 0">
                   <Badge v-for="ps in getWorkflowStatuses(proj)" :key="ps" :value="getStatusLabel(ps)"
-                    :style="{ backgroundColor: getStatusColor(ps), color: '#fff', margin: '1px' }" />
+                    :style="{ backgroundColor: $accessibleBg(getStatusColor(ps)), color: '#fff', margin: '1px' }" />
                 </template>
                 <Badge v-else-if="proj.work_status" :value="getStatusLabel(proj.work_status)"
-                  :style="{ backgroundColor: getStatusColor(proj.work_status), color: '#fff' }" />
+                  :style="{ backgroundColor: $accessibleBg(getStatusColor(proj.work_status)), color: '#fff' }" />
               </div>
               <div class="exp-cell">{{ proj.location || '' }}</div>
               <div class="exp-cell">
                 <template v-if="parseCategoryArray(proj.category).length > 0">
                   <Badge v-for="cat in parseCategoryArray(proj.category)" :key="cat"
                     :value="getCategoryLabel(cat)"
-                    :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', margin: '1px' }" />
+                    :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff', margin: '1px' }" />
                 </template>
               </div>
               <div class="exp-cell exp-cell-actions">
@@ -314,7 +314,7 @@
             <div class="step-header-mini">
               <span class="step-number-mini" :style="{ background: getStepColorFromData(step) }">{{ (step.step_order || 0) + 1 }}</span>
               <span class="step-name-mini">{{ step.step_name }}</span>
-              <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: getStepColorFromData(step) }">{{ getStepLabelFromData(step) }}</span>
+              <span class="step-status-badge-mini" :style="{ background: getStepColorFromData(step) + '20', color: $accessibleText(getStepColorFromData(step)) }">{{ getStepLabelFromData(step) }}</span>
             </div>
           </div>
         </div>
@@ -323,7 +323,7 @@
             <div class="step-header-mini">
               <span class="step-number-mini" :style="{ background: getStepColor(selectedRecord) }">{{ (selectedRecord.step_order || 0) + 1 }}</span>
               <span class="step-name-mini">{{ selectedRecord.step_name }}</span>
-              <span class="step-status-badge-mini" :style="{ background: getStepColor(selectedRecord) + '20', color: getStepColor(selectedRecord) }">{{ getStepLabel(selectedRecord) }}</span>
+              <span class="step-status-badge-mini" :style="{ background: getStepColor(selectedRecord) + '20', color: $accessibleText(getStepColor(selectedRecord)) }">{{ getStepLabel(selectedRecord) }}</span>
             </div>
           </div>
         </div>
@@ -335,7 +335,7 @@
         <div class="dt-cats">
           <Badge v-for="cat in parseCategoryArray(selectedRecord.category)" :key="cat"
             :value="getCategoryLabel(cat)"
-            :style="{ backgroundColor: getCategoryColor(cat), color: '#fff' }" />
+            :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff' }" />
         </div>
       </div>
 
@@ -559,6 +559,7 @@ import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import Checkbox from 'primevue/checkbox'
 import { usePermissions } from '@/composables/usePermissions'
+import { accessibleBg } from '@/utils/color'
 
 import { addDays, formatDayMonthTH } from '@/utils/dateUtils'
 import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
@@ -938,20 +939,20 @@ export default {
       return value
     },
     getStepColor(data) {
-      if (data?.step_status === 'completed') return '#10b981'
+      if (data?.step_status === 'completed') return accessibleBg('#10b981')
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       if (data?.step_end_date) {
         const endDate = new Date(data.step_end_date)
         endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return '#ef4444'
+        if (today > endDate) return accessibleBg('#ef4444')
       }
       if (data?.step_has_work_logged && data?.step_latest_work_date) {
         const wDate = new Date(data.step_latest_work_date)
         wDate.setHours(0, 0, 0, 0)
-        if (wDate <= today) return '#f59e0b'
+        if (wDate <= today) return accessibleBg('#f59e0b')
       }
-      return '#9ca3af'
+      return accessibleBg('#9ca3af')
     },
     getStepLabel(data) {
       if (data?.step_status === 'completed') return 'เสร็จสิ้น'
@@ -970,6 +971,11 @@ export default {
       return 'รอดำเนินการ'
     },
     goToProjectProgress(taskId, stepId) {
+      // เปิดได้เฉพาะ role ที่ถูกติ๊กสิทธิ์หน้า "ขั้นตอนการดำเนินการโครงการ" (ไม่งั้น route guard จะเด้งไปหน้าอื่นโดยไม่บอกเหตุผล)
+      if (!this.hasAccess('/project-progress')) {
+        this.$toast.add({ severity: 'warn', summary: 'ไม่มีสิทธิ์เข้าถึง', detail: 'บัญชีนี้ไม่มีสิทธิ์เปิดหน้า "ขั้นตอนการดำเนินการโครงการ"', life: 3000 })
+        return
+      }
       this.$router.push({ path: '/project-progress', query: { taskId, stepId } })
     },
     getWorkflowStatuses(record) {
@@ -989,20 +995,20 @@ export default {
       return (record.steps_data && record.steps_data.length > 0) || record.step_id
     },
     getStepColorFromData(step) {
-      if (step?.status === 'completed') return '#10b981'
+      if (step?.status === 'completed') return accessibleBg('#10b981')
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       if (step?.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return '#ef4444'
+        if (today > endDate) return accessibleBg('#ef4444')
       }
       if (step?.has_work_logged && step.latest_work_date) {
         const wDate = new Date(step.latest_work_date)
         wDate.setHours(0, 0, 0, 0)
-        if (wDate <= today) return '#f59e0b'
+        if (wDate <= today) return accessibleBg('#f59e0b')
       }
-      return '#9ca3af'
+      return accessibleBg('#9ca3af')
     },
     getStepLabelFromData(step) {
       if (step?.status === 'completed') return 'เสร็จสิ้น'
@@ -1030,7 +1036,7 @@ export default {
     },
     getProjectStatusColor(status) {
       const found = this.statusOptions.find(s => s.value === status)
-      return found?.color || '#6b7280'
+      return accessibleBg(found?.color || '#6b7280')
     },
     getStatusLabelFromOptions(value) {
       const status = this.statusOptions.find(s => s.value === value)
@@ -1041,9 +1047,9 @@ export default {
       return value
     },
     getStatusColor(value) {
-      if (value === 'cancelled') return '#ef4444'
+      if (value === 'cancelled') return accessibleBg('#ef4444')
       const status = this.statusOptions.find(s => s.value === value)
-      return status?.color || '#6c757d'
+      return accessibleBg(status?.color || '#6c757d')
     },
     getCategoryLabel(value) {
       const category = this.categoryOptions.find(c => c.value === value)
@@ -1055,7 +1061,7 @@ export default {
     },
     getCategoryColor(value) {
       const category = this.categoryOptions.find(c => c.value === value)
-      return category?.color || '#6c757d'
+      return accessibleBg(category?.color || '#6c757d')
     },
     parseCategoryArray(category) {
       if (!category) return []
@@ -1346,8 +1352,8 @@ export default {
   display: flex; align-items: center; gap: 6px;
   margin-bottom: 6px;
 }
-.multi-proj-icon { color: #3a7bd0; font-size: 0.75rem; }
-.multi-proj-count { font-weight: 700; font-size: 0.82rem; color: #1e40af; }
+.multi-proj-icon { color: #2f66b3; font-size: max(0.75rem, var(--min-fs)); }
+.multi-proj-count { font-weight: 700; font-size: max(0.82rem, var(--min-fs)); color: #1e40af; }
 .multi-proj-list { display: flex; flex-direction: column; gap: 4px; }
 .multi-proj-item {
   display: flex; align-items: center; gap: 5px;
@@ -1356,8 +1362,8 @@ export default {
   border-radius: 5px;
   border: 1px solid #e5e7eb;
 }
-.multi-proj-num { font-size: 0.72rem; color: #9ca3af; font-weight: 600; min-width: 14px; }
-.multi-proj-name { font-size: 0.78rem; color: #374151; font-weight: 500; }
+.multi-proj-num { font-size: max(0.72rem, var(--min-fs)); color: #55657a; font-weight: 600; min-width: 14px; }
+.multi-proj-name { font-size: max(0.78rem, var(--min-fs)); color: #374151; font-weight: 500; }
 
 /* Expansion row */
 .expansion-projects {
@@ -1380,15 +1386,15 @@ export default {
 .expansion-header {
   background: #e8f0fe !important;
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
   color: #1e40af;
   border-radius: 6px;
   margin-bottom: 6px;
   padding: 8px 12px;
   border: 1px solid #bfdbfe;
 }
-.exp-cell { font-size: 0.82rem; }
-.exp-cell-time { font-size: 0.82rem; font-weight: 600; color: #374151; white-space: nowrap; }
+.exp-cell { font-size: max(0.82rem, var(--min-fs)); }
+.exp-cell-time { font-size: max(0.82rem, var(--min-fs)); font-weight: 600; color: #374151; white-space: nowrap; }
 .exp-cell-project { display: flex; flex-direction: column; gap: 3px; }
 .exp-cell-steps { display: flex; flex-direction: column; gap: 4px; }
 .exp-cell-actions { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; }
@@ -1403,10 +1409,10 @@ export default {
   align-items: flex-start;
   gap: 6px;
   margin-top: 4px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 .proj-detail-label {
-  color: #6b7280;
+  color: #525f70;
   font-weight: 500;
   white-space: nowrap;
   padding-top: 2px;
@@ -1429,7 +1435,7 @@ export default {
 .proj-item-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
 .proj-steps { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
 .step-tag-mini {
-  font-size: 0.7rem; padding: 2px 6px; border-radius: 10px;
+  font-size: max(0.7rem, var(--min-fs)); padding: 2px 6px; border-radius: 10px;
   border: 1px solid; cursor: pointer; white-space: nowrap;
 }
 .step-tag-mini:hover { opacity: 0.8; }
@@ -1450,16 +1456,16 @@ export default {
   background: #e3f2fd;
   color: #1976d2;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
 }
 
 .step-badge i {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .text-muted {
-  color: #9ca3af;
+  color: #55657a;
 }
 
 .step-info {
@@ -1490,11 +1496,11 @@ export default {
 }
 
 .step-badge-small i {
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
 }
 
 .step-status-tag {
-  font-size: 0.65rem;
+  font-size: max(0.65rem, var(--min-fs));
   padding: 0.1rem 0.4rem;
   border-radius: 8px;
   color: white;
@@ -1507,13 +1513,13 @@ export default {
 }
 
 .step-detail {
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: max(0.8rem, var(--min-fs));
+  color: #525f70;
 }
 
 .step-detail i {
   margin-right: 4px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .badge-container {
@@ -1541,7 +1547,7 @@ export default {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6c757d;
+  color: #525f70;
   background: #f8f9fa;
   border-radius: 8px;
   margin: 1rem;
@@ -1558,10 +1564,7 @@ export default {
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
-  background: #f8f9fa;
-  color: #495057;
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
   padding: 1rem 0.75rem;
   font-size: 0.9rem;
 }
@@ -1570,16 +1573,6 @@ export default {
   padding: 1rem 0.75rem;
   border-bottom: 1px solid #f1f3f4;
   vertical-align: middle;
-}
-
-.history-table :deep(.p-datatable-tbody > tr:hover) {
-  background: #f8f9fa;
-}
-
-.history-table :deep(.p-paginator) {
-  background: #f8f9fa;
-  border-top: 2px solid #e9ecef;
-  padding: 1rem;
 }
 
 .employee-info {
@@ -1595,7 +1588,7 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #3a7bd0;
+  color: #2f66b3;
   transition: all 0.2s;
 }
 
@@ -1605,14 +1598,14 @@ export default {
 }
 
 .position-text {
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
 }
 
 .department-text {
-  color: #868e96;
-  font-size: 0.85rem;
+  color: #55657a;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
 }
 
@@ -1623,12 +1616,12 @@ export default {
 }
 
 .custom-id-badge {
-  background-color: #3a7bd0 !important;
+  background-color: #3369ac !important;
   color: white !important;
   font-weight: 700 !important;
   padding: 0.4rem 0.6rem !important;
   border-radius: 8px !important;
-  font-size: 0.85rem !important;
+  font-size: max(0.85rem, var(--min-fs)) !important;
   border: 2px solid rgba(74, 144, 226, 0.2) !important;
   box-shadow: none !important;
   letter-spacing: 0.5px !important;
@@ -1653,8 +1646,8 @@ export default {
 }
 
 .so-number {
-  font-size: 0.8rem;
-  color: #6c757d;
+  font-size: max(0.8rem, var(--min-fs));
+  color: #525f70;
   background: #e3f2fd;
   padding: 0.2rem 0.5rem;
   border-radius: 12px;
@@ -1670,11 +1663,11 @@ export default {
 
 .time-info i {
   margin-right: 0.5rem;
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .total-hours {
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   color: #28a745;
   font-weight: 600;
 }
@@ -1687,11 +1680,11 @@ export default {
 }
 
 .sale-info i {
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .text-muted {
-  color: #6c757d;
+  color: #525f70;
 }
 
 .description-preview {
@@ -1732,7 +1725,7 @@ export default {
 
 .edit-label i {
   color: #6366f1;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .file-upload-area {
@@ -1753,7 +1746,7 @@ export default {
   padding: 0.4rem 0.75rem;
   background: #f3f4f6;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .file-chip.new {
@@ -1762,8 +1755,8 @@ export default {
 
 .file-chip .remove-file {
   cursor: pointer;
-  color: #ef4444;
-  font-size: 0.75rem;
+  color: #dc2626;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .file-chip .remove-file:hover {
@@ -1800,12 +1793,12 @@ export default {
 
 .time-range-group .time-separator {
   font-weight: bold;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .time-range-group .time-total {
   font-size: 0.9rem;
-  color: #6c757d;
+  color: #525f70;
   margin-left: 0.5rem;
 }
 
@@ -1850,8 +1843,8 @@ export default {
 }
 
 .disabled-text {
-  color: #6c757d;
-  font-size: 0.8rem;
+  color: #525f70;
+  font-size: max(0.8rem, var(--min-fs));
   font-style: italic;
 }
 
@@ -1897,7 +1890,7 @@ export default {
 
 .file-icon {
   font-size: 1.5rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .file-name {
@@ -1936,7 +1929,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #999;
+  color: #55657a;
   font-size: 0.9rem;
   width: 100%;
   text-align: center;
@@ -1946,12 +1939,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #3a7bd0;
+  color: #2f66b3;
   font-size: 0.9rem;
 }
 
 .file-indicator i {
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .dialog-overlay {
@@ -2010,7 +2003,7 @@ export default {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #6c757d;
+  color: #525f70;
   padding: 0;
   width: 30px;
   height: 30px;
@@ -2062,26 +2055,26 @@ export default {
 }
 .dt-icon {
   width: 40px; height: 40px; border-radius: 11px;
-  background-color: #3a7bd0;
+  background-color: #3369ac;
   color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 1rem; flex-shrink: 0;
 }
 .dt-title { flex: 1; min-width: 0; }
 .dt-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 .dt-so {
-  font-family: monospace; font-weight: 800; font-size: 0.7rem;
-  color: #fff; background-color: #3a7bd0;
+  font-family: monospace; font-weight: 800; font-size: max(0.7rem, var(--min-fs));
+  color: #fff; background-color: #3369ac;
   padding: 0.12rem 0.45rem; border-radius: 5px; white-space: nowrap;
 }
 .dt-task { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
 .dt-customer {
   display: flex; align-items: center; gap: 0.3rem;
-  font-size: 0.74rem; color: #475569; margin-top: 0.25rem;
+  font-size: max(0.74rem, var(--min-fs)); color: #475569; margin-top: 0.25rem;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.dt-customer i { font-size: 0.64rem; color: #94a3b8; flex-shrink: 0; }
+.dt-customer i { font-size: max(0.64rem, var(--min-fs)); color: #55657a; flex-shrink: 0; }
 .dt-status {
-  flex-shrink: 0; font-size: 0.7rem; font-weight: 700;
+  flex-shrink: 0; font-size: max(0.7rem, var(--min-fs)); font-weight: 700;
   padding: 0.2rem 0.6rem; border-radius: 20px; white-space: nowrap;
 }
 .dt-status.st-completed { background: #dcfce7; color: #166534; }
@@ -2093,24 +2086,24 @@ export default {
 .dt-item { background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px; padding: 0.6rem 0.8rem; }
 .dt-label {
   display: flex; align-items: center; gap: 0.3rem;
-  font-size: 0.66rem; font-weight: 700; color: #94a3b8;
+  font-size: max(0.66rem, var(--min-fs)); font-weight: 700; color: #55657a;
   text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem;
 }
-.dt-label i { font-size: 0.66rem; }
-.dt-value { font-size: 0.86rem; color: #0f172a; font-weight: 500; }
+.dt-label i { font-size: max(0.66rem, var(--min-fs)); }
+.dt-value { font-size: max(0.86rem, var(--min-fs)); color: #0f172a; font-weight: 500; }
 .dt-section { display: flex; flex-direction: column; gap: 0.5rem; }
 .dt-section-title {
   display: flex; align-items: center; gap: 0.35rem;
-  font-size: 0.78rem; font-weight: 800; color: #334155;
+  font-size: max(0.78rem, var(--min-fs)); font-weight: 800; color: #334155;
 }
-.dt-section-title i { color: #3a7bd0; font-size: 0.78rem; }
+.dt-section-title i { color: #2f66b3; font-size: max(0.78rem, var(--min-fs)); }
 .dt-cats { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .dt-desc {
   background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px;
-  padding: 0.75rem 1rem; font-size: 0.88rem; color: #334155;
+  padding: 0.75rem 1rem; font-size: max(0.88rem, var(--min-fs)); color: #334155;
   line-height: 1.65; white-space: pre-wrap; word-break: break-word;
 }
-.dt-desc-empty { color: #94a3b8; font-style: italic; }
+.dt-desc-empty { color: #55657a; font-style: italic; }
 .dt-files { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .dt-file {
   width: 72px; height: 72px; border-radius: 10px; overflow: hidden;
@@ -2120,12 +2113,16 @@ export default {
 }
 .dt-file:hover { border-color: #4A90E2; }
 .dt-thumb { width: 100%; height: 100%; object-fit: cover; }
-.dt-file-icon { font-size: 1.4rem; color: #94a3b8; }
+.dt-file-icon { font-size: 1.4rem; color: #55657a; }
 .dt-footer { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
 @media (max-width: 640px) {
   .dt-grid { grid-template-columns: 1fr; }
   .dt-footer { flex-direction: column-reverse; }
   .dt-footer .p-button { width: 100%; }
+  /* ปุ่มท้ายฟอร์มแก้ไขงาน (ยกเลิก / เพิ่มโครงการ / บันทึก): บน 375px 3 ปุ่ม + ช่องไฟ 1rem กว้างพอดีกล่อง ปุ่มโดนบีบ
+     "เพิ่มโครงการ" ตัดเป็น 2 บรรทัด (ปุ่มอื่นยืดสูงตาม) และ "ยกเลิก" ล้นกรอบ → ห้ามตัดบรรทัดในปุ่ม ให้ปุ่มขยายเต็มแถว และขึ้นแถวใหม่ถ้าไม่พอ */
+  .form-actions { flex-wrap: wrap; gap: 0.6rem; }
+  .form-actions .p-button { flex: 1 1 auto; justify-content: center; white-space: nowrap; }
 }
 
 /* Mobile Responsive */
@@ -2136,12 +2133,12 @@ export default {
 
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .task-info {
@@ -2149,7 +2146,7 @@ export default {
   }
 
   .task-name {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
     line-height: 1.2;
   }
 
@@ -2158,7 +2155,7 @@ export default {
   }
 
   .step-name {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     flex-wrap: wrap;
     gap: 0.3rem;
   }
@@ -2169,33 +2166,33 @@ export default {
   }
 
   .step-status-tag {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     padding: 0.1rem 0.3rem;
   }
 
   .step-detail {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 }
 
 @media (max-width: 480px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .custom-id-badge {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     padding: 0.25rem 0.4rem;
   }
 
   .step-name {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .step-status-tag {
@@ -2217,7 +2214,7 @@ export default {
   border: 1px solid #d5e5fa;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
   display: block;
   width: fit-content;
@@ -2231,7 +2228,7 @@ export default {
   border: 1px solid #e2e8f0;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   font-weight: 500;
   display: block;
   width: fit-content;
@@ -2280,25 +2277,25 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: bold;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
 }
 
 .step-name-mini {
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   color: #1e293b;
 }
 
 .step-status-badge-mini {
-  font-size: 0.65rem;
+  font-size: max(0.65rem, var(--min-fs));
   padding: 0.1rem 0.4rem;
   border-radius: 10px;
   font-weight: 500;
 }
 
 .step-desc-mini {
-  font-size: 0.7rem;
-  color: #64748b;
+  font-size: max(0.7rem, var(--min-fs));
+  color: #526074;
   margin: 0.3rem 0;
   white-space: pre-wrap;
 }
@@ -2314,20 +2311,20 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.65rem;
-  color: #64748b;
+  font-size: max(0.65rem, var(--min-fs));
+  color: #526074;
 }
 
 .meta-item-mini i {
-  font-size: 0.6rem;
+  font-size: max(0.6rem, var(--min-fs));
 }
 
 .user-badge-mini {
-  background: #4A90E2;
+  background: #3d78bc;
   color: white;
   padding: 0.1rem 0.3rem;
   border-radius: 6px;
-  font-size: 0.6rem;
+  font-size: max(0.6rem, var(--min-fs));
   margin-right: 0.2rem;
 }
 
@@ -2337,14 +2334,14 @@ export default {
   gap: 0.2rem;
   padding: 0.15rem 0.4rem;
   border-radius: 8px;
-  font-size: 0.65rem;
+  font-size: max(0.65rem, var(--min-fs));
   font-weight: 500;
 }
 
 /* ── Manage Group Dialog ── */
 .manage-group-wrap { display: flex; flex-direction: column; gap: 1rem; }
 .manage-group-date { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #374151; font-size: 0.95rem; }
-.manage-group-count { background: #dbeafe; color: #2a5490; border-radius: 12px; padding: 2px 10px; font-size: 0.78rem; font-weight: 700; margin-left: 4px; }
+.manage-group-count { background: #dbeafe; color: #2a5490; border-radius: 12px; padding: 2px 10px; font-size: max(0.78rem, var(--min-fs)); font-weight: 700; margin-left: 4px; }
 .manage-proj-list { display: flex; flex-direction: column; gap: 8px; }
 .manage-proj-item {
   display: flex; align-items: center; justify-content: space-between;
@@ -2353,12 +2350,12 @@ export default {
   background: #f8fafc;
 }
 .manage-proj-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #4A90E2; color: #fff; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #3d78bc; color: #fff; font-size: max(0.72rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .manage-proj-detail { flex: 1; min-width: 0; }
-.manage-proj-name { font-weight: 600; color: #1e293b; font-size: 0.875rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.manage-proj-time { font-size: 0.78rem; color: #64748b; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.manage-proj-name { font-weight: 600; color: #1e293b; font-size: max(0.875rem, var(--min-fs)); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.manage-proj-time { font-size: max(0.78rem, var(--min-fs)); color: #526074; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 .manage-proj-actions { display: flex; gap: 4px; flex-shrink: 0; }
-.so-badge-sm { background: #eaf3fe; color: #2f66b3; border: 1px solid #d5e5fa; padding: 1px 6px; border-radius: 6px; font-size: 0.68rem; font-weight: 700; white-space: nowrap; }
+.so-badge-sm { background: #eaf3fe; color: #2f66b3; border: 1px solid #d5e5fa; padding: 1px 6px; border-radius: 6px; font-size: max(0.68rem, var(--min-fs)); font-weight: 700; white-space: nowrap; }
 
 /* ── Edit Dialog Dropdown custom styles ── */
 .edit-val-row,
@@ -2381,20 +2378,20 @@ export default {
 }
 
 .edit-so-tag {
-  background: #4A90E2;
+  background: #3d78bc;
   color: #fff;
   padding: 1px 6px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 700;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .edit-mine-tag {
-  background: #f59e0b;
+  background: #a46a07;
   color: #fff;
-  font-size: 0.65rem;
+  font-size: max(0.65rem, var(--min-fs));
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 10px;
@@ -2411,6 +2408,6 @@ export default {
 }
 
 .edit-ph {
-  color: #9ca3af;
+  color: #55657a;
 }
 </style>

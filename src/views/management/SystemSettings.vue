@@ -237,7 +237,7 @@ const showComingSoon = () => {
 
 .card-icon {
   font-size: 2.5rem;
-  color: #4A90E2;
+  color: #2f66b3;
   transition: color 0.3s ease;
 }
 
@@ -254,7 +254,7 @@ const showComingSoon = () => {
 
 .card-content p {
   margin: 0;
-  color: #6c757d;
+  color: #525f70;
   font-size: 0.9rem;
   line-height: 1.5;
 }
@@ -268,7 +268,7 @@ const showComingSoon = () => {
 }
 
 .card-footer i {
-  color: #4A90E2;
+  color: #2f66b3;
   transition: transform 0.3s ease;
 }
 

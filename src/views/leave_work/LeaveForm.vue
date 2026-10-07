@@ -193,7 +193,7 @@
               />
             </div>
             <div class="input-group full-width">
-              <label for="delegateContact" class="input-label">ช่องทางติดต่อผู้รับผิดชอบงานเเทน *</label>
+              <label for="delegateContact" class="input-label">ช่องทางติดต่อผู้รับผิดชอบงานแทน *</label>
               <InputText id="delegateContact" v-model="formData.delegateContact"
                 placeholder="เบอร์โทร, อีเมล, หรือช่องทางอื่นๆ" required class="corporate-input" />
             </div>
@@ -1097,7 +1097,7 @@ export default {
 }
 
 .quota-label {
-  color: #6c757d;
+  color: #525f70;
   font-weight: 500;
 }
 
@@ -1119,8 +1119,8 @@ export default {
 }
 
 .quota-total {
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .form-card {
@@ -1203,7 +1203,7 @@ export default {
 
 .readonly-field {
   background: #f8f9fa;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .section-divider {
@@ -1266,7 +1266,7 @@ export default {
 }
 
 .file-item i {
-  color: #6c757d;
+  color: #525f70;
   font-size: 1rem;
 }
 
@@ -1310,7 +1310,7 @@ export default {
   }
 
   .input-label {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .checkbox-label {
@@ -1326,7 +1326,7 @@ export default {
   }
 
   .file-name {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -1367,11 +1367,11 @@ export default {
   .corporate-input,
   .corporate-dropdown {
     padding: 0.5rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .input-label {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .form-actions .p-button {
@@ -1385,7 +1385,7 @@ export default {
   }
 
   .checkbox-label {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -1401,8 +1401,8 @@ export default {
 }
 
 .user-role {
-  font-size: 0.875rem;
-  color: #6c757d;
+  font-size: max(0.875rem, var(--min-fs));
+  color: #525f70;
   margin-top: 0.25rem;
 }
 
@@ -1456,8 +1456,8 @@ export default {
 }
 
 .quota-total {
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .leave-type-option {
@@ -1469,12 +1469,12 @@ export default {
 
 .disabled-option {
   background-color: #f8f9fa !important;
-  color: #6c757d !important;
+  color: #525f70 !important;
   cursor: not-allowed !important;
 }
 
 .quota-status {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   color: #dc3545;
   font-weight: 500;
   background: #f8d7da;
@@ -1488,14 +1488,14 @@ export default {
 }
 
 .quota-placeholder-text {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
   font-size: 0.9rem;
 }
 
 .time-hint {
-  color: #6c757d;
-  font-size: 0.75rem;
+  color: #525f70;
+  font-size: max(0.75rem, var(--min-fs));
   margin-top: 0.25rem;
   display: block;
 }
@@ -1509,8 +1509,8 @@ export default {
 
 .advance-hint {
   display: block;
-  font-size: 0.75rem;
-  color: #f59e0b;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #b45309;
   margin-top: 0.25rem;
 }
 
@@ -1518,8 +1518,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  color: #f59e0b;
-  font-size: 0.8rem;
+  color: #b45309;
+  font-size: max(0.8rem, var(--min-fs));
   margin-top: 0.5rem;
 }
 
@@ -1537,14 +1537,14 @@ export default {
 }
 
 .advance-day-blocked {
-  background-color: #f59e0b !important;
+  background-color: #a46a07 !important;
   color: #fff !important;
   font-weight: 600;
   cursor: not-allowed;
 }
 
 .holiday-date {
-  background-color: #ef4444 !important;
+  background-color: #d73d3d !important;
   color: #fff !important;
   font-weight: 600;
 }

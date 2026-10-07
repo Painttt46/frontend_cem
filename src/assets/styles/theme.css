@@ -11,9 +11,10 @@
 
 :root {
   /* ===== Brand tokens ===== */
-  --brand-blue: #4A90E2;
-  --brand-blue-600: #3a7bd0;
-  --brand-blue-700: #2f66b3;
+  /* น้ำเงินหลักเข้มขึ้นจากเดิม #4A90E2 เพื่อให้ตัวหนังสือขาวบนปุ่ม/ป้ายสีนี้อ่านได้ (contrast 3.3 → 4.5) */
+  --brand-blue: #3d78bc;
+  --brand-blue-600: #3369ac;
+  --brand-blue-700: #2a5a96;
   --brand-blue-soft: #eaf3fe;
   --brand-red: #D73527;
   --brand-gradient: linear-gradient(120deg, #3f82dc 0%, #4A90E2 42%, #c24a6a 82%, #D73527 100%);
@@ -21,7 +22,7 @@
 
   --ink: #1e293b;
   --ink-soft: #475569;
-  --muted: #64748b;
+  --muted: #526074;
   --line: #e2e8f1;
   --line-strong: #cfd9e8;
   --page-bg: #f4f7fb;
@@ -40,21 +41,21 @@
 
   /* ===== PrimeVue (aura) variables: เปลี่ยน primary จากเขียว -> น้ำเงินแบรนด์ ===== */
   --font-family: var(--font-thai);
-  --primary-color: #4A90E2;
+  --primary-color: #3d78bc;
   --primary-color-text: #ffffff;
   --primary-50: #f0f6fe;
   --primary-100: #deebfc;
   --primary-200: #c1d9f9;
   --primary-300: #94bff4;
   --primary-400: #66a3ec;
-  --primary-500: #4A90E2;
-  --primary-600: #3a7bd0;
-  --primary-700: #2f66b3;
-  --primary-800: #2a5490;
-  --primary-900: #274670;
+  --primary-500: #3d78bc;
+  --primary-600: #3369ac;
+  --primary-700: #2a5a96;
+  --primary-800: #244c80;
+  --primary-900: #1f3f69;
   --highlight-bg: #eaf3fe;
   --highlight-text-color: #2f66b3;
-  --p-focus-ring-color: #4A90E2;
+  --p-focus-ring-color: #3d78bc;
   --border-radius: 10px;
   --text-color: var(--ink);
   --text-color-secondary: var(--muted);
@@ -153,6 +154,25 @@ h1, h2, h3, h4, h5, h6 {
 .p-button.p-button-sm {
   border-radius: var(--radius-sm);
 }
+/* ปุ่มไอคอนล้วน: ความกว้างถูกล็อกไว้ (ธีม/แต่ละหน้า) แต่ .p-button-sm ใส่ padding ซ้าย-ขวา ≈ 1rem ต่อด้าน → เนื้อหากว้างเกินกล่อง
+ * ไอคอนเลยเยื้องซ้าย ~4px และบางปุ่มโดน overflow:hidden ตัด (เห็นชัดบนมือถือ เช่น ปุ่มแก้ไข/ลบในตาราง) → ตัด padding ข้างทิ้ง จัดกึ่งกลางด้วย flex */
+.p-button.p-button-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+  gap: 0; /* gap ของปุ่ม + <span class="p-button-label">&nbsp;</span> (กว้าง 0) ที่ PrimeVue ใส่ไว้ ทำให้ไอคอนเยื้องซ้าย gap/2 */
+}
+.p-button.p-button-icon-only > .p-button-label {
+  display: none;
+}
+.p-button.p-button-icon-only > .p-button-icon,
+.p-button.p-button-icon-only > .pi {
+  margin: 0;
+  flex: none;
+  line-height: 1; /* กล่องไอคอนสูงเท่าตัวไอคอน ไม่ใช่ line-height ของฟอนต์ไทย (ไม่งั้นล้นปุ่มเล็ก 30px แล้วโดนตัด) */
+}
 
 /* ===== Inputs ===== */
 .p-inputtext,
@@ -192,7 +212,15 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: none;
 }
 .p-inputtext::placeholder {
-  color: #94a3b8;
+  /* ข้อความตัวอย่างในช่องกรอก: ต้องอ่านออก (contrast ≥ 4.5) แต่ยังอ่อนกว่าข้อความที่กรอกจริง */
+  color: #526074;
+}
+/* ข้อความตัวอย่างของ Dropdown/MultiSelect/Calendar (PrimeVue ใช้สีเทาอ่อน) */
+.p-dropdown .p-dropdown-label.p-placeholder,
+.p-multiselect .p-multiselect-label.p-placeholder,
+.p-autocomplete .p-autocomplete-input::placeholder,
+.p-inputtext::-webkit-input-placeholder {
+  color: #526074;
 }
 
 /* ===== ช่องกรอก + ปุ่มที่ต่อท้าย (ปุ่มเปิดปฏิทินของ Calendar, ปุ่มลูกศรของ AutoComplete) ต่อกันเป็นแถบเดียว ===== */
@@ -366,7 +394,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.3rem 0.2rem;
   color: var(--muted);
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
 }
 .p-datepicker table th > span {
   display: flex;
@@ -450,36 +478,109 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== DataTable ===== */
+/* ตารางทุกหน้าใช้ชุดสไตล์เดียวกัน: กรอบมนมีเส้นขอบ, หัวตารางไล่สีฟ้าอ่อน + แถบสีหลักด้านบน, แถวสลับสีอ่อน,
+ * เลื่อนเมาส์แล้วแถวเปลี่ยนสี + มีแถบสีหลักด้านซ้าย, แถวที่เรียงอยู่/เลือกอยู่เด่นขึ้น, ตัวแบ่งหน้าเป็นแถบแยก
+ * (ออกแบบแบบเรียบไม่ใช้เงาตามธีม — แยกชั้นด้วยสีพื้น/เส้นขอบ/แถบสี; ตัวหนังสือทุกชนิดต้องมี contrast ≥ 4.5) */
+.p-datatable .p-datatable-wrapper {
+  border: 1px solid #dbe6f4;
+  border-radius: 14px;
+  background: #fff;
+}
 .p-datatable .p-datatable-thead > tr > th {
-  background: #f6f9fd;
-  color: var(--ink-soft);
-  font-weight: 600;
-  border-color: var(--line);
+  /* ไล่สีแนวตั้ง (ไม่ใช่เฉียง): แต่ละช่องหัวตารางวาดพื้นของตัวเอง ไล่สีเฉียงทำให้เห็นเป็นบล็อกต่อกัน */
+  background: linear-gradient(180deg, #3d78bc 0%, #336aa8 100%);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-bottom: 3px solid #d73527;
   white-space: nowrap;
+}
+/* ข้อความรองที่บางหน้าใส่ไว้ในหัวตาราง (เช่นคำอธิบายใต้ชื่อประเภทการลา) เดิมตั้งเป็นสีเทาสำหรับหัวตารางสีอ่อน — บนหัวตารางสีน้ำเงินต้องเป็นสีขาว */
+.p-datatable .p-datatable-thead > tr > th small,
+.p-datatable .p-datatable-thead > tr > th .text-muted,
+.p-datatable .p-datatable-thead > tr > th .p-column-title {
+  color: inherit;
+}
+.p-datatable .p-datatable-thead > tr > th small {
+  color: #fff !important;
+}
+.p-datatable .p-datatable-thead > tr > th:first-child {
+  border-top-left-radius: 13px;
+}
+.p-datatable .p-datatable-thead > tr > th:last-child {
+  border-top-right-radius: 13px;
+}
+.p-datatable .p-datatable-thead > tr > th .p-sortable-column-icon {
+  color: #d6e6fa;
 }
 .p-datatable .p-datatable-tbody > tr {
   transition: background-color 0.15s ease;
 }
 .p-datatable .p-datatable-tbody > tr > td {
-  border-color: #eef2f8;
+  border: none;
+  border-bottom: 1px solid #e8eef7;
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
 }
-.p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):hover,
-.p-datatable .p-datatable-tbody > tr:hover {
-  background: #f4f8fe;
+.p-datatable .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none;
 }
-.p-datatable .p-sortable-column:hover {
-  background: #eef4fc;
+/* แถวสลับสีอ่อน ๆ (ไม่นับแถวขยาย/แถวว่าง/แถวที่เลือกอยู่) */
+.p-datatable .p-datatable-tbody > tr:nth-child(even):not(.p-highlight):not(.p-datatable-row-expansion):not(.p-datatable-emptymessage) {
+  background: #f6f9fe;
 }
-.p-datatable .p-sortable-column.p-highlight {
+.p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):not(.p-datatable-emptymessage):hover,
+.p-datatable .p-datatable-tbody > tr:not(.p-datatable-row-expansion):not(.p-datatable-emptymessage):hover {
+  background: #e9f2fe;
+}
+.p-datatable .p-datatable-tbody > tr:not(.p-datatable-row-expansion):not(.p-datatable-emptymessage):hover > td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--brand-blue);
+}
+.p-datatable .p-datatable-tbody > tr.p-highlight {
   background: var(--brand-blue-soft);
   color: var(--brand-blue-700);
+}
+.p-datatable .p-datatable-tbody > tr.p-datatable-row-expansion > td {
+  background: #fbfdff;
+  border-bottom: 1px solid #dbe6f4;
+}
+.p-datatable .p-sortable-column:hover {
+  background: #2a5a96;
+}
+.p-datatable .p-sortable-column.p-highlight {
+  background: #244c80;
+  color: #fff;
+}
+.p-datatable .p-sortable-column.p-highlight .p-sortable-column-icon {
+  color: #fff;
+}
+.p-datatable .p-row-toggler {
+  border-radius: 8px;
+  color: var(--brand-blue-700);
+}
+.p-datatable .p-row-toggler:hover {
+  background: #dce9fa;
+}
+.p-datatable .p-datatable-emptymessage > td {
+  text-align: center;
+  color: var(--muted);
+  font-weight: 500;
+  padding: 2.4rem 1rem;
+  background: #fbfdff;
+}
+.p-datatable .p-datatable-loading-overlay {
+  background: rgba(255, 255, 255, 0.62);
 }
 
 /* ===== Paginator ===== */
 .p-paginator {
-  border: none;
-  background: transparent;
-  gap: 2px;
+  border: 1px solid #dbe6f4;
+  border-radius: 12px;
+  background: #fff;
+  gap: 4px;
+  padding: 0.55rem 0.75rem;
+  margin-top: 0.65rem;
 }
 .p-paginator .p-paginator-pages .p-paginator-page,
 .p-paginator .p-paginator-first,
@@ -487,11 +588,48 @@ h1, h2, h3, h4, h5, h6 {
 .p-paginator .p-paginator-next,
 .p-paginator .p-paginator-last {
   border-radius: 10px;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  color: var(--ink-soft);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.p-paginator .p-paginator-pages .p-paginator-page:not(.p-highlight):hover,
+.p-paginator .p-paginator-first:not(.p-disabled):hover,
+.p-paginator .p-paginator-prev:not(.p-disabled):hover,
+.p-paginator .p-paginator-next:not(.p-disabled):hover,
+.p-paginator .p-paginator-last:not(.p-disabled):hover {
+  background: #e9f2fe;
+  color: var(--brand-blue-700);
 }
 .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
-  background: var(--brand-blue-soft);
-  color: var(--brand-blue-700);
+  background: var(--brand-blue);
+  color: #fff;
   font-weight: 700;
+}
+
+/* มือถือ: ตารางกระชับขึ้น และตารางแบบการ์ด (responsiveLayout stack) มีแถบสีด้านซ้ายของการ์ด */
+@media (max-width: 768px) {
+  .p-datatable .p-datatable-wrapper {
+    border-radius: 12px;
+  }
+  .p-datatable .p-datatable-thead > tr > th {
+    padding: 0.7rem 0.75rem;
+  }
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.65rem 0.75rem;
+  }
+  .p-datatable.p-datatable-responsive-stack .p-datatable-wrapper {
+    border: none;
+    background: transparent;
+  }
+  .p-datatable.p-datatable-responsive-stack .p-datatable-tbody > tr:nth-child(even):not(.p-highlight) {
+    background: #f9fbff;
+  }
+  .p-paginator {
+    padding: 0.45rem 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
 
 /* ===== Tabs ===== */
@@ -512,9 +650,12 @@ h1, h2, h3, h4, h5, h6 {
 .p-tag {
   border-radius: 999px;
   font-weight: 600;
+  /* PrimeVue ใช้ 0.75rem (≈10px ที่ root 13.6px) — ยกให้ถึงพื้นขนาดตัวอักษร (--min-fs ใน App.vue) */
+  font-size: max(0.75rem, var(--min-fs, 11px));
 }
 .p-badge {
   font-weight: 700;
+  font-size: max(0.75rem, var(--min-fs, 11px));
 }
 /* ตัวอักษรในป้ายต้องอยู่กึ่งกลางทั้งแนวตั้ง/แนวนอน: PrimeVue กำหนดความสูงตายตัว + line-height และหลายหน้าเติม padding แนวตั้งเพิ่ม
  * (เช่น badge "Active" ในหน้าจัดการระบบ ตัวหนังสือตกลงต่ำกว่ากึ่งกลาง ~3px) → ใช้ flex จัดกึ่งกลางเสมอ ไม่ว่า padding/ความสูงจะเป็นเท่าไร */
@@ -547,7 +688,7 @@ h1, h2, h3, h4, h5, h6 {
 .p-tooltip .p-tooltip-text {
   border-radius: 8px;
   background: #1e293b;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   padding: 0.45rem 0.7rem;
 }
 .p-tooltip.p-tooltip-top .p-tooltip-arrow { border-top-color: #1e293b; }
@@ -779,7 +920,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 0 1 auto;
   }
   .header-card .header-stats > * {
-    font-size: 0.8rem !important;
+    font-size: max(0.8rem, var(--min-fs)) !important;
     padding: 0.3rem 0.6rem !important;
     white-space: nowrap;
   }
@@ -830,6 +971,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.3rem 0.15rem;
     background: #fff;
     border: 1px solid var(--line);
+    border-left: 4px solid #9cc0ee; /* แถบสีด้านซ้ายของการ์ด — ให้แถวแต่ละใบแยกจากกันชัดและดูมีมิติขึ้น */
     border-radius: 16px;
   }
   .p-datatable.p-datatable-responsive-stack .p-datatable-tbody > tr > td {
@@ -844,7 +986,7 @@ h1, h2, h3, h4, h5, h6 {
     flex: 0 0 36%;
     max-width: 36%;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     font-weight: 600;
   }
   .p-datatable.p-datatable-responsive-stack .p-datatable-tbody > tr > td:empty,
@@ -936,7 +1078,7 @@ h1, h2, h3, h4, h5, h6 {
   .latest-work-date,
   .assigned-chip,
   .p-datepicker table th > span {
-    font-size: 0.75rem !important;
+    font-size: max(0.75rem, var(--min-fs)) !important;
   }
 }
 
@@ -964,4 +1106,70 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center !important;
     gap: 0.5rem;
   }
+}
+
+/* ===== ตัวหนังสือไทยอ่านออก (ทุกขนาดจอ) ===== */
+/* <small> ของเบราว์เซอร์ (smaller ≈ 0.83em) บนมือถือเหลือ ~10px — ใช้พื้นขนาดเดียวกับที่ตั้งใน App.vue */
+small {
+  font-size: max(0.8em, var(--min-fs, 11px));
+}
+/* PrimeVue ตั้ง line-height: 1 ให้ชื่อแท็บ/ข้อความแบ่งหน้า — วรรณยุกต์/สระบนของตัวหนังสือไทยชนแถวบน/ถูกตัด จึงเพิ่มให้พอ */
+.p-tabview .p-tabview-nav li .p-tabview-nav-link .p-tabview-title,
+.p-paginator .p-paginator-current {
+  line-height: 1.4;
+}
+/* Toast: PrimeVue กำหนดกว้างตายตัว 25rem (≈380px บนมือถือ) + right 20px → บนจอ 375px ล้นออกซ้ายจอ ~25px
+ * (ไอคอน/หัวข้อแจ้งเตือนถูกตัด) → จำกัดไม่ให้กว้างกว่าจอและเว้นขอบ 12px ทั้งสองข้าง */
+@media (max-width: 480px) {
+  .p-toast {
+    width: calc(100vw - 24px) !important;
+    max-width: 25rem;
+    right: 12px !important;
+    left: auto !important;
+  }
+}
+
+/* ===== สี severity ของ PrimeVue (ป้าย/แท็ก/ปุ่ม) ที่ตัวหนังสือขาวอ่านได้ (contrast ≥ 4.5) =====
+ * ค่าเดิมของธีมฐาน: เขียว #22c55e (2.3), ฟ้า #0ea5e9 (2.8), เหลือง #f59e0b (2.2), ส้ม #f97316 (2.8), แดง #ef4444 (3.8) — ขาวบนสีเหล่านี้อ่านไม่ออก */
+.p-badge.p-badge-success, .p-tag.p-tag-success,
+.p-button.p-button-success:not(.p-button-outlined):not(.p-button-text) { background: #178841; border-color: #178841; color: #fff; }
+.p-badge.p-badge-info, .p-tag.p-tag-info,
+.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text) { background: #0b7db1; border-color: #0b7db1; color: #fff; }
+.p-badge.p-badge-warning, .p-tag.p-tag-warning,
+.p-button.p-button-warning:not(.p-button-outlined):not(.p-button-text) { background: #a46a07; border-color: #a46a07; color: #fff; }
+.p-badge.p-badge-danger, .p-tag.p-tag-danger,
+.p-button.p-button-danger:not(.p-button-outlined):not(.p-button-text) { background: #d73d3d; border-color: #d73d3d; color: #fff; }
+.p-badge.p-badge-help, .p-tag.p-tag-help,
+.p-button.p-button-help:not(.p-button-outlined):not(.p-button-text) { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+.p-badge.p-badge-secondary, .p-tag.p-tag-secondary { background: #64748b; color: #fff; }
+.p-button.p-button-success:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #12703a; border-color: #12703a; }
+.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #096a98; border-color: #096a98; }
+.p-button.p-button-warning:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #8a5806; border-color: #8a5806; }
+.p-button.p-button-danger:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #b93030; border-color: #b93030; }
+
+/* ปุ่มแบบข้อความ/ขอบ ที่ใช้ severity: สีตัวหนังสือเดิมของธีมฐาน (ฟ้า #0ea5e9 2.8, เขียว #22c55e 2.3, เหลือง #f59e0b 2.2) อ่านบนพื้นขาวไม่ออก */
+.p-button.p-button-text.p-button-info, .p-button.p-button-outlined.p-button-info, .p-button.p-button-link.p-button-info { color: #0369a1; }
+.p-button.p-button-text.p-button-success, .p-button.p-button-outlined.p-button-success, .p-button.p-button-link.p-button-success { color: #15803d; }
+.p-button.p-button-text.p-button-warning, .p-button.p-button-outlined.p-button-warning, .p-button.p-button-link.p-button-warning { color: #b45309; }
+.p-button.p-button-text.p-button-danger, .p-button.p-button-outlined.p-button-danger, .p-button.p-button-link.p-button-danger { color: #c62828; }
+.p-button.p-button-text.p-button-help, .p-button.p-button-outlined.p-button-help { color: #7c3aed; }
+.p-button.p-button-text.p-button-secondary, .p-button.p-button-outlined.p-button-secondary { color: #475569; }
+
+/* รายการตัวเลือกของ Dropdown/MultiSelect: กรอบรายการ (items-wrapper) ตั้งความสูงสูงสุดไว้เอง (scrollHeight) แต่กรอบ panel
+ * ถูกจำกัดความสูงตามพื้นที่ของหน้าจอ → บนจอเตี้ย (iPhone SE 667px) รายการล้นพ้นขอบล่างของ panel ~10px และถูกตัดครึ่งใบ
+ * ทำให้ panel เป็น flex แนวตั้ง ให้กรอบรายการหดและเลื่อนได้ภายใน panel (และตัดมุมมนให้เนื้อหาไม่ทะลุ) */
+.p-dropdown-panel,
+.p-multiselect-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.p-dropdown-panel .p-dropdown-items-wrapper,
+.p-multiselect-panel .p-multiselect-items-wrapper {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.p-dropdown-panel .p-dropdown-header,
+.p-multiselect-panel .p-multiselect-header {
+  flex: 0 0 auto;
 }

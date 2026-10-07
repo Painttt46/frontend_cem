@@ -33,7 +33,7 @@
 }
 
 .header-card {
-  background-color: #4A90E2;
+  background-color: #3d78bc;
   color: white;
   border: none;
   box-shadow: none;
@@ -80,7 +80,7 @@
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .empty-icon {
@@ -95,7 +95,7 @@
 }
 
 .empty-state p {
-  color: #6c757d;
+  color: #525f70;
   font-size: 0.95rem;
 }
 

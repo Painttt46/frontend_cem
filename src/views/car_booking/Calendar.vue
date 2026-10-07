@@ -30,7 +30,7 @@
       <!-- Car Status Bar -->
       <div class="car-status-bar">
         <div class="status-item">
-          <i class="pi pi-bolt" style="color: #f59e0b;"></i>
+          <i class="pi pi-bolt" style="color: #b45309;"></i>
           <span class="status-label">ระดับน้ำมัน</span>
           <div class="status-fuel">
             <div class="fuel-segs-bar">
@@ -42,13 +42,13 @@
         </div>
         <div class="status-divider"></div>
         <div class="status-item">
-          <i class="pi pi-wallet" style="color: #8b5cf6;"></i>
+          <i class="pi pi-wallet" style="color: #7c3aed;"></i>
           <span class="status-label">EasyPass</span>
           <span class="status-value easypass-val">฿{{ formatMoney(latestEasyPass) }}</span>
         </div>
         <div class="status-divider"></div>
         <div class="status-item">
-          <i class="pi pi-map-marker" style="color: #22c55e;"></i>
+          <i class="pi pi-map-marker" style="color: #15803d;"></i>
           <span class="status-label">สถานที่คืนรถ</span>
           <span class="status-value">{{ latestReturnLocation || 'ไม่ระบุ' }}</span>
         </div>
@@ -70,7 +70,7 @@
               <span class="booking-emoji">📅</span>
             </div>
             <div v-if="hasBookingOnDate(date.date) && !isActiveUsage(date.date)" class="booking-text-center">
-              <div class="booking-text">จองเเล้ว</div>
+              <div class="booking-text">จองแล้ว</div>
             </div>
             <div v-if="isReturnedDate(date.date) && !isActiveUsage(date.date) && !hasBookingOnDate(date.date)" class="booking-indicator">
               <span class="booking-emoji">{{ isAutoReturnedDate(date.date) ? '⏱️' : '✅' }}</span>
@@ -88,7 +88,7 @@
                 <span class="car-emoji">🚗</span>
               </div>
               <div>
-                <p>กําลังใช้งาน</p>
+                <p>กำลังใช้งาน</p>
               </div>
 
             </div>
@@ -164,7 +164,7 @@
 
             <div class="detail-row fuel-row">
               <div class="detail-label">
-                <i class="pi pi-bolt" style="color: #f59e0b;"></i>
+                <i class="pi pi-bolt" style="color: #b45309;"></i>
                 ระดับน้ำมัน
               </div>
               <div class="detail-value">
@@ -177,7 +177,7 @@
 
             <div class="detail-row" style="margin-top: 0.5rem;">
               <div class="detail-label">
-                <i class="pi pi-wallet" style="color: #8b5cf6;"></i>
+                <i class="pi pi-wallet" style="color: #7c3aed;"></i>
                 Easy Pass
               </div>
             </div>
@@ -260,7 +260,7 @@
 
             <div class="detail-row fuel-row">
               <div class="detail-label">
-                <i class="pi pi-bolt" style="color: #f59e0b;"></i>
+                <i class="pi pi-bolt" style="color: #b45309;"></i>
                 ระดับน้ำมัน
               </div>
               <div class="detail-value">
@@ -273,7 +273,7 @@
 
             <div class="detail-row" style="margin-top: 0.5rem;">
               <div class="detail-label">
-                <i class="pi pi-wallet" style="color: #8b5cf6;"></i>
+                <i class="pi pi-wallet" style="color: #7c3aed;"></i>
                 Easy Pass
               </div>
             </div>
@@ -468,7 +468,7 @@ export default {
       checkDate.setHours(0, 0, 0, 0)
       return checkDate < today
     },
-    // วันที่ "จองเเล้ว" = เฉพาะ pending (รอเวลาใช้งาน) — active แสดงเป็นสีใช้งานอยู่แท้
+    // วันที่ "จองแล้ว" = เฉพาะ pending (รอเวลาใช้งาน) — active แสดงเป็นสีใช้งานอยู่แท้
     hasBookingOnDate(date) {
       const dateStr = date.toDateString()
 
@@ -554,7 +554,7 @@ export default {
   color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   font-weight: bold;
   display: inline-block;
   width: fit-content;
@@ -570,7 +570,7 @@ export default {
   border-radius: 12px;
   padding: 0.7rem 1rem;
   margin: 0.85rem 0;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   color: #1e3a8a;
 }
 .active-countdown i { font-size: 1.3rem; color: #2f66b3; flex-shrink: 0; }
@@ -586,7 +586,7 @@ export default {
   padding: 0.1rem 0.55rem;
   border-radius: 20px;
   white-space: nowrap;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
 }
 .countdown-text small { color: #b45309; font-weight: 600; }
 .active-countdown.countdown-urgent {
@@ -594,10 +594,10 @@ export default {
   border-color: #fbbf24;
   color: #92400e;
 }
-.active-countdown.countdown-urgent i { color: #d97706; }
+.active-countdown.countdown-urgent i { color: #b45309; }
 .active-countdown.countdown-urgent .countdown-dot { color: #fcd34d; }
 .active-countdown.countdown-urgent .countdown-left {
-  color: #b45309;
+  color: #92400e;
   background: rgba(217, 119, 6, 0.12);
   border-color: #fcd34d;
 }
@@ -626,19 +626,19 @@ export default {
 }
 
 .status-label {
-  font-size: 0.78rem;
-  color: #888;
+  font-size: max(0.78rem, var(--min-fs));
+  color: #55657a;
   font-weight: 500;
 }
 
 .status-value {
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 700;
   color: #333;
 }
 
 .easypass-val {
-  color: #8b5cf6;
+  color: #7c3aed;
 }
 
 .status-fuel {
@@ -777,7 +777,7 @@ export default {
 
 .calendar-day.other-month {
   background: #f1f3f4;
-  color: #9aa0a6;
+  color: #55657a;
   cursor: not-allowed;
 }
 
@@ -802,7 +802,7 @@ export default {
 
 .calendar-day.past-date {
   background: #f1f3f4;
-  color: #9aa0a6;
+  color: #55657a;
   cursor: not-allowed;
 }
 
@@ -810,7 +810,7 @@ export default {
   position: absolute;
   top: 0.35rem;
   right: 0.5rem;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .booking-text-center {
@@ -822,7 +822,7 @@ export default {
 }
 
 .booking-text {
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   font-weight: 600;
   white-space: nowrap;
   color: #2e7d32;
@@ -912,7 +912,7 @@ export default {
   .booking-indicator {
     top: 0.2rem;
     right: 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
   .booking-emoji {
     font-size: 1rem;
@@ -925,7 +925,7 @@ export default {
   }
   .booking-text {
     white-space: normal;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     line-height: 1.15;
     padding: 0;
   }
@@ -939,7 +939,7 @@ export default {
     margin-bottom: 0.1rem;
   }
   .car-indicator p {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     line-height: 1.15;
   }
 
@@ -963,7 +963,7 @@ export default {
 
   .day-header {
     padding: 0.4rem 0.2rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .calendar-day {
@@ -975,6 +975,15 @@ export default {
 
 }
 
+/* จอแคบมาก (≤360px): ช่องวันที่กว้างแค่ ~38px ข้อความยาว ("กำลังใช้งาน" / "คืนอัตโนมัติ") ไม่พอและถูกตัดเป็นตัว ๆ ในแนวตั้ง
+   ซ่อนข้อความ เหลือไอคอน (🚗 / ⏱️) — ความหมายยังอยู่ที่แบนเนอร์ "รถกำลังใช้งาน" และคำอธิบายสีด้านบน */
+@media (max-width: 360px) {
+  .car-indicator p,
+  .booking-text.returned-text.auto {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .calendar-container {
     margin: 0.25rem;
@@ -984,7 +993,7 @@ export default {
   .active-countdown {
     padding: 0.6rem 0.75rem;
     gap: 0.6rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
   .countdown-main {
     flex-direction: column;
@@ -998,7 +1007,7 @@ export default {
     align-self: flex-start;
     white-space: normal;
     max-width: 100%;
-    font-size: 0.82rem;
+    font-size: max(0.82rem, var(--min-fs));
     line-height: 1.35;
   }
 
@@ -1013,17 +1022,17 @@ export default {
   .nav-btn {
     width: 2rem;
     height: 2rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .day-header {
     padding: 0.3rem 0.1rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   .calendar-day {
     padding: 0.2rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
     min-height: 42px;
   }
 
@@ -1060,7 +1069,7 @@ export default {
   background: rgba(255, 255, 255, 0.2);
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .status-badge .pi-circle-fill {

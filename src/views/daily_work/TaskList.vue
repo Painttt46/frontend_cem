@@ -2,7 +2,7 @@
   <Card class="history-card">
     <template #content>
       <div v-if="tasks.length === 0" class="empty-state">
-        <i class="pi pi-briefcase" style="font-size: 4rem; color: #ccc;"></i>
+        <i class="pi pi-briefcase" style="font-size: 4rem; color: #55657a;"></i>
         <p>ยังไม่มีงานที่เพิ่มไว้</p>
       </div>
 
@@ -18,7 +18,7 @@
             <span v-if="slotProps.data.children && slotProps.data.children.length > 0"
               style="cursor:pointer;display:flex;align-items:center;justify-content:center">
               <i :class="expandedRows[slotProps.data.id] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
-                style="font-size:0.85rem;color:#64748b" />
+                style="font-size:max(0.85rem, var(--min-fs));color:#526074" />
             </span>
           </template>
         </Column>
@@ -26,9 +26,9 @@
         <template #expansion="slotProps">
           <div v-if="slotProps.data.children && slotProps.data.children.length > 0"
             style="background:#f8faff;border-top:2px solid #e0e7ff;overflow-x:auto">
-            <component :is="'table'" style="width:100%;border-collapse:collapse;font-size:0.875rem;table-layout:fixed">
+            <component :is="'table'" style="width:100%;border-collapse:collapse;font-size:max(0.875rem, var(--min-fs));table-layout:fixed">
               <component :is="'thead'">
-                <component :is="'tr'" style="background:#e0e7ff;color:#3730a3;font-weight:600;font-size:0.82rem">
+                <component :is="'tr'" style="background:#e0e7ff;color:#3730a3;font-weight:600;font-size:max(0.82rem, var(--min-fs))">
                   <component :is="'th'" style="padding:8px 12px;width:3rem"></component>
                   <component :is="'th'" style="padding:8px 12px;width:80px;text-align:center">รหัสงาน</component>
                   <component :is="'th'" style="padding:8px 12px;width:250px">ชื่อโครงการ</component>
@@ -51,21 +51,21 @@
                   style="border-bottom:1px solid #e2e8f0;background:#f0f4ff">
                   <component :is="'td'" style="padding:8px 12px"></component>
                   <component :is="'td'" style="padding:8px 12px;text-align:center"><Badge :value="child.id" class="custom-id-badge" /></component>
-                  <component :is="'td'" style="padding:8px 12px"><div class="task-name"><i class="pi pi-briefcase" style="color:#4A90E2;margin-right:6px;font-size:0.85rem"></i>{{ child.task_name }}</div></component>
+                  <component :is="'td'" style="padding:8px 12px"><div class="task-name"><i class="pi pi-briefcase" style="color:#2f66b3;margin-right:6px;font-size:max(0.85rem, var(--min-fs))"></i>{{ child.task_name }}</div></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.so_number" class="so-number">{{ child.so_number }}</div><span v-else class="text-muted">-</span></component>
-                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ child.contract_number }}</span><span v-else class="text-muted">-</span></component>
-                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:0.85rem"></i>{{ child.customer_info }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:max(0.85rem, var(--min-fs));border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:max(0.75rem, var(--min-fs));margin-right:3px"></i>{{ child.contract_number }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:max(0.85rem, var(--min-fs))"></i>{{ child.customer_info }}</span><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.sale_owner" class="person-badge sale-badge" @click="showSaleUserInfo(child.sale_owner)"><i class="pi pi-user"></i> {{ child.sale_owner }}</div><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.project_manager" class="person-badge pm-badge" @click="showSaleUserInfo(child.project_manager)"><i class="pi pi-briefcase"></i> {{ child.project_manager }}</div><span v-else class="text-muted">-</span></component>
-                  <component :is="'td'" style="padding:8px 12px"><div class="category-badges"><Badge v-for="cat in parseCategoryArray(child.category)" :key="cat" :value="getCategoryLabel(cat)" :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', fontWeight: 'bold', margin: '2px' }" /></div></component>
-                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0891b2;font-size:0.85rem"></i>{{ formatDate(child.project_start_date) }}</span><span v-else class="text-muted">-</span></component>
-                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:0.85rem"></i>{{ formatDate(child.project_end_date) }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><div class="category-badges"><Badge v-for="cat in parseCategoryArray(child.category)" :key="cat" :value="getCategoryLabel(cat)" :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff', fontWeight: 'bold', margin: '2px' }" /></div></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0e7490;font-size:max(0.85rem, var(--min-fs))"></i>{{ formatDate(child.project_start_date) }}</span><span v-else class="text-muted">-</span></component>
+                  <component :is="'td'" style="padding:8px 12px"><span v-if="child.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:max(0.85rem, var(--min-fs))"></i>{{ formatDate(child.project_end_date) }}</span><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><Button label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined @click="showTaskDetails(child)" :disabled="!child.description" /></component>
                   <component :is="'td'" style="padding:8px 12px">
                     <div class="status-badges-column">
-                      <Badge v-if="child.status === 'completed'" value="เสร็จสิ้น" :style="{ backgroundColor: '#10b981', color: '#fff', fontWeight: 'bold' }" />
+                      <Badge v-if="child.status === 'completed'" value="เสร็จสิ้น" :style="{ backgroundColor: '#0c855d', color: '#fff', fontWeight: 'bold' }" />
                       <template v-else-if="getLatestProjectStatuses(child).length > 0">
-                        <Badge v-for="ps in getLatestProjectStatuses(child)" :key="ps" :value="getProjectStatusLabel(ps)" :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
+                        <Badge v-for="ps in getLatestProjectStatuses(child)" :key="ps" :value="getProjectStatusLabel(ps)" :style="{ backgroundColor: $accessibleBg(getProjectStatusColor(ps)), color: '#fff', fontWeight: 'bold' }" />
                       </template>
                       <span v-else class="no-status">-</span>
                     </div>
@@ -94,7 +94,7 @@
 
         <Column field="task_name" header="ชื่อโครงการ" :sortable="true" style="min-width: 250px;">
           <template #body="slotProps">
-            <div class="task-name"><i class="pi pi-briefcase" style="color:#4A90E2;margin-right:6px;font-size:0.85rem"></i>{{ slotProps.data.task_name }}</div>
+            <div class="task-name"><i class="pi pi-briefcase" style="color:#2f66b3;margin-right:6px;font-size:max(0.85rem, var(--min-fs))"></i>{{ slotProps.data.task_name }}</div>
           </template>
         </Column>
 
@@ -107,13 +107,13 @@
 
         <Column field="contract_number" header="เลขที่สัญญา" style="min-width: 150px;">
           <template #body="slotProps">
-            <span v-if="slotProps.data.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:0.85rem;border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:0.75rem;margin-right:3px"></i>{{ slotProps.data.contract_number }}</span><span v-else class="text-muted">-</span>
+            <span v-if="slotProps.data.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:max(0.85rem, var(--min-fs));border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:max(0.75rem, var(--min-fs));margin-right:3px"></i>{{ slotProps.data.contract_number }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="customer_info" header="ข้อมูลลูกค้า" style="min-width: 150px;">
           <template #body="slotProps">
-            <span v-if="slotProps.data.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:0.85rem"></i>{{ slotProps.data.customer_info }}</span><span v-else class="text-muted">-</span>
+            <span v-if="slotProps.data.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:max(0.85rem, var(--min-fs))"></i>{{ slotProps.data.customer_info }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
@@ -142,7 +142,7 @@
             <div class="category-badges">
               <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
                      :value="getCategoryLabel(cat)" 
-                     :style="{ backgroundColor: getCategoryColor(cat), color: '#fff', fontWeight: 'bold', margin: '2px' }" 
+                     :style="{ backgroundColor: $accessibleBg(getCategoryColor(cat)), color: '#fff', fontWeight: 'bold', margin: '2px' }" 
                      class="category-badge" />
             </div>
           </template>
@@ -150,13 +150,13 @@
 
         <Column field="project_start_date" header="วันเริ่มโครงการ" :sortable="true">
           <template #body="slotProps">
-            <span v-if="slotProps.data.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0891b2;font-size:0.85rem"></i>{{ formatDate(slotProps.data.project_start_date) }}</span><span v-else class="text-muted">-</span>
+            <span v-if="slotProps.data.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0e7490;font-size:max(0.85rem, var(--min-fs))"></i>{{ formatDate(slotProps.data.project_start_date) }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
         <Column field="project_end_date" header="วันสิ้นสุดโครงการ" :sortable="true">
           <template #body="slotProps">
-            <span v-if="slotProps.data.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:0.85rem"></i>{{ formatDate(slotProps.data.project_end_date) }}</span><span v-else class="text-muted">-</span>
+            <span v-if="slotProps.data.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:max(0.85rem, var(--min-fs))"></i>{{ formatDate(slotProps.data.project_end_date) }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
@@ -178,12 +178,12 @@
             <div class="status-badges-column">
               <!-- ถ้า task เสร็จสิ้นแล้ว แสดง completed -->
               <Badge v-if="slotProps.data.status === 'completed'" value="เสร็จสิ้น" 
-                     :style="{ backgroundColor: '#10b981', color: '#fff', fontWeight: 'bold' }" />
+                     :style="{ backgroundColor: '#0c855d', color: '#fff', fontWeight: 'bold' }" />
               <!-- ถ้ามี project_statuses จาก workflow -->
               <template v-else-if="getLatestProjectStatuses(slotProps.data).length > 0">
                 <Badge v-for="ps in getLatestProjectStatuses(slotProps.data)" :key="ps"
                   :value="getProjectStatusLabel(ps)" 
-                  :style="{ backgroundColor: getProjectStatusColor(ps), color: '#fff', fontWeight: 'bold' }" />
+                  :style="{ backgroundColor: $accessibleBg(getProjectStatusColor(ps)), color: '#fff', fontWeight: 'bold' }" />
               </template>
               <!-- ไม่มี project_statuses แสดง - -->
               <span v-else class="no-status">-</span>
@@ -241,7 +241,7 @@
     <div class="dialog-content" @click.stop>
       <div class="dialog-header">
         <h3>รายละเอียดงาน</h3>
-        <button class="dialog-close" @click="detailDialog = false">&times;</button>
+        <button class="dialog-close" @click="detailDialog = false" aria-label="ปิด"><i class="pi pi-times"></i></button>
       </div>
       <div class="dialog-body">
         <div class="work-description">
@@ -289,7 +289,7 @@
     </div>
     
     <div v-else-if="taskWorks.length === 0" class="empty-works">
-      <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+      <i class="pi pi-inbox" style="font-size: 3rem; color: #55657a;"></i>
       <p>ยังไม่มีการลงงานรายวันสำหรับโครงการนี้</p>
     </div>
     
@@ -371,15 +371,15 @@
                     <template v-if="step.project_statuses && step.project_statuses.length > 0">
                       <Badge v-for="ps in step.project_statuses" :key="ps"
                         :value="getStatusLabel(ps)" 
-                        :style="{ backgroundColor: getStatusColor(ps), color: '#fff', fontWeight: 'bold', fontSize: '0.75rem' }" />
+                        :style="{ backgroundColor: $accessibleBg(getStatusColor(ps)), color: '#fff', fontWeight: 'bold', fontSize: 'max(0.75rem, var(--min-fs))' }" />
                     </template>
-                    <Badge v-else value="-" :style="{ backgroundColor: '#9e9e9e', color: '#fff', fontWeight: 'bold', fontSize: '0.75rem' }" />
+                    <Badge v-else value="-" :style="{ backgroundColor: '#757575', color: '#fff', fontWeight: 'bold', fontSize: 'max(0.75rem, var(--min-fs))' }" />
                   </div>
                 </template>
                 <!-- ถ้าไม่มี workflow ให้แสดง work_status -->
                 <Badge v-else-if="work.work_status" :value="getStatusLabel(work.work_status)" 
-                       :style="{ backgroundColor: getStatusColor(work.work_status), color: '#fff', fontWeight: 'bold' }" />
-                <Badge v-else value="-" :style="{ backgroundColor: '#9e9e9e', color: '#fff', fontWeight: 'bold' }" />
+                       :style="{ backgroundColor: $accessibleBg(getStatusColor(work.work_status)), color: '#fff', fontWeight: 'bold' }" />
+                <Badge v-else value="-" :style="{ backgroundColor: '#757575', color: '#fff', fontWeight: 'bold' }" />
               </td>
               <td>{{ work.location || '-' }}</td>
               <td class="text-center">
@@ -447,8 +447,8 @@
             class="corporate-input w-full">
             <template #option="{ option }">
               <div style="line-height:1.4">
-                <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
-                <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+                <div><i class="pi pi-user" style="font-size:max(0.8rem, var(--min-fs));margin-right:4px"></i><b>{{ option.label }}</b></div>
+                <small v-if="option.position || option.department" style="color:#55657a">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
               </div>
             </template>
           </Dropdown>
@@ -462,8 +462,8 @@
             class="corporate-input w-full">
             <template #option="{ option }">
               <div style="line-height:1.4">
-                <div><i class="pi pi-user" style="font-size:0.8rem;margin-right:4px"></i><b>{{ option.label }}</b></div>
-                <small v-if="option.position || option.department" style="color:#888">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
+                <div><i class="pi pi-user" style="font-size:max(0.8rem, var(--min-fs));margin-right:4px"></i><b>{{ option.label }}</b></div>
+                <small v-if="option.position || option.department" style="color:#55657a">{{ option.position }}<span v-if="option.position && option.department"> · </span>{{ option.department }}</small>
               </div>
             </template>
           </Dropdown>
@@ -570,6 +570,7 @@ import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
 import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
 import { usePermissions } from '@/composables/usePermissions'
+import { accessibleBg } from '@/utils/color'
 
 export default {
   name: 'TaskList',
@@ -860,10 +861,10 @@ export default {
     },
     getCategoryColor(categoryValue) {
       if (!this.categories || this.categories.length === 0) {
-        return '#6c757d'
+        return accessibleBg('#6c757d')
       }
       const category = this.categories.find(cat => cat.value === categoryValue)
-      return category && category.color ? category.color : '#6c757d'
+      return accessibleBg(category && category.color ? category.color : '#6c757d')
     },
     parseCategoryArray(category) {
       if (!category) return []
@@ -891,15 +892,15 @@ export default {
       return statusValue
     },
     getStatusColor(statusValue) {
-      if (!statusValue) return '#9e9e9e'
-      if (statusValue === 'cancelled') return '#ef4444'
+      if (!statusValue) return accessibleBg('#9e9e9e')
+      if (statusValue === 'cancelled') return accessibleBg('#ef4444')
       // ลอง match ด้วย value ก่อน
       let status = this.workStatuses.find(s => s.value === statusValue)
       // ถ้าไม่เจอ ลอง match ด้วย label
       if (!status) {
         status = this.workStatuses.find(s => s.label && s.label.includes(statusValue))
       }
-      return status?.color || '#9e9e9e'
+      return accessibleBg(status?.color || '#9e9e9e')
     },
     getLatestProjectStatuses(task) {
       if (!task.steps || task.steps.length === 0) return []
@@ -938,28 +939,28 @@ export default {
     },
     getProjectStatusColor(status) {
       const found = this.workStatuses.find(s => s.value === status)
-      return found?.color || '#6b7280'
+      return accessibleBg(found?.color || '#6b7280')
     },
     hasWorkflowWithWork(task) {
       if (!task.steps || task.steps.length === 0) return false
       return task.steps.some(s => s.has_work_logged)
     },
     getStepColorFromWork(step) {
-      if (step.status === 'completed') return '#10b981'
+      if (step.status === 'completed') return accessibleBg('#10b981')
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       // เกินกำหนด - เช็คก่อนเสมอ
       if (step.end_date) {
         const endDate = new Date(step.end_date)
         endDate.setHours(0, 0, 0, 0)
-        if (today > endDate) return '#ef4444'
+        if (today > endDate) return accessibleBg('#ef4444')
       }
       if (step.latest_work_date) {
         const workDate = new Date(step.latest_work_date)
         workDate.setHours(0, 0, 0, 0)
-        if (workDate <= today) return '#f59e0b'
+        if (workDate <= today) return accessibleBg('#f59e0b')
       }
-      return '#4A90E2'
+      return accessibleBg('#4A90E2')
     },
     getStepLabelFromWork(step) {
       if (step.status === 'completed') return '(เสร็จสิ้น)'
@@ -997,12 +998,12 @@ export default {
       return workingSteps[workingSteps.length - 1].step_name
     },
     getLatestStepColor(task) {
-      if (!task.steps || task.steps.length === 0) return '#9ca3af'
+      if (!task.steps || task.steps.length === 0) return accessibleBg('#9ca3af')
       const workingSteps = task.steps.filter(s => s.assigned_users && s.assigned_users.length > 0)
-      if (workingSteps.length === 0) return '#9ca3af'
+      if (workingSteps.length === 0) return accessibleBg('#9ca3af')
       const latestStep = workingSteps[workingSteps.length - 1]
-      if (latestStep.status === 'completed') return '#10b981'
-      return '#4A90E2'
+      if (latestStep.status === 'completed') return accessibleBg('#10b981')
+      return accessibleBg('#4A90E2')
     },
     async loadTasks() {
       try {
@@ -1355,17 +1356,9 @@ export default {
     },
     async downloadWorkFile(fileName) {
       try {
-        const response = await this.$http.get(`/api/files/download/${fileName}`, {
-          responseType: 'blob'
-        })
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
+        // ใช้ตัวเดียวกับ downloadFile: ให้เบราว์เซอร์โหลดไฟล์ตรง ๆ + ตั้งชื่อไฟล์เดิม (เดิมได้ชื่อที่มี timestamp นำหน้า และใช้ blob ที่ถูก revoke ทันที)
+        const displayName = fileName.split('-').slice(2).join('-') || fileName
+        await downloadBlob(this.$http, `/api/files/download/${fileName}`, displayName)
       } catch (error) {
         this.$toast.add({
           severity: 'error',
@@ -1435,7 +1428,7 @@ export default {
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: #6c757d;
+  color: #525f70;
   background: #f8f9fa;
   border-radius: 8px;
   margin: 1rem;
@@ -1452,10 +1445,7 @@ export default {
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
-  background: #f8f9fa;
-  color: #495057;
   font-weight: 600;
-  border-bottom: 2px solid #e9ecef;
   padding: 1rem 0.75rem;
   font-size: 0.9rem;
 }
@@ -1466,23 +1456,13 @@ export default {
   vertical-align: middle;
 }
 
-.history-table :deep(.p-datatable-tbody > tr:hover) {
-  background: #f8f9fa;
-}
-
-.history-table :deep(.p-paginator) {
-  background: #f8f9fa;
-  border-top: 2px solid #e9ecef;
-  padding: 1rem;
-}
-
 .custom-id-badge {
   background-color: #24b86e;
   color: white;
   font-weight: 600;
   padding: 0.5rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1495,7 +1475,7 @@ export default {
 }
 
 .so-number {
-  font-size: 0.82rem;
+  font-size: max(0.82rem, var(--min-fs));
   font-weight: 600;
   color: #2a5490;
   background-color: #e5f0fe;
@@ -1515,11 +1495,11 @@ export default {
 }
 
 .sale-info i {
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .text-muted {
-  color: #6c757d;
+  color: #525f70;
 }
 
 .dialog-overlay {
@@ -1575,12 +1555,14 @@ export default {
 .dialog-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.1rem; /* ไอคอน pi-times (เดิมเป็นตัวอักษร × ซึ่งกล่องบรรทัดของฟอนต์ไทยทำให้ตกต่ำกว่ากึ่งกลางปุ่ม) */
+  line-height: 1;
   cursor: pointer;
-  color: #6c757d;
+  color: #525f70;
   padding: 0;
   width: 30px;
   height: 30px;
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1677,7 +1659,7 @@ export default {
   
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
   
   .task-name {
@@ -1764,7 +1746,7 @@ export default {
 .empty-works {
   text-align: center;
   padding: 3rem 2rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .loading-state p,
@@ -1823,12 +1805,12 @@ export default {
 }
 
 .summary-item i {
-  color: #4A90E2;
+  color: #2f66b3;
   font-size: 1.1rem;
 }
 
 .summary-item strong {
-  color: #4A90E2;
+  color: #2f66b3;
   font-size: 1.1rem;
 }
 
@@ -1879,12 +1861,12 @@ export default {
   background: #e0f2fe;
   color: #0369a1;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
 }
 
 .step-badge-small i {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .steps-container-mini {
@@ -1901,7 +1883,7 @@ export default {
   background: #f8fafc;
   border-left: 3px solid;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
 }
 
 .step-badge-inline .step-num {
@@ -1912,12 +1894,12 @@ export default {
   height: 18px;
   border-radius: 50%;
   color: #fff;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: bold;
 }
 
 .step-status-mini {
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 500;
 }
 
@@ -1956,7 +1938,7 @@ export default {
 }
 
 .file-info i {
-  color: #6c757d;
+  color: #525f70;
   font-size: 1rem;
 }
 
@@ -1981,7 +1963,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  color: #999;
+  color: #55657a;
   font-size: 0.9rem;
   width: 100%;
   text-align: center;
@@ -2006,16 +1988,16 @@ export default {
 @media (max-width: 480px) {
   .history-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
   
   .history-table :deep(.p-datatable-thead > tr > th) {
     padding: 0.5rem 0.25rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
   
   .custom-id-badge {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     padding: 0.3rem 0.5rem;
   }
 }
@@ -2069,7 +2051,7 @@ export default {
 .category-option i,
 .status-display i,
 .status-option i {
-  color: #4A90E2;
+  color: #2f66b3;
   font-size: 14px;
 }
 
@@ -2100,22 +2082,8 @@ export default {
 }
 
 .history-table :deep(.p-datatable-thead > tr > th) {
-  background-color: #f4f8fa !important;
-  color: #334155 !important;
   font-weight: 700 !important;
-  border-bottom: 2px solid #cbd5e1 !important;
-  font-size: 0.82rem !important;
-  letter-spacing: 0.4px !important;
-  text-transform: uppercase !important;
-}
-
-.history-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
-  background: #fafbfc !important;
-}
-
-.history-table :deep(.p-datatable-tbody > tr:hover) {
-  background: #eff6ff !important;
-  transition: background 0.15s;
+  font-size: max(0.82rem, var(--min-fs)) !important;
 }
 
 .person-badge {
@@ -2124,7 +2092,7 @@ export default {
   gap: 6px;
   padding: 4px 12px;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: max(0.82rem, var(--min-fs));
   font-weight: 600;
   white-space: nowrap;
 }

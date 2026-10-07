@@ -41,7 +41,7 @@
             <i class="pi pi-times-circle"></i>
             ยกเลิกการจอง
             <Badge v-if="pendingBorrows.length > 0" :value="pendingBorrows.length" 
-                   :style="{ backgroundColor: 'white', color: 'black', fontSize: '0.75rem', 
+                   :style="{ backgroundColor: 'white', color: 'black', fontSize: 'max(0.75rem, var(--min-fs))', 
                             width: '1.2rem', height: '1.2rem', borderRadius: '50%',
                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                             lineHeight: '1', fontWeight: 'bold', border: '2px solid white' }" />
@@ -75,7 +75,7 @@
     <!-- Image Modal -->
     <Dialog v-model:visible="showImageModal" modal header="รูปภาพ" :style="{ width: '80vw' }" :draggable="false">
       <div v-if="selectedImages.length === 0" class="no-images-state">
-        <i class="pi pi-image" style="font-size: 4rem; color: #ccc;"></i>
+        <i class="pi pi-image" style="font-size: 4rem; color: #55657a;"></i>
         <p>ไม่มีรูปภาพ</p>
       </div>
 
@@ -188,39 +188,14 @@ export default {
     hasActiveBorrow() {
       return this.records.some(r => r.status === 'active')
     },
+    // ใครเข้าหน้านี้ได้ (สิทธิ์ /car_booking) แจ้งคืน/ยกเลิก/เพิ่มรูปให้การจองของทุกคนได้ — backend ใช้สิทธิ์เดียวกัน
     availableBorrows() {
-      const currentUserName = this.getCurrentUserName()
-      
-      return this.records.filter(r => {
-        // Must be active status (past borrow time, not returned)
-        if (r.status !== 'active') return false
-
-        // Check if current user is borrower or colleague
-        const isBorrower = r.name === currentUserName
-        const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
-          r.colleagues.some(colleague => {
-            return this.normalizeColleagueName(colleague) === currentUserName
-          })
-
-        return isBorrower || isColleague
-      })
+      // active = เลยเวลารับรถแล้วและยังไม่คืน
+      return this.records.filter(r => r.status === 'active')
     },
     pendingBorrows() {
-      const currentUserName = this.getCurrentUserName()
-
-      return this.records.filter(r => {
-        // Must be pending status (future booking, not started yet)
-        if (r.status !== 'pending') return false
-
-        // Check if current user is authorized to cancel this booking
-        const isBorrower = r.name === currentUserName
-        const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
-          r.colleagues.some(colleague => {
-            return this.normalizeColleagueName(colleague) === currentUserName
-          })
-
-        return isBorrower || isColleague
-      })
+      // pending = จองล่วงหน้า ยังไม่ถึงเวลา
+      return this.records.filter(r => r.status === 'pending')
     },
     currentReturnTime() {
       return this.currentTime.toLocaleTimeString('th-TH', {
@@ -242,20 +217,7 @@ export default {
       return this.records.filter(r => r.status !== 'returned').length
     },
     bookingsAllowingImageUpload() {
-      const currentUserName = this.getCurrentUserName()
-      
-      return this.records.filter(r => {
-        // Must be active status and user is authorized
-        if (r.status !== 'active') return false
-
-        const isBorrower = r.name === currentUserName
-        const isColleague = r.colleagues && Array.isArray(r.colleagues) &&
-          r.colleagues.some(colleague => {
-            return this.normalizeColleagueName(colleague) === currentUserName
-          })
-
-        return isBorrower || isColleague
-      })
+      return this.records.filter(r => r.status === 'active')
     },
     groupedImages() {
       const groups = {}
@@ -313,11 +275,6 @@ export default {
       const firstName = localStorage.getItem('soc_firstname') || ''
       const lastName = localStorage.getItem('soc_lastname') || ''
       return `${firstName} ${lastName}`.trim()
-    },
-    // ตัด (nickname) ออกจากชื่อ colleague เพื่อเปรียบเทียบกับ currentUserName
-    normalizeColleagueName(colleague) {
-      if (typeof colleague === 'string') return colleague.replace(/\s*\(.*?\)\s*$/, '').trim()
-      return colleague?.fullName || colleague?.name?.replace(/\s*\(.*?\)\s*$/, '').trim() || ''
     },
     async loadRecords(silent = false) {
       try {
@@ -869,7 +826,7 @@ export default {
 
 .main-tabs :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
   background: white;
-  color: #4A90E2;
+  color: #2f66b3;
   box-shadow: none;
   transform: translateY(-2px);
   border-bottom: none !important;
@@ -994,7 +951,7 @@ export default {
   background: #f8f9fa;
   border: 1px dashed #dee2e6;
   border-radius: 6px;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .full-size-image {
@@ -1009,7 +966,7 @@ export default {
 .no-images-state {
   text-align: center;
   padding: 3rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .no-images-state p {
@@ -1156,12 +1113,12 @@ export default {
   }
 
   .action-buttons-header .p-button {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .tab-navigation :deep(.p-tabview-nav-link) {
     padding: 0.6rem 0.8rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   .tab-header {
@@ -1169,7 +1126,35 @@ export default {
   }
 
   .tab-header span {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
+  }
+}
+
+/* จอเล็ก (≤480px เช่น iPhone SE 375px): แท็บ "ประวัติการใช้รถ" มี ไอคอน + ข้อความ + ป้ายจำนวน กว้างเกินช่องแท็บ (~141px) ~8px
+ * และ .p-tabview-nav-link เป็น overflow:hidden → ป้ายตัวเลขท้ายแท็บโดนตัดหายไป → ลด padding/ช่องไฟ ให้ไอคอน/ป้ายคงขนาด
+ * ส่วนข้อความยอมตัดด้วย … เมื่อแคบจริง ๆ (แทนที่จะตัดป้ายทิ้ง) */
+@media (max-width: 480px) {
+  .tab-navigation :deep(.p-tabview-nav-link) {
+    padding: 0.6rem 0.4rem;
+    justify-content: center;
+  }
+
+  .tab-header {
+    gap: 0.35rem;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .tab-header i,
+  .tab-header :deep(.p-badge) {
+    flex: none;
+  }
+
+  .tab-header span:not(.p-badge) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 </style>

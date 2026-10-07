@@ -115,8 +115,8 @@ export default {
   justify-content: space-between;
   width: 100%;
   padding: 0 40px 0 0;
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #55657a;
   font-weight: 600;
 }
 
@@ -146,7 +146,7 @@ export default {
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  background: #4A90E2;
+  background: #3d78bc;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid #fff;

@@ -50,7 +50,7 @@
     </div>
 
     <div v-else class="error-state">
-      <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: #f59e0b"></i>
+      <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: #b45309"></i>
       <p>ไม่พบข้อมูลผู้ใช้</p>
     </div>
   </Dialog>
@@ -145,7 +145,7 @@ export default {
   justify-content: center;
   padding: 1.5rem;
   gap: 0.75rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .user-info-content {
@@ -165,7 +165,7 @@ export default {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #4A90E2;
+  background-color: #3d78bc;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -204,8 +204,8 @@ export default {
 }
 
 .detail-label i {
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 .detail-value {
@@ -233,14 +233,14 @@ export default {
 
   .detail-label,
   .detail-value {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 .role-badge {
   display: inline-block;
   padding: 0.2rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: max(0.78rem, var(--min-fs));
   font-weight: 600;
   letter-spacing: 0.02em;
 }

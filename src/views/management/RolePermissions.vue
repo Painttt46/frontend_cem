@@ -45,26 +45,30 @@
                 <span v-if="!data.editingName">{{ data.name }}</span>
                 <InputText v-else v-model="data.name" @blur="saveEdit(data, 'name')" @keyup.enter="saveEdit(data, 'name')" autofocus />
               </div>
+              <!-- มือถือ: ซ่อนคอลัมน์ Path/Icon เพื่อให้สวิตช์เปิด/ปิดอยู่ในหน้าจอ (ไม่ต้องเลื่อนขวา) — แสดง path ไว้ใต้ชื่อแทน -->
+              <code class="path-under-name">{{ data.path }}</code>
             </template>
           </Column>
-          <Column field="path" header="Path (Double-click เพื่อแก้ไข)" style="min-width: 200px">
+          <Column field="path" header="Path (Double-click เพื่อแก้ไข)" style="min-width: 200px" headerClass="hide-on-mobile" bodyClass="hide-on-mobile">
             <template #body="{ data }">
               <code v-if="!data.editingPath" @dblclick="editCell(data, 'path')">{{ data.path }}</code>
               <InputText v-else v-model="data.path" @blur="saveEdit(data, 'path')" @keyup.enter="saveEdit(data, 'path')" autofocus />
             </template>
           </Column>
-          <Column field="icon" header="Icon (Double-click เพื่อแก้ไข)" style="min-width: 150px">
+          <Column field="icon" header="Icon (Double-click เพื่อแก้ไข)" style="min-width: 150px" headerClass="hide-on-mobile" bodyClass="hide-on-mobile">
             <template #body="{ data }">
               <div v-if="!data.editingIcon" @dblclick="editCell(data, 'icon')">
-                <i :class="data.icon" style="font-size: 1.2rem; color: #4A90E2;"></i>
-                <span style="margin-left: 0.5rem; font-size: 0.85rem; color: #6c757d;">{{ data.icon }}</span>
+                <i :class="data.icon" style="font-size: 1.2rem; color: #2f66b3;"></i>
+                <span style="margin-left: 0.5rem; font-size: max(0.85rem, var(--min-fs)); color: #525f70;">{{ data.icon }}</span>
               </div>
               <InputText v-else v-model="data.icon" placeholder="pi pi-home" @blur="saveEdit(data, 'icon')" @keyup.enter="saveEdit(data, 'icon')" autofocus />
             </template>
           </Column>
           <Column header="สิทธิ์การเข้าถึง" style="width: 150px">
             <template #body="{ data }">
-              <InputSwitch v-model="data.hasAccess" :disabled="isFixedRole" />
+              <Tag v-if="isAlwaysOn(data)" value="เข้าได้เสมอ" severity="success"
+                title="หน้าโปรไฟล์ทุกคนเข้าได้เสมอ (ใช้เปลี่ยนรหัสผ่าน และเป็นหน้าสำรองเมื่อ role ไม่มีสิทธิ์หน้าอื่น) จึงปิดไม่ได้" />
+              <InputSwitch v-else v-model="data.hasAccess" :disabled="isFixedRole" />
             </template>
           </Column>
         </DataTable>
@@ -107,6 +111,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import Message from 'primevue/message'
+import Tag from 'primevue/tag'
 import { isFullAccessRole } from '@/composables/usePermissions'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
@@ -119,6 +124,12 @@ const saving = ref(false)
 const roles = ref([])
 // admin / superadmin มีสิทธิ์ทุกอย่างเสมอ (ทั้งหน้าเว็บและ API) — แสดงเป็นเปิดทั้งหมดและแก้ไม่ได้
 const isFixedRole = computed(() => isFullAccessRole(selectedRole.value))
+// หน้าที่ทุก role เข้าได้เสมอ ไม่ผ่านตารางสิทธิ์ (router ข้ามการตรวจ /profile) — ไม่ให้มีสวิตช์ที่กดแล้วไม่มีผล
+const ALWAYS_ON_PATHS = ['/profile']
+// สิทธิ์ที่เลิกใช้แล้ว (ระบบไม่ตรวจอีก) แต่อาจยังมีแถวค้างในฐานข้อมูล — ไม่แสดงในตาราง ไม่งั้นจะเป็นสวิตช์ที่กดแล้วไม่มีผล
+// (การจัดการการจองรถของผู้อื่นใช้สิทธิ์ "จองรถ" /car_booking เดียวกัน)
+const RETIRED_PATHS = ['/car_booking#manage']
+const isAlwaysOn = (page) => ALWAYS_ON_PATHS.includes(page.path)
 const editingCell = ref(null)
 const showAddDialog = ref(false)
 const newPermission = ref({
@@ -159,8 +170,8 @@ const pages = ref([
   { id: 24, name: 'ลบโครงการ / ขั้นตอนงาน', path: '/projects#delete', icon: 'pi pi-trash', hasAccess: false },
   { id: 25, name: 'ลบรายการจัดซื้อ / ไฟล์ผู้ขาย', path: '/procurement#delete', icon: 'pi pi-trash', hasAccess: false },
   { id: 26, name: 'แก้ไข/ลบงานรายวันของผู้อื่น', path: '/daily_work#manage-all', icon: 'pi pi-users', hasAccess: false },
-  { id: 27, name: 'จัดการการจองรถของผู้อื่น', path: '/car_booking#manage', icon: 'pi pi-car', hasAccess: false },
-  { id: 28, name: 'ดู/จัดการกิจกรรมเข้าพบลูกค้าของทุกคน', path: '/sales-activity#manage-all', icon: 'pi pi-briefcase', hasAccess: false }
+  { id: 28, name: 'ดู/จัดการกิจกรรมเข้าพบลูกค้าของทุกคน', path: '/sales-activity#manage-all', icon: 'pi pi-briefcase', hasAccess: false },
+  { id: 29, name: 'ดูประวัติการใช้งานระบบ (ในหน้าระบบจัดการ)', path: '/management#audit-logs', icon: 'pi pi-history', hasAccess: false }
 ])
 
 onMounted(async () => {
@@ -200,6 +211,7 @@ const loadPermissions = async (role) => {
       
       // Add new permissions from database that don't exist in pages
       response.data.permissions.forEach(permission => {
+        if (RETIRED_PATHS.includes(permission.page_path)) return
         const existingPage = pages.value.find(p => p.path === permission.page_path)
         if (!existingPage) {
           pages.value.push({
@@ -475,8 +487,13 @@ const savePermissions = async () => {
   background: #f8f9fa;
 }
 
+/* path ใต้ชื่อหน้า: เห็นเฉพาะมือถือ (คอลัมน์ Path ถูกซ่อน) */
+.path-under-name {
+  display: none;
+}
+
 .page-icon {
-  color: #4A90E2;
+  color: #2f66b3;
   font-size: 1.1rem;
   min-width: 20px;
 }
@@ -485,7 +502,7 @@ code {
   background: #f8f9fa;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   color: #e83e8c;
   cursor: pointer;
   display: inline-block;
@@ -527,19 +544,12 @@ code:hover {
 }
 
 :deep(.p-datatable .p-datatable-thead > tr > th) {
-  background: #f8f9fa;
-  color: #2c3e50;
   font-weight: 600;
   padding: 1rem;
-  border-bottom: 2px solid #dee2e6;
 }
 
 :deep(.p-datatable .p-datatable-tbody > tr > td) {
   padding: 0.75rem 1rem;
-}
-
-:deep(.p-datatable .p-datatable-tbody > tr:hover) {
-  background: #f8f9fa;
 }
 
 @media (max-width: 1024px) {
@@ -605,12 +615,12 @@ code:hover {
   }
 
   :deep(.p-datatable) {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 
   :deep(.p-datatable .p-datatable-thead > tr > th) {
     padding: 0.5rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   :deep(.p-datatable .p-datatable-tbody > tr > td) {
@@ -623,12 +633,28 @@ code:hover {
     gap: 0.25rem;
   }
 
+  :deep(.hide-on-mobile) {
+    display: none !important;
+  }
+
+  .path-under-name {
+    display: inline-block;
+    margin-top: 0.25rem;
+  }
+
+  :deep(.p-datatable .p-datatable-thead > tr > th:last-child),
+  :deep(.p-datatable .p-datatable-tbody > tr > td:last-child) {
+    width: 4.5rem !important;
+    min-width: 4.5rem !important;
+    text-align: center;
+  }
+
   .page-icon {
     font-size: 1rem;
   }
 
   code {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
     word-break: break-all;
     max-width: 100%;
   }
@@ -660,7 +686,7 @@ code:hover {
   }
 
   .add-permission-form .field label {
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -674,20 +700,20 @@ code:hover {
   }
 
   :deep(.p-datatable) {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   :deep(.p-datatable .p-datatable-thead > tr > th) {
     padding: 0.4rem;
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 
   :deep(.p-datatable .p-datatable-tbody > tr > td) {
     padding: 0.4rem;
   }
 
-  :deep(.p-button) {
-    font-size: 0.85rem;
+  :deep(.p-button:not(.p-button-icon-only)) {
+    font-size: max(0.85rem, var(--min-fs));
     padding: 0.5rem 1rem;
   }
 

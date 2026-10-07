@@ -575,7 +575,7 @@ const deleteUserWorkHours = async (userId) => {
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #6c757d;
+  color: #525f70;
 }
 
 .empty-state i {
@@ -585,8 +585,8 @@ const deleteUserWorkHours = async (userId) => {
 }
 
 .nickname-text {
-  color: #888;
-  font-size: 0.85rem;
+  color: #55657a;
+  font-size: max(0.85rem, var(--min-fs));
 }
 
 @media (max-width: 768px) {

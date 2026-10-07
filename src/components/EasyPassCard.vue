@@ -169,7 +169,7 @@ export default {
 .logo-pass {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fbbf24;
+  color: #92400e;
   letter-spacing: 1px;
 }
 
@@ -211,7 +211,7 @@ export default {
 }
 
 .edit-hint {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   color: #60a5fa;
   margin-left: 8px;
   opacity: 0;
@@ -219,8 +219,8 @@ export default {
 }
 
 .balance-label {
-  font-size: 0.75rem;
-  color: #94a3b8;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #55657a;
   text-transform: uppercase;
   letter-spacing: 2px;
   margin-bottom: 0.25rem;
@@ -293,8 +293,8 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #526074;
 }
 
 .card-number {
@@ -321,7 +321,7 @@ export default {
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  background-color: #3a7bd0;
+  background-color: #3369ac;
   border-radius: 50%;
   cursor: pointer;
   border: 3px solid #fff;
@@ -341,7 +341,7 @@ export default {
 .slider-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #526074;
 }
 </style>

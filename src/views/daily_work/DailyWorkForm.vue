@@ -122,7 +122,7 @@
                     <div class="step-opt-top">
                       <span class="step-opt-name">{{ option.step_name }}</span>
                       <span class="step-status-tag" :style="{ color: getStepStatusColor(option), borderColor: getStepStatusColor(option) + '40', background: getStepStatusColor(option) + '15' }">
-                        <i class="pi pi-circle-fill" style="font-size:0.45rem"></i> {{ getStepStatusLabel(option) }}
+                        <i class="pi pi-circle-fill" style="font-size:max(0.45rem, var(--min-fs))"></i> {{ getStepStatusLabel(option) }}
                       </span>
                     </div>
                     <div v-if="option.start_date || option.end_date" class="step-opt-dates">
@@ -268,6 +268,7 @@ import AutoComplete from 'primevue/autocomplete'
 
 import { isValidTimeRange } from '@/utils/validation'
 import { isActive } from '@/utils/statusHelper'
+import { accessibleBg } from '@/utils/color'
 
 export default {
   name: 'DailyWorkForm',
@@ -506,12 +507,12 @@ export default {
     getStepByIdFromTask(sid, tid) { return this.getStepsForTask(tid).find(s => s.id === sid) },
     getStepNumberFromTask(sid, tid) { return this.getStepsForTask(tid).findIndex(s => s.id === sid) + 1 },
     getStepStatusColor(step) {
-      if (!step) return '#9ca3af'
-      if (step.status === 'completed') return '#10b981'
+      if (!step) return accessibleBg('#9ca3af')
+      if (step.status === 'completed') return accessibleBg('#10b981')
       const today = new Date(); today.setHours(0,0,0,0)
-      if (step.end_date && today > new Date(step.end_date).setHours(0,0,0,0)) return '#ef4444'
-      if (step.has_work_logged) return '#f59e0b'
-      return '#9ca3af'
+      if (step.end_date && today > new Date(step.end_date).setHours(0,0,0,0)) return accessibleBg('#ef4444')
+      if (step.has_work_logged) return accessibleBg('#f59e0b')
+      return accessibleBg('#9ca3af')
     },
     getStepStatusLabel(step) {
       if (!step) return 'รอดำเนินการ'
@@ -853,7 +854,7 @@ export default {
 }
 
 .toggle-label {
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   font-weight: 500;
   color: #1e40af;
   cursor: pointer;
@@ -880,9 +881,9 @@ export default {
 }
 
 .date-range-separator {
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   font-weight: 500;
-  color: #64748b;
+  color: #526074;
   padding-bottom: 0.5rem;
   white-space: nowrap;
 }
@@ -896,14 +897,14 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   color: #1e40af;
   box-shadow: none;
 }
 
 .date-range-info i {
   font-size: 1.1rem;
-  color: #3a7bd0;
+  color: #2f66b3;
   flex-shrink: 0;
 }
 
@@ -928,7 +929,7 @@ export default {
   }
   
   .date-range-field label {
-    font-size: 0.8rem;
+    font-size: max(0.8rem, var(--min-fs));
   }
 }
 
@@ -972,7 +973,7 @@ export default {
 }
 
 .section-title i { 
-  color: #3a7bd0; 
+  color: #2f66b3; 
   font-size: 1.1rem;
 }
 
@@ -1009,9 +1010,9 @@ export default {
   width: 32px; 
   height: 32px; 
   border-radius: 50%;
-  background-color: #3a7bd0;
+  background-color: #3369ac;
   color: #fff; 
-  font-size: 0.85rem; 
+  font-size: max(0.85rem, var(--min-fs)); 
   font-weight: 700;
   display: flex; 
   align-items: center; 
@@ -1033,21 +1034,21 @@ export default {
 }
 .time-fields { display: flex; align-items: flex-end; gap: 0.5rem; }
 .time-field { display: flex; flex-direction: column; gap: 2px; }
-.time-sep { font-weight: 600; color: #94a3b8; padding-bottom: 4px; }
+.time-sep { font-weight: 600; color: #55657a; padding-bottom: 4px; }
 .time-input { width: 72px !important; text-align: center; font-size: 1rem; padding: 0.4rem 0.3rem !important; }
 .time-total-pill {
   background: #dbeafe; color: #2a5490; border-radius: 20px;
-  padding: 4px 12px; font-size: 0.82rem; font-weight: 600;
+  padding: 4px 12px; font-size: max(0.82rem, var(--min-fs)); font-weight: 600;
   display: flex; align-items: center; gap: 4px; white-space: nowrap;
 }
 
 /* ── Fields ── */
 .field-row { margin-bottom: 0.75rem; }
 .field-row:last-child { margin-bottom: 0; }
-.field-label { font-weight: 600; color: #374151; font-size: 0.875rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 5px; }
-.field-label i { color: #6b7280; font-size: 0.8rem; }
-.field-label-sm { font-size: 0.78rem; color: #6b7280; font-weight: 500; margin-bottom: 2px; display: block; }
-.req { color: #ef4444; }
+.field-label { font-weight: 600; color: #374151; font-size: max(0.875rem, var(--min-fs)); margin-bottom: 0.35rem; display: flex; align-items: center; gap: 5px; }
+.field-label i { color: #525f70; font-size: max(0.8rem, var(--min-fs)); }
+.field-label-sm { font-size: max(0.78rem, var(--min-fs)); color: #525f70; font-weight: 500; margin-bottom: 2px; display: block; }
+.req { color: #dc2626; }
 
 /* ── Dropdown / Input ── */
 .w-full { width: 100% !important; }
@@ -1057,35 +1058,35 @@ export default {
 /* ── Dropdown options ── */
 .val-row, .opt-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; overflow: hidden; }
 .opt-mine { background: #fefce8; border-left: 3px solid #f59e0b; padding: 3px 6px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-.so-tag { background: #4A90E2; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
-.mine-tag { background: #f59e0b; color: #fff; font-size: 0.65rem; font-weight: 700; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
+.so-tag { background: #3d78bc; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: max(0.7rem, var(--min-fs)); font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+.mine-tag { background: #a46a07; color: #fff; font-size: max(0.65rem, var(--min-fs)); font-weight: 700; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
 .task-txt { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; overflow-wrap: anywhere; }
-.ph { color: #9ca3af; }
+.ph { color: #55657a; }
 
 /* ── Step chips ── */
 .chips-wrap { display: flex; flex-direction: column; gap: 4px; width: 100%; }
 .step-chip { display: flex; align-items: center; gap: 6px; border-left: 3px solid; border-radius: 4px; padding: 4px 8px; background: #f8fafc; }
-.chip-num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.chip-name { flex: 1; font-size: 0.82rem; color: #334155; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chip-x { cursor: pointer; color: #94a3b8; font-size: 0.7rem; }
-.chip-x:hover { color: #ef4444; }
+.chip-num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: max(0.65rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chip-name { flex: 1; font-size: max(0.82rem, var(--min-fs)); color: #334155; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip-x { cursor: pointer; color: #55657a; font-size: max(0.7rem, var(--min-fs)); }
+.chip-x:hover { color: #dc2626; }
 
 /* ── Step option ── */
 .step-opt { display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid; padding: 6px 8px; border-radius: 0 6px 6px 0; background: #f8fafc; }
-.step-num-badge { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+.step-num-badge { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: max(0.7rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
 .step-opt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .step-opt-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.step-opt-name { flex: 1; font-weight: 600; font-size: 0.875rem; color: #1e293b; }
-.step-status-tag { font-size: 0.7rem; font-weight: 600; white-space: nowrap; padding: 1px 7px; border-radius: 10px; border: 1px solid; display: flex; align-items: center; gap: 3px; }
-.step-opt-dates { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #64748b; }
-.step-opt-dates i { font-size: 0.7rem; }
-.step-opt-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+.step-opt-name { flex: 1; font-weight: 600; font-size: max(0.875rem, var(--min-fs)); color: #1e293b; }
+.step-status-tag { font-size: max(0.7rem, var(--min-fs)); font-weight: 600; white-space: nowrap; padding: 1px 7px; border-radius: 10px; border: 1px solid; display: flex; align-items: center; gap: 3px; }
+.step-opt-dates { display: flex; align-items: center; gap: 4px; font-size: max(0.75rem, var(--min-fs)); color: #526074; }
+.step-opt-dates i { font-size: max(0.7rem, var(--min-fs)); }
+.step-opt-desc { font-size: max(0.75rem, var(--min-fs)); color: #55657a; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
 
 /* ── File list ── */
 .file-list { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
 .file-item { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; }
-.file-item i { color: #6b7280; }
-.file-name { flex: 1; font-size: 0.82rem; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.file-item i { color: #525f70; }
+.file-name { flex: 1; font-size: max(0.82rem, var(--min-fs)); color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 
 /* ── Calendar section ── */
 .cal-section { 
@@ -1179,7 +1180,7 @@ export default {
 .meeting-time-separator {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #f59e0b;
+  color: #b45309;
   padding-bottom: 0.25rem;
   flex-shrink: 0;
 }
@@ -1251,7 +1252,7 @@ export default {
 }
 
 .form-actions :deep(.p-button-success) {
-  background-color: #0aa875;
+  background-color: #0c875e;
   border: none;
   box-shadow: none;
 }
@@ -1290,14 +1291,14 @@ export default {
 .hint-external {
   display: block;
   margin-top: 0.5rem;
-  color: #0ea5e9;
-  font-size: 0.8rem;
+  color: #0369a1;
+  font-size: max(0.8rem, var(--min-fs));
   font-weight: 500;
   animation: fadeIn 0.3s ease-out;
 }
 
 .hint-external i {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
   margin-right: 0.25rem;
 }
 
@@ -1312,8 +1313,8 @@ export default {
 }
 
 .attendee-email {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: max(0.8rem, var(--min-fs));
+  color: #526074;
   margin-top: 0.15rem;
 }
 
@@ -1332,7 +1333,7 @@ export default {
   background-color: #cde2fe;
   border: 1px solid #93c5fd;
   border-radius: 20px;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   color: #1e40af;
   transition: all 0.2s;
 }
@@ -1343,7 +1344,7 @@ export default {
 }
 
 .attendee-chip i.pi-user {
-  font-size: 0.75rem;
+  font-size: max(0.75rem, var(--min-fs));
 }
 
 .attendee-chip-name {
@@ -1352,7 +1353,7 @@ export default {
 
 .attendee-chip-remove {
   cursor: pointer;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   padding: 0.2rem;
   border-radius: 50%;
   transition: all 0.2s;
@@ -1360,7 +1361,7 @@ export default {
 
 .attendee-chip-remove:hover {
   background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  color: #dc2626;
 }
 
 /* ── Mobile ── */
@@ -1378,7 +1379,7 @@ export default {
 
   .entry-top { flex-wrap: wrap; gap: 8px; }
   .entry-dropdown-wrap { order: 3; width: 100%; }
-  .entry-badge { order: 1; width: 28px; height: 28px; font-size: 0.8rem; }
+  .entry-badge { order: 1; width: 28px; height: 28px; font-size: max(0.8rem, var(--min-fs)); }
   .entry-top .p-button { order: 2; margin-left: auto; }
 
   .time-row { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; }
@@ -1386,7 +1387,7 @@ export default {
   .time-field { flex: 1; min-width: 0; }
   .time-input { width: 100% !important; min-width: 0; font-size: 1rem; padding: 0.5rem !important; }
   .time-sep { flex-shrink: 0; }
-  .time-total-pill { width: 100%; justify-content: center; font-size: 0.85rem; padding: 6px 12px; }
+  .time-total-pill { width: 100%; justify-content: center; font-size: max(0.85rem, var(--min-fs)); padding: 6px 12px; }
 
   .meeting-time-grid { 
     flex-direction: column; 
@@ -1435,6 +1436,30 @@ export default {
   .section { padding: 1.5rem; }
   .entry-card { padding: 1.5rem; }
   .time-input { width: 90px !important; }
+}
+
+/* ── มือถือ: แถวเลือกโครงการ ──
+   เดิม [เลขลำดับ][dropdown][ปุ่มลบ] อยู่แถวเดียวกัน → dropdown เหลือกว้างแค่ ~170px (iPhone SE) ชื่อโครงการที่เลือกถูกตัดเหลือ "SO25102 บำรุง…"
+   อ่านไม่ออกว่าเลือกโครงการไหน — ให้ เลขลำดับ + ปุ่มลบ อยู่แถวบน แล้ว dropdown กว้างเต็มแถวด้านล่าง และชื่อโครงการตัดบรรทัดได้ */
+@media (max-width: 768px) {
+  .entry-top { flex-wrap: wrap; row-gap: 0.6rem; }
+  .entry-badge { order: 1; }
+  .entry-top > .p-button { order: 2; margin-left: auto; }
+  .entry-dropdown-wrap { order: 3; flex: 1 1 100%; }
+  /* โครงการเดียว (ไม่มีปุ่มลบ): เลขลำดับอยู่ข้างหน้า dropdown ได้ ไม่ต้องกินอีกแถว */
+  .entry-top:not(:has(> .p-button)) { flex-wrap: nowrap; }
+  .entry-top:not(:has(> .p-button)) .entry-dropdown-wrap { order: 2; flex: 1 1 0; }
+  .entry-dropdown-wrap :deep(.p-dropdown) { height: auto; min-height: 2.6rem; }
+  .entry-dropdown-wrap :deep(.p-dropdown-label) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+  /* เลข SO อยู่บรรทัดบน ชื่อโครงการอยู่บรรทัดล่างเต็มความกว้าง — ไม่ให้ชื่อถูกบีบเป็นคอลัมน์แคบข้างป้าย SO */
+  .entry-dropdown-wrap :deep(.p-dropdown-label .val-row) { overflow: visible; flex-direction: column; align-items: flex-start; gap: 4px; }
 }
 </style>
 

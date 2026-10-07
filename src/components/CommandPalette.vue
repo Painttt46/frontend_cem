@@ -243,13 +243,13 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKey))
 }
 
 .cp-input::placeholder {
-  color: #94a3b8;
+  color: #55657a;
 }
 
 .cp-kbd,
 .cp-foot kbd {
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 600;
   color: var(--muted);
   background: #f1f5f9;
@@ -269,7 +269,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKey))
 
 .cp-group {
   padding: 0.55rem 0.7rem 0.25rem;
-  font-size: 0.72rem;
+  font-size: max(0.72rem, var(--min-fs));
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--muted);
@@ -324,7 +324,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKey))
 }
 
 .cp-text small {
-  font-size: 0.74rem;
+  font-size: max(0.74rem, var(--min-fs));
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -333,7 +333,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKey))
 
 .cp-go {
   color: var(--brand-blue);
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   opacity: 0;
   transition: opacity 0.12s ease;
 }
@@ -364,7 +364,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKey))
   padding: 0.6rem 1rem;
   border-top: 1px solid var(--line);
   background: #fafbfd;
-  font-size: 0.74rem;
+  font-size: max(0.74rem, var(--min-fs));
   color: var(--muted);
 }
 

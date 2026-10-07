@@ -155,7 +155,7 @@
     </div>
 
     <!-- Audit Log Section -->
-    <Card class="audit-card mt-4">
+    <Card v-if="canViewAuditLogs" class="audit-card mt-4">
       <template #title>
         <div class="flex align-items-center justify-content-between">
           <div class="flex align-items-center gap-2">
@@ -293,7 +293,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { usePermissions } from '@/composables/usePermissions'
@@ -302,6 +302,9 @@ import axios from 'axios'
 const router = useRouter()
 const toast = useToast()
 const { loadPermissions, hasAccess } = usePermissions()
+
+// ประวัติการใช้งานระบบเห็นได้เฉพาะ admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์นี้ที่หน้า "จัดการสิทธิ์"
+const canViewAuditLogs = computed(() => hasAccess('/management#audit-logs'))
 
 // Audit Log State
 const auditLogs = ref([])
@@ -418,9 +421,9 @@ const showLogDetail = (log) => {
   detailDialog.value = true
 }
 
-onMounted(() => {
-  loadPermissions()
-  loadAuditLogs()
+onMounted(async () => {
+  await loadPermissions()
+  if (canViewAuditLogs.value) loadAuditLogs()
 })
 
 const navigateTo = (section) => {
@@ -541,7 +544,7 @@ const navigateTo = (section) => {
 }
 
 .system-count {
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   padding: 0.75rem 1.25rem;
   background: rgba(255, 255, 255, 0.2);
   color: white;
@@ -615,7 +618,7 @@ const navigateTo = (section) => {
 }
 
 .status-badge {
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   padding: 0.25rem 0.5rem;
 }
 
@@ -628,7 +631,7 @@ const navigateTo = (section) => {
 
 .card-content p {
   margin: 0;
-  color: #6c757d;
+  color: #525f70;
   font-size: 0.9rem;
   line-height: 1.5;
   flex: 1;
@@ -652,7 +655,7 @@ const navigateTo = (section) => {
   border-radius: 50%;
   color: var(--brand-blue-700);
   background: var(--brand-blue-soft);
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--min-fs));
   transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 
@@ -758,39 +761,39 @@ const navigateTo = (section) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #4A90E2;
+  background-color: #3d78bc;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
 }
 
 .action-badge {
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   padding: 0.35rem 0.75rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 5rem;
   text-align: center;
+  /* คอลัมน์ action กว้างแค่ 15% ของตาราง (≈76px บนมือถือ) แต่ PrimeVue ล็อกความสูงป้าย 1.5rem → "🔑 เข้าสู่ระบบ" ตัดเป็น 2 บรรทัดแล้วล้นออกนอกป้าย
+     ให้ป้ายสูงตามจำนวนบรรทัดแทน */
+  height: auto;
+  min-height: 1.5rem;
+  line-height: 1.35;
+  max-width: 100%;
+  white-space: normal;
 }
 
 :deep(.audit-table .p-datatable-thead > tr > th) {
-  background-color: #f4f8fa;
-  border-bottom: 2px solid #e2e8f0;
   font-weight: 600;
-  color: #475569;
   padding: 0.6rem 1rem;
   text-align: center;
 }
 
 :deep(.audit-table .p-datatable-tbody > tr) {
   transition: all 0.2s ease;
-}
-
-:deep(.audit-table .p-datatable-tbody > tr:hover) {
-  background: #f8fafc !important;
 }
 
 :deep(.audit-table .p-datatable-tbody > tr > td) {
@@ -830,8 +833,8 @@ const navigateTo = (section) => {
 }
 
 .detail-label {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #526074;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -852,7 +855,7 @@ const navigateTo = (section) => {
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
 }
 
 .data-header.data-old {
@@ -862,13 +865,13 @@ const navigateTo = (section) => {
 
 .data-header.data-new {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
 }
 
 .data-content {
   margin: 0;
   padding: 0.6rem 1rem;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--min-fs));
   max-height: 200px;
   overflow: auto;
   font-family: 'Monaco', 'Menlo', monospace;

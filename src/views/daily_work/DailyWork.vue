@@ -68,7 +68,7 @@
       :dismissableMask="false">
       <template #header>
         <div class="dialog-header-custom">
-          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #3a7bd0;"></i>
+          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #2f66b3;"></i>
           <span class="dialog-title">ลงตารางงานรายวัน</span>
         </div>
       </template>
@@ -93,12 +93,6 @@ export default {
   components: {
     DailyWorkForm,
     DailyWorkList
-  },
-  setup() {
-    return {
-      $confirm: useConfirm(),
-      $toast: useToast()
-    }
   },
   provide() {
     return {
@@ -291,11 +285,11 @@ export default {
 }
 
 .filter-so-tag {
-  background: #4A90E2;
+  background: #3d78bc;
   color: #fff;
   padding: 1px 6px;
   border-radius: 4px;
-  font-size: 0.7rem;
+  font-size: max(0.7rem, var(--min-fs));
   font-weight: 700;
   white-space: nowrap;
   flex-shrink: 0;
@@ -315,10 +309,10 @@ export default {
 .filter-btn {
   background: transparent;
   border: none;
-  color: #64748b;
+  color: #526074;
   padding: 0.5rem 1rem;
   font-weight: 500;
-  font-size: 0.875rem;
+  font-size: max(0.875rem, var(--min-fs));
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -342,7 +336,7 @@ export default {
 }
 
 .filter-btn.filter-today.active {
-  color: #059669;
+  color: #047857;
 }
 
 .filter-btn.filter-future.active {
@@ -354,10 +348,10 @@ export default {
   align-items: center;
   justify-content: center;
   background: #e2e8f0;
-  color: #64748b;
+  color: #526074;
   border-radius: 20px;
   padding: 0.1rem 0.5rem;
-  font-size: 0.72rem;
+  font-size: max(0.72rem, var(--min-fs));
   font-weight: 700;
   min-width: 22px;
   line-height: 1.4;
@@ -380,7 +374,7 @@ export default {
 }
 
 .work-btn {
-  background-color: #4A90E2 !important;
+  background-color: #3d78bc !important;
   border: none !important;
   color: white !important;
   padding: 0.85rem 1.8rem !important;
@@ -399,7 +393,7 @@ export default {
 }
 
 .task-btn {
-  background-color: #0aa875 !important;
+  background-color: #0c875e !important;
   border: none !important;
   color: white !important;
   padding: 1rem 2rem !important;
@@ -457,7 +451,7 @@ export default {
 .tab-navigation :deep(.p-tabview-nav-link) {
   background: transparent;
   border: none;
-  color: #6c757d;
+  color: #525f70;
   font-weight: 500;
   padding: 1rem 1.5rem;
   margin: 0 0.25rem;
@@ -467,12 +461,12 @@ export default {
 
 .tab-navigation :deep(.p-tabview-nav-link:hover) {
   background: rgba(74, 144, 226, 0.1);
-  color: #3a7bd0;
+  color: #2f66b3;
 }
 
 .tab-navigation :deep(.p-tabview-nav-link.p-highlight) {
   background: white;
-  color: #3a7bd0;
+  color: #2f66b3;
   border-bottom: 2px solid #3a7bd0;
   box-shadow: none;
 }
@@ -616,7 +610,7 @@ export default {
 
   .tab-navigation :deep(.p-tabview-nav-link) {
     padding: 0.5rem 0.75rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 
@@ -653,7 +647,7 @@ export default {
 :deep(.work-dialog .p-dialog-header-icon) {
   width: 2.5rem;
   height: 2.5rem;
-  color: #3a7bd0;
+  color: #2f66b3;
   transition: all 0.2s;
 }
 
@@ -704,7 +698,7 @@ export default {
     justify-content: center;
     white-space: nowrap;
     padding: 0.5rem 0.6rem;
-    font-size: 0.85rem;
+    font-size: max(0.85rem, var(--min-fs));
   }
 }
 </style>

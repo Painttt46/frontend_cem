@@ -52,7 +52,7 @@
             <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 180px">
               <template #header>
                 <div class="leave-type-header">
-                  <Badge :value="type.label" :style="{ backgroundColor: type.color, color: '#fff', fontWeight: 'bold' }" />
+                  <Badge :value="type.label" :style="{ backgroundColor: $accessibleBg(type.color), color: '#fff', fontWeight: 'bold' }" />
                   <div v-if="canManageLeaveTypes" class="leave-type-actions">
                     <Button icon="pi pi-pencil" size="small" text severity="info" @click="editLeaveType(type)" v-tooltip="'แก้ไข'" />
                     <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" v-tooltip="'ลบ'" />
@@ -159,7 +159,7 @@
         
         <div class="field">
           <label>ประเภทการลา</label>
-          <Badge :value="editingLeaveType?.label" :style="{ backgroundColor: editingLeaveType?.color, color: '#fff' }" />
+          <Badge :value="editingLeaveType?.label" :style="{ backgroundColor: $accessibleBg(editingLeaveType?.color), color: '#fff' }" />
         </div>
         
         <div class="field add-quota-field">
@@ -825,8 +825,8 @@ const saveLeaveType = async () => {
 
 .advance-days-hint {
   display: block;
-  font-size: 0.75rem;
-  color: #6c757d;
+  font-size: max(0.75rem, var(--min-fs));
+  color: #525f70;
   margin-top: 0.25rem;
 }
 
@@ -863,8 +863,8 @@ const saveLeaveType = async () => {
 }
 
 .quota-row small {
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: max(0.85rem, var(--min-fs));
+  color: #525f70;
   min-width: 60px;
 }
 
@@ -875,8 +875,8 @@ const saveLeaveType = async () => {
 }
 
 .remaining {
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: max(0.85rem, var(--min-fs));
+  color: #525f70;
   padding-left: 60px;
 }
 
@@ -899,8 +899,8 @@ const saveLeaveType = async () => {
 }
 
 .field-hint {
-  color: #6c757d;
-  font-size: 0.85rem;
+  color: #525f70;
+  font-size: max(0.85rem, var(--min-fs));
   margin-top: 0.25rem;
 }
 
@@ -915,7 +915,7 @@ const saveLeaveType = async () => {
 
 .user-info i {
   font-size: 2rem;
-  color: #4A90E2;
+  color: #2f66b3;
 }
 
 .user-info h4 {
@@ -925,7 +925,7 @@ const saveLeaveType = async () => {
 }
 
 .user-info small {
-  color: #6c757d;
+  color: #525f70;
 }
 
 .leave-type-form {
@@ -947,8 +947,8 @@ const saveLeaveType = async () => {
 }
 
 .leave-type-form small {
-  color: #6c757d;
-  font-size: 0.8rem;
+  color: #525f70;
+  font-size: max(0.8rem, var(--min-fs));
 }
 
 .quota-cell {
@@ -958,8 +958,8 @@ const saveLeaveType = async () => {
 }
 
 .quota-cell small {
-  font-size: 0.85rem;
-  color: #6c757d;
+  font-size: max(0.85rem, var(--min-fs));
+  color: #525f70;
 }
 
 .header-actions {
@@ -1012,19 +1012,19 @@ const saveLeaveType = async () => {
 }
 
 .holiday-date {
-  background-color: #ef4444 !important;
+  background-color: #d73d3d !important;
   color: #fff !important;
   font-weight: 600;
 }
 
 .pending-holiday-date {
-  background-color: #4A90E2 !important;
+  background-color: #3d78bc !important;
   color: #fff !important;
   font-weight: 600;
 }
 
 .delete-holiday-date {
-  background-color: #9ca3af !important;
+  background-color: #727780 !important;
   color: #fff !important;
   font-weight: 600;
   text-decoration: line-through;
@@ -1036,7 +1036,7 @@ const saveLeaveType = async () => {
 }
 
 .no-holidays {
-  color: #6c757d;
+  color: #525f70;
   font-style: italic;
 }
 
@@ -1047,7 +1047,7 @@ const saveLeaveType = async () => {
 }
 
 .holiday-chip {
-  background: #ef4444 !important;
+  background: #d73d3d !important;
   color: white !important;
 }
 
