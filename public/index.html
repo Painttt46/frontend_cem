@@ -6,9 +6,11 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,user-scalable=yes">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="<%= BASE_URL %>GENT.svg">
-    <link rel="icon" type="image/png" sizes="16x16" href="<%= BASE_URL %>GENT.svg">
-    <link rel="apple-touch-icon" sizes="180x180" href="<%= BASE_URL %>GENT.svg">
+    <!-- ไอคอนเป็น SVG ต้องประกาศ type ให้ตรง (เดิมระบุ image/png → เบราว์เซอร์ไม่ใช้ แล้วไปขอ /favicon.ico ที่ไม่มีอยู่ทุกครั้งที่เปลี่ยนหน้า = 404 ซ้ำใน log) -->
+    <link rel="icon" type="image/svg+xml" href="<%= BASE_URL %>GENT.svg">
+    <!-- สำรองสำหรับเบราว์เซอร์ที่ไม่รองรับไอคอน SVG (Safari) และไอคอนหน้าจอหลัก iOS (ไม่รองรับ SVG) -->
+    <link rel="alternate icon" type="image/png" href="<%= BASE_URL %>GENT.png">
+    <link rel="apple-touch-icon" href="<%= BASE_URL %>GENT.png">
     
     <!-- Meta tags -->
     <meta name="description" content="Gent-CEM Management System">

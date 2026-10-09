@@ -539,7 +539,7 @@ const deleteUserWorkHours = async (userId) => {
 
 .time-badge {
   background: #e3f2fd;
-  color: #1976d2;
+  color: #1565c0;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: 500;

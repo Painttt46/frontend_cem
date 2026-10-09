@@ -367,7 +367,7 @@
                           <div class="wl-info">
                             <div class="wl-step">{{ step.stepOrder }}. {{ step.stepName }}</div>
                             <div v-if="step.projectStatuses && step.projectStatuses.length" class="wl-status-badges">
-                              <span v-for="status in step.projectStatuses" :key="status" class="status-mini" :style="{ backgroundColor: getStatusColor(status) }">{{ status }}</span>
+                              <span v-for="status in step.projectStatuses" :key="status" class="status-mini" :style="{ backgroundColor: $accessibleBg(getStatusColor(status)) }">{{ status }}</span>
                             </div>
                           </div>
                         </div>

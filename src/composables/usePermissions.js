@@ -8,11 +8,24 @@ import axios from '@/utils/axiosConfig'
 const FULL_ACCESS_ROLES = ['admin', 'superadmin']
 export const isFullAccessRole = (role) => FULL_ACCESS_ROLES.includes(String(role ?? '').trim().toLowerCase())
 
+// หน้าทั้งหมดในส่วน "จัดการระบบ" — มีสิทธิ์หน้าใดหน้าหนึ่งก็เห็นเมนู "จัดการระบบ" และเข้าหน้ารวม /management ได้
+// (หน้ารวมเป็นแค่การ์ดลิงก์ที่กรองตามสิทธิ์ของแต่ละหน้าอีกชั้น ไม่ได้เปิดข้อมูลเพิ่ม และ backend ไม่มี API ที่ใช้คีย์ /management)
+// เดิมต้องติ๊ก /management ด้วย — ถ้าติ๊กแค่หน้าย่อย (เช่น /management/leave) ผู้ใช้เข้าหน้านั้นได้แต่ไม่มีเมนูให้กดไปถึง
+export const MANAGEMENT_SECTION_KEYS = [
+  '/management/dashboard', '/management/users', '/management/leave',
+  '/management/tasks', '/management/projects', '/management/daily-work',
+  '/management/settings', '/management/settings/role-permissions',
+  '/management/settings/leave-approval', '/management/settings/role-work-hours',
+  '/management#audit-logs'
+]
+
 const PERMISSIONS_MAX_AGE_MS = 60 * 1000 // ผู้ดูแลแก้สิทธิ์แล้วผู้ใช้ที่เปิดแอปค้างอยู่จะได้ค่าใหม่ภายในประมาณ 1 นาที (ไม่ต้อง login ใหม่)
 
 const permissions = ref([])
 const permissionsLoaded = ref(false)
-let loadedRole = null
+// เป็น ref เพื่อให้เมนู/การ์ดที่เรียก hasAccess() คำนวณใหม่เมื่อโหลดสิทธิ์ของ role ใหม่เสร็จ
+// (ถ้าเป็นตัวแปรธรรมดา: ระหว่างที่ role ยังไม่ตรง hasAccess คืน false โดยไม่ได้อ่าน permissions — Vue จึงไม่รู้ว่าต้องวาดเมนูใหม่เมื่อโหลดเสร็จ)
+const loadedRole = ref(null)
 let loadedAt = 0
 let inflight = null
 
@@ -30,13 +43,13 @@ export function usePermissions() {
 
       permissions.value = response.data.permissions || []
       permissionsLoaded.value = true
-      loadedRole = role
+      loadedRole.value = role
       loadedAt = Date.now()
       return true
     } catch {
       // โหลดไม่สำเร็จ (เครือข่ายสะดุด / backend รีสตาร์ท / ถูกจำกัดจำนวนคำขอ): ถ้าเคยโหลดสำเร็จมาแล้ว "คงสิทธิ์ล่าสุดไว้" แล้วลองใหม่ตอนเปลี่ยนหน้าครั้งถัดไป
       // — เดิมล้างสิทธิ์ทิ้ง ทำให้เมนู/ปุ่มที่ต้องมีสิทธิ์ (เช่น "อนุมัติการลา") หายไปทั้งหมดชั่วคราวเพราะคำขอพลาดครั้งเดียว
-      return permissionsLoaded.value && loadedRole === localStorage.getItem('soc_role')
+      return permissionsLoaded.value && loadedRole.value === localStorage.getItem('soc_role')
     }
   }
 
@@ -44,7 +57,7 @@ export function usePermissions() {
   const ensureFreshPermissions = async (maxAgeMs = PERMISSIONS_MAX_AGE_MS) => {
     const role = localStorage.getItem('soc_role')
     if (!role) return false
-    const fresh = permissionsLoaded.value && loadedRole === role && (Date.now() - loadedAt) < maxAgeMs
+    const fresh = permissionsLoaded.value && loadedRole.value === role && (Date.now() - loadedAt) < maxAgeMs
     if (fresh) return true
     if (!inflight) inflight = loadPermissions().finally(() => { inflight = null })
     return inflight
@@ -57,14 +70,19 @@ export function usePermissions() {
     if (isFullAccessRole(role)) return true
 
     // ยังโหลดไม่เสร็จ หรือเป็นสิทธิ์ของ role เดิม (เพิ่งเปลี่ยนผู้ใช้) → ยังไม่ให้
-    if (!permissionsLoaded.value || loadedRole !== role) return false
+    if (!permissionsLoaded.value || loadedRole.value !== role) return false
 
     // ไม่มีแถว = ไม่มีสิทธิ์
     const permission = permissions.value.find(p => p.page_path === path)
     return permission ? permission.has_access === true : false
   }
 
+  // มีสิทธิ์หน้าใดก็ได้ในส่วน "จัดการระบบ" (รวมตัวหน้ารวม /management เอง)
+  const hasManagementAccess = () => hasAccess('/management') || MANAGEMENT_SECTION_KEYS.some(key => hasAccess(key))
+
   const canAccessRoute = (path) => {
+    // หน้ารวม /management: เข้าได้ถ้ามีสิทธิ์หน้าใดหน้าหนึ่งในส่วนนี้ (การ์ดในหน้ารวมกรองตามสิทธิ์ของแต่ละหน้าอยู่แล้ว)
+    if (path === '/management') return hasManagementAccess()
     return hasAccess(path)
   }
 
@@ -73,7 +91,7 @@ export function usePermissions() {
     if (isFullAccessRole(role)) return '/daily_work'
     const menuOrder = ['/daily_work', '/car_booking', '/leave_work', '/projects', '/management']
     for (const path of menuOrder) {
-      if (hasAccess(path)) return path
+      if (canAccessRoute(path)) return path
     }
     return '/profile'
   }
@@ -85,6 +103,7 @@ export function usePermissions() {
     ensureFreshPermissions,
     hasAccess,
     canAccessRoute,
+    hasManagementAccess,
     getFirstAccessibleRoute,
     isFullAccess: () => isFullAccessRole(localStorage.getItem('soc_role'))
   }

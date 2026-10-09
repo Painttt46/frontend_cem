@@ -822,7 +822,7 @@ export default {
 }
 
 .status-working .step-number {
-  background-color: #e78a08;
+  background-color: #b45309; /* ตัวเลขขาว: เดิม #e78a08 = 2.61:1 → 5.02:1 */
 }
 
 .status-overdue .step-number {
@@ -834,7 +834,7 @@ export default {
 }
 
 .status-pending .step-number {
-  background-color: #848a98;
+  background-color: #64748b; /* ตัวเลขขาว: เดิม #848a98 = 3.46:1 → 4.76:1 */
 }
 
 .status-on_hold .step-number {
@@ -864,7 +864,7 @@ export default {
 
 .step-status-badge.status-overdue {
   background: #fee2e2;
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .step-status-badge.status-in_progress {

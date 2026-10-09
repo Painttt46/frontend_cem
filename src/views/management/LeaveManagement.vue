@@ -872,6 +872,8 @@ const saveLeaveType = async () => {
   font-weight: 600;
   color: #2c3e50;
   font-size: 0.9rem;
+  /* "30 วัน (240 ชม.)" ไม่ตัดบรรทัด — คอลัมน์แคบบนมือถือถูกบีบเหลือ ~40px เป็น 3 บรรทัด; ตารางเลื่อนแนวนอนอยู่แล้วจึงให้คอลัมน์ขยายแทน */
+  white-space: nowrap;
 }
 
 .remaining {

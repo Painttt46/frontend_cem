@@ -229,8 +229,13 @@ router.beforeEach(async (to, from, next) => {
       }
 
       if (!canAccessRoute(to.meta.requiresPermission)) {
-        // Redirect to first accessible route
-        const accessibleRoutes = ['/leave_work', '/daily_work', '/car_booking', '/projects', '/sales-activity', '/procurement'];
+        // หน้าย่อยในส่วน "จัดการระบบ" ที่ไม่มีสิทธิ์ (เช่น กดย้อนกลับจากหน้าลูกไปหน้าแม่ที่ไม่ได้ติ๊กไว้) → กลับหน้ารวมจัดการระบบ ถ้าเข้าได้
+        if (to.path.startsWith('/management/') && canAccessRoute('/management')) {
+          next('/management');
+          return;
+        }
+        // Redirect to first accessible route (ท้ายสุด = หน้ารวมจัดการระบบ สำหรับ role ที่มีแต่สิทธิ์ฝั่งจัดการ)
+        const accessibleRoutes = ['/leave_work', '/daily_work', '/car_booking', '/projects', '/sales-activity', '/procurement', '/management'];
         for (const route of accessibleRoutes) {
           if (canAccessRoute(route)) {
             next(route);

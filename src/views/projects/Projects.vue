@@ -49,7 +49,7 @@
               <span style="background:#dbeafe;color:#2f66b3;border:1px solid #93c5fd;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
                 <i class="pi pi-refresh" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.updated }} อัปเดต
               </span>
-              <span style="background:#fef3c7;color:#ca8a04;border:1px solid #fde047;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
+              <span style="background:#fef3c7;color:#92400e;border:1px solid #fde047;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
                 <i class="pi pi-database" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.total }} ทั้งหมด
               </span>
             </div>
@@ -85,7 +85,7 @@
               <div v-for="item in h.createdList" :key="item.so || item"
                 style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 10px">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:4px">
-                  <span style="background:#16a34a;color:white;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:700">NEW</span>
+                  <span style="background:#15803d;color:white;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:700">NEW</span>
                   <span style="font-weight:700;color:#15803d;font-size:max(0.85rem, var(--min-fs))">
                     <b>{{ item.so || item }}</b> — {{ item.name && item.name !== item.so ? item.name : '' }}
                   </span>
@@ -192,7 +192,7 @@
               <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490">อัปเดต</div>
             </div>
             <div style="flex:1;text-align:center">
-              <div style="font-size:1.6rem;font-weight:700;color:#ca8a04">{{ previewData.total }}</div>
+              <div style="font-size:1.6rem;font-weight:700;color:#a16207">{{ previewData.total }}</div>
               <div style="font-size:max(0.85rem, var(--min-fs));color:#a16207">ทั้งหมด</div>
             </div>
           </div>
@@ -284,7 +284,7 @@
             <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490;margin-top:2px">อัปเดต</div>
           </div>
           <div style="flex:1;background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:1rem;text-align:center">
-            <div style="font-size:1.8rem;font-weight:700;color:#ca8a04">{{ syncData.total }}</div>
+            <div style="font-size:1.8rem;font-weight:700;color:#a16207">{{ syncData.total }}</div>
             <div style="font-size:max(0.85rem, var(--min-fs));color:#a16207;margin-top:2px">ทั้งหมด</div>
           </div>
         </div>

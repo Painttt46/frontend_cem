@@ -692,7 +692,7 @@ export default {
 }
 
 .delegate-contact .contact-info {
-  color: #28a745 !important;
+  color: #15803d !important;
   font-weight: 500;
 }
 

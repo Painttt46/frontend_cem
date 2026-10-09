@@ -2204,7 +2204,7 @@ const data = {
 .vn-target { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding-bottom: 0.85rem; border-bottom: 1.5px solid #f1f5f9; }
 .vn-vendor { font-weight: 700; color: #0f172a; display: inline-flex; gap: 0.35rem; align-items: center; }
 .vn-vendor i { color: #2f66b3; font-size: max(0.75rem, var(--min-fs)); }
-.vn-info-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: max(0.7rem, var(--min-fs)); font-weight: 600; color: #6366f1; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 0.25rem 0.55rem; border-radius: 8px; }
+.vn-info-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: max(0.7rem, var(--min-fs)); font-weight: 600; color: #4338ca; background: #e0e7ff; border: 1px solid #c7d2fe; padding: 0.25rem 0.55rem; border-radius: 8px; }
 .vn-info-badge i { font-size: max(0.65rem, var(--min-fs)); }
 .vn-files { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.6rem; }
 .vn-file-row { display: flex; align-items: center; gap: 0.5rem; background: #f8fafc; border: 1px solid #eef2f6; border-radius: 8px; padding: 0.45rem 0.65rem; }
@@ -2292,13 +2292,13 @@ const data = {
   box-shadow: none;
 }
 .action-btn:hover { filter: brightness(0.93); }
-.action-btn.btn-approved { background-color: #e78a08; color: #fff; }
+.action-btn.btn-approved { background-color: #b45309; color: #fff; } /* เดิม #e78a08 ตัวขาว 2.61:1 */
 .action-btn.btn-ordered { background-color: #3369ac; color: #fff; }
 .action-btn.btn-waiting { background-color: #844bf2; color: #fff; }
-.action-btn.btn-received { background-color: #07a4c3; color: #fff; }
-.action-btn.btn-completed { background-color: #169244; color: #fff; }
+.action-btn.btn-received { background-color: #0e7490; color: #fff; } /* เดิม #07a4c3 ตัวขาว 2.95:1 */
+.action-btn.btn-completed { background-color: #15803d; color: #fff; }
 .action-btn.btn-negotiating { background-color: #be31cf; color: #fff; }
-.action-btn.btn-awaiting_payment { background-color: #f26611; color: #fff; }
+.action-btn.btn-awaiting_payment { background-color: #c2410c; color: #fff; }
 
 /* ===== Calendar Section ===== */
 .calendar-section { display: grid; grid-template-columns: 1fr 380px; gap: var(--section-gap); margin-top: var(--section-gap); }
@@ -2644,6 +2644,11 @@ const data = {
   .group-name { font-size: 0.9rem; }
   .vendor-row { padding: 0.75rem 1rem 0.75rem 2.2rem; }
   .vendor-row::before { left: 1rem; }
+}
+
+/* จอแคบมาก (≤360px เช่น 320px): สองปุ่มครึ่งแถวยังแคบเกิน "Import Excel" ถูกตัด → ให้แต่ละปุ่มเต็มแถว */
+@media (max-width: 360px) {
+  .import-btn, .add-btn { flex-basis: 100%; }
 }
 
 /* ===== Import Excel ===== */

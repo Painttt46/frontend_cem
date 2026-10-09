@@ -71,7 +71,7 @@ const props = defineProps({ modelValue: { type: Boolean, default: false } })
 const emit = defineEmits(['update:modelValue'])
 
 const router = useRouter()
-const { hasAccess } = usePermissions()
+const { canAccessRoute } = usePermissions()
 
 const open = computed({ get: () => props.modelValue, set: (v) => emit('update:modelValue', v) })
 const query = ref('')
@@ -95,6 +95,12 @@ const PAGES = [
   { path: '/management/leave', label: 'จัดการการลางาน', icon: 'pi pi-calendar-times', words: 'โควตา วันหยุด leave' },
   { path: '/management/dashboard', label: 'Dashboard', icon: 'pi pi-chart-bar', words: 'รายงาน สถิติ ภาพรวม' },
   { path: '/management/settings', label: 'ตั้งค่าระบบ', icon: 'pi pi-sliders-h', words: 'settings หมวดหมู่ สถานะ สิทธิ์' },
+  { path: '/management/tasks', label: 'จัดการงาน', icon: 'pi pi-briefcase', words: 'task หมวดหมู่งาน สถานะงาน' },
+  { path: '/management/projects', label: 'รายการงาน (จัดการระบบ)', icon: 'pi pi-list', words: 'project โครงการ รายการงาน' },
+  { path: '/management/daily-work', label: 'งานรายวันทั้งหมด (จัดการระบบ)', icon: 'pi pi-calendar', words: 'daily work งานรายวัน ทุกคน' },
+  { path: '/management/settings/role-permissions', label: 'จัดการสิทธิ์การเข้าถึง', icon: 'pi pi-shield', words: 'permission สิทธิ์ role บทบาท' },
+  { path: '/management/settings/leave-approval', label: 'ตั้งค่าผู้อนุมัติการลา', icon: 'pi pi-check-square', words: 'อนุมัติ ลา approver' },
+  { path: '/management/settings/role-work-hours', label: 'เวลาทำงานตามบทบาท', icon: 'pi pi-clock', words: 'เวลาทำงาน work hours role' },
   { path: '/profile', label: 'โปรไฟล์ของฉัน', icon: 'pi pi-user', words: 'profile รหัสผ่าน บัญชี' }
 ]
 
@@ -103,7 +109,7 @@ const norm = (s) => String(s || '').toLowerCase()
 const pageItems = computed(() => {
   const q = norm(query.value).trim()
   return PAGES
-    .filter(p => p.path === '/profile' || hasAccess(p.path))
+    .filter(p => p.path === '/profile' || canAccessRoute(p.path))
     .filter(p => !q || norm(p.label + ' ' + p.words + ' ' + p.path).includes(q))
     .map(p => ({ key: 'p:' + p.path, kind: 'page', label: p.label, hint: p.path, icon: p.icon, to: p.path }))
 })

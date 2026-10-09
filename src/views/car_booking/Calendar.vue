@@ -550,7 +550,7 @@ export default {
 }
 
 .car-plate {
-  background: #007bff;
+  background: #1d4ed8;
   color: white;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
@@ -825,7 +825,7 @@ export default {
   font-size: max(0.8rem, var(--min-fs));
   font-weight: 600;
   white-space: nowrap;
-  color: #2e7d32;
+  color: #166534; /* บนพื้นวันที่จองแล้ว #d4edda: เดิม #2e7d32 = 4.13:1 ต่ำกว่าเกณฑ์ 4.5 → 5.75:1 */
   padding: 0.1rem 0.3rem;
   border-radius: 3px;
 }
@@ -862,7 +862,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #24b86e;
+  background-color: #15803d;
   color: white;
   border-radius: 8px;
   margin-bottom: 1.5rem;

@@ -387,11 +387,11 @@ const statusIcons = ref([
 ])
 
 // Methods
+// หมายเหตุ: เดิมเรียก PUT /api/settings/categories/update-labels และ /statuses/update-colors ทุกครั้งที่เปิดหน้า
+// (migration ข้อมูลเก่า: เติมอีโมจินำหน้าชื่อหมวดหมู่ / เติมสีให้สถานะที่ยังไม่มีสี) = เขียนฐานข้อมูลทุกครั้งที่มีคนเปิดหน้านี้
+// และเติมอีโมจิกลับเข้าไปในชื่อที่ผู้ดูแลตั้งใจลบออก — ข้อมูลเก่าถูกเติมไปแล้ว และหมวดหมู่/สถานะที่สร้างจากหน้านี้มีอีโมจิ+สีตั้งแต่ตอนสร้าง จึงเลิกเรียก
 const loadCategories = async () => {
   try {
-    // Update labels for existing categories
-    await http.put('/api/settings/categories/update-labels')
-    
     const response = await http.get('/api/settings/categories')
     categories.value = response.data
   } catch { // ignore
@@ -401,9 +401,6 @@ const loadCategories = async () => {
 
 const loadStatuses = async () => {
   try {
-    // Update colors for existing statuses
-    await http.put('/api/settings/statuses/update-colors')
-    
     const response = await http.get('/api/settings/statuses')
     workStatuses.value = response.data
   } catch { // ignore

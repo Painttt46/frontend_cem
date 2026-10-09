@@ -1040,7 +1040,7 @@ export default {
 }
 
 .delegate-contact .contact-info {
-  color: #28a745 !important;
+  color: #15803d !important;
   font-weight: 500;
 }
 
@@ -1066,7 +1066,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #28a745;
+  color: #15803d;
   font-weight: 500;
 }
 

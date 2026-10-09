@@ -1,5 +1,5 @@
 // เติม attribute เพื่อการเข้าถึง (screen reader) ให้ DOM ทั้งแอปโดยไม่ต้องแก้ทีละหน้า
-// - ปุ่มที่มีแต่ไอคอน (แก้ไข/ลบ/ปิด ฯลฯ) → aria-label จาก title หรือจากชนิดไอคอน
+// - ปุ่มที่มีแต่ไอคอน (แก้ไข/ลบ/ปิด ฯลฯ) → aria-label จาก title, ข้อความ v-tooltip หรือจากชนิดไอคอน
 // - ไอคอน PrimeIcons ที่ตกแต่งล้วน → aria-hidden
 // - รูปที่ไม่มี alt → alt ตามบริบท
 // ทำเฉพาะ element ที่ยังไม่มี attribute นั้น จึงไม่ทับสิ่งที่หน้าตั้งไว้เอง
@@ -15,6 +15,8 @@ const ICON_LABELS = {
   'pi-angle-double-left': 'หน้าแรก', 'pi-angle-double-right': 'หน้าสุดท้าย',
   'pi-ellipsis-v': 'ตัวเลือกเพิ่มเติม', 'pi-ellipsis-h': 'ตัวเลือกเพิ่มเติม', 'pi-info-circle': 'ข้อมูลเพิ่มเติม',
   'pi-star': 'ติดดาว', 'pi-star-fill': 'ติดดาว', 'pi-history': 'ประวัติ', 'pi-cog': 'ตั้งค่า', 'pi-send': 'ส่ง',
+  'pi-list': 'รายการ', 'pi-arrow-up': 'เลื่อนขึ้น', 'pi-arrow-down': 'เลื่อนลง', 'pi-map-marker': 'ตำแหน่ง',
+  'pi-calendar-plus': 'เพิ่มนัดหมาย', 'pi-eye-slash': 'ซ่อน', 'pi-filter-slash': 'ล้างตัวกรอง',
   'pi-comments': 'เปิดแชตผู้ช่วย', 'pi-bars': 'เมนู', 'pi-arrow-left': 'ย้อนกลับ', 'pi-arrow-right': 'ถัดไป', 'pi-chevron-down': 'ขยาย', 'pi-chevron-up': 'ย่อ', 'pi-calendar': 'เลือกวันที่', 'pi-external-link': 'เปิดในแท็บใหม่', 'pi-link': 'ลิงก์'
 };
 
@@ -50,7 +52,9 @@ function enhance(root) {
     } else if (tag === 'BUTTON' || el.getAttribute('role') === 'button' || el.classList.contains('p-button')) {
       if (el.hasAttribute('aria-label') || el.hasAttribute('aria-labelledby')) continue;
       if (el.textContent.trim()) continue; // มีข้อความอยู่แล้ว screen reader อ่านได้เอง
-      const label = el.getAttribute('title') || labelFromIcon(el);
+      // ข้อความ tooltip (v-tooltip ของ PrimeVue เก็บไว้ที่ $_ptooltipValue) ตรงกับที่ผู้ใช้เห็น จึงใช้ก่อนชื่อจากชนิดไอคอน
+      const tip = typeof el.$_ptooltipValue === 'string' ? el.$_ptooltipValue.trim() : '';
+      const label = el.getAttribute('title') || tip || labelFromIcon(el);
       if (label) el.setAttribute('aria-label', label);
     }
   }

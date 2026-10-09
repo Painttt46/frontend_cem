@@ -1691,7 +1691,7 @@ export default {
   line-height: 1.5;
 }
 .pi-meta-overdue {
-  color: #dc2626 !important;
+  color: #b91c1c !important;
   font-weight: 600;
   background: #fee2e2 !important;
 }
@@ -2028,7 +2028,7 @@ export default {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #848a98;
+  background-color: #64748b; /* ตัวเลขขาวบนเทา: เดิม #848a98 = 3.46:1 → 4.76:1 */
   color: white;
   display: flex;
   align-items: center;
@@ -2042,7 +2042,7 @@ export default {
 }
 
 .status-working .step-number {
-  background-color: #e78a08;
+  background-color: #b45309; /* เดิม #e78a08 ตัวเลขขาวอ่านยาก 2.61:1 → 5.02:1 (โทนเดียวกับป้าย "กำลังทำ") */
 }
 
 .status-overdue .step-number {
@@ -2076,7 +2076,7 @@ export default {
 
 .step-status-badge.status-overdue {
   background: #fee2e2;
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .step-status-badge.status-in_progress {
@@ -2292,7 +2292,7 @@ export default {
 }
 .dlg-status-chip.status-completed { background: #d1fae5; color: #047857; }
 .dlg-status-chip.status-working { background: #fef3c7; color: #b45309; }
-.dlg-status-chip.status-overdue { background: #fee2e2; color: #dc2626; }
+.dlg-status-chip.status-overdue { background: #fee2e2; color: #b91c1c; }
 .dlg-status-chip.status-pending { background: #e5e7eb; color: #525f70; }
 
 /* Dialog Body */
@@ -2557,7 +2557,7 @@ export default {
 
 .latest-step-chip.status-completed { background-color: #ccfadc; color:#166534; border-color:#86efac; }
 .latest-step-chip.status-overdue   { background-color: #fed6d6; color:#991b1b; border-color:#fca5a5; }
-.latest-step-chip.status-working   { background-color: #feeca8; color:#b45309; border-color:#fcd34d; }
+.latest-step-chip.status-working   { background-color: #feeca8; color:#92400e; border-color:#fcd34d; }
 
 .latest-step-card {
   margin-top: 6px;

@@ -840,7 +840,7 @@ export default {
 .kpi-scheduled { background: #eff6ff; color: #2f66b3; }
 .kpi-done { background: #dcfce7; color: #15803d; }
 .kpi-followup { background: #fef3c7; color: #b45309; }
-.kpi-cancelled { background: #fee2e2; color: #dc2626; }
+.kpi-cancelled { background: #fee2e2; color: #b91c1c; }
 .kpi-overdue { background: #ffedd5; color: #c2410c; }
 .kpi-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
 .kpi-label { font-size: max(0.7rem, var(--min-fs)); color: #526074; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -937,7 +937,7 @@ export default {
 /* สถานะ */
 .vs-scheduled { background: #dbeafe; color: #2f66b3; }
 .vs-done { background: #dcfce7; color: #15803d; }
-.vs-cancelled { background: #fee2e2; color: #dc2626; }
+.vs-cancelled { background: #fee2e2; color: #b91c1c; }
 .vs-follow_up { background: #fef3c7; color: #b45309; }
 
 /* ===== Task Dropdown: โครงการที่เกี่ยวข้อง ===== */
@@ -945,7 +945,7 @@ export default {
 .task-selected { display: flex; align-items: center; gap: 0.45rem; min-width: 0; flex-wrap: wrap; }
 .task-selected-name { font-weight: 600; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .task-so-chip { font-size: max(0.66rem, var(--min-fs)); color: #4f46e5; background: #eef2ff; border: 1px solid #e0e7ff; padding: 0.08rem 0.4rem; border-radius: 5px; font-weight: 800; font-family: monospace; white-space: nowrap; }
-.task-mine-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: max(0.64rem, var(--min-fs)); font-weight: 800; color: #b45309; background-color: #feeca8; border: 1px solid #fbbf24; padding: 0.1rem 0.45rem; border-radius: 20px; white-space: nowrap; box-shadow: none; }
+.task-mine-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: max(0.64rem, var(--min-fs)); font-weight: 800; color: #92400e; background-color: #feeca8; border: 1px solid #fbbf24; padding: 0.1rem 0.45rem; border-radius: 20px; white-space: nowrap; box-shadow: none; }
 .task-mine-chip i { font-size: max(0.6rem, var(--min-fs)); color: #b45309; }
 .task-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1.5px solid transparent; width: 100%; }
 .task-option-icon { width: 32px; height: 32px; border-radius: 9px; background-color: #cde2fe; color: #2f66b3; display: flex; align-items: center; justify-content: center; font-size: max(0.85rem, var(--min-fs)); flex-shrink: 0; }
@@ -973,9 +973,9 @@ export default {
 .cavatar { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: #fff; flex-shrink: 0; box-shadow: none; }
 .cavatar.sm { width: 26px; height: 26px; border-radius: 8px; font-size: max(0.75rem, var(--min-fs)); }
 .cavatar-c0 { background-color: #3369ac; }
-.cavatar-c1 { background-color: #07a4c3; }
+.cavatar-c1 { background-color: #0e7490; } /* ตัวอักษรขาว: เดิม #07a4c3 = 2.95:1 */
 .cavatar-c2 { background-color: #844bf2; }
-.cavatar-c3 { background-color: #e78a08; }
+.cavatar-c3 { background-color: #b45309; } /* ตัวอักษรขาว: เดิม #e78a08 = 2.61:1 */
 .cavatar-c4 { background-color: #0c875e; }
 .customer-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.35rem 0.5rem; border-radius: 10px; width: 100%; }
 .customer-option-info { min-width: 0; flex: 1; }

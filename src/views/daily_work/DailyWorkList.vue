@@ -177,7 +177,7 @@
             </template>
             <template v-else>
               <Button v-if="isOwner(slotProps.data.projects[0]) || isAdmin()" icon="pi pi-list" size="small" severity="info" outlined
-                @click="openManageGroup(slotProps.data)" v-tooltip="'จัดการโครงการ'" />
+                @click="openManageGroup(slotProps.data)" v-tooltip="'จัดการโครงการ'" aria-label="จัดการโครงการ" />
             </template>
           </template>
         </Column>
@@ -1454,7 +1454,7 @@ export default {
   gap: 0.25rem;
   padding: 0.25rem 0.5rem;
   background: #e3f2fd;
-  color: #1976d2;
+  color: #1565c0;
   border-radius: 4px;
   font-size: max(0.85rem, var(--min-fs));
   font-weight: 500;
@@ -1668,7 +1668,7 @@ export default {
 
 .total-hours {
   font-size: max(0.8rem, var(--min-fs));
-  color: #28a745;
+  color: #15803d;
   font-weight: 600;
 }
 

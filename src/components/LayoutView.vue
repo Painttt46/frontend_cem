@@ -120,7 +120,8 @@
                 </h5>
               </router-link>
             </li>
-            <li class="nav-item ml-2 mt-2" v-if="hasAccess('/management')">
+            <!-- แสดงเมื่อมีสิทธิ์หน้าใดก็ได้ในส่วนจัดการระบบ (ไม่ต้องติ๊ก /management คู่) — ดู MANAGEMENT_SECTION_KEYS -->
+            <li class="nav-item ml-2 mt-2" v-if="canAccessRoute('/management')">
               <router-link to="/management" @click="closeSidebarOnMobile" class="nav-link" active-class="active" title="จัดการระบบ">
                 <h5 class="mt-2">
                   <i class="pi pi-cog px-2" style="font-size: 1.5rem"></i>จัดการระบบ
@@ -194,7 +195,7 @@ import { usePermissions } from "@/composables/usePermissions";
 import { usePageLoading } from "@/composables/usePageLoading";
 import CommandPalette from "@/components/CommandPalette.vue";
 
-const { loadPermissions, hasAccess } = usePermissions();
+const { loadPermissions, hasAccess, canAccessRoute } = usePermissions();
 
 // ทุกหน้า: โชว์ฉากโหลดจนกว่าข้อมูลของหน้านั้นจะมาครบ (ดู composables/usePageLoading.js)
 const { pageLoading, beginPageLoading } = usePageLoading();
@@ -289,7 +290,7 @@ const MOBILE_NAV = [
   { to: "/sales-activity", label: "Sale", icon: "pi pi-briefcase" },
   { to: "/management", label: "จัดการ", icon: "pi pi-cog" },
 ];
-const mobileNav = computed(() => MOBILE_NAV.filter(item => hasAccess(item.to)).slice(0, 4));
+const mobileNav = computed(() => MOBILE_NAV.filter(item => canAccessRoute(item.to)).slice(0, 4));
 
 const resetTimer = () => {
   timeout.value = 300; // รีเซ็ตเวลาเป็น 5 นาที

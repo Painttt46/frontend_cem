@@ -33,6 +33,7 @@
         </Message>
         <Message v-else severity="secondary" :closable="false" class="mb-3">
           ติ๊กเฉพาะสิ่งที่บทบาทนี้ทำได้ — ไม่ติ๊ก = ทำไม่ได้ ผลมีกับผู้ใช้ที่เปิดระบบค้างอยู่ภายใน ~1 นาที หรือทันทีเมื่อเปิดหน้าใหม่
+          <br>เมนู "จัดการระบบ" จะแสดงเองเมื่อติ๊กหน้าใดก็ได้ในส่วนจัดการ (/management/...) — ไม่ต้องติ๊ก "ระบบจัดการ" คู่ หน้ารวมจะแสดงเฉพาะการ์ดของหน้าที่ติ๊กไว้
         </Message>
         <div class="table-header">
           <Button label="เพิ่ม Permission" icon="pi pi-plus" @click="showAddDialog = true" severity="success" size="small" />
@@ -503,7 +504,7 @@ code {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: max(0.85rem, var(--min-fs));
-  color: #e83e8c;
+  color: #c2185b;
   cursor: pointer;
   display: inline-block;
   transition: background 0.2s;

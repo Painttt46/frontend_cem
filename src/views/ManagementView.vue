@@ -69,7 +69,8 @@
       </Card>
 
       <!-- Car Management -->
-      <Card class="management-card" @click="navigateTo('car-management')">
+      <!-- การ์ด Coming Soon (ยังไม่มีหน้าจริง) แสดงเฉพาะ admin/superadmin — บทบาทอื่นเข้าหน้ารวมได้เมื่อมีสิทธิ์หน้าย่อย จึงไม่ควรเห็นการ์ดที่กดไม่ได้ -->
+      <Card v-if="isFullAccess()" class="management-card" @click="navigateTo('car-management')">
         <template #content>
           <div class="card-content">
             <div class="card-header">
@@ -102,8 +103,25 @@
         </template>
       </Card>
 
+      <!-- ทางลัดไปหน้าย่อยที่มีสิทธิ์ แต่ไม่มีสิทธิ์หน้าแม่ (เช่น ติ๊ก "จัดการสิทธิ์" แต่ไม่ได้ติ๊ก "ตั้งค่าระบบ") — ไม่งั้นไม่มีทางกดไปถึง -->
+      <Card v-for="page in shortcutPages" :key="page.path" class="management-card" @click="router.push(page.path)">
+        <template #content>
+          <div class="card-content">
+            <div class="card-header">
+              <i :class="['pi', page.icon, 'card-icon']"></i>
+              <Badge value="Active" severity="success" class="status-badge" />
+            </div>
+            <h3>{{ page.title }}</h3>
+            <p>{{ page.desc }}</p>
+            <div class="card-footer">
+              <i class="pi pi-arrow-right"></i>
+            </div>
+          </div>
+        </template>
+      </Card>
+
       <!-- Department Management -->
-      <Card class="management-card" @click="navigateTo('departments')">
+      <Card v-if="isFullAccess()" class="management-card" @click="navigateTo('departments')">
         <template #content>
           <div class="card-content">
             <div class="card-header">
@@ -137,7 +155,7 @@
       </Card>
 
       <!-- Backup & Restore -->
-      <Card class="management-card" @click="navigateTo('backup')">
+      <Card v-if="isFullAccess()" class="management-card" @click="navigateTo('backup')">
         <template #content>
           <div class="card-content">
             <div class="card-header">
@@ -155,14 +173,19 @@
     </div>
 
     <!-- Audit Log Section -->
+    <div v-if="!hasAnySectionCard && !canViewAuditLogs" class="no-section-note" role="status">
+      <i class="pi pi-info-circle" aria-hidden="true"></i>
+      ยังไม่มีเมนูจัดการที่บทบาทของคุณได้รับสิทธิ์ — ติดต่อผู้ดูแลระบบให้เปิดสิทธิ์ที่หน้า "จัดการสิทธิ์การเข้าถึง"
+    </div>
+
     <Card v-if="canViewAuditLogs" class="audit-card mt-4">
       <template #title>
-        <div class="flex align-items-center justify-content-between">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
           <div class="flex align-items-center gap-2">
             <i class="pi pi-history text-primary" style="font-size: 1.25rem;"></i>
             <span class="text-xl font-semibold">ประวัติการใช้งานระบบ</span>
           </div>
-          <Button icon="pi pi-refresh" label="รีเฟรช" text size="small" @click="loadAuditLogs" :loading="loadingLogs" />
+          <Button icon="pi pi-refresh" label="รีเฟรช" text size="small" class="flex-shrink-0" @click="loadAuditLogs" :loading="loadingLogs" />
         </div>
       </template>
       <template #content>
@@ -195,7 +218,7 @@
               </div>
             </template>
           </Column>
-          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 20%;" headerClass="text-center" bodyClass="text-center">
+          <Column field="user_name" header="ผู้ดำเนินการ" style="width: 20%; min-width: 11rem;" headerClass="text-center" bodyClass="text-center">
             <template #body="{ data }">
               <div class="flex align-items-center justify-content-center gap-2">
                 <div class="user-avatar">
@@ -301,10 +324,25 @@ import axios from 'axios'
 
 const router = useRouter()
 const toast = useToast()
-const { loadPermissions, hasAccess } = usePermissions()
+const { loadPermissions, hasAccess, isFullAccess } = usePermissions()
 
 // ประวัติการใช้งานระบบเห็นได้เฉพาะ admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์นี้ที่หน้า "จัดการสิทธิ์"
 const canViewAuditLogs = computed(() => hasAccess('/management#audit-logs'))
+
+// หน้าลูกที่ปกติเข้าผ่านหน้าแม่ (จัดการงาน → รายการงาน/งานรายวัน, ตั้งค่าระบบ → สิทธิ์/ผู้อนุมัติ/เวลาทำงาน)
+// ถ้ามีสิทธิ์หน้าลูกแต่ไม่มีสิทธิ์หน้าแม่ ให้มีการ์ดทางลัดตรงนี้แทน
+const CHILD_PAGES = [
+  { parent: '/management/tasks', path: '/management/projects', title: 'รายการงาน', desc: 'รายการงาน/โครงการทั้งหมด', icon: 'pi-list' },
+  { parent: '/management/tasks', path: '/management/daily-work', title: 'งานรายวัน', desc: 'ดูงานรายวันของทุกคน', icon: 'pi-calendar' },
+  { parent: '/management/settings', path: '/management/settings/role-permissions', title: 'จัดการสิทธิ์การเข้าถึง', desc: 'กำหนดหน้าที่แต่ละบทบาทเข้าได้', icon: 'pi-shield' },
+  { parent: '/management/settings', path: '/management/settings/leave-approval', title: 'ตั้งค่าผู้อนุมัติการลา', desc: 'กำหนดผู้อนุมัติการลาแต่ละระดับ', icon: 'pi-check-square' },
+  { parent: '/management/settings', path: '/management/settings/role-work-hours', title: 'เวลาทำงานตามบทบาท', desc: 'กำหนดเวลาเข้า-ออกงานของแต่ละบทบาท', icon: 'pi-clock' }
+]
+const shortcutPages = computed(() => CHILD_PAGES.filter(p => !hasAccess(p.parent) && hasAccess(p.path)))
+const hasAnySectionCard = computed(() =>
+  ['/management/dashboard', '/management/users', '/management/leave', '/management/tasks', '/management/settings'].some(p => hasAccess(p)) ||
+  shortcutPages.value.length > 0
+)
 
 // Audit Log State
 const auditLogs = ref([])
@@ -557,6 +595,19 @@ const navigateTo = (section) => {
 }
 
 /* Grid Layout */
+.no-section-note {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+
 .management-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -860,7 +911,7 @@ const navigateTo = (section) => {
 
 .data-header.data-old {
   background: #fef2f2;
-  color: #dc2626;
+  color: #b91c1c;
 }
 
 .data-header.data-new {

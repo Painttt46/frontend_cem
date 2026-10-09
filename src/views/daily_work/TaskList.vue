@@ -1457,7 +1457,7 @@ export default {
 }
 
 .custom-id-badge {
-  background-color: #24b86e;
+  background-color: #15803d;
   color: white;
   font-weight: 600;
   padding: 0.5rem 0.75rem;

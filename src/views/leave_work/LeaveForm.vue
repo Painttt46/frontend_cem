@@ -1107,11 +1107,11 @@ export default {
 }
 
 .quota-value.quota-normal {
-  color: #28a745;
+  color: #15803d;
 }
 
 .quota-value.quota-low {
-  color: #ffc107;
+  color: #b45309; /* เดิม #ffc107 เหลืองบนพื้นขาว 1.63:1 อ่านไม่ออก → 5.02:1 */
 }
 
 .quota-value.quota-zero {
@@ -1475,7 +1475,7 @@ export default {
 
 .quota-status {
   font-size: max(0.75rem, var(--min-fs));
-  color: #dc3545;
+  color: #a71d2a;
   font-weight: 500;
   background: #f8d7da;
   padding: 0.2rem 0.4rem;
