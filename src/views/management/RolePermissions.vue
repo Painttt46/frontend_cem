@@ -59,7 +59,7 @@
           <Column field="icon" header="Icon (Double-click เพื่อแก้ไข)" style="min-width: 150px" headerClass="hide-on-mobile" bodyClass="hide-on-mobile">
             <template #body="{ data }">
               <div v-if="!data.editingIcon" @dblclick="editCell(data, 'icon')">
-                <i :class="data.icon" style="font-size: 1.2rem; color: #2f66b3;"></i>
+                <i :class="data.icon" style="font-size: 1.2rem; color: #1d4ed8;"></i>
                 <span style="margin-left: 0.5rem; font-size: max(0.85rem, var(--min-fs)); color: #525f70;">{{ data.icon }}</span>
               </div>
               <InputText v-else v-model="data.icon" placeholder="pi pi-home" @blur="saveEdit(data, 'icon')" @keyup.enter="saveEdit(data, 'icon')" autofocus />
@@ -388,7 +388,7 @@ const savePermissions = async () => {
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -494,7 +494,7 @@ const savePermissions = async () => {
 }
 
 .page-icon {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 1.1rem;
   min-width: 20px;
 }

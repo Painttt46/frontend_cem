@@ -125,7 +125,8 @@ export default {
   border-radius: 16px;
   padding: 1.25rem;
   color: white;
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.1) inset;
+  outline: 1px solid rgba(255, 255, 255, 0.1);
+  outline-offset: -1px;
   position: relative;
   overflow: hidden;
   min-height: 180px;
@@ -321,7 +322,7 @@ export default {
   -webkit-appearance: none;
   width: 22px;
   height: 22px;
-  background-color: #3369ac;
+  background-color: #1d4ed8;
   border-radius: 50%;
   cursor: pointer;
   border: 3px solid #fff;

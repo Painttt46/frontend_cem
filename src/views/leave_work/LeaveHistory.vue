@@ -743,7 +743,7 @@ export default {
           color: '#1f2937'
         },
         pending_level2: {
-          backgroundColor: '#3d78bc', // ฟ้า - รอ HR
+          backgroundColor: '#2563eb', // ฟ้า - รอ HR
           color: '#ffffff'
         },
         approved: {
@@ -1120,14 +1120,14 @@ export default {
 }
 
 .clickable-name {
-  color: #2f66b3;
+  color: #1d4ed8;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #2f66b3;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
@@ -1494,11 +1494,11 @@ export default {
   padding: 1rem;
   background: #eff6ff;
   border-radius: 8px;
-  border-left: 3px solid #4A90E2;
+  border-left: 3px solid #2563eb;
 }
 
 .cancel-reason-view-content i {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 1.25rem;
   margin-top: 2px;
 }

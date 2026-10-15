@@ -45,7 +45,7 @@
               <Card class="stat-card">
                 <template #content>
                   <div class="stat-content">
-                    <i class="pi pi-clock" style="color: #2f66b3"></i>
+                    <i class="pi pi-clock" style="color: #1d4ed8"></i>
                     <div>
                       <h3><CountUp :value="workloadStats.totalHours" /></h3>
                       <p>ชั่วโมงทำงานรวม</p>
@@ -414,7 +414,7 @@ const leaveStats = computed(() => {
   const avgPerPerson = filteredUsers.value.length > 0 ? (total / filteredUsers.value.length).toFixed(1) : 0
   
   return {
-    total: { value: total.toFixed(1) + ' วัน', label: 'วันลาทั้งหมด', icon: 'pi pi-calendar', color: '#4A90E2' },
+    total: { value: total.toFixed(1) + ' วัน', label: 'วันลาทั้งหมด', icon: 'pi pi-calendar', color: '#2563eb' },
     count: { value: count + ' ครั้ง', label: 'จำนวนครั้งที่ลา', icon: 'pi pi-list', color: '#f59e0b' },
     avg: { value: avgPerPerson + ' วัน', label: 'เฉลี่ยต่อคน', icon: 'pi pi-user', color: '#10b981' },
     people: { value: new Set(filteredLeaves.value.map(l => l.user_id)).size + ' คน', label: 'พนักงานที่ลา', icon: 'pi pi-users', color: '#8b5cf6' }
@@ -499,7 +499,7 @@ const renderWorkloadChart = () => {
       datasets: [{
         label: 'ชั่วโมงทำงาน',
         data: workloadChartData.value.map(([, h]) => h.toFixed(1)),
-        backgroundColor: '#4A90E2',
+        backgroundColor: '#2563eb',
         borderRadius: 4
       }]
     },
@@ -518,7 +518,7 @@ const renderTeamWorkloadChart = () => {
 
   const labels = teamWorkloadData.value.map(([d]) => d)
   const data = teamWorkloadData.value.map(([, h]) => h.toFixed(1))
-  const colors = ['#4A90E2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
+  const colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
 
   charts.teamWorkload = new Chart(teamWorkloadChart.value, {
     type: 'doughnut',
@@ -610,7 +610,7 @@ onMounted(loadData)
 
 /* Header - เหมือน ManagementView */
 .header-card { 
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -699,7 +699,7 @@ onMounted(loadData)
 
 .task-info { display: flex; flex-direction: column; gap: 0.125rem; overflow: hidden; }
 .task-name { font-size: max(0.875rem, var(--min-fs)); font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-.task-name:hover { color: #2f66b3; text-decoration: underline; }
+.task-name:hover { color: #1d4ed8; text-decoration: underline; }
 .task-dates { font-size: max(0.7rem, var(--min-fs)); color: #525f70; }
 
 .gantt-bar {

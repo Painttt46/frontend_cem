@@ -167,7 +167,7 @@ const showComingSoon = () => {
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
 }
@@ -221,7 +221,7 @@ const showComingSoon = () => {
 
 .setting-card:hover {
   box-shadow: none;
-  border-color: #4A90E2;
+  border-color: #2563eb;
 }
 
 .card-content {
@@ -237,7 +237,7 @@ const showComingSoon = () => {
 
 .card-icon {
   font-size: 2.5rem;
-  color: #2f66b3;
+  color: #1d4ed8;
   transition: color 0.3s ease;
 }
 
@@ -268,7 +268,7 @@ const showComingSoon = () => {
 }
 
 .card-footer i {
-  color: #2f66b3;
+  color: #1d4ed8;
   transition: transform 0.3s ease;
 }
 

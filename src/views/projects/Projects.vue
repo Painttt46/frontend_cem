@@ -35,7 +35,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:2px solid #f1f5f9">
             <div>
               <div style="font-weight:700;color:#1e293b;font-size:1rem;display:flex;align-items:center;gap:0.5rem">
-                <i class="pi pi-calendar" style="color:#2f66b3"></i>
+                <i class="pi pi-calendar" style="color:#1d4ed8"></i>
                 {{ h.syncedAt }}
               </div>
               <div style="font-size:max(0.8rem, var(--min-fs));color:#526074;margin-top:2px">
@@ -46,7 +46,7 @@
               <span style="background:#dcfce7;color:#15803d;border:1px solid #86efac;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
                 <i class="pi pi-plus-circle" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.created }} ใหม่
               </span>
-              <span style="background:#dbeafe;color:#2f66b3;border:1px solid #93c5fd;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
+              <span style="background:#dbeafe;color:#1d4ed8;border:1px solid #93c5fd;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
                 <i class="pi pi-refresh" style="font-size:max(0.75rem, var(--min-fs))"></i> {{ h.updated }} อัปเดต
               </span>
               <span style="background:#fef3c7;color:#92400e;border:1px solid #fde047;border-radius:20px;padding:4px 12px;font-size:max(0.85rem, var(--min-fs));font-weight:700">
@@ -68,7 +68,7 @@
               </div>
               <div>
                 <div style="font-size:max(0.75rem, var(--min-fs));color:#526074;margin-bottom:2px">โครงการหลัง Sync</div>
-                <div style="font-size:1.3rem;font-weight:700;color:#2f66b3">{{ h.total }}</div>
+                <div style="font-size:1.3rem;font-weight:700;color:#1d4ed8">{{ h.total }}</div>
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@
               <div v-for="item in h.updatedList" :key="item.so || item"
                 style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 12px">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:6px">
-                  <span style="background:#3369ac;color:white;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:700">UPDATE</span>
+                  <span style="background:#1d4ed8;color:white;border-radius:4px;padding:2px 6px;font-size:max(0.7rem, var(--min-fs));font-weight:700">UPDATE</span>
                   <span style="font-weight:700;color:#2a5490;font-size:max(0.85rem, var(--min-fs))">
                     <b>{{ item.so || item }}</b> — {{ item.name }}
                   </span>
@@ -188,7 +188,7 @@
               <div style="font-size:max(0.85rem, var(--min-fs));color:#15803d">โครงการใหม่</div>
             </div>
             <div style="flex:1;text-align:center">
-              <div style="font-size:1.6rem;font-weight:700;color:#2f66b3">{{ previewData.updated }}</div>
+              <div style="font-size:1.6rem;font-weight:700;color:#1d4ed8">{{ previewData.updated }}</div>
               <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490">อัปเดต</div>
             </div>
             <div style="flex:1;text-align:center">
@@ -223,7 +223,7 @@
         
         <!-- Updated List -->
         <div v-if="previewData.updatedList.length">
-          <div style="font-weight:600;color:#2f66b3;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
+          <div style="font-weight:600;color:#1d4ed8;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
             <i class="pi pi-refresh"></i> อัปเดต ({{ previewData.updatedList.length }})
           </div>
           <div style="max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
@@ -280,7 +280,7 @@
             <div style="font-size:max(0.85rem, var(--min-fs));color:#15803d;margin-top:2px">โครงการใหม่</div>
           </div>
           <div style="flex:1;background:#eff6ff;border:1px solid #93c5fd;border-radius:10px;padding:1rem;text-align:center">
-            <div style="font-size:1.8rem;font-weight:700;color:#2f66b3">{{ syncData.updated }}</div>
+            <div style="font-size:1.8rem;font-weight:700;color:#1d4ed8">{{ syncData.updated }}</div>
             <div style="font-size:max(0.85rem, var(--min-fs));color:#2a5490;margin-top:2px">อัปเดต</div>
           </div>
           <div style="flex:1;background:#fef9c3;border:1px solid #fde047;border-radius:10px;padding:1rem;text-align:center">
@@ -306,7 +306,7 @@
         </div>
         <!-- Updated List -->
         <div v-if="syncData.updatedList.length">
-          <div style="font-weight:600;color:#2f66b3;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
+          <div style="font-weight:600;color:#1d4ed8;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px">
             <i class="pi pi-refresh"></i> อัปเดต ({{ syncData.updatedList.length }})
           </div>
           <div style="max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px">
@@ -522,7 +522,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border-radius: 15px 15px 0 0;
   box-shadow: none;
@@ -570,12 +570,12 @@ export default {
   padding: 0.7rem 1.4rem !important;
   font-weight: 600 !important;
   border-radius: 14px !important;
-  box-shadow: var(--shadow-xs) !important;
+  box-shadow: none !important;
   transition: all 0.25s ease !important;
   margin-left: auto !important;
 }
 .sync-btn:hover {
-  background: #eaf3fe !important;
+  background: #eff6ff !important;
   border-color: var(--brand-blue) !important;
   box-shadow: none !important;
 }
@@ -587,7 +587,7 @@ export default {
   padding: 0.7rem 1.4rem !important;
   font-weight: 600 !important;
   border-radius: 14px !important;
-  box-shadow: var(--shadow-xs) !important;
+  box-shadow: none !important;
   transition: all 0.25s ease !important;
 }
 .history-btn:hover {
@@ -597,7 +597,7 @@ export default {
 }
 .task-btn {
   /* ปุ่มหลัก: น้ำเงินแบรนด์ (เดิมเขียวทึบ ไม่ใช่สีหลักของระบบ) */
-  background-color: #3d78bc !important;
+  background-color: #2563eb !important;
   border: none !important;
   color: white !important;
   padding: 0.85rem 1.8rem !important;

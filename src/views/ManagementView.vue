@@ -537,7 +537,7 @@ const navigateTo = (section) => {
 
 /* Header Styles */
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -626,8 +626,8 @@ const navigateTo = (section) => {
 }
 
 .management-card:hover {
-  box-shadow: none;
-  border-color: #bcd6f6;
+  transform: translateY(-3px);
+  border-color: #93c5fd;
 }
 
 .card-content {
@@ -658,14 +658,27 @@ const navigateTo = (section) => {
   justify-content: center;
   font-size: 1.6rem;
   border-radius: 16px;
-  color: var(--brand-blue-700);
-  background: var(--brand-blue-soft);
-  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+  /* ไอคอนขาวบนกล่องไล่สี — แต่ละการ์ดคนละสี (ตั้งตามชนิดไอคอนด้านล่าง) เดิมทุกการ์ดเป็นกล่องฟ้าอ่อนเหมือนกันหมด ดูซีด */
+  color: #fff;
+  background: var(--icon-bg, var(--brand-gradient-blue));
+  transition: transform 0.25s ease;
 }
+.card-icon.pi-chart-bar { --icon-bg: linear-gradient(135deg, #3b82f6, #1d4ed8); --icon-glow: rgba(37, 99, 235, 0.3); }
+.card-icon.pi-users { --icon-bg: linear-gradient(135deg, #8b5cf6, #6d28d9); --icon-glow: rgba(109, 40, 217, 0.3); }
+.card-icon.pi-calendar-times { --icon-bg: linear-gradient(135deg, #f43f5e, #be123c); --icon-glow: rgba(190, 18, 60, 0.28); }
+.card-icon.pi-car { --icon-bg: linear-gradient(135deg, #14b8a6, #0f766e); --icon-glow: rgba(15, 118, 110, 0.28); }
+.card-icon.pi-briefcase { --icon-bg: linear-gradient(135deg, #f59e0b, #c2410c); --icon-glow: rgba(194, 65, 12, 0.28); }
+.card-icon.pi-building { --icon-bg: linear-gradient(135deg, #06b6d4, #0e7490); --icon-glow: rgba(14, 116, 144, 0.28); }
+.card-icon.pi-cog { --icon-bg: linear-gradient(135deg, #6366f1, #4338ca); --icon-glow: rgba(67, 56, 202, 0.3); }
+.card-icon.pi-database { --icon-bg: linear-gradient(135deg, #64748b, #334155); --icon-glow: rgba(51, 65, 85, 0.25); }
+.card-icon.pi-list { --icon-bg: linear-gradient(135deg, #f59e0b, #b45309); --icon-glow: rgba(180, 83, 9, 0.28); }
+.card-icon.pi-calendar { --icon-bg: linear-gradient(135deg, #22c55e, #15803d); --icon-glow: rgba(21, 128, 61, 0.28); }
+.card-icon.pi-shield { --icon-bg: linear-gradient(135deg, #6366f1, #4338ca); --icon-glow: rgba(67, 56, 202, 0.3); }
+.card-icon.pi-check-square { --icon-bg: linear-gradient(135deg, #f43f5e, #be123c); --icon-glow: rgba(190, 18, 60, 0.28); }
+.card-icon.pi-clock { --icon-bg: linear-gradient(135deg, #14b8a6, #0f766e); --icon-glow: rgba(15, 118, 110, 0.28); }
 
 .management-card:hover .card-icon {
-  color: #fff;
-  background: var(--brand-gradient);
+  transform: scale(1.06);
 }
 
 .status-badge {
@@ -812,7 +825,7 @@ const navigateTo = (section) => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background-color: #3d78bc;
+  background-color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;

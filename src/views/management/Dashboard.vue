@@ -60,7 +60,7 @@
           <h3>Timesheet ประจำปี {{ currentYear }}</h3>
           <div class="timesheet-summary">
             <div class="summary-item">
-              <i class="pi pi-clock" style="color: #2f66b3"></i>
+              <i class="pi pi-clock" style="color: #1d4ed8"></i>
               <div>
                 <h4>{{ formatHoursMinutes(userTimesheetSummary.totalHours) }}</h4>
                 <p>ชั่วโมงทำงานจริง</p>
@@ -180,7 +180,7 @@
           <Card class="summary-card clickable" >
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-users summary-icon" style="color: #2f66b3"></i>
+                <i class="pi pi-users summary-icon" style="color: #1d4ed8"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.totalUsers" /></h3>
                   <p>ผู้ใช้งานทั้งหมด</p>
@@ -228,7 +228,7 @@
           <Card class="summary-card clickable" @click="showDueSoonDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-clock summary-icon" style="color: #2f66b3"></i>
+                <i class="pi pi-clock summary-icon" style="color: #1d4ed8"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.dueSoon" /></h3>
                   <p>โครงการครบกำหนดสัปดาห์นี้</p>
@@ -325,7 +325,7 @@
             <Column field="taskCount" header="งาน" sortable style="min-width: 60px" />
             <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
               <template #body="{ data }">
-                <span style="font-weight: 600; color: #2f66b3">{{ formatHoursMinutes(data.totalHours) }}</span>
+                <span style="font-weight: 600; color: #1d4ed8">{{ formatHoursMinutes(data.totalHours) }}</span>
               </template>
             </Column>
             <Column field="expectedHours" header="ควรทำ" sortable style="min-width: 100px">
@@ -392,7 +392,7 @@
                     <template #body="{ data: task }">
                       <div style="display: flex; align-items: center; gap: 0.5rem">
                         <div style="flex: 1; background: #e9ecef; border-radius: 4px; height: 20px; overflow: hidden">
-                          <div :style="{ width: task.percentage + '%', background: '#4A90E2', height: '100%' }"></div>
+                          <div :style="{ width: task.percentage + '%', background: '#2563eb', height: '100%' }"></div>
                         </div>
                         <span style="min-width: 50px; text-align: right">{{ task.percentage.toFixed(1) }}%</span>
                       </div>
@@ -982,7 +982,7 @@ const loadWorkStatusColors = async () => {
   } catch (error) {
     workStatusColors.value = {
       'pending': '#f59e0b',
-      'in_progress': '#4A90E2',
+      'in_progress': '#2563eb',
       'completed': '#10b981',
       'cancelled': '#ef4444',
       'ไม่ระบุ': '#9e9e9e'
@@ -1495,7 +1495,7 @@ const renderCharts = (leaves, tasks) => {
 
 <style scoped>
 .analytics-btn {
-  background-color: #3d78bc !important;
+  background-color: #2563eb !important;
   border: none !important;
   color: #fff !important;
   font-weight: 500;
@@ -1511,13 +1511,13 @@ const renderCharts = (leaves, tasks) => {
 
 .clickable-name {
   cursor: pointer;
-  color: #2f66b3;
+  color: #1d4ed8;
   font-weight: 600;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #2f66b3;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
@@ -1533,7 +1533,7 @@ const renderCharts = (leaves, tasks) => {
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -1610,7 +1610,7 @@ const renderCharts = (leaves, tasks) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .user-leave-summary {
@@ -1734,7 +1734,7 @@ const renderCharts = (leaves, tasks) => {
 .step-status-completed { border-left-color: #10b981 !important; background: #f0fdf4; color: #065f46; }
 .step-status-working   { border-left-color: #f59e0b !important; background: #fefce8; color: #92400e; }
 .step-status-overdue   { border-left-color: #ef4444 !important; background: #fef2f2; color: #991b1b; }
-.step-status-in_progress { border-left-color: #4A90E2 !important; background: #eff6ff; color: #1e40af; }
+.step-status-in_progress { border-left-color: #2563eb !important; background: #eff6ff; color: #1e40af; }
 .step-status-pending   { border-left-color: #9ca3af !important; background: #f9fafb; color: #374151; }
 
 .summary-grid {
@@ -1794,7 +1794,7 @@ canvas {
 }
 
 .chart-dots span.active {
-  background: #3d78bc;
+  background: #2563eb;
   width: 24px;
   border-radius: 4px;
 }
@@ -1946,7 +1946,7 @@ canvas {
 .project-name { font-weight: 600; font-size: max(0.8rem, var(--min-fs)); color: #1f2937; }
 .project-progress { font-size: max(0.7rem, var(--min-fs)); color: #525f70; }
 .progress-bar { flex: 0 0 80px; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #4A90E2, #10b981); transition: width 0.3s; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb, #10b981); transition: width 0.3s; }
 .steps-list { padding: 4px; background: white; }
 .wl-status-badges { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 2px; }
 .status-mini { padding: 1px 5px; border-radius: 8px; font-size: max(0.65rem, var(--min-fs)); color: white; font-weight: 500; }

@@ -1352,7 +1352,7 @@ export default {
   display: flex; align-items: center; gap: 6px;
   margin-bottom: 6px;
 }
-.multi-proj-icon { color: #2f66b3; font-size: max(0.75rem, var(--min-fs)); }
+.multi-proj-icon { color: #1d4ed8; font-size: max(0.75rem, var(--min-fs)); }
 .multi-proj-count { font-weight: 700; font-size: max(0.82rem, var(--min-fs)); color: #1e40af; }
 .multi-proj-list { display: flex; flex-direction: column; gap: 4px; }
 .multi-proj-item {
@@ -1588,12 +1588,12 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #2f66b3;
+  color: #1d4ed8;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #2f66b3;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 
@@ -1616,13 +1616,13 @@ export default {
 }
 
 .custom-id-badge {
-  background-color: #3369ac !important;
+  background-color: #1d4ed8 !important;
   color: white !important;
   font-weight: 700 !important;
   padding: 0.4rem 0.6rem !important;
   border-radius: 8px !important;
   font-size: max(0.85rem, var(--min-fs)) !important;
-  border: 2px solid rgba(74, 144, 226, 0.2) !important;
+  border: 2px solid rgba(37, 99, 235, 0.2) !important;
   box-shadow: none !important;
   letter-spacing: 0.5px !important;
   min-width: 50px !important;
@@ -1663,7 +1663,7 @@ export default {
 
 .time-info i {
   margin-right: 0.5rem;
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .total-hours {
@@ -1680,7 +1680,7 @@ export default {
 }
 
 .sale-info i {
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .text-muted {
@@ -1939,12 +1939,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 0.9rem;
 }
 
 .file-indicator i {
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .dialog-overlay {
@@ -2055,7 +2055,7 @@ export default {
 }
 .dt-icon {
   width: 40px; height: 40px; border-radius: 11px;
-  background-color: #3369ac;
+  background-color: #1d4ed8;
   color: #fff; display: flex; align-items: center; justify-content: center;
   font-size: 1rem; flex-shrink: 0;
 }
@@ -2063,7 +2063,7 @@ export default {
 .dt-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
 .dt-so {
   font-family: monospace; font-weight: 800; font-size: max(0.7rem, var(--min-fs));
-  color: #fff; background-color: #3369ac;
+  color: #fff; background-color: #1d4ed8;
   padding: 0.12rem 0.45rem; border-radius: 5px; white-space: nowrap;
 }
 .dt-task { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
@@ -2096,7 +2096,7 @@ export default {
   display: flex; align-items: center; gap: 0.35rem;
   font-size: max(0.78rem, var(--min-fs)); font-weight: 800; color: #334155;
 }
-.dt-section-title i { color: #2f66b3; font-size: max(0.78rem, var(--min-fs)); }
+.dt-section-title i { color: #1d4ed8; font-size: max(0.78rem, var(--min-fs)); }
 .dt-cats { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 .dt-desc {
   background: #f8fafc; border: 1px solid #eef2f6; border-radius: 10px;
@@ -2111,7 +2111,7 @@ export default {
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s;
 }
-.dt-file:hover { border-color: #4A90E2; }
+.dt-file:hover { border-color: #2563eb; }
 .dt-thumb { width: 100%; height: 100%; object-fit: cover; }
 .dt-file-icon { font-size: 1.4rem; color: #55657a; }
 .dt-footer { display: flex; align-items: center; justify-content: flex-end; gap: 0.5rem; flex-wrap: wrap; }
@@ -2163,7 +2163,7 @@ export default {
     margin-bottom: 8px;
     font-size: max(0.78rem, var(--min-fs));
     font-weight: 600;
-    color: #2a5a96;
+    color: #1e40af;
   }
   .expansion-proj-row {
     grid-template-columns: 110px 220px 230px 140px 110px 140px 90px 100px;
@@ -2262,9 +2262,9 @@ export default {
 
 .so-badge {
   /* chip รหัส SO: โทนน้ำเงินแบรนด์อ่อน (เดิมฟ้าสด ตัวขาว สีชนกับ chip อื่นในแถว) */
-  background: #eaf3fe;
-  color: #2f66b3;
-  border: 1px solid #d5e5fa;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
   font-size: max(0.75rem, var(--min-fs));
@@ -2373,7 +2373,7 @@ export default {
 }
 
 .user-badge-mini {
-  background: #3d78bc;
+  background: #2563eb;
   color: white;
   padding: 0.1rem 0.3rem;
   border-radius: 6px;
@@ -2399,17 +2399,17 @@ export default {
 .manage-proj-list { display: flex; flex-direction: column; gap: 8px; }
 .manage-proj-item {
   display: flex; align-items: center; justify-content: space-between;
-  border: 1px solid #e2e8f0; border-left: 4px solid #4A90E2;
+  border: 1px solid #e2e8f0; border-left: 4px solid #2563eb;
   border-radius: 8px; padding: 0.75rem 1rem;
   background: #f8fafc;
 }
 .manage-proj-info { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #3d78bc; color: #fff; font-size: max(0.72rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.manage-proj-num { width: 24px; height: 24px; border-radius: 50%; background: #2563eb; color: #fff; font-size: max(0.72rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .manage-proj-detail { flex: 1; min-width: 0; }
 .manage-proj-name { font-weight: 600; color: #1e293b; font-size: max(0.875rem, var(--min-fs)); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .manage-proj-time { font-size: max(0.78rem, var(--min-fs)); color: #526074; margin-top: 2px; display: flex; align-items: center; gap: 4px; }
 .manage-proj-actions { display: flex; gap: 4px; flex-shrink: 0; }
-.so-badge-sm { background: #eaf3fe; color: #2f66b3; border: 1px solid #d5e5fa; padding: 1px 6px; border-radius: 6px; font-size: max(0.68rem, var(--min-fs)); font-weight: 700; white-space: nowrap; }
+.so-badge-sm { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 1px 6px; border-radius: 6px; font-size: max(0.68rem, var(--min-fs)); font-weight: 700; white-space: nowrap; }
 
 /* ── Edit Dialog Dropdown custom styles ── */
 .edit-val-row,
@@ -2432,7 +2432,7 @@ export default {
 }
 
 .edit-so-tag {
-  background: #3d78bc;
+  background: #2563eb;
   color: #fff;
   padding: 1px 6px;
   border-radius: 4px;

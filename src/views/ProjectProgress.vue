@@ -1182,7 +1182,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border-radius: 15px 15px 0 0;
   box-shadow: none;
@@ -1242,13 +1242,13 @@ export default {
 }
 
 .filter-tab:hover {
-  border-color: #4A90E2;
-  color: #2f66b3;
+  border-color: #2563eb;
+  color: #1d4ed8;
 }
 
 .filter-tab.active {
-  background: #3d78bc;
-  border-color: #4A90E2;
+  background: #2563eb;
+  border-color: #2563eb;
   color: white;
   font-weight: 600;
 }
@@ -1474,7 +1474,7 @@ export default {
   white-space: nowrap;
 }
 .proc-cluster-done { margin-left: auto; font-size: max(0.8rem, var(--min-fs)); color: #15803d; font-weight: 700; white-space: nowrap; }
-.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: max(0.74rem, var(--min-fs)); font-weight: 700; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
+.cluster-files-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: max(0.74rem, var(--min-fs)); font-weight: 700; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 999px; padding: 0.1rem 0.55rem; white-space: nowrap; }
 .cluster-files-badge i { font-size: max(0.66rem, var(--min-fs)); }
 .vendor-note-bar {
   display: flex;
@@ -1493,11 +1493,11 @@ export default {
 .vendor-note-bar i { color: #7c3aed; margin-top: 3px; font-size: 0.9rem; }
 .vnb-label { font-weight: 800; color: #6d28d9; margin-right: 0.3rem; white-space: nowrap; }
 .vnb-meta { display: block; font-size: max(0.78rem, var(--min-fs)); color: #526074; margin-top: 3px; font-weight: 400; }
-.proc-cluster-file-chip { color: #2f66b3; background: #eff6ff; border-color: #bfdbfe; }
+.proc-cluster-file-chip { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
 .vendor-files-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
-.vfr-label { font-size: max(0.84rem, var(--min-fs)); font-weight: 800; color: #2f66b3; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.vfr-label { font-size: max(0.84rem, var(--min-fs)); font-weight: 800; color: #1d4ed8; display: inline-flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
 .vfr-label i { font-size: max(0.66rem, var(--min-fs)); }
-.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: max(0.84rem, var(--min-fs)); font-weight: 600; color: #2f66b3; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
+.file-chip { display: inline-flex; align-items: center; gap: 0.3rem; font-size: max(0.84rem, var(--min-fs)); font-weight: 600; color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.25rem 0.6rem; border-radius: 8px; text-decoration: none; transition: all 0.15s; }
 .file-chip:hover { background: #dbeafe; }
 .file-chip i { font-size: max(0.66rem, var(--min-fs)); flex-shrink: 0; }
 .file-chip-name { white-space: normal; word-break: break-word; line-height: 1.35; }
@@ -1524,7 +1524,7 @@ export default {
 .procurement-item:hover { border-color: #bcd6f6; }
 
 .procurement-item.pi-status-approved { border-left-color: #f59e0b; }
-.procurement-item.pi-status-ordered { border-left-color: #4A90E2; }
+.procurement-item.pi-status-ordered { border-left-color: #2563eb; }
 .procurement-item.pi-status-waiting { border-left-color: #8b5cf6; }
 .procurement-item.pi-status-received { border-left-color: #10b981; }
 .procurement-item.pi-status-completed { border-left-color: #16a34a; }
@@ -1722,7 +1722,7 @@ export default {
 }
 .pi-history-dot.dot-pending { background: #94a3b8; }
 .pi-history-dot.dot-approved { background: #f59e0b; }
-.pi-history-dot.dot-ordered { background: #3d78bc; }
+.pi-history-dot.dot-ordered { background: #2563eb; }
 .pi-history-dot.dot-waiting { background: #8b5cf6; }
 .pi-history-dot.dot-received { background: #06b6d4; }
 .pi-history-dot.dot-completed { background: #16a34a; }
@@ -1757,9 +1757,9 @@ export default {
   gap: 0.4rem;
   padding: 0.45rem 0.9rem;
   background: #fff;
-  border: 1.5px solid #4A90E2;
+  border: 1.5px solid #2563eb;
   border-radius: 6px;
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: max(0.82rem, var(--min-fs));
   font-weight: 600;
   cursor: pointer;
@@ -1767,7 +1767,7 @@ export default {
 }
 
 .dlg-edit-btn:hover {
-  background: #3d78bc;
+  background: #2563eb;
   color: #fff;
 }
 
@@ -1830,7 +1830,7 @@ export default {
 }
 
 .workflow-expansion h4 i {
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .no-steps {
@@ -1963,7 +1963,7 @@ export default {
   transform: translateY(-50%);
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-left: 10px solid #4A90E2;
+  border-left: 10px solid #2563eb;
 }
 
 .workflow-step:not(:first-child)::after {
@@ -1974,7 +1974,7 @@ export default {
   transform: translateY(-50%);
   width: 12px;
   height: 3px;
-  background: #3d78bc;
+  background: #2563eb;
 }
 
 .step-card {
@@ -1988,7 +1988,7 @@ export default {
 }
 
 .step-card.step-highlight {
-  box-shadow: 0 0 0 3px #f59e0b;
+  outline: 3px solid #f59e0b; /* วงเน้น (เดิมทำด้วย box-shadow) */
   background: #fffbeb;
 }
 
@@ -2008,7 +2008,7 @@ export default {
 }
 
 .step-card.status-in_progress {
-  border-left-color: #4A90E2;
+  border-left-color: #2563eb;
   background-color: #eff6ff;
 }
 
@@ -2050,7 +2050,7 @@ export default {
 }
 
 .status-in_progress .step-number {
-  background-color: #3369ac;
+  background-color: #1d4ed8;
 }
 
 .step-status-badge {
@@ -2124,7 +2124,7 @@ export default {
 }
 
 .user-badge {
-  background: #3d78bc;
+  background: #2563eb;
   color: #fff;
   padding: 0.1rem 0.4rem;
   border-radius: 8px;
@@ -2178,8 +2178,8 @@ export default {
 :deep(.cm-project-row:hover) {
   background-color: #f1eefe !important;
 }
-.clickable-name { color: #2f66b3; cursor: pointer; font-weight: 500; }
-.clickable-name:hover { text-decoration: underline; color: #2f66b3; }
+.clickable-name { color: #1d4ed8; cursor: pointer; font-weight: 500; }
+.clickable-name:hover { text-decoration: underline; color: #1d4ed8; }
 .completed-text { color: #15803d; }
 .completed-text i { color: #15803d; }
 
@@ -2194,7 +2194,7 @@ export default {
 .step-detail-dlg .p-dialog {
   border-radius: 16px !important;
   overflow: hidden !important;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+  outline: 1px solid rgba(0, 0, 0, 0.05);
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
@@ -2366,7 +2366,7 @@ export default {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background-color: #3369ac;
+  background-color: #1d4ed8;
   color: white;
   padding: 0.4rem 0.9rem;
   border-radius: 20px;
@@ -2529,7 +2529,7 @@ export default {
 }
 .step-idx-badge {
   flex-shrink: 0;
-  background: #2f66b3;
+  background: #1d4ed8;
   color: #fff;
   border-radius: 50%;
   width: 18px;

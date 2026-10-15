@@ -484,7 +484,7 @@ const startCountdown = () => {
   width: 34px;
   height: 34px;
   border: 3px solid var(--line, #e2e8f0);
-  border-top-color: var(--brand-blue-700, #2f66b3);
+  border-top-color: var(--brand-blue-700, #1d4ed8);
   border-radius: 50%;
   animation: page-loading-spin 0.8s linear infinite;
 }
@@ -580,7 +580,7 @@ const startCountdown = () => {
   white-space: nowrap;
   background: var(--brand-blue-soft);
   color: var(--brand-blue-700);
-  border: 1px solid #d5e5fa;
+  border: 1px solid #bfdbfe;
   padding: 0.6rem 0.5rem;
   border-radius: 12px;
   margin: 0 0.15rem; /* ระยะเว้นขอบซ้าย-ขวาเท่ากับกล่องอื่นในแถบ (ปุ่มค้นหา, เมนู, การ์ดผู้ใช้) = 0.15rem */
@@ -608,7 +608,8 @@ const startCountdown = () => {
   border-radius: 12px;
   padding: 0;
   color: var(--ink-soft) !important;
-  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  /* ไม่ทำแอนิเมชันสีตัวอักษร: พื้นแถบที่เลือกเป็นไล่สี (ทำแอนิเมชันไม่ได้ หายทันที) — ถ้าสีตัวอักษรค่อย ๆ เปลี่ยนจากขาว จะเห็นตัวขาวบนพื้นขาวแวบหนึ่งตอนเปลี่ยนเมนู */
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .nav-menu .nav-link h5 {
@@ -627,12 +628,11 @@ const startCountdown = () => {
   width: 1.6rem;
   padding: 0 !important;
   text-align: center;
-  color: var(--muted);
-  transition: color 0.18s ease;
+  color: var(--brand-blue); /* ไอคอนสีแบรนด์ (เดิมเทา ทำให้เมนูดูซีด) */
 }
 
 .nav-menu .nav-link:hover {
-  background: #f1f6fd;
+  background: #eff6ff;
   color: var(--brand-blue-700) !important;
 }
 
@@ -641,8 +641,9 @@ const startCountdown = () => {
 }
 
 .nav-menu .nav-link.active {
-  background: var(--brand-blue-soft);
-  color: var(--brand-blue-700) !important;
+  /* เมนูที่เปิดอยู่: แถบไล่สีน้ำเงิน→คราม ตัวขาว (ขาวบน #2563eb 5.17:1, บน #4f46e5 6.29:1) */
+  background: var(--brand-gradient-blue);
+  color: #fff !important;
 }
 
 .nav-menu .nav-link.active h5 {
@@ -650,7 +651,7 @@ const startCountdown = () => {
 }
 
 .nav-menu .nav-link.active h5 i {
-  color: var(--brand-blue);
+  color: #fff;
 }
 
 h1,
@@ -882,8 +883,12 @@ h4 {
 
 .mobile-tab.active {
   color: var(--brand-blue-700) !important;
-  background: var(--brand-blue-soft);
+  background: #dbeafe;
   font-weight: 600;
+}
+
+.mobile-tab.active i {
+  color: var(--brand-blue);
 }
 
 @media (max-width: 768px) {
@@ -912,7 +917,7 @@ h4 {
   background: #fff !important;
   color: var(--ink-soft) !important;
   border: 1px solid var(--line) !important;
-  box-shadow: var(--shadow-xs) !important;
+  box-shadow: none !important;
 }
 
 .setting-button:hover {

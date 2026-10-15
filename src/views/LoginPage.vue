@@ -344,7 +344,7 @@ body {
   padding: 2rem 2rem 1.5rem;
   backdrop-filter: blur(22px) saturate(160%);
   -webkit-backdrop-filter: blur(22px) saturate(160%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: none;
 }
 
 .card-body-1 h3 {
@@ -388,7 +388,7 @@ body {
 .card-body-1 .p-inputtext:enabled:focus {
   /* ช่องกรอกบนการ์ดกระจก: ใช้ขอบขาวหนา + outline น้ำเงิน แทนวงแสง (ไม่มีเงา) */
   border-color: #fff;
-  outline: 2px solid #4A90E2;
+  outline: 2px solid #2563eb;
   outline-offset: 0;
   box-shadow: none;
 }
@@ -523,7 +523,7 @@ body {
   display: flex;
   align-items: center;
   padding: 12px 20px 10px;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border-radius: 16px;
   margin: -1.5rem -1.5rem 0;
@@ -565,7 +565,7 @@ body {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #4A90E2;
+  color: #2563eb;
   z-index: 1;
 }
 
@@ -579,7 +579,7 @@ body {
 }
 
 .email-input:focus {
-  border-color: #4A90E2 !important;
+  border-color: #2563eb !important;
   box-shadow: none !important;
   background: white !important;
 }
@@ -591,18 +591,18 @@ body {
   padding: 10px 12px;
   background-color: #ebecf9;
   border-radius: 8px;
-  border-left: 4px solid #4A90E2;
+  border-left: 4px solid #2563eb;
   font-size: 12px;
   color: #555;
 }
 
 .info-text i {
-  color: #4A90E2;
+  color: #2563eb;
   font-size: 14px;
 }
 
 .email-input:focus {
-  border-color: #4A90E2 !important;
+  border-color: #2563eb !important;
   box-shadow: none !important;
 }
 
@@ -656,7 +656,7 @@ body {
 }
 
 .send-btn {
-  background: #4A90E2 !important;
+  background: #2563eb !important;
   border: none !important;
   padding: 8px 20px !important;
   border-radius: 8px !important;

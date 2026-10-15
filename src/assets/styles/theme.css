@@ -1,6 +1,6 @@
 /*
  * Gent-CEM — ชั้นธีมกลาง (modern refresh)
- * โทนสีเดิมของแบรนด์: น้ำเงิน #4A90E2 เป็นสีหลัก + แดง #D73527 เป็นสีเน้น บนพื้นขาว/เทาอ่อน
+ * โทนสีเดิมของแบรนด์: น้ำเงิน #2563eb เป็นสีหลัก + แดง #D73527 เป็นสีเน้น บนพื้นขาว/เทาอ่อน
  *
  * ไฟล์นี้ import ต่อจากธีม PrimeVue/Bootstrap (ดู main.css) จึงทับค่าเริ่มต้นได้ด้วย specificity เท่ากัน
  * - ปรับ "ตัวแปร" ของธีม PrimeVue (primary เดิมเป็นสีเขียว ไม่เข้ากับโทนน้ำเงิน)
@@ -11,14 +11,14 @@
 
 :root {
   /* ===== Brand tokens ===== */
-  /* น้ำเงินหลักเข้มขึ้นจากเดิม #4A90E2 เพื่อให้ตัวหนังสือขาวบนปุ่ม/ป้ายสีนี้อ่านได้ (contrast 3.3 → 4.5) */
-  --brand-blue: #3d78bc;
-  --brand-blue-600: #3369ac;
-  --brand-blue-700: #2a5a96;
-  --brand-blue-soft: #eaf3fe;
+  /* น้ำเงินหลักเข้มขึ้นจากเดิม #2563eb เพื่อให้ตัวหนังสือขาวบนปุ่ม/ป้ายสีนี้อ่านได้ (contrast 3.3 → 4.5) */
+  --brand-blue: #2563eb;
+  --brand-blue-600: #1d4ed8;
+  --brand-blue-700: #1e40af;
+  --brand-blue-soft: #eff6ff;
   --brand-red: #D73527;
-  --brand-gradient: linear-gradient(120deg, #3f82dc 0%, #4A90E2 42%, #c24a6a 82%, #D73527 100%);
-  --brand-gradient-soft: linear-gradient(135deg, #4A90E2, #D73527);
+  --brand-gradient: linear-gradient(120deg, #2563eb 0%, #2563eb 42%, #c24a6a 82%, #D73527 100%);
+  --brand-gradient-soft: linear-gradient(135deg, #2563eb, #D73527);
 
   --ink: #1e293b;
   --ink-soft: #475569;
@@ -41,21 +41,21 @@
 
   /* ===== PrimeVue (aura) variables: เปลี่ยน primary จากเขียว -> น้ำเงินแบรนด์ ===== */
   --font-family: var(--font-thai);
-  --primary-color: #3d78bc;
+  --primary-color: #2563eb;
   --primary-color-text: #ffffff;
-  --primary-50: #f0f6fe;
-  --primary-100: #deebfc;
-  --primary-200: #c1d9f9;
-  --primary-300: #94bff4;
-  --primary-400: #66a3ec;
-  --primary-500: #3d78bc;
-  --primary-600: #3369ac;
-  --primary-700: #2a5a96;
-  --primary-800: #244c80;
-  --primary-900: #1f3f69;
-  --highlight-bg: #eaf3fe;
-  --highlight-text-color: #2f66b3;
-  --p-focus-ring-color: #3d78bc;
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #2563eb;
+  --primary-600: #1d4ed8;
+  --primary-700: #1e40af;
+  --primary-800: #1e3a8a;
+  --primary-900: #1e3a8a;
+  --highlight-bg: #eff6ff;
+  --highlight-text-color: #1d4ed8;
+  --p-focus-ring-color: #2563eb;
   --border-radius: 10px;
   --text-color: var(--ink);
   --text-color-secondary: var(--muted);
@@ -80,7 +80,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::selection {
-  background: rgba(74, 144, 226, 0.25);
+  background: rgba(37, 99, 235, 0.25);
 }
 
 /* โฟกัสด้วยคีย์บอร์ดต้องเห็นชัด (เดิมธีมปิด focus ring) */
@@ -91,7 +91,7 @@ h1, h2, h3, h4, h5, h6 {
 /* องค์ประกอบของ PrimeVue (ปุ่ม แท็บ หัวตาราง ฯลฯ): โฟกัสด้วยคีย์บอร์ดเท่านั้นที่เห็นกรอบ (outline) — คลิกด้วยเมาส์ไม่มีอะไรโผล่
    ช่องกรอกใช้การเปลี่ยนสีขอบแทน (ดูหมวด Inputs) */
 .p-component:focus-visible {
-  outline: 2px solid rgba(74, 144, 226, 0.75);
+  outline: 2px solid rgba(37, 99, 235, 0.75);
   outline-offset: -2px;
   box-shadow: none !important;
 }
@@ -488,7 +488,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .p-datatable .p-datatable-thead > tr > th {
   /* ไล่สีแนวตั้ง (ไม่ใช่เฉียง): แต่ละช่องหัวตารางวาดพื้นของตัวเอง ไล่สีเฉียงทำให้เห็นเป็นบล็อกต่อกัน */
-  background: linear-gradient(180deg, #3d78bc 0%, #336aa8 100%);
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
   color: #fff;
   font-weight: 700;
   padding: 0.85rem 1rem;
@@ -535,7 +535,8 @@ h1, h2, h3, h4, h5, h6 {
   background: #e9f2fe;
 }
 .p-datatable .p-datatable-tbody > tr:not(.p-datatable-row-expansion):not(.p-datatable-emptymessage):hover > td:first-child {
-  box-shadow: inset 3px 0 0 0 var(--brand-blue);
+  /* แถบสีหลักด้านซ้ายของแถวที่ชี้ — วาดด้วยพื้นหลังแทน box-shadow (ไม่ใช้เงาทั้งระบบ) */
+  background-image: linear-gradient(var(--brand-blue), var(--brand-blue)); background-size: 3px 100%; background-repeat: no-repeat; background-position: left top;
 }
 .p-datatable .p-datatable-tbody > tr.p-highlight {
   background: var(--brand-blue-soft);
@@ -546,10 +547,10 @@ h1, h2, h3, h4, h5, h6 {
   border-bottom: 1px solid #dbe6f4;
 }
 .p-datatable .p-sortable-column:hover {
-  background: #2a5a96;
+  background: #1e40af;
 }
 .p-datatable .p-sortable-column.p-highlight {
-  background: #244c80;
+  background: #1e3a8a;
   color: #fff;
 }
 .p-datatable .p-sortable-column.p-highlight .p-sortable-column-icon {
@@ -716,7 +717,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== ตัวที่ใช้ "สีหลัก" เริ่มต้นของ PrimeVue: ธีมฐานเป็น aura-light-blue (น้ำเงิน Tailwind #3b82f6 ใกล้แบรนด์แต่ไม่ตรง)
-   ปรับตัวที่เห็นบ่อยให้เป็นสีเดียวกับปุ่มหลัก (#4A90E2) — เดิมธีมฐานเป็น aura-light-green ทำให้ปุ่มข้อความ/ป้ายตัวเลขเป็นสีเขียว ===== */
+   ปรับตัวที่เห็นบ่อยให้เป็นสีเดียวกับปุ่มหลัก (#2563eb) — เดิมธีมฐานเป็น aura-light-green ทำให้ปุ่มข้อความ/ป้ายตัวเลขเป็นสีเขียว ===== */
 .p-badge:not(.p-badge-secondary):not(.p-badge-success):not(.p-badge-info):not(.p-badge-warning):not(.p-badge-danger):not(.p-badge-help):not(.p-badge-contrast),
 .p-tag:not(.p-tag-secondary):not(.p-tag-success):not(.p-tag-info):not(.p-tag-warning):not(.p-tag-danger):not(.p-tag-help):not(.p-tag-contrast) {
   background: var(--brand-blue);
@@ -1132,20 +1133,20 @@ small {
 /* ===== สี severity ของ PrimeVue (ป้าย/แท็ก/ปุ่ม) ที่ตัวหนังสือขาวอ่านได้ (contrast ≥ 4.5) =====
  * ค่าเดิมของธีมฐาน: เขียว #22c55e (2.3), ฟ้า #0ea5e9 (2.8), เหลือง #f59e0b (2.2), ส้ม #f97316 (2.8), แดง #ef4444 (3.8) — ขาวบนสีเหล่านี้อ่านไม่ออก */
 .p-badge.p-badge-success, .p-tag.p-tag-success,
-.p-button.p-button-success:not(.p-button-outlined):not(.p-button-text) { background: #178841; border-color: #178841; color: #fff; }
+.p-button.p-button-success:not(.p-button-outlined):not(.p-button-text) { background: #15803d; border-color: #15803d; color: #fff; }
 .p-badge.p-badge-info, .p-tag.p-tag-info,
-.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text) { background: #0b7db1; border-color: #0b7db1; color: #fff; }
+.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text) { background: #0369a1; border-color: #0369a1; color: #fff; }
 .p-badge.p-badge-warning, .p-tag.p-tag-warning,
-.p-button.p-button-warning:not(.p-button-outlined):not(.p-button-text) { background: #a46a07; border-color: #a46a07; color: #fff; }
+.p-button.p-button-warning:not(.p-button-outlined):not(.p-button-text) { background: #c2410c; border-color: #c2410c; color: #fff; }
 .p-badge.p-badge-danger, .p-tag.p-tag-danger,
-.p-button.p-button-danger:not(.p-button-outlined):not(.p-button-text) { background: #d73d3d; border-color: #d73d3d; color: #fff; }
+.p-button.p-button-danger:not(.p-button-outlined):not(.p-button-text) { background: #dc2626; border-color: #dc2626; color: #fff; }
 .p-badge.p-badge-help, .p-tag.p-tag-help,
 .p-button.p-button-help:not(.p-button-outlined):not(.p-button-text) { background: #7c3aed; border-color: #7c3aed; color: #fff; }
 .p-badge.p-badge-secondary, .p-tag.p-tag-secondary { background: #64748b; color: #fff; }
-.p-button.p-button-success:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #12703a; border-color: #12703a; }
-.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #096a98; border-color: #096a98; }
-.p-button.p-button-warning:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #8a5806; border-color: #8a5806; }
-.p-button.p-button-danger:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #b93030; border-color: #b93030; }
+.p-button.p-button-success:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #166534; border-color: #166534; }
+.p-button.p-button-info:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #075985; border-color: #075985; }
+.p-button.p-button-warning:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #9a3412; border-color: #9a3412; }
+.p-button.p-button-danger:not(.p-button-outlined):not(.p-button-text):not(:disabled):hover { background: #b91c1c; border-color: #b91c1c; }
 
 /* ปุ่มแบบข้อความ/ขอบ ที่ใช้ severity: สีตัวหนังสือเดิมของธีมฐาน (ฟ้า #0ea5e9 2.8, เขียว #22c55e 2.3, เหลือง #f59e0b 2.2) อ่านบนพื้นขาวไม่ออก */
 .p-button.p-button-text.p-button-info, .p-button.p-button-outlined.p-button-info, .p-button.p-button-link.p-button-info { color: #0369a1; }
@@ -1172,4 +1173,97 @@ small {
 .p-dropdown-panel .p-dropdown-header,
 .p-multiselect-panel .p-multiselect-header {
   flex: 0 0 auto;
+}
+
+/* =====================================================================
+ * Vivid refresh (2026-10-14) — ผู้ใช้เห็นว่าสีซีดและหน้าตาแบนเกินไป
+ * - น้ำเงินหลักสดขึ้น #2563eb (ตัวขาวบนสีนี้ 5.17:1) — สีน้ำเงินที่เขียนตรงในแต่ละหน้าถูกเปลี่ยนตามแบบหนึ่งต่อหนึ่งแล้ว
+ * - แบนเนอร์ไล่สี น้ำเงิน → ม่วง → แดงแบรนด์ (เดิมช่วงกลางเป็นม่วงเทาหม่นจากการผสมน้ำเงินกับแดงตรง ๆ)
+ * - ไม่มีเงาเลยทั้งระบบ (ผู้ใช้ขอ 2026-10-15) — แยกชั้นด้วยสีพื้น/เส้นขอบแทน
+ * ตัวหนังสือทุกคู่สียังผ่านเกณฑ์ contrast ≥ 4.5:1
+ * ===================================================================== */
+:root {
+  --brand-blue: #2563eb;
+  --brand-blue-600: #1d4ed8;
+  --brand-blue-700: #1e40af;
+  --brand-blue-soft: #eff6ff;
+  --brand-gradient: linear-gradient(120deg, #1d4ed8 0%, #2563eb 32%, #6d28d9 64%, #be185d 86%, #d73527 100%);
+  --brand-gradient-soft: linear-gradient(135deg, #2563eb, #7c3aed);
+  --brand-gradient-blue: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+  --page-bg: #f3f6fc;
+  --line: #e3e9f4;
+  /* ไม่ใช้เงาเลย (ผู้ใช้ขอให้เอาแรงเงาออกทั้งหมด) — คง token ไว้ให้โค้ดที่อ้างถึงยังใช้ได้ */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-brand: none;
+  --primary-color: #2563eb;
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #2563eb;
+  --primary-600: #1d4ed8;
+  --primary-700: #1e40af;
+  --primary-800: #1e3a8a;
+  --primary-900: #172554;
+  --highlight-bg: #dbeafe;
+  --highlight-text-color: #1e40af;
+  --p-focus-ring-color: #2563eb;
+}
+
+/* ไม่มีเงา: การ์ด/ตาราง/หน้าต่าง/เมนูลอย/ปุ่ม/แจ้งเตือน/tooltip ของ PrimeVue (ธีมฐานใส่เงาไว้หลายจุด) — แยกชั้นด้วยเส้นขอบแทน */
+.p-card,
+.p-datatable .p-datatable-wrapper,
+.p-dialog,
+.p-dropdown-panel,
+.p-multiselect-panel,
+.p-autocomplete-panel,
+.p-datepicker,
+.p-overlaypanel,
+.p-menu,
+.p-tieredmenu,
+.p-contextmenu,
+.p-confirm-popup,
+.p-toast .p-toast-message,
+.p-tooltip .p-tooltip-text,
+.p-button,
+.p-button:hover,
+.p-button:focus,
+.p-inputtext,
+.p-dropdown,
+.p-multiselect,
+.p-sidebar,
+.main-header,
+.header-card.p-card {
+  box-shadow: none !important;
+}
+.p-card {
+  border-color: #e6ecf6;
+}
+.p-dialog {
+  border-color: #dfe6f2;
+}
+.p-dropdown-panel,
+.p-multiselect-panel,
+.p-autocomplete-panel,
+.p-datepicker:not(.p-datepicker-inline),
+.p-overlaypanel,
+.p-menu.p-menu-overlay,
+.p-tieredmenu.p-tieredmenu-overlay,
+.p-contextmenu {
+  border: 1px solid #dbe3f0;
+}
+
+/* แบนเนอร์หัวหน้า: ไล่สีสด */
+.main-header,
+.header-card.p-card:not(:has(.main-header)) {
+  background: var(--brand-gradient) !important;
+}
+
+/* แท็บ: แท็บที่เลือกเป็นสีแบรนด์ชัดขึ้น */
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: var(--brand-blue-600);
+  border-color: var(--brand-blue);
 }

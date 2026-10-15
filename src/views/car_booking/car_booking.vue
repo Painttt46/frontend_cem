@@ -667,7 +667,7 @@ export default {
   box-shadow: none;
   border-radius: 15px;
   overflow: hidden;
-  border: 1px solid rgba(74, 144, 226, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
   background: white;
 }
 
@@ -814,7 +814,8 @@ export default {
   color: black !important;
 }
 
-.tab-header span {
+/* ไม่รวม badge ตัวเลขในแท็บ — ไม่งั้นตัวเลขกลายเป็นสีดำบนพื้นฟ้าเข้มของ badge อ่านยาก */
+.tab-header span:not(.p-badge) {
   font-weight: 800 !important;
   color: black !important;
 }
@@ -826,7 +827,7 @@ export default {
 
 .main-tabs :deep(.p-tabview-nav li.p-highlight .p-tabview-nav-link) {
   background: white;
-  color: #2f66b3;
+  color: #1d4ed8;
   box-shadow: none;
   transform: translateY(-2px);
   border-bottom: none !important;

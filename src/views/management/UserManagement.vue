@@ -416,7 +416,7 @@ onMounted(() => {
 
 /* Header Styles */
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -495,14 +495,14 @@ onMounted(() => {
 }
 
 .add-btn {
-  background: #3d78bc;
-  border: 1px solid #4A90E2;
+  background: #2563eb;
+  border: 1px solid #2563eb;
   color: white;
 }
 
 .add-btn:hover {
-  background: #357ABD;
-  border-color: #357ABD;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 /* Filter Card */
@@ -535,14 +535,14 @@ onMounted(() => {
 }
 
 .add-btn {
-  background: #3d78bc;
-  border: 1px solid #4A90E2;
+  background: #2563eb;
+  border: 1px solid #2563eb;
   color: white;
 }
 
 .add-btn:hover {
-  background: #357ABD;
-  border-color: #357ABD;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
 }
 
 /* Table Styles */

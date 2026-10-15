@@ -685,7 +685,7 @@ export default {
 }
 
 .workflow-step.drag-over .step-card {
-  border: 2px dashed #4A90E2;
+  border: 2px dashed #2563eb;
   background: #eff6ff;
 }
 
@@ -702,7 +702,7 @@ export default {
 }
 
 .step-arrow i {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 1.5rem;
   font-weight: bold;
 }
@@ -722,7 +722,7 @@ export default {
   height: 0;
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
-  border-left: 10px solid #4A90E2;
+  border-left: 10px solid #2563eb;
 }
 
 .workflow-step:not(:first-child)::after {
@@ -733,7 +733,7 @@ export default {
   transform: translateY(-50%);
   width: 12px;
   height: 3px;
-  background: #3d78bc;
+  background: #2563eb;
 }
 
 .step-card {
@@ -741,7 +741,7 @@ export default {
   border-radius: 10px;
   padding: 0.75rem;
   box-shadow: none;
-  border-left: 3px solid #4A90E2;
+  border-left: 3px solid #2563eb;
   transition: all 0.3s ease;
   min-height: fit-content;
 }
@@ -766,7 +766,7 @@ export default {
 }
 
 .step-card.status-in_progress {
-  border-left-color: #4A90E2;
+  border-left-color: #2563eb;
   background-color: #eff6ff;
 }
 
@@ -789,7 +789,7 @@ export default {
 }
 
 .drag-handle:hover {
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .drag-handle:active {
@@ -807,7 +807,7 @@ export default {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background-color: #3369ac;
+  background-color: #1d4ed8;
   color: white;
   display: flex;
   align-items: center;
@@ -830,7 +830,7 @@ export default {
 }
 
 .status-in_progress .step-number {
-  background-color: #3369ac;
+  background-color: #1d4ed8;
 }
 
 .status-pending .step-number {
@@ -926,7 +926,7 @@ export default {
 }
 
 .user-badge {
-  background: #3d78bc;
+  background: #2563eb;
   color: #fff;
   padding: 0.125rem 0.5rem;
   border-radius: 10px;

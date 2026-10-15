@@ -278,7 +278,7 @@ onMounted(() => {
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
 }
@@ -343,7 +343,7 @@ onMounted(() => {
 }
 
 .level-1 {
-  background-color: #3369ac;
+  background-color: #1d4ed8;
 }
 
 .level-2 {
@@ -385,7 +385,7 @@ onMounted(() => {
 }
 
 :deep(.custom-multiselect .p-multiselect-token) {
-  background-color: #3369ac;
+  background-color: #1d4ed8;
   color: white;
   border-radius: 6px;
   padding: 0.25rem 0.5rem;

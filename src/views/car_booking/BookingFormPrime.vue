@@ -1948,7 +1948,7 @@ export default {
 
 .corporate-dialog :deep(.p-dialog-header) {
 
-  background-color: #3d78bc;
+  background-color: #2563eb;
 
   color: white;
 
@@ -2204,7 +2204,7 @@ export default {
 
 .confirm-dialog :deep(.p-dialog-header) {
 
-  background-color: #3d78bc;
+  background-color: #2563eb;
 
   color: white;
 
@@ -2238,7 +2238,7 @@ export default {
 
   font-size: 3rem;
 
-  color: #2f66b3;
+  color: #1d4ed8;
 
 }
 
@@ -2366,7 +2366,7 @@ export default {
 
   flex-shrink: 0;
 
-  background-color: #3369ac;
+  background-color: #1d4ed8;
 
   color: white;
 
@@ -2423,7 +2423,7 @@ export default {
 
   background-color: #cde2fe;
 
-  color: #2f66b3;
+  color: #1d4ed8;
 
   display: flex;
 

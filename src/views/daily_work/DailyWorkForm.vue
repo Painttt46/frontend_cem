@@ -892,7 +892,7 @@ export default {
   margin-top: 1rem;
   padding: 0.75rem 1rem;
   background-color: #deeefe;
-  border-left: 4px solid #4A90E2;
+  border-left: 4px solid #2563eb;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -904,7 +904,7 @@ export default {
 
 .date-range-info i {
   font-size: 1.1rem;
-  color: #2f66b3;
+  color: #1d4ed8;
   flex-shrink: 0;
 }
 
@@ -973,14 +973,14 @@ export default {
 }
 
 .section-title i { 
-  color: #2f66b3; 
+  color: #1d4ed8; 
   font-size: 1.1rem;
 }
 
 /* ── Entry Card ── */
 .entry-card {
   border: 2px solid #e2e8f0;
-  border-left: 4px solid #4A90E2;
+  border-left: 4px solid #2563eb;
   border-radius: 12px;
   padding: 1.25rem;
   margin-bottom: 1rem;
@@ -1010,7 +1010,7 @@ export default {
   width: 32px; 
   height: 32px; 
   border-radius: 50%;
-  background-color: #3369ac;
+  background-color: #1d4ed8;
   color: #fff; 
   font-size: max(0.85rem, var(--min-fs)); 
   font-weight: 700;
@@ -1058,7 +1058,7 @@ export default {
 /* ── Dropdown options ── */
 .val-row, .opt-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; max-width: 100%; overflow: hidden; }
 .opt-mine { background: #fefce8; border-left: 3px solid #f59e0b; padding: 3px 6px; border-radius: 4px; width: 100%; box-sizing: border-box; }
-.so-tag { background: #3d78bc; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: max(0.7rem, var(--min-fs)); font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+.so-tag { background: #2563eb; color: #fff; padding: 1px 6px; border-radius: 4px; font-size: max(0.7rem, var(--min-fs)); font-weight: 700; flex-shrink: 0; white-space: nowrap; }
 .mine-tag { background: #a46a07; color: #fff; font-size: max(0.65rem, var(--min-fs)); font-weight: 700; padding: 1px 6px; border-radius: 10px; flex-shrink: 0; white-space: nowrap; }
 .task-txt { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; overflow-wrap: anywhere; }
 .ph { color: #55657a; }

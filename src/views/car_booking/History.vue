@@ -455,7 +455,7 @@ export default {
 .colleague-avatar {
   width: 50px;
   height: 50px;
-  background: #3369ac;
+  background: #1d4ed8;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -571,7 +571,7 @@ export default {
 
 .view-icon {
   font-size: 1.2rem;
-  color: #2f66b3;
+  color: #1d4ed8;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -659,13 +659,13 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #2f66b3;
+  color: #1d4ed8;
   font-weight: 600;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #2f66b3;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 

@@ -51,7 +51,7 @@
                   style="border-bottom:1px solid #e2e8f0;background:#f0f4ff">
                   <component :is="'td'" style="padding:8px 12px"></component>
                   <component :is="'td'" style="padding:8px 12px;text-align:center"><Badge :value="child.id" class="custom-id-badge" /></component>
-                  <component :is="'td'" style="padding:8px 12px"><div class="task-name"><i class="pi pi-briefcase" style="color:#2f66b3;margin-right:6px;font-size:max(0.85rem, var(--min-fs))"></i>{{ child.task_name }}</div></component>
+                  <component :is="'td'" style="padding:8px 12px"><div class="task-name"><i class="pi pi-briefcase" style="color:#1d4ed8;margin-right:6px;font-size:max(0.85rem, var(--min-fs))"></i>{{ child.task_name }}</div></component>
                   <component :is="'td'" style="padding:8px 12px"><div v-if="child.so_number" class="so-number">{{ child.so_number }}</div><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><span v-if="child.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:max(0.85rem, var(--min-fs));border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:max(0.75rem, var(--min-fs));margin-right:3px"></i>{{ child.contract_number }}</span><span v-else class="text-muted">-</span></component>
                   <component :is="'td'" style="padding:8px 12px"><span v-if="child.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:max(0.85rem, var(--min-fs))"></i>{{ child.customer_info }}</span><span v-else class="text-muted">-</span></component>
@@ -94,7 +94,7 @@
 
         <Column field="task_name" header="ชื่อโครงการ" :sortable="true" style="min-width: 250px;">
           <template #body="slotProps">
-            <div class="task-name"><i class="pi pi-briefcase" style="color:#2f66b3;margin-right:6px;font-size:max(0.85rem, var(--min-fs))"></i>{{ slotProps.data.task_name }}</div>
+            <div class="task-name"><i class="pi pi-briefcase" style="color:#1d4ed8;margin-right:6px;font-size:max(0.85rem, var(--min-fs))"></i>{{ slotProps.data.task_name }}</div>
           </template>
         </Column>
 
@@ -236,20 +236,35 @@
     </template>
   </Card>
 
-  <!-- Dialog สำหรับแสดงรายละเอียดงาน -->
-  <div v-if="detailDialog" class="dialog-overlay" @click="detailDialog = false">
-    <div class="dialog-content" @click.stop>
-      <div class="dialog-header">
-        <h3>รายละเอียดงาน</h3>
-        <button class="dialog-close" @click="detailDialog = false" aria-label="ปิด"><i class="pi pi-times"></i></button>
-      </div>
-      <div class="dialog-body">
-        <div class="work-description">
-          {{ selectedTask?.description || 'ไม่มีรายละเอียด' }}
+  <!-- Dialog รายละเอียดโครงการ — ใช้ Dialog ของ PrimeVue (เนื้อหาเลื่อนได้ อยู่เหนือปุ่มแชต/แถบเมนูล่าง)
+       เดิมเป็นกล่องที่เขียนเอง: บนมือถือข้อความยาวถูกตัดท้ายโดยเลื่อนดูไม่ได้ ปุ่มแชตลอยทับข้อความ และไม่บอกว่าเป็นของโครงการไหน -->
+  <Dialog v-model:visible="detailDialog" modal dismissableMask :draggable="false"
+    :style="{ width: '92vw', maxWidth: '640px' }">
+    <template #header>
+      <div class="td-head">
+        <span class="td-head-icon" aria-hidden="true"><i class="pi pi-briefcase"></i></span>
+        <div class="td-head-text">
+          <div class="td-head-label">รายละเอียดโครงการ</div>
+          <div class="td-head-title">{{ selectedTask?.task_name || '-' }}</div>
         </div>
       </div>
+    </template>
+    <div v-if="selectedTask" class="td-body">
+      <div class="td-meta">
+        <span v-if="selectedTask.so_number" class="td-chip td-chip-so"><i class="pi pi-hashtag"></i>{{ selectedTask.so_number }}</span>
+        <span v-if="selectedTask.contract_number" class="td-chip"><i class="pi pi-file-edit"></i>{{ selectedTask.contract_number }}</span>
+        <span v-if="selectedTask.customer_info" class="td-chip"><i class="pi pi-building"></i>{{ selectedTask.customer_info }}</span>
+        <span v-if="selectedTask.project_start_date || selectedTask.project_end_date" class="td-chip"><i class="pi pi-calendar"></i>{{ selectedTask.project_start_date ? formatDate(selectedTask.project_start_date) : '-' }} – {{ selectedTask.project_end_date ? formatDate(selectedTask.project_end_date) : '-' }}</span>
+      </div>
+      <div class="td-section-label"><i class="pi pi-align-left"></i> คำอธิบาย</div>
+      <!-- เขียนต่อกันบรรทัดเดียวโดยตั้งใจ: กล่องนี้คงช่องว่าง/ขึ้นบรรทัดตามข้อความจริง (pre-wrap) ช่องว่างของ template จะโผล่เป็นช่องว่างเกิน -->
+      <div class="td-desc"><template v-for="(part, i) in descriptionParts" :key="i"><a v-if="part.url" :href="part.url" target="_blank" rel="noopener noreferrer">{{ part.text }}</a><template v-else>{{ part.text }}</template></template><span v-if="!descriptionParts.length" class="td-empty">ไม่มีรายละเอียด</span></div>
     </div>
-  </div>
+    <template #footer>
+      <Button label="ปิด" severity="secondary" outlined @click="detailDialog = false" />
+      <Button label="แก้ไขโครงการ" icon="pi pi-pencil" @click="detailDialog = false; editTask(selectedTask)" />
+    </template>
+  </Dialog>
 
   <!-- Files Dialog -->
   <Dialog v-model:visible="filesDialog" modal header="ไฟล์แนบ" :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false">
@@ -357,7 +372,7 @@
                   </div>
                 </div>
                 <!-- Single step -->
-                <div v-else-if="work.step_name" class="step-badge-inline" :style="{ borderLeftColor: '#4A90E2' }">
+                <div v-else-if="work.step_name" class="step-badge-inline" :style="{ borderLeftColor: '#2563eb' }">
                   <i class="pi pi-sitemap"></i> {{ work.step_name }}
                 </div>
                 <span v-else class="text-muted">-</span>
@@ -679,6 +694,13 @@ export default {
     }
   },
   computed: {
+    // แยกคำอธิบายเป็นข้อความ/ลิงก์ เพื่อให้ URL กดเปิดได้ โดยไม่ต้องใช้ v-html (รับเฉพาะ http/https)
+    descriptionParts() {
+      const text = this.selectedTask?.description || ''
+      if (!text) return []
+      return text.split(/(https?:\/\/[^\s<>"']+)/).filter(Boolean)
+        .map(seg => (/^https?:\/\//.test(seg) ? { text: seg, url: seg } : { text: seg }))
+    },
     workStatusFilterOptions() {
       const options = [
         { label: 'ทั้งหมด', value: null },
@@ -960,7 +982,7 @@ export default {
         workDate.setHours(0, 0, 0, 0)
         if (workDate <= today) return accessibleBg('#f59e0b')
       }
-      return accessibleBg('#4A90E2')
+      return accessibleBg('#2563eb')
     },
     getStepLabelFromWork(step) {
       if (step.status === 'completed') return '(เสร็จสิ้น)'
@@ -1003,7 +1025,7 @@ export default {
       if (workingSteps.length === 0) return accessibleBg('#9ca3af')
       const latestStep = workingSteps[workingSteps.length - 1]
       if (latestStep.status === 'completed') return accessibleBg('#10b981')
-      return accessibleBg('#4A90E2')
+      return accessibleBg('#2563eb')
     },
     async loadTasks() {
       try {
@@ -1495,100 +1517,109 @@ export default {
 }
 
 .sale-info i {
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .text-muted {
   color: #525f70;
 }
 
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+/* ===== Dialog รายละเอียดโครงการ ===== */
+.td-head {
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 1000;
+  gap: 0.75rem;
+  min-width: 0;
 }
-
-.dialog-content {
-  background: white;
-  border-radius: 8px;
-  box-shadow: none;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80vh;
-  overflow: hidden;
-  animation: dialogSlideIn 0.3s ease-out;
-}
-
-@keyframes dialogSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #e9ecef;
-  background: #f8f9fa;
-}
-
-.dialog-header h3 {
-  margin: 0;
-  color: #495057;
-  font-size: 1.25rem;
-}
-
-.dialog-close {
-  background: none;
-  border: none;
-  font-size: 1.1rem; /* ไอคอน pi-times (เดิมเป็นตัวอักษร × ซึ่งกล่องบรรทัดของฟอนต์ไทยทำให้ตกต่ำกว่ากึ่งกลางปุ่ม) */
-  line-height: 1;
-  cursor: pointer;
-  color: #525f70;
-  padding: 0;
-  width: 30px;
-  height: 30px;
+.td-head-icon {
   flex: none;
-  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s;
+  color: #fff;
+  background: var(--brand-gradient-blue);
+  font-size: 1.1rem;
 }
-
-.dialog-close:hover {
-  background: #e9ecef;
-  color: #495057;
+.td-head-text { min-width: 0; }
+.td-head-label {
+  font-size: max(0.78rem, var(--min-fs));
+  font-weight: 600;
+  color: var(--brand-blue-600);
 }
-
-.dialog-body {
-  padding: 1.5rem;
+.td-head-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
-
-.work-description {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 6px;
-  border-left: 4px solid #28a745;
+.td-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.td-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.td-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: max(0.82rem, var(--min-fs));
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+.td-chip i {
+  flex: none;
+  font-size: max(0.8rem, var(--min-fs));
+  color: var(--brand-blue);
+}
+.td-chip-so {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+  font-weight: 700;
+}
+.td-section-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  color: var(--ink);
+  font-size: max(0.9rem, var(--min-fs));
+}
+.td-section-label i { color: var(--brand-blue); }
+.td-desc {
+  /* คงการขึ้นบรรทัดตามที่พิมพ์ (pre-wrap) และตัดคำยาว/URL ให้อยู่ในกรอบ (เดิมไม่ตัด → คำล้นขอบขวาแล้วถูกตัด) */
   white-space: pre-wrap;
-  line-height: 1.6;
-  color: #495057;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.75;
+  color: #1f2937;
   font-size: 0.95rem;
+  background: linear-gradient(180deg, #f8fbff 0%, #f3f7fe 100%);
+  border: 1px solid #dbe7fb;
+  border-left: 4px solid var(--brand-blue);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
 }
+.td-desc a {
+  color: var(--brand-blue-600) !important; /* ทับกฎกลาง a { color: #4f4f57 !important } — ลิงก์ต้องดูออกว่ากดได้ */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.td-empty { color: #526074; }
 
 /* Mobile Responsive */
 .files-list {
@@ -1805,12 +1836,12 @@ export default {
 }
 
 .summary-item i {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 1.1rem;
 }
 
 .summary-item strong {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 1.1rem;
 }
 
@@ -2051,7 +2082,7 @@ export default {
 .category-option i,
 .status-display i,
 .status-option i {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 14px;
 }
 
@@ -2065,7 +2096,7 @@ export default {
 }
 
 .clickable-name {
-  color: #2f66b3;
+  color: #1d4ed8;
   cursor: pointer;
   text-decoration: underline;
 }
@@ -2099,14 +2130,14 @@ export default {
 
 /* chip ชื่อบุคคล: sale = น้ำเงินอ่อน (กดดูข้อมูลได้), PM = เทาอ่อน — เดิมม่วง/ส้ม ปนกับสีสถานะในตารางเดียวกัน */
 .sale-badge {
-  background: #eaf3fe;
-  color: #2f66b3;
-  border: 1px solid #d5e5fa;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
   cursor: pointer;
 }
 
 .sale-badge:hover {
-  background: #deebfc;
+  background: #dbeafe;
   box-shadow: none;
 }
 

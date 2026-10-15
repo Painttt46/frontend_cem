@@ -146,7 +146,7 @@ export default {
   -webkit-appearance: none;
   width: 20px;
   height: 20px;
-  background: #3d78bc;
+  background: #2563eb;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid #fff;

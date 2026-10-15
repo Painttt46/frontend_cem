@@ -611,13 +611,13 @@ export default {
 }
 
 .ticket-badge {
-  background-color: #3d78bc !important;
+  background-color: #2563eb !important;
   color: white !important;
   font-weight: 700 !important;
   font-size: 0.9rem !important;
   padding: 0.5rem 0.75rem !important;
   border-radius: 8px !important;
-  border: 2px solid rgba(74, 144, 226, 0.2) !important;
+  border: 2px solid rgba(37, 99, 235, 0.2) !important;
   box-shadow: none !important;
   letter-spacing: 0.5px !important;
   min-width: 80px !important;
@@ -823,13 +823,13 @@ export default {
 
 .clickable-name {
   cursor: pointer;
-  color: #2f66b3;
+  color: #1d4ed8;
   font-weight: 600;
   transition: all 0.2s;
 }
 
 .clickable-name:hover {
-  color: #2f66b3;
+  color: #1d4ed8;
   text-decoration: underline;
 }
 .status-badge {
@@ -922,11 +922,11 @@ export default {
   padding: 1rem;
   background: #eff6ff;
   border-radius: 8px;
-  border-left: 3px solid #4A90E2;
+  border-left: 3px solid #2563eb;
 }
 
 .cancel-reason-view-content i {
-  color: #2f66b3;
+  color: #1d4ed8;
   font-size: 1.25rem;
   margin-top: 2px;
 }

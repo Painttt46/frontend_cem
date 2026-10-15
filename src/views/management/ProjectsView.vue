@@ -33,7 +33,7 @@
 }
 
 .header-card {
-  background-color: #3d78bc;
+  background-color: #2563eb;
   color: white;
   border: none;
   box-shadow: none;

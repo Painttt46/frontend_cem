@@ -826,7 +826,7 @@ export default {
 /* Header */
 .header-card { margin-bottom: 1.25rem; box-shadow: none; border: none; background: transparent; }
 .header-card :deep(.p-card-body), .header-card :deep(.p-card-content) { padding: 0; background: transparent; }
-.main-header { display: flex; justify-content: space-between; align-items: center; padding: 1.75rem 2rem; background: linear-gradient(135deg, #4A90E2, #D73527); color: white; border-radius: 16px; box-shadow: none; }
+.main-header { display: flex; justify-content: space-between; align-items: center; padding: 1.75rem 2rem; background: var(--brand-gradient); color: white; border-radius: 16px; box-shadow: none; }
 .main-header h1 { margin: 0; font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; }
 .header-actions { display: flex; align-items: center; gap: 0.75rem; }
 .stat-item { color: rgba(255,255,255,0.85); font-size: max(0.88rem, var(--min-fs)); background: rgba(255,255,255,0.15); padding: 0.4rem 1rem; border-radius: 20px; }
@@ -835,9 +835,9 @@ export default {
 .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
 .kpi-card { background: #fff; border-radius: var(--radius-lg); padding: 1rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: none; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
 .kpi-card:hover { border-color: #bcd6f6; }
-.kpi-card.kpi-active { border-color: #4A90E2; background: #f8fbff; }
+.kpi-card.kpi-active { border-color: #2563eb; background: #f8fbff; }
 .kpi-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.kpi-scheduled { background: #eff6ff; color: #2f66b3; }
+.kpi-scheduled { background: #eff6ff; color: #1d4ed8; }
 .kpi-done { background: #dcfce7; color: #15803d; }
 .kpi-followup { background: #fef3c7; color: #b45309; }
 .kpi-cancelled { background: #fee2e2; color: #b91c1c; }
@@ -852,7 +852,7 @@ export default {
 .filter-right { display: flex; gap: 0.75rem; align-items: center; margin-left: auto; /* ถูกบีบลงบรรทัดใหม่แล้วยังชิดขวา ไม่ลอยมาชิดซ้าย */ }
 .search-box { position: relative; display: inline-flex; align-items: center; }
 .search-box input { padding-left: 2.5rem; padding-right: 2.25rem; border-radius: 10px; border: 1.5px solid #e2e8f0; width: 260px; height: 38px; font-size: max(0.85rem, var(--min-fs)); background: #fafbfc; transition: all 0.2s; }
-.search-box input:focus { background: #fff; border-color: #4A90E2; box-shadow: none; }
+.search-box input:focus { background: #fff; border-color: #2563eb; box-shadow: none; }
 .search-icon { position: absolute; left: 0.85rem; color: #55657a; pointer-events: none; }
 .search-clear { position: absolute; right: 0.75rem; color: #55657a; cursor: pointer; }
 .filter-dropdown { border-radius: 10px; height: 38px; min-width: 160px; --attach-radius: 10px; }
@@ -861,7 +861,7 @@ export default {
 .filter-clear-btn { color: #55657a; flex-shrink: 0; }
 .filter-clear-btn:hover { color: #dc2626; }
 .result-count strong { color: #0f172a; font-weight: 800; }
-.add-btn { background-color: #3369ac !important; border: none !important; font-weight: 700; border-radius: 10px; box-shadow: none; height: 38px; }
+.add-btn { background-color: #1d4ed8 !important; border: none !important; font-weight: 700; border-radius: 10px; box-shadow: none; height: 38px; }
 
 /* Visit Cards */
 .visits-list { display: flex; flex-direction: column; gap: 0.85rem; padding-bottom: 2rem; }
@@ -869,7 +869,7 @@ export default {
 .visit-card:hover { box-shadow: none; border-color: #e2e8f0; }
 .visit-left { display: flex; align-items: flex-start; gap: 1rem; flex: 1; min-width: 0; }
 .visit-type-badge { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
-.vtype-on_site { background: #dbeafe; color: #2f66b3; }
+.vtype-on_site { background: #dbeafe; color: #1d4ed8; }
 .vtype-online { background: #dcfce7; color: #15803d; }
 .vtype-phone { background: #fef3c7; color: #b45309; }
 .vtype-survey { background: #ede9fe; color: #7c3aed; }
@@ -878,11 +878,11 @@ export default {
 .visit-title { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
 .visit-meta { display: flex; gap: 0.85rem; flex-wrap: wrap; margin-top: 0.3rem; font-size: max(0.78rem, var(--min-fs)); color: #526074; }
 .visit-meta span { display: inline-flex; align-items: center; gap: 0.25rem; }
-.visit-project { color: #2f66b3; }
+.visit-project { color: #1d4ed8; }
 .visit-agenda { font-size: max(0.78rem, var(--min-fs)); color: #526074; margin-top: 0.3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px; }
 .visit-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; flex-wrap: wrap; }
 .visit-status-badge { padding: 0.25rem 0.65rem; border-radius: 20px; font-size: max(0.72rem, var(--min-fs)); font-weight: 700; }
-.vstatus-scheduled { background: #eff6ff; color: #2f66b3; }
+.vstatus-scheduled { background: #eff6ff; color: #1d4ed8; }
 .vstatus-done { background: #dcfce7; color: #166534; }
 .vstatus-cancelled { background: #fee2e2; color: #b91c1c; }
 .vstatus-follow_up { background: #fef3c7; color: #92400e; }
@@ -895,7 +895,7 @@ export default {
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 0.25rem 0; }
 .form-col { display: flex; flex-direction: column; gap: 0; --attach-border-w: 1.5px; --attach-border-c: #e2e8f0; --attach-radius: 10px; /* ให้ปุ่มปฏิทินตามกรอบช่องกรอกของฟอร์มนี้ */ }
 .form-section-title { font-size: max(0.78rem, var(--min-fs)); font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.05em; margin: 1.15rem 0 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
-.form-section-title i { color: #2f66b3; font-size: max(0.8rem, var(--min-fs)); }
+.form-section-title i { color: #1d4ed8; font-size: max(0.8rem, var(--min-fs)); }
 .form-section-title:first-child { margin-top: 0; }
 .field { margin-bottom: var(--field-gap); }
 .field label { display: block; font-weight: 600; font-size: max(0.82rem, var(--min-fs)); color: #334155; margin-bottom: 0.5rem; }
@@ -909,7 +909,7 @@ export default {
 .ca-row:last-child { margin-bottom: 0; }
 .ca-input { flex: 1; min-width: 0; }
 .ca-remove { flex-shrink: 0; }
-.add-attendee-btn { color: #2f66b3; }
+.add-attendee-btn { color: #1d4ed8; }
 .user-option { padding: 0.2rem 0; }
 .user-name { font-weight: 500; font-size: max(0.85rem, var(--min-fs)); }
 .user-info { font-size: max(0.72rem, var(--min-fs)); color: #526074; }
@@ -920,7 +920,7 @@ export default {
 .team-option-name { font-weight: 600; font-size: max(0.84rem, var(--min-fs)); color: #1e293b; }
 .team-option-pos { font-size: max(0.7rem, var(--min-fs)); color: #526074; margin-top: 0.1rem; }
 .form-col :deep(.p-multiselect-token) { background-color: #cde2fe; color: #2a5490; border-radius: 20px; font-size: max(0.72rem, var(--min-fs)); font-weight: 600; padding: 0.2rem 0.6rem; }
-.form-col :deep(.p-multiselect-token-icon) { color: #2f66b3; margin-left: 0.25rem; }
+.form-col :deep(.p-multiselect-token-icon) { color: #1d4ed8; margin-left: 0.25rem; }
 
 /* ===== Type & Status Dropdowns: ประเภทกิจกรรม / สถานะ ===== */
 .type-status-option { display: flex; align-items: center; gap: 0.6rem; padding: 0.15rem 0.25rem; }
@@ -929,13 +929,13 @@ export default {
 .type-status-value .ts-badge { width: 22px; height: 22px; border-radius: 7px; font-size: max(0.7rem, var(--min-fs)); } /* ชิปในช่องที่เลือกแล้วเล็กลง ให้ Dropdown สูงเท่าช่องกรอก/ปฏิทินที่อยู่แถวเดียวกัน (เดิม 48px vs 36px) */
 .ts-badge { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; font-size: max(0.8rem, var(--min-fs)); flex-shrink: 0; }
 /* ประเภทกิจกรรม */
-.vt-on_site { background: #dbeafe; color: #2f66b3; }
+.vt-on_site { background: #dbeafe; color: #1d4ed8; }
 .vt-online { background: #dcfce7; color: #15803d; }
 .vt-phone { background: #fef3c7; color: #b45309; }
 .vt-survey { background: #ede9fe; color: #7c3aed; }
 .vt-demo { background: #fce7f3; color: #be185d; }
 /* สถานะ */
-.vs-scheduled { background: #dbeafe; color: #2f66b3; }
+.vs-scheduled { background: #dbeafe; color: #1d4ed8; }
 .vs-done { background: #dcfce7; color: #15803d; }
 .vs-cancelled { background: #fee2e2; color: #b91c1c; }
 .vs-follow_up { background: #fef3c7; color: #b45309; }
@@ -948,7 +948,7 @@ export default {
 .task-mine-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: max(0.64rem, var(--min-fs)); font-weight: 800; color: #92400e; background-color: #feeca8; border: 1px solid #fbbf24; padding: 0.1rem 0.45rem; border-radius: 20px; white-space: nowrap; box-shadow: none; }
 .task-mine-chip i { font-size: max(0.6rem, var(--min-fs)); color: #b45309; }
 .task-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1.5px solid transparent; width: 100%; }
-.task-option-icon { width: 32px; height: 32px; border-radius: 9px; background-color: #cde2fe; color: #2f66b3; display: flex; align-items: center; justify-content: center; font-size: max(0.85rem, var(--min-fs)); flex-shrink: 0; }
+.task-option-icon { width: 32px; height: 32px; border-radius: 9px; background-color: #cde2fe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: max(0.85rem, var(--min-fs)); flex-shrink: 0; }
 .task-option-info { min-width: 0; flex: 1; }
 .task-option-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: max(0.84rem, var(--min-fs)); color: #1e293b; }
 .task-option-title { font-weight: 600; }
@@ -964,15 +964,15 @@ export default {
 .task-owner-badge.mine { color: #b45309; background: #fef3c7; border-color: #fcd34d; font-weight: 700; }
 .task-owner-badge.mine i { color: #b45309; }
 /* คงไฮไลต์สีทองไว้แม้ตอน option ถูกเลือกอยู่ (p-highlight) */
-.p-dropdown-item.p-highlight .task-option { box-shadow: inset 0 0 0 999px rgba(74, 144, 226,0.07); }
-.p-dropdown-item.p-highlight .task-option-mine { box-shadow: inset 0 0 0 999px rgba(245,158,11,0.16); }
+.p-dropdown-item.p-highlight .task-option { background-image: linear-gradient(rgba(37, 99, 235, 0.07), rgba(37, 99, 235, 0.07)); }
+.p-dropdown-item.p-highlight .task-option-mine { background-image: linear-gradient(rgba(245, 158, 11, 0.16), rgba(245, 158, 11, 0.16)); }
 
 /* ===== Customer Dropdown: ลูกค้า / บริษัท ===== */
 .customer-selected { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
 .customer-selected-name { font-weight: 600; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cavatar { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; color: #fff; flex-shrink: 0; box-shadow: none; }
 .cavatar.sm { width: 26px; height: 26px; border-radius: 8px; font-size: max(0.75rem, var(--min-fs)); }
-.cavatar-c0 { background-color: #3369ac; }
+.cavatar-c0 { background-color: #1d4ed8; }
 .cavatar-c1 { background-color: #0e7490; } /* ตัวอักษรขาว: เดิม #07a4c3 = 2.95:1 */
 .cavatar-c2 { background-color: #844bf2; }
 .cavatar-c3 { background-color: #b45309; } /* ตัวอักษรขาว: เดิม #e78a08 = 2.61:1 */
@@ -987,8 +987,8 @@ export default {
 .customer-meta-badge i { font-size: max(0.6rem, var(--min-fs)); color: #55657a; }
 .customer-meta-badge.phone { color: #15803d; background: #f0fdf4; border-color: #dcfce7; }
 .customer-meta-badge.phone i { color: #15803d; }
-.customer-meta-badge.email { color: #2f66b3; background: #eff6ff; border-color: #dbeafe; }
-.customer-meta-badge.email i { color: #2f66b3; }
+.customer-meta-badge.email { color: #1d4ed8; background: #eff6ff; border-color: #dbeafe; }
+.customer-meta-badge.email i { color: #1d4ed8; }
 .w-full { width: 100%; }
 .required { color: #dc2626; }
 
@@ -1011,14 +1011,14 @@ export default {
 .detail-section-title { font-size: max(0.8rem, var(--min-fs)); font-weight: 800; color: #334155; margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.4rem; }
 .detail-text { font-size: max(0.86rem, var(--min-fs)); color: #334155; line-height: 1.6; background: #f8fafc; padding: 0.85rem 1rem; border-radius: 10px; }
 .attendees-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.attendee-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: #eff6ff; color: #2f66b3; border: 1px solid #bfdbfe; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: max(0.78rem, var(--min-fs)); font-weight: 600; }
+.attendee-chip { display: inline-flex; align-items: center; gap: 0.3rem; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 0.3rem 0.7rem; border-radius: 20px; font-size: max(0.78rem, var(--min-fs)); font-weight: 600; }
 .customer-attendee-list { display: flex; flex-direction: column; gap: 0.6rem; }
 .ca-item { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; background: #f8fafc; padding: 0.6rem 0.85rem; border-radius: 8px; font-size: max(0.82rem, var(--min-fs)); }
 .ca-pos { color: #526074; }
-.ca-email { color: #2f66b3; }
+.ca-email { color: #1d4ed8; }
 .action-item { font-size: max(0.85rem, var(--min-fs)); color: #334155; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #f1f5f9; }
 .action-item.ai-done { opacity: 0.55; text-decoration: line-through; }
-.maps-link { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.35rem; font-size: max(0.78rem, var(--min-fs)); color: #2f66b3; font-weight: 600; text-decoration: none; }
+.maps-link { display: inline-flex; align-items: center; gap: 0.3rem; margin-top: 0.35rem; font-size: max(0.78rem, var(--min-fs)); color: #1d4ed8; font-weight: 600; text-decoration: none; }
 .maps-link:hover { text-decoration: underline; }
 .optional { color: #55657a; font-weight: 400; font-size: max(0.72rem, var(--min-fs)); }
 
@@ -1029,7 +1029,7 @@ export default {
 .visit-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
 .visit-tag { display: inline-flex; align-items: center; gap: 0.25rem; font-size: max(0.68rem, var(--min-fs)); font-weight: 600; padding: 0.14rem 0.5rem; border-radius: 10px; white-space: nowrap; }
 .visit-tag i { font-size: max(0.62rem, var(--min-fs)); }
-.tag-team { color: #2f66b3; background: #eff6ff; border: 1px solid #dbeafe; }
+.tag-team { color: #1d4ed8; background: #eff6ff; border: 1px solid #dbeafe; }
 .tag-customer { color: #0e7490; background: #ecfeff; border: 1px solid #cffafe; }
 .tag-action { color: #7c3aed; background: #f5f3ff; border: 1px solid #ede9fe; }
 .tag-summary { color: #526074; background: #f8fafc; border: 1px solid #f1f5f9; }
@@ -1052,11 +1052,11 @@ export default {
 /* Dialog Buttons */
 .btn-cancel { color: #526074 !important; font-weight: 600; border-radius: 10px; }
 .btn-cancel:hover { background: #f1f5f9 !important; }
-.btn-confirm { background-color: #3369ac !important; border: none !important; font-weight: 700; border-radius: 10px; box-shadow: none; }
+.btn-confirm { background-color: #1d4ed8 !important; border: none !important; font-weight: 700; border-radius: 10px; box-shadow: none; }
 
 /* Form Deep Styles */
 .form-col :deep(.p-inputtext), .form-col :deep(.p-dropdown), .form-col :deep(.p-calendar .p-inputtext), .form-col :deep(.p-inputtextarea), .form-col :deep(.p-multiselect) { border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: max(0.86rem, var(--min-fs)); background: #fafbfc; transition: all 0.2s; }
-.form-col :deep(.p-inputtext:focus), .form-col :deep(.p-inputtextarea:focus), .form-col :deep(.p-dropdown:not(.p-disabled).p-focus), .form-col :deep(.p-multiselect:not(.p-disabled).p-focus) { background: #fff; border-color: #4A90E2; box-shadow: none; }
+.form-col :deep(.p-inputtext:focus), .form-col :deep(.p-inputtextarea:focus), .form-col :deep(.p-dropdown:not(.p-disabled).p-focus), .form-col :deep(.p-multiselect:not(.p-disabled).p-focus) { background: #fff; border-color: #2563eb; box-shadow: none; }
 .item-form :deep(.p-inputtext), .item-form :deep(.p-dropdown), .item-form :deep(.p-inputtextarea) { border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: max(0.86rem, var(--min-fs)); background: #fafbfc; }
 .item-form .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: var(--field-gap); margin-bottom: var(--field-gap); }
 .item-form .field-group .field { margin-bottom: 0; }

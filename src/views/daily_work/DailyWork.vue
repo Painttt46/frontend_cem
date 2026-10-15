@@ -68,7 +68,7 @@
       :dismissableMask="false">
       <template #header>
         <div class="dialog-header-custom">
-          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #2f66b3;"></i>
+          <i class="pi pi-calendar-plus" style="font-size: 1.5rem; color: #1d4ed8;"></i>
           <span class="dialog-title">ลงตารางงานรายวัน</span>
         </div>
       </template>
@@ -285,7 +285,7 @@ export default {
 }
 
 .filter-so-tag {
-  background: #3d78bc;
+  background: #2563eb;
   color: #fff;
   padding: 1px 6px;
   border-radius: 4px;
@@ -374,7 +374,7 @@ export default {
 }
 
 .work-btn {
-  background-color: #3d78bc !important;
+  background-color: #2563eb !important;
   border: none !important;
   color: white !important;
   padding: 0.85rem 1.8rem !important;
@@ -460,13 +460,13 @@ export default {
 }
 
 .tab-navigation :deep(.p-tabview-nav-link:hover) {
-  background: rgba(74, 144, 226, 0.1);
-  color: #2f66b3;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
 }
 
 .tab-navigation :deep(.p-tabview-nav-link.p-highlight) {
   background: white;
-  color: #2f66b3;
+  color: #1d4ed8;
   border-bottom: 2px solid #3a7bd0;
   box-shadow: none;
 }
@@ -506,7 +506,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border-radius: 15px 15px 0 0;
   box-shadow: none;
@@ -625,7 +625,7 @@ export default {
 }
 
 .dialog-title {
-  background: linear-gradient(135deg, #4A90E2, #3a7bd0);
+  background: linear-gradient(135deg, #2563eb, #3a7bd0);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -647,7 +647,7 @@ export default {
 :deep(.work-dialog .p-dialog-header-icon) {
   width: 2.5rem;
   height: 2.5rem;
-  color: #2f66b3;
+  color: #1d4ed8;
   transition: all 0.2s;
 }
 

@@ -669,7 +669,7 @@ onMounted(() => {
 
 /* Header Styles */
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -757,7 +757,7 @@ onMounted(() => {
 
 .action-card:hover {
   box-shadow: none;
-  border-color: #4A90E2;
+  border-color: #2563eb;
 }
 
 .action-content {
@@ -773,7 +773,7 @@ onMounted(() => {
 
 .action-icon {
   font-size: 2rem;
-  color: #2f66b3;
+  color: #1d4ed8;
   transition: color 0.3s ease;
 }
 
@@ -804,7 +804,7 @@ onMounted(() => {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .stat-label {
@@ -892,7 +892,7 @@ onMounted(() => {
 
 .category-info i,
 .status-info i {
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .color-preview {

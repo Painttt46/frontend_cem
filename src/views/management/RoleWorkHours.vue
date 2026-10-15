@@ -466,7 +466,7 @@ const deleteUserWorkHours = async (userId) => {
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
 }

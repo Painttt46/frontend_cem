@@ -258,7 +258,7 @@ const newLeaveTypeQuotaHours = ref(0)
 const newLeaveTypeAdvanceDays = ref(0)
 
 // Color options for leave types
-const colorOptions = ['#ef4444', '#f59e0b', '#10b981', '#4A90E2', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+const colorOptions = ['#ef4444', '#f59e0b', '#10b981', '#2563eb', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
 
 // Edit leave type states
 const editingLeaveTypeData = ref(null)
@@ -726,7 +726,7 @@ const saveLeaveType = async () => {
 }
 
 .header-card {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border: none;
   box-shadow: none;
@@ -847,7 +847,8 @@ const saveLeaveType = async () => {
 
 .color-option.selected {
   border-color: #2c3e50;
-  box-shadow: 0 0 0 2px white, 0 0 0 4px #2c3e50;
+  outline: 2px solid #2c3e50;
+  outline-offset: 2px;
 }
 
 .quota-cell {
@@ -917,7 +918,7 @@ const saveLeaveType = async () => {
 
 .user-info i {
   font-size: 2rem;
-  color: #2f66b3;
+  color: #1d4ed8;
 }
 
 .user-info h4 {
@@ -1020,7 +1021,7 @@ const saveLeaveType = async () => {
 }
 
 .pending-holiday-date {
-  background-color: #3d78bc !important;
+  background-color: #2563eb !important;
   color: #fff !important;
   font-weight: 600;
 }

@@ -165,7 +165,7 @@ export default {
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background-color: #3d78bc;
+  background-color: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;

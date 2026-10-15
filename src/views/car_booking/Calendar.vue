@@ -573,14 +573,14 @@ export default {
   font-size: max(0.85rem, var(--min-fs));
   color: #1e3a8a;
 }
-.active-countdown i { font-size: 1.3rem; color: #2f66b3; flex-shrink: 0; }
+.active-countdown i { font-size: 1.3rem; color: #1d4ed8; flex-shrink: 0; }
 .countdown-text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
 .countdown-main { display: flex; align-items: center; flex-wrap: wrap; gap: 0.45rem; line-height: 1.4; }
 .countdown-main strong { white-space: nowrap; }
 .countdown-dot { color: #93c5fd; font-weight: 800; }
 .countdown-left {
   font-weight: 800;
-  color: #2f66b3;
+  color: #1d4ed8;
   background: rgba(37, 99, 235, 0.12);
   border: 1px solid #bfdbfe;
   padding: 0.1rem 0.55rem;
@@ -679,7 +679,7 @@ export default {
 }
 
 .calendar-header {
-  background: linear-gradient(135deg, #4A90E2 0%, #D73527 100%);
+  background: var(--brand-gradient);
   color: white;
   padding: 1.5rem;
   display: flex;
@@ -736,14 +736,14 @@ export default {
   grid-template-rows: auto;
   grid-auto-rows: 1fr;
   gap: 1px;
-  background: #f0f0f0;
+  background: #e3e9f4;
   padding: 1px;
   height: calc(80vh - 120px);
 }
 
 .day-header {
-  background: #eef3fa;
-  color: var(--ink-soft);
+  background: #eff6ff;
+  color: var(--brand-blue-700);
   padding: 0.8rem 0.5rem;
   text-align: center;
   font-weight: 600;
@@ -752,13 +752,13 @@ export default {
 }
 
 .calendar-day {
-  background: #f8f9fa;
+  background: #fff; /* เดิมเทา #f8f9fa ทั้งปฏิทินดูหม่น */
   padding: 0.5rem;
   text-align: center;
   cursor: pointer;
   position: relative;
   transition: background-color 0.2s ease;
-  border: 1px solid #dee2e6;
+  border: 1px solid #e6ecf6;
   font-size: 1.1rem;
   font-weight: 500;
   /* สูงขึ้น: ตัวเลขวันที่อยู่บน ป้ายสถานะอยู่ล่าง ไม่ซ้อนกันเมื่อฟอนต์กว้างขึ้น */
@@ -789,14 +789,14 @@ export default {
 }
 
 .calendar-day.has-booking {
-  background: #d4edda;
-  border-color: #28a745;
+  background: #dcfce7;
+  border-color: #16a34a;
 }
 
 .calendar-day.active-usage {
-  background: #fff3cd;
-  border-color: #ffc107;
-  color: #856404;
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
   font-weight: 600;
 }
 
@@ -1048,7 +1048,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border-radius: 8px;
   margin-bottom: 1.5rem;
@@ -1102,7 +1102,7 @@ export default {
   padding: 0.75rem;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #4A90E2;
+  border-left: 4px solid #2563eb;
 }
 
 .detail-label {

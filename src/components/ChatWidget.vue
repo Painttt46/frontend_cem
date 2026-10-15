@@ -236,7 +236,7 @@ export default {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #3d78bc;
+  background: #2563eb;
   border: none;
   color: white;
   font-size: 24px;
@@ -282,7 +282,7 @@ export default {
 }
 
 .chat-header {
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   padding: 14px 16px;
   display: flex;
@@ -372,9 +372,9 @@ export default {
   transition: all 0.2s;
 }
 .quick-actions button:hover {
-  background: #3d78bc;
+  background: #2563eb;
   color: white;
-  border-color: #4A90E2;
+  border-color: #2563eb;
 }
 
 .message { display: flex; }
@@ -390,7 +390,7 @@ export default {
   word-break: break-word;
 }
 .user .bubble {
-  background-color: #3d78bc;
+  background-color: #2563eb;
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -405,7 +405,7 @@ export default {
   display: inline-block;
   width: 8px;
   height: 8px;
-  background: #3d78bc;
+  background: #2563eb;
   border-radius: 50%;
   margin: 0 2px;
   animation: bounce 1.4s infinite ease-in-out both;
@@ -432,12 +432,12 @@ export default {
   outline: none;
   font-size: 14px;
 }
-.chat-input input:focus { border-color: #4A90E2; }
+.chat-input input:focus { border-color: #2563eb; }
 .chat-input button {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #3d78bc;
+  background: #2563eb;
   border: none;
   color: white;
   cursor: pointer;

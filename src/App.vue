@@ -222,7 +222,7 @@ body {
   z-index: 10000;
   overflow: hidden;
   pointer-events: none;
-  background: rgba(74, 144, 226, 0.12);
+  background: rgba(37, 99, 235, 0.12);
 }
 
 .top-loader-bar {

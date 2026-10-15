@@ -345,14 +345,14 @@ export default {
             <td colspan="11" align="center" style="text-align:center; padding:25px; border:3px solid #1e40af; background-color:#ffffff;">
                 <img src="${window.location.origin}/NGENT.png" width="120" height="50" onerror="this.style.display='none'" style="margin-bottom:10px;"/>
                 <div style="font-size:26pt; font-weight:bold; color:#1e40af; margin-bottom:8px;">GENT SOLUTION CO., LTD.</div>
-                <div style="font-size:20pt; font-weight:bold; color:#2f66b3; border-top:2px solid #4A90E2; border-bottom:2px solid #4A90E2; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
+                <div style="font-size:20pt; font-weight:bold; color:#1d4ed8; border-top:2px solid #2563eb; border-bottom:2px solid #2563eb; padding:8px 0; margin:8px 0;">รายงานการลางาน (ที่ได้รับอนุมัติ)</div>
             </td>
         </tr>
         
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#2563eb; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📊 สรุปภาพรวมการลางาน
             </td>
         </tr>
@@ -381,7 +381,7 @@ export default {
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#2563eb; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📋 สรุปตามประเภทการลา
             </td>
         </tr>
@@ -397,14 +397,14 @@ export default {
                 <td colspan="4" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${type}</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
                 <td colspan="2" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.days.toFixed(1)} วัน</td>
-                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#2f66b3; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#1d4ed8; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#2563eb; color:white; font-size:16pt; padding:12px; text-align:center;">
                 🏢 สรุปตามแผนก
             </td>
         </tr>
@@ -418,14 +418,14 @@ export default {
         return `<tr>
                 <td colspan="5" align="left" class="font-bold" style="padding:10px; text-align:left; background-color:${bgColor};">${dept}</td>
                 <td colspan="3" align="center" style="padding:10px; text-align:center; background-color:${bgColor};">${data.count} ครั้ง</td>
-                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#2f66b3; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
+                <td colspan="3" align="center" class="font-bold" style="padding:10px; color:#1d4ed8; text-align:center; background-color:${bgColor};">${data.hours} ชม.</td>
             </tr>`;
       }).join('')}
 
         <tr style="height:15px; border:none;"><td colspan="11" style="border:none; background:none;"></td></tr>
 
         <tr>
-            <td colspan="11" align="center" class="font-bold" style="background-color:#3d78bc; color:white; font-size:16pt; padding:12px; text-align:center;">
+            <td colspan="11" align="center" class="font-bold" style="background-color:#2563eb; color:white; font-size:16pt; padding:12px; text-align:center;">
                 📄 รายละเอียดการลาแต่ละรายการ
             </td>
         </tr>
@@ -457,7 +457,7 @@ export default {
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.start_datetime ? new Date(r.start_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" style="padding:8px; text-align:center; background-color:${bgColor};">${r.end_datetime ? new Date(r.end_datetime).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}</td>
                 <td align="center" class="font-bold" style="padding:8px; text-align:center; background-color:${bgColor};">${calcDays(r)}</td>
-                <td align="center" class="font-bold" style="padding:8px; color:#2f66b3; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
+                <td align="center" class="font-bold" style="padding:8px; color:#1d4ed8; text-align:center; background-color:${bgColor};">${calcHours(r)}</td>
                 <td align="left" style="padding:8px; text-align:left; background-color:${bgColor};">${r.reason || '-'}</td>
             </tr>`;
       }).join('')}
@@ -887,7 +887,7 @@ export default {
 }
 
 .leave-btn {
-  background-color: #3d78bc !important;
+  background-color: #2563eb !important;
   border: none !important;
   color: white !important;
   padding: 0.85rem 1.8rem !important;
@@ -928,7 +928,7 @@ export default {
   padding: 0.8rem 1.7rem !important;
   font-weight: 600 !important;
   border-radius: 14px !important;
-  box-shadow: var(--shadow-xs) !important;
+  box-shadow: none !important;
   transition: all 0.3s ease !important;
   position: relative !important;
   overflow: hidden !important;
@@ -937,7 +937,7 @@ export default {
 }
 
 .approval-btn:hover {
-  background: #eaf3fe !important;
+  background: #eff6ff !important;
   border-color: var(--brand-blue) !important;
   box-shadow: none !important;
 }
@@ -966,7 +966,7 @@ export default {
   background: #fff !important;
   border: 1.5px solid var(--line) !important;
   color: var(--ink-soft) !important;
-  box-shadow: var(--shadow-xs) !important;
+  box-shadow: none !important;
 }
 .export-btn:hover {
   background: #f6f9fd !important;
@@ -1042,7 +1042,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #4A90E2, #D73527);
+  background: var(--brand-gradient);
   color: white;
   border-radius: 15px 15px 0 0;
   box-shadow: none;
