@@ -213,7 +213,7 @@
         <div class="form-actions">
           <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined
             @click="resetForm" />
-          <Button type="submit" label="ส่งคำขอลางาน" icon="pi pi-check" severity="success" />
+          <Button type="submit" label="ส่งคำขอลางาน" icon="pi pi-check" severity="success" :loading="submitting" :disabled="submitting" />
         </div>
       </form>
     </template>
@@ -223,6 +223,7 @@
 
 <script>
 import axios from '@/utils/axiosConfig'
+import { formatLeaveDays, formatLeaveHours } from '@/utils/dateUtils'
 import AutoComplete from 'primevue/autocomplete'
 import Dropdown from 'primevue/dropdown'
 
@@ -279,6 +280,7 @@ export default {
       quotaData: {},
       selectedQuota: null,
       holidays: [],
+      submitting: false,
       workHours: {
         start_time: '09:00',
         end_time: '18:00',
@@ -392,11 +394,11 @@ export default {
             if (day !== 0 && day !== 6 && !isHoliday) {
               if (current.getTime() === startDate.getTime()) {
                 const dayEnd = new Date(current)
-                dayEnd.setHours(we, 0, 0, 0)
+                dayEnd.setHours(we, wem, 0, 0)
                 totalHours += this.calculateWorkHours(start, dayEnd)
               } else if (current.getTime() === endDate.getTime()) {
                 const dayStart = new Date(current)
-                dayStart.setHours(ws, 0, 0, 0)
+                dayStart.setHours(ws, wsm, 0, 0)
                 totalHours += this.calculateWorkHours(dayStart, end)
               } else {
                 totalHours += hoursPerDay
@@ -406,11 +408,11 @@ export default {
           }
         }
         
-        // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
-        const rawDays = totalHours / hoursPerDay
-        const days = rawDays
-        const hoursDisplay = totalHours.toFixed(2)
-        const daysDisplay = days.toFixed(2)
+        if (!(hoursPerDay > 0)) return 'ตั้งค่าเวลาทำงานไม่ถูกต้อง'
+        // ไม่ปัดเศษ: ลาเป็นชั่วโมงจริง (เช่น บ่าย 5 ชม. = 0.625 วัน) — ค่าที่แสดงตรงกับที่ส่งไปตัดโควตา
+        const days = Math.round(totalHours / hoursPerDay * 10000) / 10000
+        const hoursDisplay = formatLeaveHours(totalHours)
+        const daysDisplay = formatLeaveDays(days)
         
         // ถ้าเป็น 0 วัน แสดงว่าเลือกวันหยุด
         if (days === 0 && startDate.getTime() === endDate.getTime()) {
@@ -646,31 +648,19 @@ export default {
     },
 
     generateAllowedTimes() {
-      const times = [];
-      const [startH, startM] = this.workHours.start_time.split(':').map(Number);
-      const [endH, endM] = this.workHours.end_time.split(':').map(Number);
-      const [lunchStartH] = this.workHours.lunch_start.split(':').map(Number);
-      const [lunchEndH] = this.workHours.lunch_end.split(':').map(Number);
-      
-      let h = startH, m = startM;
-      while (h < endH || (h === endH && m <= endM)) {
-        // ข้ามช่วงพักเที่ยง (ยกเว้นเวลาเริ่มและสิ้นสุดพัก)
-        if (h >= lunchStartH && h < lunchEndH && !(h === lunchStartH && m === 0)) {
-          h = lunchEndH;
-          m = 0;
-          continue;
-        }
-        
-        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-        times.push({ label: timeStr, value: timeStr });
-        
-        m += 30;
-        if (m >= 60) {
-          m = 0;
-          h++;
-        }
+      // ทุก 30 นาทีในเวลาทำงาน ข้ามช่วงพักเที่ยง (เลือกเวลาเริ่มพัก/เลิกพักได้) — เทียบเป็นนาที รองรับเวลาที่ไม่ลงชั่วโมงพอดี
+      const toMin = t => { const [h, m = 0] = t.split(':').map(Number); return h * 60 + m };
+      const fmt = n => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(n % 60).padStart(2, '0')}`;
+      const start = toMin(this.workHours.start_time), end = toMin(this.workHours.end_time);
+      const lunchStart = toMin(this.workHours.lunch_start), lunchEnd = toMin(this.workHours.lunch_end);
+      const set = new Set();
+      for (let t = start; t <= end; t += 30) {
+        if (t > lunchStart && t < lunchEnd) continue;
+        set.add(t);
       }
-      this.allowedTimes = times;
+      // ให้มีเวลาเริ่ม/เลิกพักและเลิกงานเสมอ (ปุ่มลาครึ่งวันใช้ค่าเหล่านี้)
+      [lunchStart, lunchEnd, end].forEach(t => { if (t >= start && t <= end) set.add(t) });
+      this.allowedTimes = [...set].sort((a, b) => a - b).map(t => ({ label: fmt(t), value: fmt(t) }));
     },
 
     onLeaveTypeChange() {
@@ -727,6 +717,7 @@ export default {
     },
 
     async submitForm() {
+      if (this.submitting) return
       // Validate user selection for level 2 approver
       if (this.isLevel2Approver && !this.selectedLeaveUser) {
         this.$toast.add({
@@ -761,6 +752,15 @@ export default {
 
       // Check if requested days exceed remaining quota
       const requestedDays = this.calculateTotalDays();
+      if (this.formData.startDateTime && this.formData.endDateTime && requestedDays <= 0) {
+        this.$toast.add({
+          severity: 'error',
+          summary: 'ช่วงเวลาไม่มีเวลาทำงาน',
+          detail: 'จำนวนวันลาเป็น 0 — ตรวจสอบวันและเวลาเริ่ม-สิ้นสุด (ต้องอยู่ในเวลาทำงาน และไม่ใช่วันหยุด)',
+          life: 5000
+        })
+        return
+      }
       if (this.selectedQuota && requestedDays > this.selectedQuota.remainingDays) {
         this.$toast.add({
           severity: 'error',
@@ -814,6 +814,7 @@ export default {
         }
       }
 
+      this.submitting = true
       try {
         // Upload files first if any
         let uploadedFiles = []
@@ -887,6 +888,8 @@ export default {
           detail: errorMessage,
           life: 5000
         })
+      } finally {
+        this.submitting = false
       }
     },
     calculateTotalDays() {
@@ -919,11 +922,11 @@ export default {
             if (day !== 0 && day !== 6 && !isHoliday) {
               if (current.getTime() === startDate.getTime()) {
                 const dayEnd = new Date(current)
-                dayEnd.setHours(we, 0, 0, 0)
+                dayEnd.setHours(we, wem, 0, 0)
                 totalHours += this.calculateWorkHours(start, dayEnd)
               } else if (current.getTime() === endDate.getTime()) {
                 const dayStart = new Date(current)
-                dayStart.setHours(ws, 0, 0, 0)
+                dayStart.setHours(ws, wsm, 0, 0)
                 totalHours += this.calculateWorkHours(dayStart, end)
               } else {
                 totalHours += hoursPerDay
@@ -933,7 +936,7 @@ export default {
           }
         }
         
-        // ปัดเป็น 0.5 step (ครึ่งวัน/เต็มวัน)
+        if (!(hoursPerDay > 0)) return 0
         const rawDays = totalHours / hoursPerDay
         return Math.round(rawDays * 10000) / 10000
       }

@@ -279,11 +279,13 @@ export default {
       records = [...records].sort((a, b) => new Date(b.start_datetime) - new Date(a.start_datetime))
 
       // คำนวณชั่วโมงและวันจาก total_days
-      const calcHours = (r) => Math.round((parseFloat(r.total_days) || 0) * 8)
-      const calcDays = (r) => parseFloat(r.total_days) || 0
+      // ชั่วโมง = วัน × 8 (ทุก role ที่ตั้งไว้ = 8 ชม./วัน) ทศนิยม 1 ตำแหน่ง — เดิมปัดเป็นชั่วโมงเต็ม (ลา 30 นาทีกลายเป็น 0 หรือ 1 ชม.)
+      const r1 = (n) => Math.round(n * 10) / 10
+      const calcHours = (r) => r1((parseFloat(r.total_days) || 0) * 8)
+      const calcDays = (r) => parseFloat((parseFloat(r.total_days) || 0).toFixed(4))
 
       // สรุปภาพรวม
-      const totalHours = records.reduce((sum, r) => sum + calcHours(r), 0)
+      const totalHours = r1(records.reduce((sum, r) => sum + calcHours(r), 0))
       const totalDays = records.reduce((sum, r) => sum + calcDays(r), 0)
 
       const summary = {
@@ -315,6 +317,10 @@ export default {
         summary.byPosition[pos].count++
         summary.byPosition[pos].hours += calcHours(r)
       })
+      // ผลรวมทศนิยมลอยตัว (เช่น 4.8 + 3.2 = 7.999999) → ปัด 1 ตำแหน่ง
+      for (const group of [summary.byType, summary.byDepartment, summary.byPosition]) {
+        Object.values(group).forEach(g => { g.hours = r1(g.hours) })
+      }
 
       let html = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">

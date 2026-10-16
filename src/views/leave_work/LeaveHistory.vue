@@ -54,7 +54,7 @@
 
         <Column field="total_days" header="จำนวน" :sortable="true">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
+            {{ formatLeaveDays(slotProps.data.total_days) }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
         </Column>
 
@@ -278,6 +278,7 @@ import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import { accessibleBg } from '@/utils/color'
+import { formatLeaveDays, formatLeaveHours, workHoursPerDay } from '@/utils/dateUtils'
 
 export default {
   name: 'LeaveHistory',
@@ -462,61 +463,16 @@ export default {
         this.isLevel2Approver = false
       }
     },
+    // ชั่วโมงที่ตัดโควตาจริง = จำนวนวันลา × ชั่วโมงทำงานต่อวันของพนักงานคนนั้น
+    // (เดิมคำนวณใหม่จากวันเวลา: ไม่หักวันหยุดนักขัตฤกษ์ และปัด ≥90% ของวันเป็นเต็มวัน — ตัวเลขชั่วโมงจึงไม่ตรงกับจำนวนวัน)
     calculateHours(data) {
       const wh = this.workHoursCache[`user_${data.user_id}`] || this.workHoursCache[data.employee_role] || this.workHours
       if (data.employee_role && !this.workHoursCache[data.employee_role]) {
         this.getWorkHoursForRole(data.employee_role)
       }
-      const start = new Date(data.start_datetime)
-      const end = new Date(data.end_datetime)
-      const [ws, wsm = 0] = wh.start_time.split(':').map(Number)
-      const [we, wem = 0] = wh.end_time.split(':').map(Number)
-      const [ls, lsm = 0] = wh.lunch_start.split(':').map(Number)
-      const [le, lem = 0] = wh.lunch_end.split(':').map(Number)
-
-      const wsMin = ws * 60 + wsm, weMin = we * 60 + wem
-      const lsMin = ls * 60 + lsm, leMin = le * 60 + lem
-      const fullDayMinutes = (lsMin - wsMin) + (weMin - leMin)
-
-      const startDate = new Date(start); startDate.setHours(0, 0, 0, 0)
-      const endDate = new Date(end); endDate.setHours(0, 0, 0, 0)
-      let totalMinutes = 0
-
-      const calcDayMinutes = (s, e) => {
-        const sMin = s.getHours() * 60 + s.getMinutes()
-        const eMin = e.getHours() * 60 + e.getMinutes()
-        let mins = 0
-        const mStart = Math.max(sMin, wsMin), mEnd = Math.min(eMin, lsMin)
-        if (mEnd > mStart) mins += mEnd - mStart
-        const aStart = Math.max(sMin, leMin), aEnd = Math.min(eMin, weMin)
-        if (aEnd > aStart) mins += aEnd - aStart
-        if (mins >= fullDayMinutes * 0.9) return fullDayMinutes
-        return Math.max(0, mins)
-      }
-
-      if (startDate.getTime() === endDate.getTime()) {
-        totalMinutes = calcDayMinutes(start, end)
-      } else {
-        const current = new Date(startDate)
-        while (current <= endDate) {
-          const day = current.getDay()
-          if (day !== 0 && day !== 6) {
-            if (current.getTime() === startDate.getTime()) {
-              const dayEnd = new Date(current); dayEnd.setHours(we, wem, 0, 0)
-              totalMinutes += calcDayMinutes(start, dayEnd)
-            } else if (current.getTime() === endDate.getTime()) {
-              const dayStart = new Date(current); dayStart.setHours(ws, wsm, 0, 0)
-              totalMinutes += calcDayMinutes(dayStart, end)
-            } else {
-              totalMinutes += fullDayMinutes
-            }
-          }
-          current.setDate(current.getDate() + 1)
-        }
-      }
-      const hours = totalMinutes / 60
-      return Number.isInteger(hours) ? hours : hours.toFixed(1)
+      return formatLeaveHours((parseFloat(data.total_days) || 0) * workHoursPerDay(wh))
     },
+    formatLeaveDays,
     async loadLeaveTypes() {
       try {
         const response = await this.$http.get('/api/leave/leave-types')
@@ -851,7 +807,7 @@ export default {
 
     confirmHrReset(record) {
       this.$confirm.require({
-        message: `คุณต้องการลบคำขอนี้และคืนโควต้าการลาหรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nช่วงวันที่ลา: ${this.formatDateTime(record.start_datetime)} - ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${record.total_days} วัน (${this.calculateHours(record)} ชม.)`,
+        message: `คุณต้องการลบคำขอนี้และคืนโควต้าการลาหรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nช่วงวันที่ลา: ${this.formatDateTime(record.start_datetime)} - ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${formatLeaveDays(record.total_days)} วัน (${this.calculateHours(record)} ชม.)`,
         header: 'ยืนยันลบและคืนโควต้า (HR)',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',

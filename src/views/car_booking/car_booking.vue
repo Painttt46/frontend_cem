@@ -67,7 +67,8 @@
     <BookingForm ref="bookingForm" v-if="showForm" :show-form="showForm" :selected-date="selectedDate"
       :active-form="activeForm" :borrow-form="borrowForm" :return-form="returnForm" :cancel-form="cancelForm"
       :available-borrows="availableBorrows" :pending-borrows="pendingBorrows" :current-return-time="currentReturnTime"
-      :selected-borrow-project="selectedBorrowProject" :selected-borrow-description="selectedBorrowDescription" @close-form="closeForm" @submit-borrow="submitBorrow"
+      :selected-borrow-project="selectedBorrowProject" :selected-borrow-description="selectedBorrowDescription"
+      :submitting="submitting" @close-form="closeForm" @submit-borrow="submitBorrow"
       @submit-return="submitReturn" @submit-cancel="submitCancel" @handle-image-upload="handleImageUpload"
       @remove-image="removeImage" @update-borrow-form="updateBorrowForm" @updateReturnForm="updateReturnForm"
       @update-cancel-form="updateCancelForm" />
@@ -81,10 +82,10 @@
 
       <div v-else class="image-viewer">
         <div v-for="imageType in groupedImages" :key="imageType.type"
-          :class="['image-section', imageType.type.includes('ใช้') ? 'borrow-section' : 'return-section']">
+          :class="['image-section', imageType.type === 'คืนรถ' ? 'return-section' : 'borrow-section']">
           <div class="section-header">
-            <i :class="imageType.type.includes('ใช้') ? 'pi pi-download' : 'pi pi-upload'"></i>
-            รูปภาพตอน{{ imageType.type }}
+            <i :class="{ 'คืนรถ': 'pi pi-upload', 'เพิ่มเติม': 'pi pi-camera' }[imageType.type] || 'pi pi-download'"></i>
+            {{ imageType.type === 'เพิ่มเติม' ? 'รูปภาพเพิ่มเติมระหว่างใช้รถ' : `รูปภาพตอน${imageType.type}` }}
           </div>
           <div class="images-grid">
             <div v-for="(image, index) in imageType.images" :key="index" class="image-container">
@@ -124,6 +125,52 @@ import Calendar from './Calendar.vue'
 import History from './History.vue'
 import BookingFormPrime from './BookingFormPrime.vue'
 import axios from '@/utils/axiosConfig'
+
+// ข้อความ error จาก backend (409/400 มีรายละเอียดที่ผู้ใช้ต้องรู้ เช่น "มีการจองวันนี้แล้ว") — เดิมแสดงแค่ "กรุณาลองใหม่"
+function apiErrorText(err, fallback = 'กรุณาลองใหม่อีกครั้ง') {
+  const data = err?.response?.data
+  if (data && typeof data === 'object' && (data.error || data.details)) {
+    return [data.error, data.details].filter(Boolean).join(' — ')
+  }
+  return err?.userMessage || fallback
+}
+
+function readAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result)
+    reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'))
+    reader.readAsDataURL(file)
+  })
+}
+
+// ย่อรูปก่อนส่ง — รูปจากมือถือ 3-10MB ต่อรูปถูกเก็บเป็น base64 ในฐานข้อมูลทั้งก้อน (อัปโหลดช้า, DB โต)
+// ย่อด้านยาวเหลือ 1600px เป็น JPEG; ถ้าย่อไม่ได้ (เช่น HEIC ที่เบราว์เซอร์เปิดไม่ได้) หรือไม่เล็กลง → ใช้ไฟล์เดิม
+const MAX_IMAGE_SIDE = 1600
+async function compressImage(file) {
+  const original = await readAsDataURL(file)
+  if (!/^image\/(jpeg|png|webp|bmp)$/i.test(file.type) || file.size < 300 * 1024) return original
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image()
+      el.onload = () => resolve(el)
+      el.onerror = reject
+      el.src = original
+    })
+    const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(img.naturalWidth, img.naturalHeight))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.naturalWidth * scale))
+    canvas.height = Math.max(1, Math.round(img.naturalHeight * scale))
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = '#fff' // PNG พื้นโปร่งใส → พื้นขาวเมื่อแปลงเป็น JPEG
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    const out = canvas.toDataURL('image/jpeg', 0.82)
+    return out.length < original.length ? out : original
+  } catch {
+    return original
+  }
+}
 
 export default {
   components: {
@@ -167,8 +214,7 @@ export default {
       selectedImages: [],
       showFullImageModal: false,
       fullSizeImage: '',
-      teamsWebhookUrl: 'YOUR_TEAMS_WEBHOOK_URL_HERE',
-      notifiedActiveBookings: new Set(),
+      submitting: false, // กันกดบันทึกซ้ำระหว่างส่งข้อมูล (แปลงรูป + อัปโหลดใช้เวลา)
       refreshInterval: null,
       timeInterval: null,
       syncInterval: null
@@ -213,8 +259,9 @@ export default {
       const selectedBorrow = this.records.find(r => r.id == this.returnForm.borrowId)
       return selectedBorrow ? selectedBorrow.discription : ''
     },
+    // รายการที่ยังค้างอยู่ (รอใช้ + กำลังใช้) — ไม่นับ "คืนแล้ว" และ "ยกเลิก" (เดิมนับรายการที่ระบบยกเลิกด้วย ตัวเลขจึงโตไม่หยุด)
     borrowRecordsCount() {
-      return this.records.filter(r => r.status !== 'returned').length
+      return this.records.filter(r => r.status === 'pending' || r.status === 'active').length
     },
     bookingsAllowingImageUpload() {
       return this.records.filter(r => r.status === 'active')
@@ -330,17 +377,7 @@ export default {
       }
     },
     async convertImagesToBase64(images) {
-      const promises = images.map(img => {
-        if (img instanceof File) {
-          return new Promise((resolve) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result)
-            reader.readAsDataURL(img)
-          })
-        }
-        return Promise.resolve(img)
-      })
-      return Promise.all(promises)
+      return Promise.all(images.map(img => (img instanceof File ? compressImage(img) : img)))
     },
     openImageModal(imageSrc) {
       this.selectedImages = [{ src: imageSrc, type: 'รูปภาพ' }]
@@ -395,6 +432,8 @@ export default {
       return `${year}-${month}-${day}`
     },
     async submitBorrow(payload = {}) {
+      if (this.submitting) return
+      this.submitting = true
       try {
         const images = await this.convertImagesToBase64(this.borrowForm.images || [])
         const borrowData = {
@@ -408,8 +447,8 @@ export default {
           colleagues: this.borrowForm.colleagues || [],
           images,
           user_id: localStorage.getItem('soc_user_id'),
-          fuel_level_borrow: payload.fuelLevelBorrow || null,
-          easy_pass_borrow: payload.easyPassBorrow || null,
+          fuel_level_borrow: payload.fuelLevelBorrow ?? null,
+          easy_pass_borrow: payload.easyPassBorrow ?? null,
           expected_return_date: this.borrowForm.expected_return_date
             ? this.formatDateForDB(this.borrowForm.expected_return_date)
             : this.formatDateForDB(this.selectedDate),
@@ -434,17 +473,20 @@ export default {
           this.$toast.add({
             severity: 'warn',
             summary: 'ไม่สามารถจองได้',
-            detail: err.response.data.details || err.response.data.error,
-            life: 5000
+            detail: apiErrorText(err),
+            life: 6000
           })
+          this.loadRecords(true)
         } else {
           this.$toast.add({
             severity: 'error',
             summary: 'บันทึกไม่สำเร็จ',
-            detail: 'กรุณาลองใหม่อีกครั้ง',
-            life: 4000
+            detail: apiErrorText(err),
+            life: 5000
           })
         }
+      } finally {
+        this.submitting = false
       }
     },
     async submitReturn(payload = {}) {
@@ -454,6 +496,8 @@ export default {
         this.$toast.add({ severity: 'error', summary: 'กรุณาเลือกข้อมูล', detail: 'เลือกการแจ้งใช้รถที่ต้องการคืน', life: 4000 })
         return
       }
+      if (this.submitting) return
+      this.submitting = true
 
       try {
         const firstName = localStorage.getItem('soc_firstname') || ''
@@ -471,12 +515,13 @@ export default {
         const returnData = {
           return_name: currentUserName,
           return_location: this.returnForm.location,
-          return_description: this.returnForm.discription,
+          // ช่องว่าง = คงข้อมูลตอนจองไว้ (backend ก็กันไว้อีกชั้น)
+          return_description: this.returnForm.discription || this.selectedBorrowDescription || '',
           return_time: currentTime,
           return_date: this.formatDateForDB(bangkokTime),
           images,
-          fuel_level_return: payload.fuelLevelReturn || null,
-          easy_pass_return: payload.easyPassReturn || null
+          fuel_level_return: payload.fuelLevelReturn ?? null,
+          easy_pass_return: payload.easyPassReturn ?? null
         }
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
@@ -496,13 +541,16 @@ export default {
           detail: 'บันทึกการคืนรถเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch { // ignore
+      } catch (err) {
         this.$toast.add({
-          severity: 'error',
-          summary: 'บันทึกไม่สำเร็จ',
-          detail: 'กรุณาลองใหม่อีกครั้ง',
-          life: 4000
+          severity: err.response?.status === 409 ? 'warn' : 'error',
+          summary: 'บันทึกการคืนรถไม่สำเร็จ',
+          detail: apiErrorText(err),
+          life: 6000
         })
+        if (err.response?.status === 409) this.loadRecords(true)
+      } finally {
+        this.submitting = false
       }
     },
     async submitCancel() {
@@ -512,8 +560,13 @@ export default {
         return
       }
 
+      if (this.submitting) return
+      this.submitting = true
+
       try {
-        await this.$http.delete(`/api/car-booking/${this.cancelForm.borrowId}`)
+        await this.$http.delete(`/api/car-booking/${this.cancelForm.borrowId}`, {
+          data: { reason: (this.cancelForm.reason || '').trim() }
+        })
 
         await this.loadRecords()
         this.closeForm()
@@ -524,13 +577,16 @@ export default {
           detail: 'ยกเลิกการจองเรียบร้อยแล้ว',
           life: 3000
         })
-      } catch { // ignore
+      } catch (err) {
         this.$toast.add({
-          severity: 'error',
+          severity: err.response?.status === 409 ? 'warn' : 'error',
           summary: 'ยกเลิกไม่สำเร็จ',
-          detail: 'กรุณาลองใหม่อีกครั้ง',
-          life: 4000
+          detail: apiErrorText(err),
+          life: 6000
         })
+        if (err.response?.status === 409) this.loadRecords(true)
+      } finally {
+        this.submitting = false
       }
     },
     updateBorrowForm({ field, value }) {
@@ -553,12 +609,7 @@ export default {
         // Convert files to base64
         const newImages = []
         for (const file of files) {
-          const reader = new FileReader()
-          const base64 = await new Promise((resolve, reject) => {
-            reader.onload = () => resolve(reader.result)
-            reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'))
-            reader.readAsDataURL(file)
-          })
+          const base64 = await compressImage(file)
           newImages.push({
             name: file.name,
             src: base64,
@@ -584,7 +635,7 @@ export default {
         this.$toast.add({
           severity: 'error',
           summary: 'อัปโหลดไม่สำเร็จ',
-          detail: error.response?.data?.error || 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ',
+          detail: apiErrorText(error, 'ไฟล์อาจใหญ่เกินไป หรือรูปแบบไม่รองรับ'),
           life: 4000
         })
       }

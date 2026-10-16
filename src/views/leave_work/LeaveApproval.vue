@@ -46,7 +46,7 @@
 
         <Column header="จำนวน">
           <template #body="slotProps">
-            {{ slotProps.data.total_days }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
+            {{ formatLeaveDays(slotProps.data.total_days) }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
         </Column>
 
@@ -235,6 +235,7 @@ import { downloadBlob, getOriginalFileName } from '@/utils/fileHelpers'
 import AttachmentsDialog from '@/components/AttachmentsDialog.vue'
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
+import { formatLeaveDays, formatLeaveHours, workHoursPerDay } from '@/utils/dateUtils'
 import { accessibleBg } from '@/utils/color'
 
 export default {
@@ -353,57 +354,16 @@ export default {
       const roles = [...new Set(records.map(r => r.employee_role).filter(Boolean))]
       await Promise.all(roles.map(role => this.getWorkHoursForRole(role)))
     },
+    // ชั่วโมงที่ตัดโควตาจริง = จำนวนวันลา × ชั่วโมงทำงานต่อวันของพนักงานคนนั้น
+    // (เดิมคำนวณใหม่จากวันเวลา: ไม่หักวันหยุดนักขัตฤกษ์ และปัด ≥90% ของวันเป็นเต็มวัน — ตัวเลขชั่วโมงจึงไม่ตรงกับจำนวนวัน)
     calculateHours(data) {
       const wh = this.workHoursCache[`user_${data.user_id}`] || this.workHoursCache[data.employee_role] || this.workHours
       if (data.employee_role && !this.workHoursCache[data.employee_role]) {
         this.getWorkHoursForRole(data.employee_role)
       }
-      const start = new Date(data.start_datetime)
-      const end = new Date(data.end_datetime)
-      const [ws, wsm = 0] = wh.start_time.split(':').map(Number)
-      const [we, wem = 0] = wh.end_time.split(':').map(Number)
-      const [ls, lsm = 0] = wh.lunch_start.split(':').map(Number)
-      const [le, lem = 0] = wh.lunch_end.split(':').map(Number)
-      const wsMin = ws * 60 + wsm, weMin = we * 60 + wem
-      const lsMin = ls * 60 + lsm, leMin = le * 60 + lem
-      const fullDayMinutes = (lsMin - wsMin) + (weMin - leMin)
-      const startDate = new Date(start); startDate.setHours(0, 0, 0, 0)
-      const endDate = new Date(end); endDate.setHours(0, 0, 0, 0)
-      let totalMinutes = 0
-      const calcMins = (s, e) => {
-        const sMin = s.getHours() * 60 + s.getMinutes()
-        const eMin = e.getHours() * 60 + e.getMinutes()
-        let m = 0
-        const mS = Math.max(sMin, wsMin), mE = Math.min(eMin, lsMin)
-        if (mE > mS) m += mE - mS
-        const aS = Math.max(sMin, leMin), aE = Math.min(eMin, weMin)
-        if (aE > aS) m += aE - aS
-        if (m >= fullDayMinutes * 0.9) return fullDayMinutes
-        return Math.max(0, m)
-      }
-      if (startDate.getTime() === endDate.getTime()) {
-        totalMinutes = calcMins(start, end)
-      } else {
-        const cur = new Date(startDate)
-        while (cur <= endDate) {
-          const day = cur.getDay()
-          if (day !== 0 && day !== 6) {
-            if (cur.getTime() === startDate.getTime()) {
-              const de = new Date(cur); de.setHours(we, wem, 0, 0)
-              totalMinutes += calcMins(start, de)
-            } else if (cur.getTime() === endDate.getTime()) {
-              const ds = new Date(cur); ds.setHours(ws, wsm, 0, 0)
-              totalMinutes += calcMins(ds, end)
-            } else {
-              totalMinutes += fullDayMinutes
-            }
-          }
-          cur.setDate(cur.getDate() + 1)
-        }
-      }
-      const hours = totalMinutes / 60
-      return Number.isInteger(hours) ? hours : hours.toFixed(1)
+      return formatLeaveHours((parseFloat(data.total_days) || 0) * workHoursPerDay(wh))
     },
+    formatLeaveDays,
     async loadLeaveTypes() {
       try {
         const response = await this.$http.get('/api/leave/leave-types')

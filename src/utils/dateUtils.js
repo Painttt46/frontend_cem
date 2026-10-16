@@ -154,3 +154,16 @@ export const formatDayMonthTH = (date) => {
   if (!date) return ''
   return new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
 }
+
+// จำนวนวันลาสำหรับแสดงผล — ตัดศูนย์ท้าย สูงสุด 4 ตำแหน่ง (DB ส่ง numeric มาเป็นสตริง เช่น "0.6250" → "0.625", "1.0000" → "1")
+export const formatLeaveDays = (days) => String(parseFloat((Number(days) || 0).toFixed(4)))
+
+// ชั่วโมงลาสำหรับแสดงผล — สูงสุด 2 ตำแหน่ง (5 → "5", 2.5 → "2.5")
+export const formatLeaveHours = (hours) => String(parseFloat((Number(hours) || 0).toFixed(2)))
+
+// ชั่วโมงทำงานต่อวันจากเวลาทำงาน { start_time, end_time, lunch_start, lunch_end } ('HH:MM') — ตั้งค่าผิดจนได้ ≤ 0 ใช้ 8
+export const workHoursPerDay = (wh) => {
+  const toMin = (t) => { const [h, m = 0] = String(t || '0:0').split(':').map(Number); return h * 60 + m }
+  const perDay = ((toMin(wh?.lunch_start) - toMin(wh?.start_time)) + (toMin(wh?.end_time) - toMin(wh?.lunch_end))) / 60
+  return perDay > 0 ? perDay : 8
+}

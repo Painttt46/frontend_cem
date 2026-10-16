@@ -126,6 +126,7 @@
           <template #body="slotProps">
             <div class="status-cell">
               <Badge v-if="slotProps.data.returned" value="✓ คืนแล้ว" severity="success" />
+              <Badge v-else-if="slotProps.data.cancelled" value="ยกเลิก" severity="danger" />
               <Badge v-else-if="isWaitingToUse(slotProps.data)" value="รอใช้งาน" severity="info" />
               <Badge v-else value="ยังไม่คืน" severity="warning" />
               <span v-if="slotProps.data.borrowRecord.auto_returned" class="auto-return-badge" v-tooltip="'ระบบปิดรายการให้อัตโนมัติเมื่อครบเวลาคืนที่ตั้งไว้ตอนจอง'">
@@ -211,7 +212,9 @@ export default {
             created_at: borrow.updated_at,
             has_images: borrow.has_images
           } : null,
-          returned: returned
+          returned: returned,
+          // ระบบยกเลิกอัตโนมัติ (รถยังไม่ถูกคืน/มีการใช้รถวันเดียวกัน) — เดิมแสดงเป็น "ยังไม่คืน"
+          cancelled: borrow.status === 'cancelled'
         }
       })
       return groups.sort((a, b) => {
@@ -222,16 +225,15 @@ export default {
     },
     groupedRecordsWithDuration() {
       return this.groupedRecords.map(group => {
-        let duration = 'ยังไม่คืน'
+        let duration = group.cancelled || group.borrowRecord.status === 'pending' ? '-' : 'ยังไม่คืน'
         if (group.returned) {
           const borrowDate = new Date(group.borrowDate)
           const [borrowHour, borrowMin] = group.borrowRecord.time.split(':').map(Number)
           const borrowTime = new Date(borrowDate)
           borrowTime.setHours(borrowHour, borrowMin, 0, 0)
 
-          const returnTime = group.returnRecord.created_at
-            ? new Date(group.returnRecord.created_at)
-            : new Date()
+          // ใช้วัน/เวลาคืนจริง — updated_at เปลี่ยนเมื่อมีการแก้รายการภายหลัง (เช่น เพิ่มรูป) ระยะเวลาจึงเพี้ยน
+          const returnTime = this.returnDateTime(group.returnRecord)
 
           const diffMs = returnTime - borrowTime
           if (diffMs > 0) {
@@ -315,6 +317,15 @@ export default {
       return colleague?.department || ''
     },
     
+    returnDateTime(ret) {
+      if (ret.date && /^\d{1,2}:\d{2}/.test(ret.time || '')) {
+        const d = new Date(ret.date)
+        const [h, m] = ret.time.split(':').map(Number)
+        d.setHours(h, m, 0, 0)
+        return d
+      }
+      return ret.created_at ? new Date(ret.created_at) : new Date()
+    },
     formatTime(dateString) {
       if (!dateString) return '-'
       return new Date(dateString).toLocaleTimeString('th-TH', {
@@ -360,12 +371,14 @@ export default {
       const images = []
       if (data.borrowRecord.has_images) {
         const raw = await axios.get(`/api/car-booking/${data.borrowRecord.id}/images`).then(r => r.data)
+        // รูปที่อัปโหลดเพิ่มระหว่างใช้รถ เก็บเป็น { src, type: 'เพิ่มเติม' } — แยกหัวข้อให้ (เดิมรวมเป็น "ตอนใช้รถ")
+        const kind = img => (img && typeof img === 'object' && img.type === 'เพิ่มเติม' ? 'เพิ่มเติม' : 'ใช้รถ')
         if (Array.isArray(raw)) {
-          images.push(...raw.map(img => ({ src: img, type: 'ใช้รถ' })))
+          images.push(...raw.map(img => ({ src: img, type: kind(img) })))
         } else if (raw && typeof raw === 'object') {
           const borrowImgs = raw.borrow || []
           const returnImgs = raw.return || []
-          images.push(...borrowImgs.map(img => ({ src: img, type: 'ใช้รถ' })))
+          images.push(...borrowImgs.map(img => ({ src: img, type: kind(img) })))
           images.push(...returnImgs.map(img => ({ src: img, type: 'คืนรถ' })))
         }
       }

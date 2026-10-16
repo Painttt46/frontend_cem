@@ -103,7 +103,7 @@
           <div class="car-header">
             <div class="car-plate-display">
               <i class="pi pi-car"></i>
-              <span>FXAG-2032</span>
+              <span>{{ selectedCarRecord.license || 'ชฮ-3706' }}</span>
             </div>
             <div class="status-badge">
               <i class="pi pi-circle-fill"></i>
@@ -139,6 +139,16 @@
               </div>
               <div class="detail-value">
                 {{ selectedCarRecord.time || 'ไม่ระบุ' }}
+              </div>
+            </div>
+
+            <div v-if="selectedCarRecord.expected_return_time" class="detail-row">
+              <div class="detail-label">
+                <i class="pi pi-flag"></i>
+                กำหนดคืน
+              </div>
+              <div class="detail-value">
+                {{ formatDate(selectedCarRecord.expected_return_date || selectedCarRecord.selected_date) }} {{ selectedCarRecord.expected_return_time }}
               </div>
             </div>
 
@@ -199,7 +209,7 @@
           <div class="booking-header">
             <div class="car-plate-display">
               <i class="pi pi-calendar"></i>
-              <span>FXAG-2032</span>
+              <span>{{ selectedCarRecord.license || 'ชฮ-3706' }}</span>
             </div>
             <div class="status-badge booking-status">
               <i class="pi pi-clock"></i>
@@ -235,6 +245,16 @@
               </div>
               <div class="detail-value">
                 {{ selectedCarRecord.time || 'ไม่ระบุ' }}
+              </div>
+            </div>
+
+            <div v-if="selectedCarRecord.expected_return_time" class="detail-row">
+              <div class="detail-label">
+                <i class="pi pi-flag"></i>
+                กำหนดคืน
+              </div>
+              <div class="detail-value">
+                {{ formatDate(selectedCarRecord.expected_return_date || selectedCarRecord.selected_date) }} {{ selectedCarRecord.expected_return_time }}
               </div>
             </div>
 
@@ -412,15 +432,8 @@ export default {
         this.$emit('select-date', date)
       }
     },
-    async showCarDetails(date) {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const checkDate = new Date(date)
-      checkDate.setHours(0, 0, 0, 0)
-
-      if (checkDate.getTime() !== today.getTime()) return
-
+    // เปิดได้ทุกวันในช่วงที่รถกำลังใช้งาน (เดิมเปิดได้เฉพาะ "วันนี้" — ใช้รถข้ามวันแล้วกดวันแรกไม่ได้อะไร)
+    async showCarDetails() {
       const activeBooking = this.records.find(r => r.status === 'active')
       if (activeBooking) {
         this.selectedCarRecord = activeBooking
@@ -429,10 +442,8 @@ export default {
       }
     },
     async showBookingDetails(date) {
-      const dateStr = date.toDateString()
       const borrowRecord = this.records.find(r =>
-        (r.status === 'pending' || r.status === 'active') &&
-        new Date(r.selected_date).toDateString() === dateStr
+        (r.status === 'pending' || r.status === 'active') && this.bookingCovers(r, date)
       )
 
       if (borrowRecord) {
@@ -468,14 +479,23 @@ export default {
       checkDate.setHours(0, 0, 0, 0)
       return checkDate < today
     },
+    // วันที่ (เที่ยงคืน) จากค่าวันที่ของ API
+    dayOf(value) {
+      const d = new Date(value)
+      d.setHours(0, 0, 0, 0)
+      return d
+    },
+    // การจองครอบคลุมวันนี้ไหม: วันรับรถ → วันคืนที่ตั้งไว้ตอนจอง (จองข้ามวันได้)
+    bookingCovers(r, date) {
+      const day = this.dayOf(date)
+      const start = this.dayOf(r.selected_date)
+      const end = r.expected_return_date ? this.dayOf(r.expected_return_date) : start
+      return day >= start && day <= (end < start ? start : end)
+    },
     // วันที่ "จองแล้ว" = เฉพาะ pending (รอเวลาใช้งาน) — active แสดงเป็นสีใช้งานอยู่แท้
+    // ทำเครื่องหมายทุกวันในช่วงที่จอง (เดิมแค่วันแรก จึงกดจองวันที่ 2 ของการจองข้ามวันได้ แล้วโดนยกเลิกทีหลัง)
     hasBookingOnDate(date) {
-      const dateStr = date.toDateString()
-
-      return this.records.some(r =>
-        r.status === 'pending' &&
-        new Date(r.selected_date).toDateString() === dateStr
-      )
+      return this.records.some(r => r.status === 'pending' && this.bookingCovers(r, date))
     },
     // วันที่มีการคืนรถ (จาก flow ใหม่: คืนก่อนเวลา หรือ ระบบปิดให้อัตโนมัติ)
     isReturnedDate(date) {
@@ -506,18 +526,16 @@ export default {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
 
-      // If there's a return_date, use it as end date
+      // ถึงวันคืนที่ตั้งไว้ตอนจอง (ถ้าเลยมาแล้วยังไม่คืน = ถึงวันนี้) — วันที่รถยังไม่ว่างจะกดจองซ้อนไม่ได้
       let endDate
       if (activeBooking.return_date) {
-        endDate = new Date(activeBooking.return_date)
-        endDate.setHours(0, 0, 0, 0)
+        endDate = this.dayOf(activeBooking.return_date)
       } else {
-        // If no return date, only show up to today (no future dates)
-        endDate = today
+        const expEnd = activeBooking.expected_return_date ? this.dayOf(activeBooking.expected_return_date) : null
+        endDate = expEnd && expEnd > today ? expEnd : today
       }
 
-      // Show active status from borrow date to end date (but not beyond today)
-      return day >= borrowDate && day <= endDate && day <= today
+      return day >= borrowDate && day <= endDate
     },
     isToday(date) {
       const today = new Date()

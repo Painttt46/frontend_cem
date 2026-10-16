@@ -165,7 +165,9 @@
                     {{ formatLeaveDate(data.start_datetime) }} - {{ formatLeaveDate(data.end_datetime) }}
                   </template>
                 </Column>
-                <Column field="total_days" header="จำนวนวัน" sortable />
+                <Column field="total_days" header="จำนวนวัน" sortable>
+                  <template #body="{ data }">{{ formatLeaveDays(data.total_days) }}</template>
+                </Column>
                 <Column field="reason" header="เหตุผล">
                   <template #body="{ data }">
                     <span :title="data.reason">{{ (data.reason || '-').substring(0, 30) }}{{ data.reason?.length > 30 ? '...' : '' }}</span>
@@ -214,6 +216,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
+import { formatLeaveDays } from '@/utils/dateUtils'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import CountUp from '@/components/CountUp.vue'
 

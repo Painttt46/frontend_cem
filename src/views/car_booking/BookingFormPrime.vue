@@ -76,7 +76,7 @@
 
             <label for="location" class="input-label">สถานที่ *</label>
 
-            <InputText id="location" :value="borrowForm.location"
+            <InputText id="location" :value="borrowForm.location" maxlength="200"
 
               @input="updateBorrowForm('location', $event.target.value)" required class="corporate-input" />
 
@@ -170,7 +170,7 @@
 
             <Textarea 
 
-              id="description" 
+              id="description" maxlength="200" 
 
               :value="borrowForm.discription" 
 
@@ -342,7 +342,7 @@
 
             @click="handleDialogClose" />
 
-          <Button type="submit" label="บันทึกการแจ้งใช้รถ" icon="pi pi-check" severity="success" />
+          <Button type="submit" label="บันทึกการแจ้งใช้รถ" icon="pi pi-check" severity="success" :loading="submitting" :disabled="submitting" />
 
         </div>
 
@@ -466,7 +466,7 @@
 
             <label for="returnLocation" class="input-label">สถานที่คืนรถ *</label>
 
-            <InputText id="returnLocation" :value="returnForm.location"
+            <InputText id="returnLocation" :value="returnForm.location" maxlength="255"
 
               @input="$emit('updateReturnForm', 'location', $event.target.value)" required class="corporate-input" />
 
@@ -480,9 +480,9 @@
 
             <Textarea 
 
-              id="returnDescription" 
+              id="returnDescription" maxlength="200" 
 
-              :value="returnForm.discription || selectedBorrowDescription" 
+              :value="returnForm.discription" 
 
               @input="$emit('updateReturnForm', 'discription', $event.target.value)"
 
@@ -582,7 +582,7 @@
 
             @click="handleDialogClose" />
 
-          <Button type="submit" label="บันทึกการแจ้งคืนรถ" icon="pi pi-check" severity="success" />
+          <Button type="submit" label="บันทึกการแจ้งคืนรถ" icon="pi pi-check" severity="success" :loading="submitting" :disabled="submitting" />
 
         </div>
 
@@ -668,7 +668,13 @@
 
             </div>
 
-            <small class="field-hint cancel-hint"><i class="pi pi-exclamation-triangle"></i> ยืนยันแล้วจะแจ้งเตือนทีมงานผ่าน Teams และรายการจะถูกลบถาวร</small>
+            <label for="cancelReason" class="input-label cancel-reason-label">เหตุผลที่ยกเลิก (ไม่บังคับ)</label>
+
+            <Textarea id="cancelReason" :value="cancelForm.reason" maxlength="500" rows="2" class="corporate-input"
+              placeholder="เช่น เลื่อนนัดลูกค้า / ไม่ต้องใช้รถแล้ว"
+              @input="$emit('update-cancel-form', { field: 'reason', value: $event.target.value })" />
+
+            <small class="field-hint cancel-hint"><i class="pi pi-exclamation-triangle"></i> ยืนยันแล้วจะแจ้งเตือนทีมงานผ่าน Teams (พร้อมเหตุผล) และรายการจะถูกลบถาวร</small>
 
           </div>
 
@@ -686,7 +692,7 @@
 
             @click="handleDialogClose" />
 
-          <Button type="submit" label="ยืนยันการยกเลิก" icon="pi pi-trash" severity="danger" />
+          <Button type="submit" label="ยืนยันการยกเลิก" icon="pi pi-trash" severity="danger" :loading="submitting" :disabled="submitting" />
 
         </div>
 
@@ -716,7 +722,7 @@
 
       <div class="confirm-buttons">
 
-        <Button @click="handleConfirm" label="ยืนยัน" icon="pi pi-check" severity="success" />
+        <Button @click="handleConfirm" label="ยืนยัน" icon="pi pi-check" severity="success" :disabled="submitting" />
 
         <Button @click="showConfirm = false" label="ยกเลิก" icon="pi pi-times" severity="secondary" outlined />
 
@@ -786,7 +792,9 @@ export default {
 
     selectedBorrowProject: String,
 
-    selectedBorrowDescription: String
+    selectedBorrowDescription: String,
+
+    submitting: Boolean
 
   },
 
@@ -830,6 +838,8 @@ export default {
 
     this.$http = axios
 
+    this.previewUrlCache = new Map() // File → object URL (ไม่ reactive)
+
     await Promise.all([
 
       this.loadUsers(),
@@ -841,6 +851,12 @@ export default {
     ]);
 
     this.filteredUsers = this.users.slice(0, this.maxDisplayUsers);
+
+  },
+
+  beforeUnmount() {
+
+    this.previewUrlCache?.forEach(url => URL.revokeObjectURL(url))
 
   },
 
@@ -971,11 +987,11 @@ export default {
 
       this.$emit('updateReturnForm', 'borrowId', newVal)
 
-      if (newVal && this.selectedBorrowDescription) {
+      // ดึงข้อมูลเพิ่มเติมของ "รายการที่เพิ่งเลือก" มาใส่ให้แก้ต่อได้ — เดิมอ่านจาก prop selectedBorrowDescription
+      // ซึ่งยังเป็นค่าของรายการก่อนหน้า (prop อัปเดตรอบ render ถัดไป) ช่องนี้จึงว่าง แล้วการคืนรถเขียนทับข้อมูลตอนจองเป็นค่าว่าง
+      const borrow = (this.availableBorrows || []).find(b => b.id === newVal)
 
-        this.$emit('updateReturnForm', 'discription', this.selectedBorrowDescription)
-
-      }
+      this.$emit('updateReturnForm', 'discription', borrow?.discription || '')
 
     },
 
@@ -1081,7 +1097,10 @@ export default {
 
       if (image instanceof File) {
 
-        return URL.createObjectURL(image)
+        // สร้าง object URL ครั้งเดียวต่อไฟล์ — เดิมสร้างใหม่ทุกครั้งที่ render และไม่เคยคืนหน่วยความจำ
+        if (!this.previewUrlCache.has(image)) this.previewUrlCache.set(image, URL.createObjectURL(image))
+
+        return this.previewUrlCache.get(image)
 
       }
 
@@ -1355,6 +1374,26 @@ export default {
 
     confirmSubmit(type) {
 
+      if (this.submitting) return
+
+      const warn = (summary, detail) => this.$toast.add({ severity: 'error', summary, detail, life: 3500 })
+
+      if (type === 'borrow') {
+
+        if (!String(this.borrowForm.location || '').trim()) return warn('กรุณาระบุสถานที่', 'ระบุสถานที่ที่จะใช้รถก่อนบันทึก')
+
+        if (!this.borrowForm.task_id) return warn('กรุณาเลือกโครงการ', 'เลือกโครงการที่ใช้รถก่อนบันทึก')
+
+      }
+
+      if (type === 'return') {
+
+        if (!this.selectedReturnBorrow) return warn('กรุณาเลือกรายการ', 'เลือกการแจ้งใช้รถที่ต้องการคืนก่อนยืนยัน')
+
+        if (!String(this.returnForm.location || '').trim()) return warn('กรุณาระบุสถานที่คืนรถ', 'ระบุสถานที่ที่จอดรถคืนก่อนบันทึก')
+
+      }
+
       // Validate selected booking for cancel form
 
       if (type === 'cancel' && !this.selectedCancelBorrow) {
@@ -1492,6 +1531,8 @@ export default {
     },
 
     handleConfirm() {
+
+      if (this.submitting) return
 
       this.showConfirm = false
 
@@ -1935,6 +1976,9 @@ export default {
   font-weight: 600;
 }
 .cancel-hint i { color: #b45309; }
+.cancel-reason-label {
+  margin-top: 0.85rem;
+}
 
 
 
