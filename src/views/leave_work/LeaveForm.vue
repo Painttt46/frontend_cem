@@ -672,7 +672,12 @@ export default {
 
       // Clear dates if they're before the new minStartDate
       const minDate = this.minStartDate
-      this.calendarViewDate = new Date(minDate)
+      // เปิดปฏิทินที่เดือนปัจจุบัน (ถ้าวันแรกที่เลือกได้อยู่ในอนาคต เช่น ต้องลาล่วงหน้า ค่อยเปิดที่เดือนนั้น)
+      // เดิมเปิดที่ minStartDate — ผู้อนุมัติชั้น 2 ย้อนหลังได้ 1 ปี ปฏิทินจึงเปิดที่ "เดือนเดียวกันของปีที่แล้ว"
+      // กดวันที่ตามความเคยชินแล้วได้ใบลาผิดปี (เช่น 16 ต.ค. 2568 แทน 2569 — ใบ #286, #293, #369, #371 บน production)
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
+      this.calendarViewDate = minDate > todayStart ? new Date(minDate) : todayStart
       if (this.formData.startDate && new Date(this.formData.startDate) < minDate) {
         this.formData.startDate = null
         this.formData.startTime = null
@@ -811,6 +816,33 @@ export default {
             life: 4000
           })
           return
+        }
+      }
+
+      // วันลาย้อนหลังเกิน 30 วัน หรือคนละปีกับวันนี้ → ให้ยืนยันก่อน (กันเลือกปีผิด)
+      if (this.formData.startDateTime) {
+        const startDay = new Date(this.formData.startDateTime)
+        startDay.setHours(0, 0, 0, 0)
+        const todayDay = new Date()
+        todayDay.setHours(0, 0, 0, 0)
+        const daysBack = Math.round((todayDay - startDay) / 86400000)
+        if (daysBack > 30 || startDay.getFullYear() !== todayDay.getFullYear()) {
+          const dateText = startDay.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })
+          const confirmed = await new Promise(resolve => {
+            this.$confirm.require({
+              header: 'ตรวจสอบวันที่ลา',
+              message: daysBack > 0
+                ? `วันเริ่มลาคือ ${dateText} (ย้อนหลัง ${daysBack} วัน) — ถูกต้องหรือไม่?`
+                : `วันเริ่มลาคือ ${dateText} (คนละปีกับปีนี้) — ถูกต้องหรือไม่?`,
+              icon: 'pi pi-exclamation-triangle',
+              acceptLabel: 'ถูกต้อง ส่งคำขอ',
+              rejectLabel: 'กลับไปแก้วันที่',
+              accept: () => resolve(true),
+              reject: () => resolve(false),
+              onHide: () => resolve(false)
+            })
+          })
+          if (!confirmed) return
         }
       }
 

@@ -202,10 +202,10 @@
             </div>
           </template>
         </Column>
-        <Column header="ลบ/คืนโควต้า" style="width: 250px;">
+        <Column header="ยกเลิก/คืนโควต้า" style="width: 250px;">
           <template #body="slotProps">
             <div v-if="canHrResetQuota(slotProps.data)" class="hr-action-row">
-              <Button icon="pi pi-undo" label="ลบ/คืนโควต้า" size="small" severity="danger" outlined
+              <Button icon="pi pi-undo" label="ยกเลิก/คืนโควต้า" size="small" severity="danger" outlined
                 class="action-btn hr-reset-btn" @click="confirmHrReset(slotProps.data)" />
             </div>
           </template>
@@ -801,18 +801,20 @@ export default {
 
     canHrResetQuota(record) {
       if (!this.isLevel2Approver || !record) return false
-      // ให้ Level 2 Approver จัดการเฉพาะคำขอที่เคยอนุมัติแล้วหรืออยู่ระหว่างกระบวนการยกเลิก
-      return ['approved', 'cancel', 'cancelled', 'pending_level2'].includes(record.status)
+      // ให้ Level 2 Approver จัดการเฉพาะคำขอที่เคยอนุมัติแล้วหรืออยู่ระหว่างกระบวนการยกเลิก (ใบที่ยกเลิกแล้วไม่ต้องมีปุ่ม)
+      return ['approved', 'cancel', 'pending_level2'].includes(record.status)
     },
 
     confirmHrReset(record) {
       this.$confirm.require({
-        message: `คุณต้องการลบคำขอนี้และคืนโควต้าการลาหรือไม่?\n\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nช่วงวันที่ลา: ${this.formatDateTime(record.start_datetime)} - ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${formatLeaveDays(record.total_days)} วัน (${this.calculateHours(record)} ชม.)`,
-        header: 'ยืนยันลบและคืนโควต้า (HR)',
+        // ระบุชื่อพนักงานให้ชัด + ใบจะยังอยู่ในประวัติ (สถานะ "ยกเลิกแล้ว") — เดิมเป็นการลบถาวร
+        // และปุ่มปิดเดิมชื่อ "ยกเลิก" ซ้ำกับการกระทำ ทำให้สับสนว่ากดปุ่มไหนคือยืนยัน
+        message: `ยกเลิกใบลานี้และคืนโควต้าที่ตัดไปแล้วหรือไม่?\nใบลาจะยังอยู่ในประวัติ โดยเปลี่ยนสถานะเป็น "ยกเลิกแล้ว"\n\nพนักงาน: ${record.employee_name || '-'}\nประเภท: ${this.getLeaveTypeLabel(record.leave_type)}\nช่วงวันที่ลา: ${this.formatDateTime(record.start_datetime)} - ${this.formatDateTime(record.end_datetime)}\nจำนวน: ${formatLeaveDays(record.total_days)} วัน (${this.calculateHours(record)} ชม.)`,
+        header: 'ยืนยันยกเลิกใบลาและคืนโควต้า (HR)',
         icon: 'pi pi-exclamation-triangle',
         acceptClass: 'p-button-danger',
-        acceptLabel: 'ลบและคืนโควต้า',
-        rejectLabel: 'ยกเลิก',
+        acceptLabel: 'ยกเลิกใบลาและคืนโควต้า',
+        rejectLabel: 'ปิด',
         accept: () => this.hrResetQuota(record)
       })
     },
@@ -829,12 +831,12 @@ export default {
           return
         }
 
-        await this.$http.delete(`/api/leave/${record.id}/admin-reset`)
+        const { data } = await this.$http.delete(`/api/leave/${record.id}/admin-reset`)
 
         this.$toast.add({
           severity: 'success',
           summary: 'สำเร็จ',
-          detail: 'ลบคำขอและคืนโควต้าการลาเรียบร้อยแล้ว',
+          detail: data?.message || 'ยกเลิกใบลาและคืนโควต้าเรียบร้อยแล้ว',
           life: 3000
         })
 
