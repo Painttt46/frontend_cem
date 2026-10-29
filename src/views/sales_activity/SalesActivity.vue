@@ -92,8 +92,9 @@
           <span class="visit-type-label">{{ getVisitTypeLabel(visit.visit_type) }}</span>
           <div class="visit-actions" @click.stop>
             <Button v-if="visit.next_visit_date" icon="pi pi-calendar-plus" v-tooltip.top="'สร้างนัดถัดไปจากวันนัดหมายที่ตั้งไว้'" @click="openNextVisitDialog(visit)" text size="small" />
-            <Button icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditDialog(visit)" text size="small" />
-            <Button icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteVisit(visit)" text severity="danger" size="small" />
+            <Button v-if="canEdit(visit)" icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditDialog(visit)" text size="small" />
+            <Button v-if="canEdit(visit)" icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteVisit(visit)" text severity="danger" size="small" />
+            <span v-else class="visit-tag tag-team" v-tooltip.top="'คุณอยู่ในทีมที่ไปเข้าพบ — แก้ไขได้เฉพาะผู้สร้าง'"><i class="pi pi-users"></i> ร่วมทีม</span>
           </div>
         </div>
       </div>
@@ -322,7 +323,7 @@
       </div>
       <template #footer>
         <Button label="ยกเลิก" @click="showCustomerDialog = false" class="btn-cancel" text />
-        <Button :label="customerDialogMode === 'edit' ? 'บันทึก' : 'สร้างลูกค้า'" icon="pi pi-check" @click="saveCustomer" :disabled="!newCustomer.company_name" class="btn-confirm" />
+        <Button :label="customerDialogMode === 'edit' ? 'บันทึก' : 'สร้างลูกค้า'" icon="pi pi-check" @click="saveCustomer" :disabled="!newCustomer.company_name || savingCustomer" :loading="savingCustomer" class="btn-confirm" />
       </template>
     </Dialog>
 
@@ -434,7 +435,7 @@ export default {
   data() {
     return {
       visits: [], customers: [], tasks: [], users: [],
-      loading: false, saving: false, gettingLocation: false,
+      loading: false, saving: false, savingCustomer: false, gettingLocation: false,
       searchQuery: '', filterStatus: null, filterType: null, filterDateRange: null,
       filterUserId: null, userRole: '', dataScope: 'year',
       dataScopeOptions: [
@@ -549,7 +550,14 @@ export default {
         this.customers = customersRes.data
         this.tasks = tasksRes.data.map(t => ({ ...t, display_name: `${t.so_number ? '[' + t.so_number + '] ' : ''}${t.task_name}` }))
         this.users = usersRes.data.map(u => ({ id: u.id, name: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`, position: u.position }))
-      } catch (e) { console.error(e) } finally { this.loading = false }
+      } catch (e) {
+        // เดิมเงียบ (แค่ console) — ผู้ใช้เห็นหน้าว่างเหมือนไม่มีข้อมูล
+        this.$toast.add({ severity: 'error', summary: 'โหลดข้อมูลไม่สำเร็จ', detail: e.response?.data?.error || e.userMessage || 'กรุณารีเฟรชหน้าเว็บ', life: 5000 })
+      } finally { this.loading = false }
+    },
+    // แก้ไข/ลบได้เฉพาะผู้สร้างรายการ หรือผู้มีสิทธิ์ดูแลกิจกรรมของทุกคน (ตรงกับที่ backend ตรวจ)
+    canEdit(visit) {
+      return this.isAdmin || String(visit.created_by) === String(localStorage.getItem('soc_user_id') || '')
     },
     // จำกัดปริมาณข้อมูลที่โหลดจาก server ตามช่วงเวลาที่เลือก (แทนการโหลดทั้งหมดทุกครั้ง)
     buildScopeParams() {
@@ -702,7 +710,8 @@ export default {
       this.showCustomerDialog = true
     },
     async saveCustomer() {
-      if (!this.newCustomer.company_name) return
+      if (!this.newCustomer.company_name || this.savingCustomer) return
+      this.savingCustomer = true
       try {
         if (this.customerDialogMode === 'edit') {
           const res = await axios.put(`/api/sales-visits/customers/${this.form.customer_id}`, this.newCustomer)
@@ -717,7 +726,18 @@ export default {
         }
         this.showCustomerDialog = false
       } catch (e) {
-        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกลูกค้าได้', life: 3000 })
+        const existing = e.response?.status === 409 ? e.response.data?.existing : null
+        if (existing && this.customerDialogMode === 'create') {
+          // ชื่อซ้ำกับลูกค้าที่มีอยู่ → เลือกรายเดิมให้แทนการสร้างซ้ำ
+          if (!this.customers.some(c => c.id === existing.id)) this.customers.push(existing)
+          this.form.customer_id = existing.id
+          this.showCustomerDialog = false
+          this.$toast.add({ severity: 'info', summary: 'มีลูกค้านี้อยู่แล้ว', detail: `เลือก "${existing.company_name}" ให้แทนการสร้างซ้ำ`, life: 4000 })
+        } else {
+          this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกลูกค้าได้', life: 4000 })
+        }
+      } finally {
+        this.savingCustomer = false
       }
     },
     deleteVisit(visit) {

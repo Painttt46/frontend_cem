@@ -217,7 +217,8 @@
               </div>
             </div>
             <div class="teams-toggle">
-              <Checkbox v-model="entry.createTeamsMeeting" :inputId="'teams_' + idx" :binary="true" />
+              <Checkbox v-model="entry.createTeamsMeeting" :inputId="'teams_' + idx" :binary="true"
+                @update:modelValue="v => { if (v) entry.createCalendarEvent = true }" />
               <label :for="'teams_' + idx" class="teams-label"><i class="pi pi-video"></i> สร้าง MS Teams Meeting</label>
             </div>
             <div v-if="entry.createTeamsMeeting" class="meeting-time-grid">
@@ -739,7 +740,7 @@ export default {
             files: uploadedFiles,
             user_id: userId,
             submitted_at: submittedAt,
-            create_calendar_event: entry.createCalendarEvent && !!entry.eventTitle,
+            create_calendar_event: (entry.createCalendarEvent || entry.createTeamsMeeting) && !!entry.eventTitle,
             event_title: entry.eventTitle || '',
             event_details: eventDetails,
             create_teams_meeting: entry.createTeamsMeeting || false,
@@ -754,6 +755,21 @@ export default {
 
         const results = settled.flatMap(r => r.status === 'fulfilled' ? r.value : [r])
         const failures = results.filter(r => r.status === 'rejected')
+        const calendarIssues = results
+          .filter(r => r.status === 'fulfilled')
+          .map(r => r.value?.data?.calendar_event)
+          .filter(c => c && (!c.created || c.warning))
+        if (calendarIssues.length > 0) {
+          const failed = calendarIssues.filter(c => !c.created)
+          this.$toast.add({
+            severity: 'warn',
+            summary: failed.length
+              ? `บันทึกงานแล้ว แต่สร้างนัด Calendar/Teams ไม่สำเร็จ ${failed.length} รายการ`
+              : 'บันทึกงานและสร้างนัดแล้ว แต่มีข้อสังเกต',
+            detail: (failed[0] || calendarIssues[0]).error || (failed[0] || calendarIssues[0]).warning,
+            life: 12000
+          })
+        }
 
         const dateText = this.formData.useDateRange 
           ? `${datesToSubmit.length} วัน` 
