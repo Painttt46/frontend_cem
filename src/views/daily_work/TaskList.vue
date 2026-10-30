@@ -448,6 +448,32 @@
           <label class="input-label">เลข SO (Project)</label>
           <InputText v-model="editFormData.so_number" class="corporate-input" />
         </div>
+
+        <div class="input-group full-width">
+          <label class="input-label">สถานะปัจจุบันของโครงการ</label>
+          <Dropdown v-model="currentStatusModel" :options="currentStatusOptions" optionLabel="label" optionValue="key"
+            :placeholder="currentStatusOptions.length ? 'เลือกสถานะ' : 'ยังไม่มี Workflow Step ที่ตั้งสถานะโครงการไว้'"
+            :disabled="!currentStatusOptions.length" class="corporate-input w-full">
+            <template #value="{ value, placeholder }">
+              <span v-if="statusOptionByKey(value)" class="current-status-value">
+                <Badge v-for="ps in statusOptionByKey(value).statuses" :key="ps" :value="getProjectStatusLabel(ps)"
+                  :style="{ backgroundColor: $accessibleBg(getProjectStatusColor(ps)), color: '#fff' }" />
+                <span class="current-status-step">{{ statusOptionByKey(value).stepText }}</span>
+              </span>
+              <span v-else>{{ placeholder }}</span>
+            </template>
+            <template #option="{ option }">
+              <span class="current-status-value">
+                <Badge v-for="ps in option.statuses" :key="ps" :value="getProjectStatusLabel(ps)"
+                  :style="{ backgroundColor: $accessibleBg(getProjectStatusColor(ps)), color: '#fff' }" />
+                <span class="current-status-step">{{ option.stepText }}</span>
+              </span>
+            </template>
+          </Dropdown>
+          <small class="current-status-hint">
+            เลือกจากสถานะที่ตั้งไว้ใน Workflow Steps ด้านล่าง เพื่อตั้งสถานะ ณ ตอนนี้ — ถ้าภายหลังมีการลงงานใน step อื่น สถานะจะเปลี่ยนตาม workflow อัตโนมัติ
+          </small>
+        </div>
         
         <div class="input-group">
           <label class="input-label">เลขที่สัญญา</label>
@@ -661,6 +687,7 @@ export default {
         { label: 'วันที่เก่าสุด', value: 'date_asc' },
         { label: 'สถานะ', value: 'status' }
       ],
+      manualStatusKey: null, // สถานะปัจจุบันที่ผู้ใช้เลือกเองในหน้าต่างแก้ไข (null = ไม่ได้เลือก)
       editFormData: {
         id: null,
         task_name: '',
@@ -694,6 +721,28 @@ export default {
     }
   },
   computed: {
+    // ตัวเลือก "สถานะปัจจุบันของโครงการ" = step ในหน้าต่างแก้ไขที่ตั้งสถานะโครงการไว้ (step ใหม่ที่ยังไม่บันทึกก็เลือกได้)
+    currentStatusOptions() {
+      return (this.editFormData.steps || [])
+        .map((s, i) => ({ s, i }))
+        .filter(({ s }) => Array.isArray(s.project_statuses) && s.project_statuses.length > 0)
+        .map(({ s, i }) => ({
+          key: this.stepKey(s, i),
+          statuses: s.project_statuses,
+          stepText: `Step ${i + 1}: ${s.step_name || 'ไม่มีชื่อ'}`,
+          label: `${s.project_statuses.map(ps => this.getProjectStatusLabel(ps)).join(', ')} — Step ${i + 1}: ${s.step_name || ''}`
+        }))
+    },
+    // ค่าเริ่มต้น = step ที่กำหนดสถานะปัจจุบันอยู่ (สูตรเดียวกับคอลัมน์สถานะ) จนกว่าผู้ใช้จะเลือกเอง
+    currentStatusModel: {
+      get() {
+        if (this.manualStatusKey && this.currentStatusOptions.some(o => o.key === this.manualStatusKey)) return this.manualStatusKey
+        const steps = this.editFormData.steps || []
+        const cur = this.getCurrentStatusStep(steps)
+        return cur ? this.stepKey(cur, steps.indexOf(cur)) : null
+      },
+      set(v) { this.manualStatusKey = v }
+    },
     // แยกคำอธิบายเป็นข้อความ/ลิงก์ เพื่อให้ URL กดเปิดได้ โดยไม่ต้องใช้ v-html (รับเฉพาะ http/https)
     descriptionParts() {
       const text = this.selectedTask?.description || ''
@@ -924,33 +973,38 @@ export default {
       }
       return accessibleBg(status?.color || '#9e9e9e')
     },
+    // สถานะปัจจุบันของโครงการ = สถานะของ step ที่ "มีความเคลื่อนไหวล่าสุด" ในบรรดา step ที่ตั้งสถานะไว้
+    //   ความเคลื่อนไหว = เวลาที่แก้สถานะ step นั้นล่าสุด (project_status_updated_at) หรือวันที่ลงงานล่าสุดของ step (ไม่เกินวันนี้)
+    // เดิม: ดูเฉพาะ step ที่มีการลงงาน แล้วเลือกตาม updated_at — แต่การกดบันทึกหน้าแก้ไขโครงการอัปเดต updated_at ของทุก step
+    // สถานะที่เพิ่งแก้จึงไม่ขึ้น (ได้ step สุดท้ายในรายการแทน) และ step ที่ยังไม่มีการลงงานแก้สถานะเท่าไรก็ไม่แสดง
     getLatestProjectStatuses(task) {
-      if (!task.steps || task.steps.length === 0) return []
+      const step = this.getCurrentStatusStep(task.steps || [])
+      return step ? step.project_statuses : []
+    },
+    stepKey(step, index) {
+      return step.id ? String(step.id) : `new-${index}`
+    },
+    statusOptionByKey(key) {
+      return this.currentStatusOptions.find(o => o.key === key) || null
+    },
+    getCurrentStatusStep(steps) {
+      if (!steps || steps.length === 0) return null
       const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      
-      // หา step ที่มีการลงงานจริง และวันที่ลงงานไม่เกินวันนี้
-      const workingSteps = task.steps.filter(s => {
-        if (!s.has_work_logged) return false
-        // รองรับทั้ง project_statuses (array) และ project_status (single)
-        const hasStatus = (s.project_statuses && s.project_statuses.length > 0) || s.project_status
-        if (!hasStatus) return false
-        if (s.latest_work_date) {
-          const workDate = new Date(s.latest_work_date)
-          workDate.setHours(0, 0, 0, 0)
-          return workDate <= today
-        }
-        return true
-      })
-      
-      if (workingSteps.length === 0) return []
-      const latestStep = workingSteps.sort((a, b) => 
-        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
-      )[0]
-      if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
-        return latestStep.project_statuses
-      }
-      return []
+      today.setHours(23, 59, 59, 999)
+      const toTime = v => { const t = v ? new Date(v).getTime() : NaN; return Number.isFinite(t) ? t : 0 }
+
+      const candidates = steps
+        .filter(s => Array.isArray(s.project_statuses) && s.project_statuses.length > 0)
+        .map(s => {
+          const editedAt = toTime(s.project_status_updated_at)
+          const workedAt = s.has_work_logged && toTime(s.latest_work_date) <= today.getTime() ? toTime(s.latest_work_date) : 0
+          return { step: s, activity: Math.max(editedAt, workedAt) }
+        })
+        .filter(c => c.activity > 0)
+
+      if (candidates.length === 0) return null
+      candidates.sort((x, y) => (y.activity - x.activity) || ((y.step.step_order ?? 0) - (x.step.step_order ?? 0)))
+      return candidates[0].step
     },
     getProjectStatusLabel(status) {
       const found = this.workStatuses.find(s => s.value === status)
@@ -1194,6 +1248,7 @@ export default {
         newFiles: [],
         steps: []
       }
+      this.manualStatusKey = null
       this.editDialog = true
     },
     handleEditFileUpload(event) {
@@ -1267,12 +1322,18 @@ export default {
         
         // Update or create steps
         if (this.editFormData.steps && this.editFormData.steps.length > 0) {
-          for (const step of this.editFormData.steps) {
+          // step ที่ผู้ใช้เลือกเป็น "สถานะปัจจุบัน" บันทึกเป็นตัวสุดท้าย เพื่อให้เวลาตั้งสถานะใหม่สุด
+          const markKey = this.manualStatusKey
+          const ordered = this.editFormData.steps
+            .map((s, i) => ({ s, isMarked: !!markKey && this.stepKey(s, i) === markKey }))
+            .sort((a, b) => Number(a.isMarked) - Number(b.isMarked))
+          for (const { s: step, isMarked } of ordered) {
             const stepData = {
               ...step,
               task_id: this.editFormData.id,
               start_date: formatDate(step.start_date),
-              end_date: formatDate(step.end_date)
+              end_date: formatDate(step.end_date),
+              mark_current_status: isMarked
             }
             if (step.id && existingIds.includes(step.id)) {
               // Update existing
@@ -1439,6 +1500,22 @@ export default {
 </script>
 
 <style scoped>
+.current-status-value {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.current-status-step {
+  color: #475569;
+  font-size: max(0.85rem, var(--min-fs));
+}
+.current-status-hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: #526074;
+  font-size: max(0.75rem, var(--min-fs));
+}
 :deep(.p-dropdown-clear-icon) { margin-right: 1.2rem; }
 .history-card {
   width: 100%;

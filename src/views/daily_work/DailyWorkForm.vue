@@ -12,6 +12,15 @@
           </div>
         </div>
         
+        <div v-if="entryWindow && entryWindow.message" class="entry-window-msg" :class="'entry-' + entryWindow.phase" role="alert">
+          <i :class="entryWindow.phase === 'locked' ? 'pi pi-lock' : 'pi pi-info-circle'"></i>
+          <span>{{ entryWindow.message }}</span>
+        </div>
+        <div v-else-if="entryWindow && !entryWindow.exempt" class="entry-window-hint">
+          <i class="pi pi-clock"></i>
+          <span>ลงงานได้ตั้งแต่วันนี้เป็นต้นไป (ห้ามลงย้อนหลัง) — รายการแรกของแต่ละวันต้องลงก่อน {{ entryWindow.cutoff }} น.</span>
+        </div>
+
         <div v-if="!formData.useDateRange" class="single-date">
           <Calendar id="workDate" v-model="formData.workDate" dateFormat="dd/mm/yy" class="w-full" :minDate="minDate" required />
         </div>
@@ -253,7 +262,7 @@
       <!-- Actions -->
       <div class="form-actions">
         <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined @click="resetForm" />
-        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" :disabled="isSubmitting" :loading="isSubmitting" />
+        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" :disabled="isSubmitting || entryLocked" :loading="isSubmitting" />
       </div>
     </form>
   </div>
@@ -270,6 +279,7 @@ import AutoComplete from 'primevue/autocomplete'
 import { isValidTimeRange } from '@/utils/validation'
 import { isActive } from '@/utils/statusHelper'
 import { accessibleBg } from '@/utils/color'
+import { fetchEntryWindow, entryMinDate } from '@/utils/entryWindow'
 
 export default {
   name: 'DailyWorkForm',
@@ -292,8 +302,8 @@ export default {
         startTime: null, endTime: null, attendees: [], selectedAttendee: null,
         filteredAttendees: []
       }],
-      // ลงงานย้อนหลังได้สูงสุด 5 วัน (วันนี้ + ย้อนไป 5 วัน)
-      minDate: (() => { const d = new Date(); d.setDate(d.getDate() - 5); return d; })(),
+      // กติกาเวลาลงงานจาก server (ห้ามย้อนหลัง / รายการแรกก่อน 10:00) — ดู utils/entryWindow.js
+      entryWindow: null,
       formData: { 
         workDate: new Date(),
         useDateRange: false,
@@ -305,6 +315,14 @@ export default {
     }
   },
   computed: {
+    // วันแรกที่เลือกได้: วันนี้ (ห้ามย้อนหลัง) หรือพรุ่งนี้ถ้าถูกปิดลงงานของวันนี้ — admin/superadmin ไม่จำกัด
+    minDate() {
+      return entryMinDate(this.entryWindow)
+    },
+    // 10:00–18:00 ของวันที่ไม่ได้ลงรายการแรกก่อน 10:00 → ลงงานไม่ได้เลย
+    entryLocked() {
+      return this.entryWindow?.phase === 'locked'
+    },
     dateRangeDays() {
       if (!this.formData.useDateRange || !this.formData.startDate || !this.formData.endDate) return 0
       const start = new Date(this.formData.startDate)
@@ -323,6 +341,7 @@ export default {
     }
   },
   async mounted() {
+    this.loadEntryWindow()
     await this.loadTasks()
     await this.loadUsers()
     // ตั้งค่าเริ่มต้นเวลาปัจจุบัน
@@ -334,6 +353,15 @@ export default {
     }
   },
   methods: {
+    async loadEntryWindow() {
+      this.entryWindow = await fetchEntryWindow('/api/daily-work/entry-window')
+      // วันที่ตั้งต้น (วันนี้) เลือกไม่ได้แล้ว (เช่น หลัง 18:00 ของวันที่ถูกปิด) → เลื่อนเป็นวันแรกที่ลงได้
+      const min = this.minDate
+      if (!min) return
+      for (const key of ['workDate', 'startDate', 'endDate']) {
+        if (this.formData[key] && new Date(this.formData[key]).setHours(0, 0, 0, 0) < min.getTime()) this.formData[key] = new Date(min)
+      }
+    },
     async loadTasks() {
       try {
         const userId = localStorage.getItem('soc_user_id')
@@ -647,6 +675,23 @@ export default {
         }
       }
 
+      // ห้ามลงย้อนหลัง / ถูกปิดลงงาน (backend ตรวจซ้ำอีกชั้น)
+      if (this.entryLocked) {
+        this.$toast.add({ severity: 'error', summary: 'ปิดการลงงานชั่วคราว', detail: this.entryWindow.message, life: 8000 })
+        this.isSubmitting = false
+        return
+      }
+      const firstDate = this.formData.useDateRange ? this.formData.startDate : this.formData.workDate
+      if (this.minDate && new Date(firstDate).setHours(0, 0, 0, 0) < this.minDate.getTime()) {
+        this.$toast.add({
+          severity: 'error', summary: 'เลือกวันที่ไม่ได้',
+          detail: this.entryWindow?.message || 'ห้ามลงงานย้อนหลัง — ลงงานได้ตั้งแต่วันนี้เป็นต้นไป',
+          life: 8000
+        })
+        this.isSubmitting = false
+        return
+      }
+
       const validEntries = this.taskEntries.filter(e => e.taskId)
       if (validEntries.length === 0) {
         this.$toast.add({ severity: 'error', summary: 'ข้อผิดพลาด', detail: 'กรุณาเลือกโครงการอย่างน้อย 1 รายการ', life: 3000 })
@@ -775,6 +820,18 @@ export default {
           ? `${datesToSubmit.length} วัน` 
           : '1 วัน'
 
+        if (failures.length > 0 && failures.length === results.length) {
+          // ไม่สำเร็จเลย (เช่น ถูกปิดลงงาน / ห้ามย้อนหลัง) → แจ้งเหตุผลแล้วคงฟอร์มไว้ ไม่ปิดหน้าต่าง
+          const firstErr = failures[0].reason
+          this.$toast.add({
+            severity: 'error',
+            summary: 'บันทึกงานไม่สำเร็จ',
+            detail: firstErr?.response?.data?.error || firstErr?.userMessage || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง',
+            life: 10000
+          })
+          if (firstErr?.response?.data?.code === 'ENTRY_WINDOW') this.loadEntryWindow()
+          return
+        }
         if (failures.length > 0) {
           const firstErr = failures[0].reason
           this.$toast.add({
@@ -842,6 +899,37 @@ export default {
 /* ── Date Section ── */
 .date-section {
   margin-bottom: 1.5rem;
+}
+
+/* กติกาเวลาลงงาน */
+.entry-window-msg,
+.entry-window-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  margin-bottom: 0.85rem;
+  border-radius: 8px;
+  border: 1px solid;
+  font-size: max(0.875rem, var(--min-fs));
+  line-height: 1.5;
+}
+.entry-window-msg i,
+.entry-window-hint i { margin-top: 0.2rem; }
+.entry-window-msg.entry-locked {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #991b1b;
+}
+.entry-window-msg.entry-future_only {
+  background: #fffbeb;
+  border-color: #d97706;
+  color: #92400e;
+}
+.entry-window-hint {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
 }
 
 .date-header {

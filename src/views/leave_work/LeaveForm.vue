@@ -56,7 +56,7 @@
             <label for="startDateTime" class="input-label">วันเวลาเริ่มลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.startDate" dateFormat="dd/mm/yy"
-                :key="'start-' + formData.leaveType"
+                :key="'start-' + formData.leaveType" :disabled="!formData.leaveType"
                 class="corporate-input date-only advance-calendar" :manualInput="false" required
                 :minDate="minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" placeholder="เลือกวันที่"
                 :viewDate="formData.startDate || calendarViewDate"
@@ -68,7 +68,7 @@
                 </template>
               </Calendar>
               <Dropdown v-model="formData.startTime" :options="allowedTimes" optionLabel="label" optionValue="value"
-                class="corporate-input time-dropdown" placeholder="เวลา" @change="updateStartDateTime" />
+                class="corporate-input time-dropdown" placeholder="เวลา" :disabled="!formData.leaveType" @change="updateStartDateTime" />
             </div>
             <small class="time-hint">เวลาทำการ: {{ workHours.start_time }}-{{ workHours.lunch_start }}, {{ workHours.lunch_end }}-{{ workHours.end_time }}</small>
           </div>
@@ -77,7 +77,7 @@
             <label for="endDateTime" class="input-label">วันเวลาสิ้นสุดการลา *</label>
             <div class="datetime-picker">
               <Calendar v-model="formData.endDate" dateFormat="dd/mm/yy"
-                :key="'end-' + formData.leaveType"
+                :key="'end-' + formData.leaveType" :disabled="!formData.leaveType"
                 :minDate="formData.startDate || minStartDate" :disabledDates="disabledDates" :disabledDays="disabledDays" class="corporate-input date-only advance-calendar" :manualInput="false" required
                 placeholder="เลือกวันที่"
                 :viewDate="formData.endDate || formData.startDate || calendarViewDate"
@@ -89,7 +89,7 @@
                 </template>
               </Calendar>
               <Dropdown v-model="formData.endTime" :options="allowedTimes" optionLabel="label" optionValue="value"
-                class="corporate-input time-dropdown" placeholder="เวลา" @change="updateEndDateTime" />
+                class="corporate-input time-dropdown" placeholder="เวลา" :disabled="!formData.leaveType" @change="updateEndDateTime" />
             </div>
             <small class="time-hint">เวลาทำการ: {{ workHours.start_time }}-{{ workHours.lunch_start }}, {{ workHours.lunch_end }}-{{ workHours.end_time }}</small>
           </div>
@@ -98,18 +98,30 @@
           <div class="input-group full-width">
             <label class="input-label">ลาแบบด่วน</label>
             <div class="quick-leave-buttons">
-              <Button type="button" :label="`ลาครึ่งวันเช้า (${workHours.start_time}-${workHours.lunch_start})`" 
-                :severity="formData.quickLeave === 'half_morning' ? 'success' : 'secondary'" 
-                :outlined="formData.quickLeave !== 'half_morning'"
+              <Button type="button" :label="`ลาครึ่งวันเช้า (${workHours.start_time}-${workHours.lunch_start})`"
+                :severity="quickLeaveMode === 'half_morning' ? 'success' : 'secondary'"
+                :outlined="quickLeaveMode !== 'half_morning'" :disabled="!formData.leaveType"
                 @click="setQuickLeave('half_morning')" size="small" />
-              <Button type="button" :label="`ลาครึ่งวันบ่าย (${workHours.lunch_end}-${workHours.end_time})`" 
-                :severity="formData.quickLeave === 'half_afternoon' ? 'success' : 'secondary'" 
-                :outlined="formData.quickLeave !== 'half_afternoon'"
+              <Button type="button" :label="`ลาครึ่งวันบ่าย (${workHours.lunch_end}-${workHours.end_time})`"
+                :severity="quickLeaveMode === 'half_afternoon' ? 'success' : 'secondary'"
+                :outlined="quickLeaveMode !== 'half_afternoon'" :disabled="!formData.leaveType"
                 @click="setQuickLeave('half_afternoon')" size="small" />
-              <Button type="button" :label="`ลาเต็มวัน (${workHours.start_time}-${workHours.end_time})`" 
-                :severity="formData.quickLeave === 'full' ? 'success' : 'secondary'" 
-                :outlined="formData.quickLeave !== 'full'"
+              <Button type="button" :label="`ลาเต็มวัน (${workHours.start_time}-${workHours.end_time})`"
+                :severity="quickLeaveMode === 'full' ? 'success' : 'secondary'"
+                :outlined="quickLeaveMode !== 'full'" :disabled="!formData.leaveType"
                 @click="setQuickLeave('full')" size="small" />
+            </div>
+            <small v-if="!formData.leaveType" class="quick-leave-hint">
+              <i class="pi pi-info-circle"></i> เลือกประเภทการลาก่อน จึงจะเลือกวันที่/กดลาแบบด่วนได้
+            </small>
+            <small v-else-if="!formData.startDate" class="quick-leave-hint">
+              <i class="pi pi-info-circle"></i>
+              {{ todayBlockedReason() ? `ยังไม่ได้เลือกวันที่ — ${todayBlockedReason()} จึงต้องเลือกวันที่ก่อนกดลาแบบด่วน` : 'ยังไม่ได้เลือกวันที่ — กดปุ่มลาแบบด่วนจะใช้วันนี้' }}
+            </small>
+            <div v-if="leaveSummary" class="leave-summary">
+              <i class="pi pi-calendar"></i>
+              <span>{{ leaveSummary.text }}</span>
+              <span v-if="leaveSummary.daysBack > 0" class="leave-summary-back">(ย้อนหลัง {{ leaveSummary.daysBack }} วัน)</span>
             </div>
           </div>
 
@@ -213,7 +225,7 @@
         <div class="form-actions">
           <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined
             @click="resetForm" />
-          <Button type="submit" label="ส่งคำขอลางาน" icon="pi pi-check" severity="success" :loading="submitting" :disabled="submitting" />
+          <Button type="submit" label="ส่งคำขอลางาน" icon="pi pi-check" severity="success" :loading="submitting" :disabled="submitting || !formData.leaveType" />
         </div>
       </form>
     </template>
@@ -290,7 +302,16 @@ export default {
     }
   },
   watch: {
-    'formData.startDate'() {
+    // เปลี่ยนวันเริ่ม: ลาวันเดียว (หรือยังไม่มีวันสิ้นสุด/วันสิ้นสุดอยู่ก่อนวันเริ่มใหม่) → วันสิ้นสุดขยับตาม
+    // ลาหลายวันที่วันเริ่มใหม่ยังไม่เลยวันสิ้นสุด → คงวันสิ้นสุดไว้
+    // (เดิมวันสิ้นสุดค้างที่วันเก่า เช่น กดลาเต็มวัน 3 พ.ย. แล้วเปลี่ยนวันเริ่มเป็น 2 พ.ย. → กลายเป็นลา 2 วัน)
+    'formData.startDate'(newStart, oldStart) {
+      if (newStart) {
+        const end = this.formData.endDate
+        if (!end || this.isSameDay(end, oldStart) || this.dayStart(end) < this.dayStart(newStart)) {
+          this.formData.endDate = new Date(newStart)
+        }
+      }
       this.updateStartDateTime()
     },
     'formData.endDate'() {
@@ -319,6 +340,32 @@ export default {
       if (!this.formData.leaveType || this.formData.leaveType === 'sick' || this.formData.leaveType === 'ลาป่วย') return 0
       const type = this.leaveTypes.find(t => t.value === this.formData.leaveType)
       return type?.advance_days || 0
+    },
+    // ปุ่มลาด่วนที่ตรงกับวัน/เวลาที่เลือกอยู่จริง (แก้เวลาเองแล้วไฮไลต์หายตาม)
+    quickLeaveMode() {
+      const { startDate, endDate, startTime, endTime } = this.formData
+      if (!startDate || !endDate || !startTime || !endTime) return null
+      const w = this.workHours
+      const single = this.isSameDay(startDate, endDate)
+      if (startTime === w.start_time && endTime === w.end_time) return 'full'
+      if (single && startTime === w.start_time && endTime === w.lunch_start) return 'half_morning'
+      if (single && startTime === w.lunch_end && endTime === w.end_time) return 'half_afternoon'
+      return null
+    },
+    // สรุปวันลาใต้ปุ่มลาด่วน — ให้เห็นวันที่ชัด ๆ ก่อนส่ง (ย้อนหลังแสดงเป็นสีส้ม)
+    leaveSummary() {
+      const s = this.formData.startDateTime
+      const e = this.formData.endDateTime
+      if (!s || !e) return null
+      const fmtD = d => new Date(d).toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+      const fmtT = d => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+      const range = this.isSameDay(s, e)
+        ? `${fmtD(s)} ${fmtT(s)}–${fmtT(e)}`
+        : `${fmtD(s)} ${fmtT(s)} – ${fmtD(e)} ${fmtT(e)}`
+      const typeLabel = this.leaveTypes.find(t => t.value === this.formData.leaveType)?.label
+      const modeLabel = { full: 'เต็มวัน', half_morning: 'ครึ่งวันเช้า', half_afternoon: 'ครึ่งวันบ่าย' }[this.quickLeaveMode]
+      const daysBack = Math.round((this.dayStart(new Date()) - this.dayStart(s)) / 86400000)
+      return { text: [typeLabel, modeLabel, range, this.calculateDays].filter(Boolean).join(' · '), daysBack }
     },
     minStartDate() {
       // ถ้าเป็นผู้อนุมัติขั้นที่ 2 สามารถเลือกวันย้อนหลังได้
@@ -440,6 +487,26 @@ export default {
     }
   },
   methods: {
+    dayStart(d) {
+      const x = new Date(d)
+      x.setHours(0, 0, 0, 0)
+      return x.getTime()
+    },
+    isSameDay(a, b) {
+      return !!a && !!b && this.dayStart(a) === this.dayStart(b)
+    },
+    // วันนี้ลาด้วยประเภทที่เลือกได้ไหม — คืนเหตุผลที่ลาไม่ได้ หรือ null
+    todayBlockedReason() {
+      const today = this.dayStart(new Date())
+      if (today < this.dayStart(this.minStartDate)) {
+        const type = this.leaveTypes.find(t => t.value === this.formData.leaveType)
+        return `${type?.label || 'ประเภทนี้'}ต้องลาล่วงหน้าอย่างน้อย ${this.selectedLeaveTypeAdvanceDays} วันทำการ (เริ่มลาได้ตั้งแต่ ${this.formatMinDate})`
+      }
+      const blockedDay = this.disabledDays.includes(new Date(today).getDay())
+      const blockedDate = this.disabledDates.some(d => this.dayStart(d) === today)
+      if (blockedDay || blockedDate) return 'วันนี้เป็นวันหยุด'
+      return null
+    },
     // Add N working days (Mon-Fri, non-holiday) to a date, counting fromDate itself
     addWorkingDays(fromDate, days) {
       const result = new Date(fromDate)
@@ -1081,16 +1148,35 @@ export default {
         this.formData.delegateDepartment = user.department || ''
       }
     },
+    // ปุ่มลาด่วน: ตั้ง "เวลา" ตามปุ่ม — วันที่ใช้วันที่ผู้ใช้เลือกไว้ ถ้ายังไม่เลือกใช้วันนี้
+    // เดิม: ไม่เลือกวันแล้วกด → ใช้วันแรกที่เลือกได้ (ลาป่วย = ย้อนหลัง 2 วัน, ผู้อนุมัติขั้น 2 = ย้อนหลัง 1 ปี) โดยไม่แจ้ง
+    //       และตั้งวันสิ้นสุด = วันเริ่มทุกครั้ง (เลือก 3–5 พ.ย. แล้วกดลาเต็มวัน → เหลือ 1 วัน)
     setQuickLeave(type) {
-      this.formData.quickLeave = type
-      
-      // ถ้ายังไม่เลือกวันเริ่ม ให้ใช้วันนี้หรือ minStartDate
-      if (!this.formData.startDate) {
-        this.formData.startDate = new Date(this.minStartDate)
+      if (!this.formData.leaveType) {
+        this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกประเภทการลาก่อน', life: 3000 })
+        return
       }
-      
-      // ตั้งค่าวันสิ้นสุดเป็นวันเดียวกับวันเริ่ม
-      this.formData.endDate = new Date(this.formData.startDate)
+
+      if (!this.formData.startDate) {
+        const blocked = this.todayBlockedReason()
+        if (blocked) {
+          this.$toast.add({ severity: 'warn', summary: 'กรุณาเลือกวันที่ลาก่อน', detail: `${blocked} — เลือกวันที่ในช่อง "วันเวลาเริ่มลา" แล้วกดปุ่มอีกครั้ง`, life: 6000 })
+          return
+        }
+        const today = new Date(this.dayStart(new Date()))
+        this.formData.startDate = today
+        this.formData.endDate = new Date(today)
+      } else if (type !== 'full') {
+        // ลาครึ่งวันมีได้วันเดียว — ถ้าเลือกไว้หลายวัน แจ้งว่าปรับวันสิ้นสุดให้
+        if (this.formData.endDate && !this.isSameDay(this.formData.endDate, this.formData.startDate)) {
+          const day = new Date(this.formData.startDate).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+          this.$toast.add({ severity: 'info', summary: 'ลาครึ่งวันใช้ได้วันเดียว', detail: `ปรับวันสิ้นสุดเป็น ${day} (วันเดียวกับวันเริ่ม) แล้ว`, life: 5000 })
+        }
+        this.formData.endDate = new Date(this.formData.startDate)
+      } else if (!this.formData.endDate || this.dayStart(this.formData.endDate) < this.dayStart(this.formData.startDate)) {
+        this.formData.endDate = new Date(this.formData.startDate)
+      }
+      this.formData.quickLeave = type
       
       const startTime = this.workHours.start_time
       const endTime = this.workHours.end_time
@@ -1597,6 +1683,34 @@ export default {
 .quick-leave-buttons .p-button {
   flex: 1;
   min-width: 150px;
+}
+
+.quick-leave-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  color: #525f70;
+  font-size: max(0.8rem, var(--min-fs));
+}
+
+.leave-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #93c5fd;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: max(0.875rem, var(--min-fs));
+  font-weight: 600;
+}
+
+.leave-summary-back {
+  color: #b45309;
 }
 
 @media (max-width: 768px) {

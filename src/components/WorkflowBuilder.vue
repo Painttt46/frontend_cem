@@ -134,7 +134,7 @@
           <label>สถานะโครงการ</label>
           <MultiSelect v-model="currentStep.project_statuses" :options="projectStatusOptions" 
                     optionLabel="label" optionValue="value" 
-                    placeholder="เลือกสถานะโครงการ" class="w-full" display="chip">
+                    placeholder="เลือกสถานะโครงการ" class="w-full" display="chip" :showToggleAll="false">
             <template #option="slotProps">
               <span class="project-badge" 
                     :style="{ background: slotProps.option.color + '20', color: $accessibleText(slotProps.option.color) }">
@@ -142,6 +142,7 @@
               </span>
             </template>
           </MultiSelect>
+          <small class="field-hint-status">สถานะที่แก้ล่าสุด (หรือของ step ที่มีการลงงานล่าสุด) จะแสดงเป็น "สถานะปัจจุบัน" ของโครงการหลังกดบันทึก</small>
         </div>
 
         <div class="field">
@@ -640,6 +641,12 @@ export default {
 </script>
 
 <style scoped>
+.field-hint-status {
+  display: block;
+  margin-top: 0.35rem;
+  color: #526074;
+  font-size: max(0.75rem, var(--min-fs));
+}
 .workflow-builder {
   padding: 1rem;
   background: #f8f9fa;

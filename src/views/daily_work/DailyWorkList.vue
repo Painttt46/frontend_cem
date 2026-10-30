@@ -467,7 +467,9 @@
         <div class="edit-row">
           <div class="edit-field">
             <label class="edit-label"><i class="pi pi-calendar"></i> วันที่ลงงาน</label>
-            <Calendar v-model="editFormData.work_date" dateFormat="dd/mm/yy" class="w-full" required showIcon />
+            <Calendar v-model="editFormData.work_date" dateFormat="dd/mm/yy" class="w-full" required showIcon
+              :minDate="editMinDate" :disabled="editDateFrozen" />
+            <small v-if="editDateFrozen" class="edit-date-hint">รายการของวันที่ผ่านมาแล้ว เปลี่ยนวันที่ไม่ได้ (แก้รายละเอียดอื่นได้)</small>
           </div>
         </div>
 
@@ -528,7 +530,7 @@
 
       <div class="form-actions">
         <Button type="button" label="ยกเลิก" severity="secondary" outlined @click="editDialog = false" />
-        <Button type="button" icon="pi pi-plus" label="เพิ่มโครงการ" severity="info" outlined
+        <Button v-if="canAddToEditDate" type="button" icon="pi pi-plus" label="เพิ่มโครงการ" severity="info" outlined
           @click="$emit('add-to-group', String(editFormData.work_date instanceof Date ? editFormData.work_date.toISOString() : editFormData.work_date).substring(0, 10)); editDialog = false" />
         <Button type="submit" label="บันทึก" severity="success" />
       </div>
@@ -563,6 +565,7 @@ import { accessibleBg } from '@/utils/color'
 
 import { addDays, formatDayMonthTH } from '@/utils/dateUtils'
 import { EDIT_CUTOFF_HOUR } from '@/constants/workConstants'
+import { fetchEntryWindow, entryMinDate, ymdToDate } from '@/utils/entryWindow'
 
 export default {
   name: 'DailyWorkList',
@@ -613,6 +616,21 @@ export default {
     window.removeEventListener('categoriesUpdated', this._onCategoriesUpdated)
   },
   computed: {
+    // รายการของวันที่ผ่านมาแล้ว: แก้รายละเอียดได้ แต่เปลี่ยนวันที่ไม่ได้ (admin/superadmin ไม่จำกัด)
+    editDateFrozen() {
+      if (!this.editOriginalDate || this.editEntryWindow?.exempt) return false
+      const today = this.editEntryWindow?.today || this.formatDateForAPI(new Date())
+      return this.editOriginalDate < today
+    },
+    editMinDate() {
+      return this.editDateFrozen ? null : entryMinDate(this.editEntryWindow)
+    },
+    // ปุ่ม "เพิ่มโครงการ" (ลงงานเพิ่มในวันเดียวกัน) — ซ่อนเมื่อวันนั้นลงงานไม่ได้แล้ว
+    canAddToEditDate() {
+      if (!this.editOriginalDate || this.editEntryWindow?.exempt) return true
+      const min = entryMinDate(this.editEntryWindow)
+      return !min || ymdToDate(this.editOriginalDate) >= min
+    },
     workRecords() {
       return this.records && this.records.length > 0 ? this.records : this.localRecords
     },
@@ -676,6 +694,9 @@ export default {
       manageGroupDialog: false,
       manageGroupData: null,
       editDialog: false,
+      // กติกาเวลาลงงาน (ห้ามย้อนหลัง / รายการแรกก่อน 10:00) + วันที่เดิมของรายการที่กำลังแก้ ('YYYY-MM-DD')
+      editEntryWindow: null,
+      editOriginalDate: null,
       cancelDialog: false,
       cancelDeletePermanently: false,
       cancelRecordTarget: null,
@@ -1130,6 +1151,10 @@ export default {
         const [year, month, day] = dateOnly.split('-').map(Number);
         workDate = new Date(year, month - 1, day, 12, 0, 0);
       }
+
+      this.editOriginalDate = String(record.work_date || '').split('T')[0] || null
+      this.editEntryWindow = null
+      fetchEntryWindow('/api/daily-work/entry-window').then(win => { this.editEntryWindow = win })
 
       this.editFormData = {
         id: record.id,
@@ -1726,6 +1751,11 @@ export default {
 .edit-label i {
   color: #6366f1;
   font-size: max(0.85rem, var(--min-fs));
+}
+
+.edit-date-hint {
+  color: #92400e;
+  font-size: max(0.8rem, var(--min-fs));
 }
 
 .file-upload-area {

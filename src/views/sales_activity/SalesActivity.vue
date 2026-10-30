@@ -118,9 +118,16 @@
           <!-- Left Column -->
           <div class="form-col">
             <div class="form-section-title"><i class="pi pi-calendar"></i> วันที่ & เวลา</div>
+            <div v-if="!editingVisit && entryWindow && entryWindow.message" class="entry-window-msg" :class="'entry-' + entryWindow.phase" role="alert">
+              <i :class="entryWindow.phase === 'locked' ? 'pi pi-lock' : 'pi pi-info-circle'"></i>
+              <span>{{ entryWindow.message }}</span>
+            </div>
             <div class="field">
               <label>วันที่และเวลาเริ่ม <span class="required">*</span></label>
-              <Calendar v-model="form.visit_date" showTime hourFormat="24" dateFormat="dd/mm/yy" showIcon class="w-full" />
+              <Calendar v-model="form.visit_date" showTime hourFormat="24" dateFormat="dd/mm/yy" showIcon class="w-full" :minDate="visitMinDate" />
+              <small v-if="entryWindow && !entryWindow.exempt" class="field-hint">
+                {{ editingVisit ? 'เปลี่ยนวันที่ได้เฉพาะวันนี้เป็นต้นไป (อัปเดตผล/สรุปของนัดที่ผ่านไปแล้วได้ตามปกติ)' : `ห้ามลงย้อนหลัง — รายการแรกของแต่ละวันต้องลงก่อน ${entryWindow.cutoff} น.` }}
+              </small>
             </div>
             <div class="field">
               <label>เวลาสิ้นสุด</label>
@@ -302,7 +309,7 @@
       </div>
       <template #footer>
         <Button label="ยกเลิก" icon="pi pi-times" @click="showFormDialog = false" class="btn-cancel" text />
-        <Button :label="editingVisit ? 'บันทึก' : 'สร้าง Visit'" icon="pi pi-check" @click="saveVisit" :disabled="!form.visit_date || saving" :loading="saving" class="btn-confirm" />
+        <Button :label="editingVisit ? 'บันทึก' : 'สร้าง Visit'" icon="pi pi-check" @click="saveVisit" :disabled="!form.visit_date || saving || (!editingVisit && entryWindow?.phase === 'locked')" :loading="saving" class="btn-confirm" />
       </template>
     </Dialog>
 
@@ -424,6 +431,7 @@
 <script>
 import axios from '@/utils/axiosConfig'
 import { usePermissions } from '@/composables/usePermissions'
+import { fetchEntryWindow, entryMinDate, dateToYmd } from '@/utils/entryWindow'
 
 export default {
   name: 'SalesActivity',
@@ -448,6 +456,8 @@ export default {
       showFormDialog: false, showCustomerDialog: false, showDetailDialog: false,
       customerDialogMode: 'create',
       editingVisit: null, selectedVisit: null,
+      // กติกาเวลาลงกิจกรรม (ห้ามย้อนหลัง / รายการแรกก่อน 10:00) — โหลดใหม่ทุกครั้งที่เปิดฟอร์ม
+      entryWindow: null,
       form: this.emptyForm(),
       newCustomer: { company_name: '', industry: '', phone: '', email: '', address: '', contact_name: '', contact_position: '' },
       visitTypeOptions: [
@@ -473,6 +483,10 @@ export default {
     }
   },
   computed: {
+    // วันแรกที่เลือกได้ (admin/superadmin ไม่จำกัด) — นัดเดิมที่ผ่านไปแล้วยังคงวันเดิมได้ (backend ยอมถ้าไม่เปลี่ยนวัน)
+    visitMinDate() {
+      return entryMinDate(this.entryWindow)
+    },
     // เห็น/จัดการกิจกรรมของทุกคน: admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์ในหน้าจัดการสิทธิ์
     isAdmin() {
       return this.hasAccess('/sales-activity#manage-all')
@@ -609,12 +623,18 @@ export default {
       if (nickname && nickname.length >= 3 && owner.includes(nickname)) return true
       return false
     },
+    async loadEntryWindow() {
+      this.entryWindow = null
+      this.entryWindow = await fetchEntryWindow('/api/sales-visits/entry-window')
+    },
     openCreateDialog() {
+      this.loadEntryWindow()
       this.editingVisit = null
       this.form = this.emptyForm()
       this.showFormDialog = true
     },
     openEditDialog(visit) {
+      this.loadEntryWindow()
       this.editingVisit = visit
       this.form = {
         ...visit,
@@ -638,6 +658,7 @@ export default {
     },
     // สร้างนัดถัดไป — clone ข้อมูล visit เดิมเป็นกำหนดการใหม่ตามวัน next_visit_date
     openNextVisitDialog(visit) {
+      this.loadEntryWindow()
       this.editingVisit = null
       const next = new Date(visit.next_visit_date)
       const orig = visit.visit_date ? new Date(visit.visit_date) : null
@@ -667,6 +688,18 @@ export default {
         this.$toast.add({ severity: 'warn', summary: 'เวลาไม่ถูกต้อง', detail: 'เวลาสิ้นสุดต้องหลังจากเวลาเริ่มต้น', life: 3000 })
         return
       }
+      // ห้ามลงย้อนหลัง / ถูกปิดลงงาน — ตรวจเฉพาะรายการใหม่หรือเมื่อเปลี่ยนวันที่ (backend ตรวจซ้ำอีกชั้น)
+      const newDay = dateToYmd(new Date(this.form.visit_date))
+      const oldDay = this.editingVisit?.visit_date ? dateToYmd(new Date(this.editingVisit.visit_date)) : null
+      const min = this.visitMinDate
+      if (newDay !== oldDay && min && newDay < dateToYmd(min)) {
+        this.$toast.add({
+          severity: 'error', summary: 'เลือกวันที่ไม่ได้',
+          detail: this.entryWindow?.message || 'ห้ามลงย้อนหลัง — ลงได้ตั้งแต่วันนี้เป็นต้นไป',
+          life: 8000
+        })
+        return
+      }
       this.saving = true
       try {
         const payload = {
@@ -689,7 +722,9 @@ export default {
         this.showFormDialog = false
         await this.loadAll()
       } catch (e) {
-        this.$toast.add({ severity: 'error', summary: 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกได้', life: 3000 })
+        const windowError = e.response?.data?.code === 'ENTRY_WINDOW'
+        this.$toast.add({ severity: 'error', summary: windowError ? 'บันทึกไม่ได้' : 'ผิดพลาด', detail: e.response?.data?.error || 'ไม่สามารถบันทึกได้', life: windowError ? 10000 : 3000 })
+        if (windowError) this.loadEntryWindow()
       } finally { this.saving = false }
     },
     // เปิด dialog ลูกค้า (สร้างใหม่ / แก้ไขของที่เลือก)
@@ -918,6 +953,17 @@ export default {
 .form-section-title i { color: #1d4ed8; font-size: max(0.8rem, var(--min-fs)); }
 .form-section-title:first-child { margin-top: 0; }
 .field { margin-bottom: var(--field-gap); }
+.field-hint { display: block; margin-top: 0.3rem; color: #526074; font-size: max(0.75rem, var(--min-fs)); }
+/* กติกาเวลาลงกิจกรรม */
+.entry-window-msg {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  padding: 0.6rem 0.8rem; margin-bottom: 0.75rem;
+  border-radius: 8px; border: 1px solid;
+  font-size: max(0.85rem, var(--min-fs)); line-height: 1.5;
+}
+.entry-window-msg i { margin-top: 0.2rem; }
+.entry-window-msg.entry-locked { background: #fef2f2; border-color: #dc2626; color: #991b1b; }
+.entry-window-msg.entry-future_only { background: #fffbeb; border-color: #d97706; color: #92400e; }
 .field label { display: block; font-weight: 600; font-size: max(0.82rem, var(--min-fs)); color: #334155; margin-bottom: 0.5rem; }
 .field-with-action { display: flex; gap: 0.4rem; align-items: center; }
 .flex-1 { flex: 1; min-width: 0; }
