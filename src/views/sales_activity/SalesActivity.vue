@@ -171,8 +171,12 @@
             </div>
             <div class="field">
               <label>โครงการที่เกี่ยวข้อง</label>
-              <Dropdown v-model="form.task_id" :options="tasks" optionLabel="display_name" optionValue="id"
-                placeholder="เชื่อมโยงโครงการ" class="w-full" filter filterPlaceholder="ค้นหาโครงการ..." :showClear="true">
+              <!-- รายการกว้างคงที่ (เดิมกว้างตามชื่อยาวสุดจนหลุดแนวช่อง) + โครงการที่ตัวเองเป็น Sale อยู่กลุ่มบนสุด -->
+              <Dropdown v-model="form.task_id" :options="taskDropdownOptions" optionLabel="display_name" optionValue="id"
+                :optionGroupLabel="taskDropdownGrouped ? 'label' : undefined" :optionGroupChildren="taskDropdownGrouped ? 'items' : undefined"
+                placeholder="เชื่อมโยงโครงการ" class="w-full" filter filterPlaceholder="ค้นหาชื่อโครงการ / เลข SO / ชื่อ Sale..."
+                :filterFields="['display_name', 'sale_owner']" :showClear="true"
+                appendTo="body" panelClass="task-dropdown-panel" :panelStyle="{ width: 'min(560px, calc(100vw - 2rem))' }" scrollHeight="min(320px, 45vh)">
                 <template #value="slotProps">
                   <div v-if="slotProps.value && getTaskById(slotProps.value)" class="task-selected">
                     <span v-if="getTaskById(slotProps.value).so_number" class="task-so-chip">{{ getTaskById(slotProps.value).so_number }}</span>
@@ -180,6 +184,13 @@
                     <span v-if="isMyProject(getTaskById(slotProps.value))" class="task-mine-chip"><i class="pi pi-star-fill"></i> โครงการของคุณ</span>
                   </div>
                   <span v-else class="task-value-placeholder">{{ slotProps.placeholder }}</span>
+                </template>
+                <template #optiongroup="slotProps">
+                  <div class="task-group-header" :class="{ 'task-group-mine': slotProps.option.mine }">
+                    <i :class="slotProps.option.mine ? 'pi pi-star-fill' : 'pi pi-briefcase'"></i>
+                    <span>{{ slotProps.option.label }}</span>
+                    <span class="task-group-count">{{ slotProps.option.items.length }}</span>
+                  </div>
                 </template>
                 <template #option="slotProps">
                   <div class="task-option" :class="{ 'task-option-mine': isMyProject(slotProps.option) }">
@@ -483,6 +494,19 @@ export default {
     }
   },
   computed: {
+    // ตัวเลือก "โครงการที่เกี่ยวข้อง": โครงการที่ตัวเองเป็น Sale ขึ้นกลุ่มแรก (ไม่มีเลย = รายการเดียวไม่แบ่งกลุ่ม)
+    taskDropdownOptions() {
+      const mine = this.tasks.filter(t => this.isMyProject(t))
+      if (!mine.length) return this.tasks
+      const others = this.tasks.filter(t => !this.isMyProject(t))
+      return [
+        { label: 'โครงการของคุณ (Sale)', mine: true, items: mine },
+        ...(others.length ? [{ label: 'โครงการอื่น ๆ', mine: false, items: others }] : [])
+      ]
+    },
+    taskDropdownGrouped() {
+      return this.taskDropdownOptions.length > 0 && Array.isArray(this.taskDropdownOptions[0].items)
+    },
     // วันแรกที่เลือกได้ (admin/superadmin ไม่จำกัด) — นัดเดิมที่ผ่านไปแล้วยังคงวันเดิมได้ (backend ยอมถ้าไม่เปลี่ยนวัน)
     visitMinDate() {
       return entryMinDate(this.entryWindow)
@@ -1013,18 +1037,23 @@ export default {
 .task-so-chip { font-size: max(0.66rem, var(--min-fs)); color: #4f46e5; background: #eef2ff; border: 1px solid #e0e7ff; padding: 0.08rem 0.4rem; border-radius: 5px; font-weight: 800; font-family: monospace; white-space: nowrap; }
 .task-mine-chip { display: inline-flex; align-items: center; gap: 0.2rem; font-size: max(0.64rem, var(--min-fs)); font-weight: 800; color: #92400e; background-color: #feeca8; border: 1px solid #fbbf24; padding: 0.1rem 0.45rem; border-radius: 20px; white-space: nowrap; box-shadow: none; }
 .task-mine-chip i { font-size: max(0.6rem, var(--min-fs)); color: #b45309; }
-.task-option { display: flex; align-items: center; gap: 0.65rem; padding: 0.45rem 0.6rem; border-radius: 10px; border: 1.5px solid transparent; width: 100%; }
+.task-option { display: flex; align-items: center; gap: 0.6rem; padding: 0.35rem 0.5rem; border-radius: 8px; border: 1.5px solid transparent; width: 100%; min-width: 0; }
 .task-option-icon { width: 32px; height: 32px; border-radius: 9px; background-color: #cde2fe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: max(0.85rem, var(--min-fs)); flex-shrink: 0; }
 .task-option-info { min-width: 0; flex: 1; }
 .task-option-name { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: max(0.84rem, var(--min-fs)); color: #1e293b; }
-.task-option-title { font-weight: 600; }
+.task-option-title { font-weight: 600; overflow-wrap: anywhere; }
 .task-option-meta { display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.25rem; }
 .task-owner-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: max(0.68rem, var(--min-fs)); color: #526074; background: #f8fafc; border: 1px solid #eef2f6; padding: 0.1rem 0.45rem; border-radius: 8px; font-weight: 500; }
 .task-owner-badge i { font-size: max(0.6rem, var(--min-fs)); color: #55657a; }
 .task-owner-badge.pm i { color: #7c3aed; }
 .task-option-star { color: #b45309; font-size: max(0.8rem, var(--min-fs)); flex-shrink: 0; }
 /* โครงการที่ตัวเองเป็น Sale — highlight สีทอง */
-.task-option-mine { background-color: #fefad7; border-color: #fbbf24; }
+.task-option-mine { background-color: #fefad7; border-color: #f59e0b; border-left-width: 4px; }
+.task-group-header { display: flex; align-items: center; gap: 0.4rem; font-size: max(0.78rem, var(--min-fs)); font-weight: 800; color: #475569; }
+.task-group-header.task-group-mine { color: #92400e; }
+.task-group-header.task-group-mine i { color: #b45309; }
+.task-group-count { margin-left: auto; font-size: max(0.72rem, var(--min-fs)); font-weight: 700; color: #475569; background: #f1f5f9; border-radius: 10px; padding: 0.05rem 0.5rem; }
+.task-group-mine .task-group-count { color: #92400e; background: #feeca8; }
 .task-option-mine .task-option-icon { background-color: #feeca8; color: #b45309; }
 .task-option-mine .task-option-title { color: #92400e; }
 .task-owner-badge.mine { color: #b45309; background: #fef3c7; border-color: #fcd34d; font-weight: 700; }
@@ -1148,5 +1177,21 @@ export default {
   .visit-left, .visit-right { width: 100%; min-width: 0; }
   .visit-title, .visit-meta span, .visit-agenda { overflow-wrap: anywhere; }
   .visit-agenda { max-width: 100%; white-space: normal; }
+}
+</style>
+
+<style>
+/* dropdown "โครงการที่เกี่ยวข้อง" (overlay อยู่ใต้ body — scoped style เข้าไม่ถึง) */
+.task-dropdown-panel .p-dropdown-item {
+  white-space: normal; /* เดิม nowrap: ชื่อยาวดันให้รายการกว้างเกินจอ/ไม่ตรงแนวช่อง */
+  padding: 0.2rem 0.4rem;
+}
+.task-dropdown-panel .p-dropdown-item-group {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.5rem 0.75rem 0.35rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
 </style>
