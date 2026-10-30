@@ -37,7 +37,7 @@
           </div>
           <Dropdown v-model="dataScope" :options="dataScopeOptions" optionLabel="label" optionValue="value"
             class="filter-dropdown" v-tooltip.top="'ช่วงข้อมูลที่โหลด'" />
-          <Dropdown v-if="isAdmin" v-model="filterUserId" :options="users" optionLabel="name" optionValue="id"
+          <Dropdown v-if="canViewAll" v-model="filterUserId" :options="users" optionLabel="name" optionValue="id"
             placeholder="พนักงานทั้งหมด" :showClear="true" class="filter-dropdown" />
           <Dropdown v-model="filterType" :options="visitTypeOptions" optionLabel="label" optionValue="value"
             placeholder="ประเภทกิจกรรม" :showClear="true" class="filter-dropdown" />
@@ -91,7 +91,7 @@
           <span class="visit-status-badge" :class="'vstatus-' + visit.status">{{ getStatusLabel(visit.status) }}</span>
           <span class="visit-type-label">{{ getVisitTypeLabel(visit.visit_type) }}</span>
           <div class="visit-actions" @click.stop>
-            <Button v-if="visit.next_visit_date" icon="pi pi-calendar-plus" v-tooltip.top="'สร้างนัดถัดไปจากวันนัดหมายที่ตั้งไว้'" @click="openNextVisitDialog(visit)" text size="small" />
+            <Button v-if="visit.next_visit_date && canFollowUp(visit)" icon="pi pi-calendar-plus" v-tooltip.top="'สร้างนัดถัดไปจากวันนัดหมายที่ตั้งไว้'" @click="openNextVisitDialog(visit)" text size="small" />
             <Button v-if="canEdit(visit)" icon="pi pi-pencil" v-tooltip.top="'แก้ไข'" @click="openEditDialog(visit)" text size="small" />
             <Button v-if="canEdit(visit)" icon="pi pi-trash" v-tooltip.top="'ลบ'" @click="deleteVisit(visit)" text severity="danger" size="small" />
             <span v-else class="visit-tag tag-team" v-tooltip.top="'คุณอยู่ในทีมที่ไปเข้าพบ — แก้ไขได้เฉพาะผู้สร้าง'"><i class="pi pi-users"></i> ร่วมทีม</span>
@@ -363,7 +363,7 @@
               <span class="detail-meta-item visit-type-label">{{ getVisitTypeLabel(selectedVisit.visit_type) }}</span>
             </div>
           </div>
-          <Button icon="pi pi-pencil" label="แก้ไข" @click="openEditDialog(selectedVisit); showDetailDialog = false" text size="small" class="detail-edit-btn" />
+          <Button v-if="canEdit(selectedVisit)" icon="pi pi-pencil" label="แก้ไข" @click="openEditDialog(selectedVisit); showDetailDialog = false" text size="small" class="detail-edit-btn" />
         </div>
 
         <div class="detail-grid">
@@ -511,8 +511,13 @@ export default {
     visitMinDate() {
       return entryMinDate(this.entryWindow)
     },
-    // เห็น/จัดการกิจกรรมของทุกคน: admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์ในหน้าจัดการสิทธิ์
-    isAdmin() {
+    // สิทธิ์จากหน้าจัดการสิทธิ์ (admin/superadmin ได้ทุกข้อ) — ตรงกับ backend config/permissionKeys.js
+    // ดูของทุกคน: ติ๊ก "ดูของทุกคน" หรือ "แก้ไข/ลบของทุกคน"
+    canViewAll() {
+      return this.hasAccess('/sales-activity#view-all') || this.hasAccess('/sales-activity#manage-all')
+    },
+    // แก้ไข/ลบของทุกคน
+    canManageAll() {
       return this.hasAccess('/sales-activity#manage-all')
     },
     // ชุดผลลัพธ์หลังตัวกรองทุกอย่าง "ยกเว้น" สถานะ — ใช้ทั้งแสดงรายการและนับ KPI
@@ -593,9 +598,14 @@ export default {
         this.$toast.add({ severity: 'error', summary: 'โหลดข้อมูลไม่สำเร็จ', detail: e.response?.data?.error || e.userMessage || 'กรุณารีเฟรชหน้าเว็บ', life: 5000 })
       } finally { this.loading = false }
     },
-    // แก้ไข/ลบได้เฉพาะผู้สร้างรายการ หรือผู้มีสิทธิ์ดูแลกิจกรรมของทุกคน (ตรงกับที่ backend ตรวจ)
+    // แก้ไข/ลบได้เฉพาะผู้สร้างรายการ หรือผู้มีสิทธิ์แก้ไข/ลบของทุกคน (ตรงกับที่ backend ตรวจ) — สิทธิ์ "ดูของทุกคน" ดูได้อย่างเดียว
     canEdit(visit) {
-      return this.isAdmin || String(visit.created_by) === String(localStorage.getItem('soc_user_id') || '')
+      return this.canManageAll || String(visit.created_by) === String(localStorage.getItem('soc_user_id') || '')
+    },
+    // สร้างนัดถัดไปจากรายการนี้: เจ้าของ/ผู้แก้ได้ หรือคนที่อยู่ในทีมที่ไปเข้าพบ (ไม่ให้คนที่แค่ "ดูของทุกคน" คัดลอกนัดของคนอื่น)
+    canFollowUp(visit) {
+      const me = String(localStorage.getItem('soc_user_id') || '')
+      return this.canEdit(visit) || (visit.internal_attendees || []).some(a => a && String(a.id) === me)
     },
     // จำกัดปริมาณข้อมูลที่โหลดจาก server ตามช่วงเวลาที่เลือก (แทนการโหลดทั้งหมดทุกครั้ง)
     buildScopeParams() {

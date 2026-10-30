@@ -171,7 +171,9 @@ const pages = ref([
   { id: 24, name: 'ลบโครงการ / ขั้นตอนงาน', path: '/projects#delete', icon: 'pi pi-trash', hasAccess: false },
   { id: 25, name: 'ลบรายการจัดซื้อ / ไฟล์ผู้ขาย', path: '/procurement#delete', icon: 'pi pi-trash', hasAccess: false },
   { id: 26, name: 'แก้ไข/ลบงานรายวันของผู้อื่น', path: '/daily_work#manage-all', icon: 'pi pi-users', hasAccess: false },
-  { id: 28, name: 'ดู/จัดการกิจกรรมเข้าพบลูกค้าของทุกคน', path: '/sales-activity#manage-all', icon: 'pi pi-briefcase', hasAccess: false },
+  // กิจกรรมเข้าพบลูกค้า (เมนู Sale): ไม่ติ๊กทั้งสอง = เห็นเฉพาะของตัวเอง + ที่อยู่ในทีมไปเข้าพบ
+  { id: 30, name: 'ดูกิจกรรมเข้าพบลูกค้าของทุกคน (ดูอย่างเดียว — แก้/ลบได้เฉพาะของตัวเอง)', path: '/sales-activity#view-all', icon: 'pi pi-eye', hasAccess: false },
+  { id: 28, name: 'แก้ไข/ลบกิจกรรมเข้าพบลูกค้าของทุกคน (รวมสิทธิ์ดูของทุกคน)', path: '/sales-activity#manage-all', icon: 'pi pi-briefcase', hasAccess: false },
   { id: 29, name: 'ดูประวัติการใช้งานระบบ (ในหน้าระบบจัดการ)', path: '/management#audit-logs', icon: 'pi pi-history', hasAccess: false }
 ])
 
