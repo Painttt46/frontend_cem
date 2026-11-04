@@ -15,6 +15,9 @@
             </div>
           </div>
           <div class="header-right">
+            <span v-if="lastLoadedAtText" class="data-time">ข้อมูล ณ {{ lastLoadedAtText }}</span>
+            <Button icon="pi pi-refresh" text rounded class="refresh-btn" :loading="loading" @click="loadData"
+              v-tooltip.bottom="'โหลดข้อมูลใหม่'" aria-label="โหลดข้อมูลใหม่" />
             <Button label="Analytics" icon="pi pi-chart-line" class="analytics-btn mr-3"
               @click="$router.push('/management/analytics')" />
             <Dropdown v-model="selectedUser" :options="userOptions" optionLabel="label" optionValue="value"
@@ -57,8 +60,22 @@
       <!-- User Timesheet -->
       <Card class="mb-4">
         <template #content>
-          <h3>Timesheet ประจำปี {{ currentYear }}</h3>
+          <div class="user-ts-head">
+            <h3>Timesheet</h3>
+            <div class="timesheet-filter">
+              <label>ช่วงเวลา:</label>
+              <Dropdown v-model="timesheetPeriod" :options="periodOptions" optionLabel="label" optionValue="value"
+                class="period-dropdown" />
+            </div>
+          </div>
           <div class="timesheet-summary">
+            <div class="summary-item">
+              <i class="pi pi-calendar-times" :style="{ color: userTimesheetSummary.att && userTimesheetSummary.att.missingDays > 0 ? '#dc2626' : '#047857' }"></i>
+              <div>
+                <h4>{{ userTimesheetSummary.att ? `${userTimesheetSummary.att.loggedDays}/${userTimesheetSummary.att.requiredDays} วัน` : '—' }}</h4>
+                <p>ลงงาน<template v-if="userTimesheetSummary.att"> (ขาด {{ userTimesheetSummary.att.missingDays }} วัน)</template></p>
+              </div>
+            </div>
             <div class="summary-item">
               <i class="pi pi-clock" style="color: #1d4ed8"></i>
               <div>
@@ -69,36 +86,33 @@
             <div class="summary-item">
               <i class="pi pi-calendar" style="color: #b45309"></i>
               <div>
-                <h4>{{ formatHoursMinutes(userTimesheetSummary.expectedHours) }}</h4>
+                <h4>{{ userTimesheetSummary.expectedHours === null ? '—' : formatHoursMinutes(userTimesheetSummary.expectedHours) }}</h4>
                 <p>ชั่วโมงที่ควรทำ</p>
               </div>
             </div>
             <div class="summary-item">
               <i class="pi pi-percentage"
-                :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#047857' : '#dc2626' }"></i>
+                :style="{ color: userTimesheetSummary.percentage === null ? '#526074' : userTimesheetSummary.percentage >= 100 ? '#047857' : '#dc2626' }"></i>
               <div>
-                <h4
-                  :style="{ color: userTimesheetSummary.totalHours >= userTimesheetSummary.expectedHours ? '#047857' : '#dc2626' }">
-                  {{ userTimesheetSummary.expectedHours > 0 ? Math.round(userTimesheetSummary.totalHours /
-                    userTimesheetSummary.expectedHours * 100) : 0 }}%
+                <h4 :style="{ color: userTimesheetSummary.percentage === null ? '#526074' : userTimesheetSummary.percentage >= 100 ? '#047857' : '#dc2626' }">
+                  {{ userTimesheetSummary.percentage === null ? '—' : userTimesheetSummary.percentage + '%' }}
                 </h4>
-                <p>เปอร์เซ็นต์</p>
+                <p>ทำจริงเทียบที่ควรทำ</p>
               </div>
             </div>
             <div class="summary-item">
               <i class="pi pi-briefcase" style="color: #7c3aed"></i>
               <div>
                 <h4>{{ userTimesheetSummary.totalTasks }}</h4>
-                <p>จำนวนงาน</p>
+                <p>รายการลงงาน<template v-if="userTimesheetSummary.lateDays"> (ลงหลัง 10:00 {{ userTimesheetSummary.lateDays }} วัน)</template></p>
               </div>
             </div>
           </div>
-
-          <div class="timesheet-filter mt-4">
-            <label>ช่วงเวลา:</label>
-            <Dropdown v-model="timesheetPeriod" :options="periodOptions" optionLabel="label" optionValue="value"
-              class="period-dropdown" />
-          </div>
+          <p class="calc-note">
+            <template v-if="userTimesheetSummary.att">ควรทำ = วันทำงาน (จ.–ศ. ไม่รวมวันหยุดและวันลา นับตั้งแต่วันเริ่มงานถึงเมื่อวาน — วันนี้นับเมื่อลงงานแล้ว) × ชั่วโมงทำงานต่อวัน</template>
+            <template v-else>ตำแหน่งนี้ไม่ได้กำหนดให้ลงงานทุกวัน จึงไม่คิดวันขาดและชั่วโมงที่ควรทำ</template>
+            · ไม่นับรายการที่ยกเลิกและงานที่ลงล่วงหน้า
+          </p>
 
           <h4 class="mt-3">Timesheet รายวัน</h4>
           <DataTable :value="userTimesheetDaily" paginator :rows="15" sortField="work_date" :sortOrder="-1">
@@ -162,7 +176,7 @@
       <div class="summary-grid mb-4">
         <!-- Loading Skeleton -->
         <template v-if="loading">
-          <Card v-for="i in 8" :key="i" class="summary-card">
+          <Card v-for="i in 6" :key="i" class="summary-card">
             <template #content>
               <div class="summary-content">
                 <div class="skeleton skeleton-icon"></div>
@@ -175,27 +189,16 @@
           </Card>
         </template>
 
-        <!-- Actual Data -->
+        <!-- Actual Data: เรื่องที่ต้องดู/ตามก่อน อยู่แถวแรก -->
         <template v-else>
-          <Card class="summary-card clickable" >
+          <Card class="summary-card clickable" :class="{ 'card-alert': notWorkingUsers.length > 0 }" @click="showWorkingDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-users summary-icon" style="color: #1d4ed8"></i>
+                <i class="pi pi-user-minus summary-icon" :style="{ color: notWorkingUsers.length > 0 ? '#dc2626' : '#047857' }"></i>
                 <div class="summary-info">
-                  <h3><CountUp :value="stats.totalUsers" /></h3>
-                  <p>ผู้ใช้งานทั้งหมด</p>
-                </div>
-              </div>
-            </template>
-          </Card>
-
-          <Card class="summary-card clickable" @click="showWorkingDialog = true">
-            <template #content>
-              <div class="summary-content">
-                <i class="pi pi-user-plus summary-icon" style="color: #047857"></i>
-                <div class="summary-info">
-                  <h3><CountUp :value="stats.workingToday" />/<CountUp :value="stats.totalEngineers" /></h3>
-                  <p>Engineer ลงงานวันนี้</p>
+                  <h3><CountUp :value="notWorkingUsers.length" /></h3>
+                  <p>Engineer ยังไม่ลงงานวันนี้</p>
+                  <small class="card-hint">ลงแล้ว {{ stats.workingToday }}/{{ stats.totalEngineers }} คน (ไม่นับคนที่ลา)</small>
                 </div>
               </div>
             </template>
@@ -208,18 +211,20 @@
                 <div class="summary-info">
                   <h3><CountUp :value="stats.todayLeaves" /></h3>
                   <p>ลางานวันนี้</p>
+                  <small class="card-hint">ใบลาที่อนุมัติแล้วครอบคลุมวันนี้</small>
                 </div>
               </div>
             </template>
           </Card>
 
-          <Card class="summary-card clickable" >
+          <Card class="summary-card clickable" :class="{ 'card-alert': stats.overdue > 0 }" @click="showOverdueDialog = true">
             <template #content>
               <div class="summary-content">
-                <i class="pi pi-car summary-icon" style="color: #0e7490"></i>
+                <i class="pi pi-exclamation-triangle summary-icon" style="color: #dc2626"></i>
                 <div class="summary-info">
-                  <h3><CountUp :value="stats.activeCars" /></h3>
-                  <p>รถกำลังใช้งาน</p>
+                  <h3><CountUp :value="stats.overdue" /></h3>
+                  <p>โครงการเลยกำหนดตามสัญญา</p>
+                  <small class="card-hint">ยังไม่เสร็จ และเลยวันสิ้นสุดโครงการแล้ว</small>
                 </div>
               </div>
             </template>
@@ -231,19 +236,8 @@
                 <i class="pi pi-clock summary-icon" style="color: #1d4ed8"></i>
                 <div class="summary-info">
                   <h3><CountUp :value="stats.dueSoon" /></h3>
-                  <p>โครงการครบกำหนดสัปดาห์นี้</p>
-                </div>
-              </div>
-            </template>
-          </Card>
-
-          <Card class="summary-card clickable" @click="showOverdueDialog = true">
-            <template #content>
-              <div class="summary-content">
-                <i class="pi pi-exclamation-triangle summary-icon" style="color: #dc2626"></i>
-                <div class="summary-info">
-                  <h3><CountUp :value="stats.overdue" /></h3>
-                  <p>โครงการที่พ้นกำหนดระยะเวลาตามสัญญา</p>
+                  <p>โครงการครบกำหนดใน 7 วัน</p>
+                  <small class="card-hint">วันสิ้นสุดโครงการตั้งแต่วันนี้ถึงอีก 7 วัน</small>
                 </div>
               </div>
             </template>
@@ -256,6 +250,7 @@
                 <div class="summary-info">
                   <h3><CountUp :value="stats.activeTasks" /></h3>
                   <p>โครงการที่กำลังดำเนินการ</p>
+                  <small class="card-hint">มี workflow {{ stats.activeWithWorkflow }} · ยังไม่มี workflow {{ stats.activeWithoutWorkflow }}</small>
                 </div>
               </div>
             </template>
@@ -268,11 +263,28 @@
                 <div class="summary-info">
                   <h3><CountUp :value="stats.completedTasks" /></h3>
                   <p>โครงการเสร็จสิ้น</p>
+                  <small class="card-hint">ทุก step เสร็จ หรือสถานะโครงการเป็นเสร็จ</small>
                 </div>
               </div>
             </template>
           </Card>
         </template>
+      </div>
+
+      <!-- ต้องดูวันนี้: รายชื่อคนที่ยังไม่ลงงาน + ข้อมูลทั่วไป -->
+      <div v-if="!loading" class="attention-strip mb-4">
+        <template v-if="notWorkingUsers.length">
+          <span class="attention-label"><i class="pi pi-exclamation-circle"></i> ยังไม่ลงงานวันนี้:</span>
+          <button v-for="u in notWorkingUsers.slice(0, 12)" :key="u.id" type="button" class="attention-chip"
+            @click="selectedUserId = u.id; showUserDialog = true">
+            {{ u.firstname }} {{ u.lastname }}{{ u.nickname ? ` (${u.nickname})` : '' }}
+          </button>
+          <button v-if="notWorkingUsers.length > 12" type="button" class="attention-more" @click="showWorkingDialog = true">
+            +{{ notWorkingUsers.length - 12 }} คน
+          </button>
+        </template>
+        <span v-else class="attention-ok"><i class="pi pi-check-circle"></i> Engineer ที่ไม่ได้ลาลงงานวันนี้ครบแล้ว</span>
+        <span class="attention-meta">ผู้ใช้งานทั้งหมด {{ stats.totalUsers }} คน · รถกำลังใช้งาน {{ stats.activeCars }} คัน</span>
       </div>
 
       <!-- Charts with Swipe Support -->
@@ -281,14 +293,14 @@
           @touchend="handleTouchEnd">
           <Card class="chart-card" :class="{ active: currentChart === 0 }">
             <template #content>
-              <h3>จำนวนวันลาของพนักงาน (รายปี)</h3>
+              <h3>จำนวนวันลาของพนักงาน ปี {{ currentYear }} <small class="chart-sub">(15 คนที่ลามากที่สุด · กดแท่งเพื่อดูรายคน)</small></h3>
               <canvas ref="leaveChart"></canvas>
             </template>
           </Card>
 
           <Card class="chart-card" :class="{ active: currentChart === 1 }">
             <template #content>
-              <h3>สถานะงาน</h3>
+              <h3>สถานะโครงการที่กำลังดำเนินการ <small class="chart-sub">(สูตรเดียวกับหน้าโครงการ · กดแท่งเพื่อดูรายการ)</small></h3>
               <canvas ref="taskChart"></canvas>
             </template>
           </Card>
@@ -305,13 +317,19 @@
       <Card>
         <template #content>
           <div class="stats-header mb-3">
-            <h3>สถิติเวลาทำงานของพนักงาน</h3>
+            <h3>สถิติการลงงานของพนักงาน</h3>
             <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap">
               <InputText v-model="statsSearch" placeholder="ค้นหา ชื่อ / ชื่อเล่น / โครงการ / step..." style="font-size:max(0.85rem, var(--min-fs));min-width:min(260px,100%);flex:1 1 200px;height:36px" />
-              <Dropdown v-model="selectedStatsYear" :options="statsYearOptions" optionLabel="label" optionValue="value" style="min-width:110px" />
+              <Dropdown v-model="selectedStatsMonth" :options="statsMonthOptions" optionLabel="label" optionValue="value" style="min-width:110px" aria-label="เดือน" />
+              <Dropdown v-model="selectedStatsYear" :options="statsYearOptions" optionLabel="label" optionValue="value" style="min-width:110px" aria-label="ปี" />
             </div>
           </div>
-          <DataTable :value="workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="totalHours"
+          <p class="calc-note">
+            คิดวันขาดเฉพาะ Engineer · วันที่ควรลงงาน = จ.–ศ. ไม่รวมวันหยุดและวันลาทั้งวัน นับตั้งแต่วันเริ่มงานถึงเมื่อวาน (วันนี้นับเมื่อลงงานแล้ว)
+            · ควรทำ = ชั่วโมงทำงานต่อวันของแต่ละคน (หักชั่วโมงลาบางส่วน) · ลงหลัง 10:00 = จำนวนวันที่รายการแรกถูกบันทึกหลัง 10:00 น. ของวันนั้น
+            · ไม่นับรายการที่ยกเลิกและงานที่ลงล่วงหน้า · เลื่อนเมาส์ที่ช่อง "ขาด" เพื่อดูวันที่
+          </p>
+          <DataTable :value="workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="missingDays"
             :sortOrder="-1" :expandedRows="expandedRows">
             <Column :expander="true" style="width: 3rem" />
             <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
@@ -322,22 +340,43 @@
               </template>
             </Column>
             <Column field="department" header="แผนก" sortable style="min-width: 100px" />
-            <Column field="taskCount" header="งาน" sortable style="min-width: 60px" />
+            <Column field="loggedDays" header="ลงงาน (วัน)" sortable style="min-width: 90px">
+              <template #body="{ data }">
+                <span v-if="data.required">{{ data.loggedDays }}/{{ data.requiredDays }}</span>
+                <span v-else class="text-muted" v-tooltip.top="'ตำแหน่งนี้ไม่ได้กำหนดให้ลงงานทุกวัน'">{{ data.loggedDays }} <small>(ไม่บังคับ)</small></span>
+              </template>
+            </Column>
+            <Column field="missingDays" header="ขาด" sortable style="min-width: 70px">
+              <template #body="{ data }">
+                <span v-if="data.missingDays === null" class="text-muted">—</span>
+                <span v-else-if="data.missingDays > 0" class="missing-days" v-tooltip.top="missingTooltip(data)">{{ data.missingDays }} วัน</span>
+                <span v-else class="ok-days">0</span>
+              </template>
+            </Column>
+            <Column field="lateDays" header="ลงหลัง 10:00" sortable style="min-width: 90px">
+              <template #body="{ data }">
+                <span v-if="data.lateDays === null" class="text-muted">—</span>
+                <span v-else :class="data.lateDays > 0 ? 'late-days' : 'ok-days'">{{ data.lateDays }} วัน</span>
+              </template>
+            </Column>
             <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
               <template #body="{ data }">
-                <span style="font-weight: 600; color: #1d4ed8">{{ formatHoursMinutes(data.totalHours) }}</span>
+                <span style="font-weight: 600; color: #1d4ed8; white-space: nowrap">{{ formatHoursMinutes(data.totalHours) }}</span>
               </template>
             </Column>
             <Column field="expectedHours" header="ควรทำ" sortable style="min-width: 100px">
               <template #body="{ data }">
-                <span style="font-weight: 600; color: #b45309">{{ formatHoursMinutes(data.expectedHours) }}</span>
+                <span v-if="data.expectedHours === null" class="text-muted">—</span>
+                <span v-else style="font-weight: 600; color: #b45309; white-space: nowrap">{{ formatHoursMinutes(data.expectedHours) }}</span>
               </template>
             </Column>
-                    <Column field="percentage" header="%" sortable style="min-width: 80px">
+            <Column field="percentage" header="%" sortable style="min-width: 70px">
               <template #body="{ data }">
-                <span :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#047857' : '#dc2626' }">{{ data.percentage }}%</span>
+                <span v-if="data.percentage === null" class="text-muted">—</span>
+                <span v-else :style="{ fontWeight: 600, color: data.percentage >= 100 ? '#047857' : '#dc2626' }">{{ data.percentage }}%</span>
               </template>
             </Column>
+            <Column field="taskCount" header="รายการ" sortable style="min-width: 70px" />
             <Column header="Workload" style="min-width: 220px">
               <template #body="{ data }">
                 <span v-if="!data.workload || data.workload.length === 0" class="text-muted" style="font-size:max(0.8rem, var(--min-fs))">ไม่มีงาน</span>
@@ -411,7 +450,7 @@
     :userId="selectedUserId" />
 
   <!-- Task Status Dialog -->
-  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'งานสถานะ: ' + selectedTaskStatus"
+  <Dialog v-model:visible="showTaskStatusDialog" modal :header="'โครงการสถานะ: ' + statusLabel(selectedTaskStatus)"
     :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
     <DataTable :value="filteredTasksByStatus" paginator :rows="10" sortField="task_name" :sortOrder="1">
       <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
@@ -433,7 +472,7 @@
   </Dialog>
 
   <!-- Overdue Projects Dialog -->
-  <Dialog v-model:visible="showOverdueDialog" modal header="โครงการที่พ้นกำหนดระยะเวลาตามสัญญา"
+  <Dialog v-model:visible="showOverdueDialog" modal header="โครงการที่เลยกำหนดตามสัญญา"
     :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
     <DataTable :value="overdueProjects" paginator :rows="10" sortField="project_end_date" :sortOrder="1">
       <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
@@ -453,7 +492,7 @@
 
 
   <!-- Working Today Dialog -->
-  <Dialog v-model:visible="showWorkingDialog" modal header="Engineer ลงงานวันนี้"
+  <Dialog v-model:visible="showWorkingDialog" modal header="การลงงานของ Engineer วันนี้ (ไม่นับคนที่ลา)"
     :style="{ width: '90vw', maxWidth: '800px' }" :draggable="false" position="center">
     <div class="work-status-section">
       <h4 style="color: #047857; margin-bottom: 10px;">✅ ลงงานแล้ว ({{ workingTodayUsers.length }})</h4>
@@ -487,7 +526,7 @@
   </Dialog>
 
   <!-- Due Soon Dialog -->
-  <Dialog v-model:visible="showDueSoonDialog" modal header="โครงการครบกำหนดสัปดาห์นี้"
+  <Dialog v-model:visible="showDueSoonDialog" modal header="โครงการครบกำหนดใน 7 วัน"
     :style="{ width: '90vw', maxWidth: '900px' }" :draggable="false" position="center">
     <DataTable :value="dueSoonProjects" paginator :rows="10" sortField="project_end_date" :sortOrder="1">
       <Column field="task_name" header="ชื่องาน/โครงการ" sortable style="min-width: 200px" />
@@ -532,7 +571,9 @@ import axios from '@/utils/axiosConfig'
 import userService from '@/services/userService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import CountUp from '@/components/CountUp.vue'
-import { isCompleted, isActive } from '@/utils/statusHelper'
+import { getCurrentStatusStep, projectState } from '@/utils/projectStatus'
+import { recordHours, dayHours, attendance } from '@/utils/workTime'
+import { toDateKey } from '@/utils/dateUtils'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
 import { usePermissions } from '@/composables/usePermissions'
@@ -558,6 +599,15 @@ const leaveTypeLabels = ref({})
 const showUserDialog = ref(false)
 const selectedUserId = ref(null)
 
+// ===== กติกาการนับ (ใช้ทั้งภาพรวมและรายคน) =====
+// role ที่ต้องลงงานทุกวันทำงาน (ตรงกับการแจ้งเตือน "ยังไม่ลงงาน" ใน Teams) — role อื่นไม่คิดวันขาด/ชั่วโมงที่ควรทำ
+const REQUIRED_ROLES = ['engineer']
+const isRequiredToLog = (user) => REQUIRED_ROLES.includes(String(user?.role || '').trim().toLowerCase())
+// เวลาทำงานเมื่อไม่ได้ตั้งค่าไว้ (เหมือนหน้าแจ้งลา)
+const DEFAULT_WORK_HOURS = { start_time: '09:00', end_time: '18:00', lunch_start: '12:00', lunch_end: '13:00' }
+const todayKey = () => toDateKey(new Date())
+const pad2 = (n) => String(n).padStart(2, '0')
+
 // Task status dialog
 const allTasks = ref([])
 const workingTodayUsers = ref([])
@@ -572,107 +622,153 @@ const showActiveTasksDialog = ref(false)
 const showCompletedDialog = ref(false)
 const selectedTaskStatus = ref(null)
 
+// ===== สถานะโครงการ (สูตรเดียวกับหน้า "โครงการ") =====
+const STATUS_NO_STATUS = '__no_status__'
+const STATUS_NO_WORKFLOW = '__no_workflow__'
+const statusLabelMap = ref({})
+// คีย์สถานะปัจจุบันของโครงการ (step หนึ่งตั้งได้หลายสถานะ → โครงการนับในทุกสถานะนั้น)
+const taskStatusKeys = (t) => {
+  if (t.steps && t.steps.length > 0) {
+    const current = getCurrentStatusStep(t.steps)
+    return current ? current.project_statuses : [STATUS_NO_STATUS]
+  }
+  return [t.status && t.status !== '-' ? t.status : STATUS_NO_WORKFLOW]
+}
+const statusLabel = (key) => {
+  if (key === STATUS_NO_STATUS) return 'มี workflow แต่ยังไม่ระบุสถานะ'
+  if (key === STATUS_NO_WORKFLOW) return 'ยังไม่มี workflow'
+  return statusLabelMap.value[key] || key
+}
+
 const filteredTasksByStatus = computed(() => {
   if (!selectedTaskStatus.value) return []
-  return allTasks.value.filter(t => {
-    if (t.steps && t.steps.length > 0) {
-      const workingSteps = t.steps.filter(s => s.has_work_logged)
-      if (workingSteps.length > 0) {
-        const latestStep = workingSteps.sort((a, b) =>
-          new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
-        )[0]
-        if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
-          return latestStep.project_statuses.includes(selectedTaskStatus.value)
-        }
-        return selectedTaskStatus.value === 'ไม่ระบุ'
-      }
-      return selectedTaskStatus.value === 'ไม่ระบุ'
-    }
-    // ไม่มี workflow - ถ้า status เป็น null/undefined หรือ '-' ให้เป็น 'ไม่ระบุ'
-    let status = t.status
-    if (!status || status === '-') status = 'ไม่ระบุ'
-    return status === selectedTaskStatus.value
-  })
+  return allTasks.value.filter(t => t._state === 'active' && taskStatusKeys(t).includes(selectedTaskStatus.value))
 })
 
+const parseLocalDate = (dateStr) => {
+  if (!dateStr) return null
+  return new Date(String(dateStr).split('T')[0] + 'T00:00:00')
+}
 
 const overdueProjects = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  return allTasks.value.filter(t => {
-    if (!t.project_end_date) return false
-    const datePart = t.project_end_date.split('T')[0]
-    const endDate = new Date(datePart + 'T00:00:00')
-    const active = t.steps && t.steps.length > 0 ? !t.steps.every(s => s.status === 'completed') : isActive(t.status)
-    return endDate < today && active
-  })
+  return allTasks.value.filter(t => t._state === 'active' && t.project_end_date && parseLocalDate(t.project_end_date) < today)
 })
-// User filter
 
+// ครบกำหนดภายใน 7 วันข้างหน้า (รวมวันนี้)
 const dueSoonProjects = computed(() => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const weekFromNow = new Date(today)
   weekFromNow.setDate(weekFromNow.getDate() + 7)
   return allTasks.value.filter(t => {
-    if (!t.project_end_date) return false
-    const datePart = t.project_end_date.split('T')[0]
-    const endDate = new Date(datePart + 'T00:00:00')
-    const active = t.steps && t.steps.length > 0 ? !t.steps.every(s => s.status === 'completed') : isActive(t.status)
-    return endDate >= today && endDate <= weekFromNow && active
+    if (t._state !== 'active' || !t.project_end_date) return false
+    const endDate = parseLocalDate(t.project_end_date)
+    return endDate >= today && endDate <= weekFromNow
   })
 })
 
-const activeTasksList = computed(() => {
-  return allTasks.value.filter(t => {
-    if (t.steps && t.steps.length > 0) return !t.steps.every(s => s.status === 'completed')
-    return isActive(t.status)
-  })
-})
+const activeTasksList = computed(() => allTasks.value.filter(t => t._state === 'active'))
+const completedTasksList = computed(() => allTasks.value.filter(t => t._state === 'completed'))
 
-const completedTasksList = computed(() => {
-  return allTasks.value.filter(t => {
-    if (t.steps && t.steps.length > 0) return t.steps.every(s => s.status === 'completed')
-    return isCompleted(t.status)
-  })
-})
+// User filter
 const selectedUser = ref(null)
 const userOptions = ref([])
 const userNameMap = ref({})
 const allLeaves = ref([])
 const allDailyWork = ref([])
-const allRoleHoursMap = ref({})
-const allLunchBreakMap = ref({}) // เก็บเวลาพักกลางวันตาม user
+const activeUsersList = ref([])
+const holidaySet = ref(new Set())
+const workHoursByUser = ref({})
+const workloadByUser = ref({})
+const lastLoadedAt = ref(null)
+const lastLoadedAtText = computed(() => lastLoadedAt.value
+  ? lastLoadedAt.value.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) + ' น.'
+  : '')
 const currentYear = new Date().getFullYear()
 const userLeaveChart = ref(null)
 let userLeaveChartInstance = null
 
-// Helper: parse time string to hours
-const parseTime = (timeStr) => {
-  if (!timeStr) return 0
-  const [h, m] = timeStr.split(':').map(Number)
-  return h + (m || 0) / 60
-}
-
-// Helper: คำนวณชั่วโมงทำงานหักพักกลางวัน
-const calcWorkHours = (startTime, endTime, lunchBreak = 1) => {
-  if (!startTime || !endTime) return 0
-  const start = parseTime(startTime)
-  const end = parseTime(endTime)
-  let hours = end - start
-  // หักพักกลางวันถ้าทำงานข้ามช่วงเที่ยง (12:00-13:00)
-  if (start < 13 && end > 12) {
-    hours -= lunchBreak
+// รายการลงงานที่นับ: ไม่รวมที่ยกเลิก และไม่รวมงานที่ลงล่วงหน้า (วันที่ยังมาไม่ถึง) — จัดกลุ่ม ผู้ใช้ → วัน → รายการ
+const workByUserDay = computed(() => {
+  const today = todayKey()
+  const map = new Map()
+  for (const w of allDailyWork.value) {
+    if (!w.user_id || w.work_status === 'cancelled') continue
+    const day = String(w.work_date || '').slice(0, 10)
+    if (!day || day > today) continue
+    if (!map.has(w.user_id)) map.set(w.user_id, new Map())
+    const days = map.get(w.user_id)
+    if (!days.has(day)) days.set(day, [])
+    days.get(day).push(w)
   }
-  return Math.max(0, hours)
+  return map
+})
+
+const approvedLeavesByUser = computed(() => {
+  const map = {}
+  for (const l of allLeaves.value) {
+    if (l.status !== 'approved' || !l.user_id) continue
+    if (!map[l.user_id]) map[l.user_id] = []
+    map[l.user_id].push(l)
+  }
+  return map
+})
+
+// สรุปการลงงานของผู้ใช้หนึ่งคนในช่วง from–to ('YYYY-MM-DD')
+const summarizeUser = (user, from, to) => {
+  const today = todayKey()
+  const end = to < today ? to : today
+  const days = workByUserDay.value.get(user.id) || new Map()
+  let totalHours = 0
+  let taskCount = 0
+  let lateDays = 0
+  let hasCreatedAt = false
+  const taskHours = {}
+  const loggedDays = new Set()
+  for (const [day, records] of days) {
+    if (day < from || day > end) continue
+    loggedDays.add(day)
+    taskCount += records.length
+    const { total, shares } = dayHours(records)
+    totalHours += total
+    shares.forEach((hours, record) => {
+      const name = record.task_name || 'ไม่ระบุ'
+      taskHours[name] = (taskHours[name] || 0) + hours
+    })
+    // ลงหลัง 10:00 = รายการแรกของวันนั้นถูกบันทึกหลัง 10:00 น. ของวันนั้น (รวมการลงย้อนหลัง)
+    const created = records.map(r => new Date(r.created_at).getTime()).filter(Number.isFinite)
+    if (created.length) {
+      hasCreatedAt = true
+      if (Math.min(...created) > new Date(`${day}T10:00:00`).getTime()) lateDays++
+    }
+  }
+  const att = isRequiredToLog(user)
+    ? attendance({
+        from, to, today,
+        joinDate: user.created_at ? toDateKey(user.created_at) : null,
+        holidays: holidaySet.value,
+        loggedDays,
+        leaves: approvedLeavesByUser.value[user.id] || [],
+        workHours: workHoursByUser.value[user.id] || DEFAULT_WORK_HOURS
+      })
+    : null
+  const expectedHours = att ? att.expectedHours : null
+  return {
+    totalHours, taskCount, taskHours, loggedDays, att, expectedHours,
+    lateDays: hasCreatedAt || loggedDays.size === 0 ? lateDays : null,
+    percentage: expectedHours > 0 ? Math.round(totalHours / expectedHours * 100) : null
+  }
 }
 
+const selectedUserObj = computed(() => activeUsersList.value.find(u => u.id === selectedUser.value) || null)
 const selectedUserName = computed(() => {
   const user = userOptions.value.find(u => u.value === selectedUser.value)
   return user ? user.label : ''
 })
 
-// Period filter
+// Period filter (หน้ารายคน)
 const timesheetPeriod = ref('month')
 const periodOptions = [
   { label: 'วันนี้', value: 'today' },
@@ -686,15 +782,11 @@ const dateRange = computed(() => {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   let startDate = today
-
   switch (timesheetPeriod.value) {
-    case 'today':
-      startDate = today
-      break
     case 'week': {
-      const dayOfWeek = today.getDay()
+      // สัปดาห์เริ่มวันจันทร์
       startDate = new Date(today)
-      startDate.setDate(today.getDate() - dayOfWeek)
+      startDate.setDate(today.getDate() - ((today.getDay() + 6) % 7))
       break
     }
     case 'month':
@@ -707,7 +799,7 @@ const dateRange = computed(() => {
       startDate = new Date(2000, 0, 1)
       break
   }
-  return { startDate, endDate: now }
+  return { from: toDateKey(startDate), to: toDateKey(today) }
 })
 
 const userLeaveData = computed(() => {
@@ -724,70 +816,23 @@ const userLeaveData = computed(() => {
 })
 
 const userTimesheetSummary = computed(() => {
-  if (!selectedUser.value) return { totalHours: 0, expectedHours: 0, totalTasks: 0, totalProjects: 0 }
-  const { startDate, endDate } = dateRange.value
-  let totalHours = 0
-  let taskCount = 0
-  const projects = new Set()
-  const workDays = new Set()
-  const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
-  // Group by date to merge overlapping time ranges
-  const dayRanges = {}
-
-  allDailyWork.value.forEach(w => {
-    if (w.user_id !== selectedUser.value) return
-    const workDate = new Date(w.work_date)
-    if (workDate < startDate || workDate > endDate) return
-
-    taskCount++
-    if (w.task_name) projects.add(w.task_name)
-    const dateKey = w.work_date?.split('T')[0]
-    workDays.add(dateKey)
-    if (w.start_time && w.end_time) {
-      if (!dayRanges[dateKey]) dayRanges[dateKey] = []
-      dayRanges[dateKey].push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
-    }
-  })
-
-  Object.values(dayRanges).forEach(ranges => {
-    ranges.sort((a, b) => a.start - b.start)
-    const merged = [ranges[0]]
-    for (let i = 1; i < ranges.length; i++) {
-      const last = merged[merged.length - 1]
-      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
-      else merged.push({ ...ranges[i] })
-    }
-    merged.forEach(({ start, end }) => {
-      let h = end - start
-      if (start < 13 && end > 12) h -= lunchBreak
-      totalHours += Math.max(0, h)
-    })
-  })
-
-  // คำนวณชั่วโมงที่ควรทำตาม role
-  const hoursPerDay = allRoleHoursMap.value[selectedUser.value] || 8
-  const expectedHours = workDays.size * hoursPerDay
-
-  return { totalHours, expectedHours, totalTasks: taskCount, totalProjects: projects.size }
+  const user = selectedUserObj.value
+  if (!user) return { totalHours: 0, expectedHours: null, percentage: null, totalTasks: 0, att: null, lateDays: null }
+  const { from, to } = dateRange.value
+  const s = summarizeUser(user, from, to)
+  return { totalHours: s.totalHours, expectedHours: s.expectedHours, percentage: s.percentage, totalTasks: s.taskCount, att: s.att, lateDays: s.lateDays }
 })
 
 const userTimesheetDaily = computed(() => {
   if (!selectedUser.value) return []
-  const { startDate, endDate } = dateRange.value
-
-  const lunchBreak = allLunchBreakMap.value[selectedUser.value] || 1
-
-  return allDailyWork.value
-    .filter(w => {
-      if (w.user_id !== selectedUser.value) return false
-      const workDate = new Date(w.work_date)
-      return workDate >= startDate && workDate <= endDate
-    })
-    .map(w => {
-      const hours = calcWorkHours(w.start_time, w.end_time, lunchBreak)
-      return { ...w, hours }
-    })
-    .sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
+  const { from, to } = dateRange.value
+  const days = workByUserDay.value.get(selectedUser.value) || new Map()
+  const rows = []
+  for (const [day, records] of days) {
+    if (day < from || day > to) continue
+    records.forEach(w => rows.push({ ...w, hours: recordHours(w.start_time, w.end_time) }))
+  }
+  return rows.sort((a, b) => String(b.work_date).localeCompare(String(a.work_date)))
 })
 
 const parseCategoryArray = (category) => {
@@ -804,11 +849,18 @@ const formatDate = (dateStr) => {
 
 const calcOverdueDays = (dateStr) => {
   if (!dateStr) return 0
-  const datePart = dateStr.split('T')[0]
-  const endDate = new Date(datePart + 'T00:00:00')
+  const endDate = parseLocalDate(dateStr)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   return Math.floor((today - endDate) / (1000 * 60 * 60 * 24))
+}
+
+// รายการวันที่ขาดสำหรับ tooltip (สูงสุด 15 วันล่าสุด)
+const missingTooltip = (row) => {
+  if (!row.missingDates || row.missingDates.length === 0) return ''
+  const list = row.missingDates.slice(-15).map(d => parseLocalDate(d).toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' }))
+  const more = row.missingDates.length > 15 ? ` และอีก ${row.missingDates.length - 15} วัน` : ''
+  return `วันที่ยังไม่ลงงาน: ${list.join(', ')}${more}`
 }
 
 // Watch selectedUser: handle both select and clear (X button)
@@ -845,7 +897,7 @@ const renderUserLeaveChart = () => {
 
   const labels = Object.keys(userLeaveData.value)
   const data = Object.values(userLeaveData.value)
-  const colors = labels.map(type => leaveTypeColors.value[type] || '#6c757d')
+  const colors = labels.map((type, i) => leaveTypeColors.value[type] || FALLBACK_COLORS[i % FALLBACK_COLORS.length])
 
   userLeaveChartInstance = new Chart(userLeaveChart.value, {
     type: 'doughnut',
@@ -874,25 +926,72 @@ const stats = ref({
   todayLeaves: 0,
   activeCars: 0,
   activeTasks: 0,
+  activeWithWorkflow: 0,
+  activeWithoutWorkflow: 0,
   completedTasks: 0,
   dueSoon: 0,
   overdue: 0
 })
 
-const workStatistics = ref([])
+// ===== สถิติการลงงาน (ตามปี/เดือนที่เลือก) =====
+const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
 const openWorkloadUserId = ref(null)
 const expandedRows = ref([])
 const selectedStatsYear = ref(new Date().getFullYear())
+const selectedStatsMonth = ref(new Date().getMonth() + 1) // 0 = ทั้งปี
 const statsYearOptions = computed(() => {
   const thisYear = new Date().getFullYear()
   return Array.from({ length: 5 }, (_, i) => ({ label: String(thisYear - i), value: thisYear - i }))
 })
+const statsMonthOptions = [{ label: 'ทั้งปี', value: 0 }, ...THAI_MONTHS.map((m, i) => ({ label: m, value: i + 1 }))]
+const statsPeriod = computed(() => {
+  const y = selectedStatsYear.value
+  const m = selectedStatsMonth.value
+  if (!m) return { from: `${y}-01-01`, to: `${y}-12-31` }
+  return { from: `${y}-${pad2(m)}-01`, to: `${y}-${pad2(m)}-${pad2(new Date(y, m, 0).getDate())}` }
+})
 const statsSearch = ref('')
+
+const workStatistics = computed(() => {
+  const { from, to } = statsPeriod.value
+  const isCurrentYear = selectedStatsYear.value === new Date().getFullYear()
+  return activeUsersList.value
+    .filter(u => {
+      if (isRequiredToLog(u)) return true
+      const days = workByUserDay.value.get(u.id)
+      if (days && [...days.keys()].some(d => d >= from && d <= to)) return true
+      return isCurrentYear && (workloadByUser.value[u.id] || []).length > 0
+    })
+    .map(u => {
+      const s = summarizeUser(u, from, to)
+      const taskDetails = Object.entries(s.taskHours)
+        .map(([taskName, hours]) => ({ taskName, hours, percentage: s.totalHours > 0 ? (hours / s.totalHours) * 100 : 0 }))
+        .sort((a, b) => b.hours - a.hours)
+      return {
+        userId: u.id,
+        userName: `${u.firstname} ${u.lastname}`,
+        nickname: u.nickname || '',
+        department: u.department || 'N/A',
+        required: !!s.att,
+        requiredDays: s.att ? s.att.requiredDays : null,
+        loggedDays: s.att ? s.att.loggedDays : s.loggedDays.size,
+        missingDays: s.att ? s.att.missingDays : null,
+        missingDates: s.att ? s.att.missingDates : [],
+        lateDays: s.lateDays,
+        totalHours: s.totalHours,
+        expectedHours: s.expectedHours,
+        percentage: s.percentage,
+        taskCount: s.taskCount,
+        taskDetails,
+        workload: workloadByUser.value[u.id] || []
+      }
+    })
+})
+
 const workStatisticsFiltered = computed(() => {
   const q = statsSearch.value.trim().toLowerCase()
+  if (!q) return workStatistics.value
   return workStatistics.value.filter(r => {
-    if (r.year !== selectedStatsYear.value) return false
-    if (!q) return true
     if (r.userName?.toLowerCase().includes(q)) return true
     if (r.nickname?.toLowerCase().includes(q)) return true
     if (r.department?.toLowerCase().includes(q)) return true
@@ -908,6 +1007,8 @@ let leaveChartInstance = null
 let taskChartInstance = null
 const workStatusColors = ref({})
 const categoryColors = ref({})
+// สีสำรองเมื่อประเภทลาไม่ได้ตั้งสีไว้ (เดิมสุ่มสีใหม่ทุกครั้งที่โหลด)
+const FALLBACK_COLORS = ['#2563eb', '#d97706', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#db2777', '#4b5563']
 
 onMounted(async () => {
   await Promise.all([loadLeaveTypeColors(), loadWorkStatusColors(), loadCategoryColors()])
@@ -975,10 +1076,14 @@ const loadWorkStatusColors = async () => {
   try {
     const response = await axios.get('/api/settings/statuses')
     const colorMap = { 'ไม่ระบุ': '#9e9e9e' }
+    const labelMap = {}
     response.data.forEach(status => {
       colorMap[status.value] = status.color
+      // ตัด emoji ออกจากชื่อสถานะ (เหมือนหน้า "โครงการ")
+      if (status.label) labelMap[status.value] = status.label.replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
     })
     workStatusColors.value = colorMap
+    statusLabelMap.value = labelMap
   } catch (error) {
     workStatusColors.value = {
       'pending': '#f59e0b',
@@ -1028,13 +1133,54 @@ const getStatusColor = (status) => {
   return accessibleBg(workStatusColors.value[status] || '#6c757d')
 }
 
+// workload ของแต่ละคน (step ที่ได้รับมอบหมาย จัดกลุ่มตามโครงการ) — ไม่ขึ้นกับช่วงเวลาที่เลือก
+const buildWorkloadByUser = (tasks) => {
+  const statusOrder = { working: 0, in_progress: 1, overdue: 2, pending: 3, completed: 4 }
+  const raw = {}
+  const totalSteps = {}
+  const completedSteps = {}
+  tasks.forEach(task => {
+    const steps = task.steps || []
+    totalSteps[task.id] = steps.length
+    completedSteps[task.id] = steps.filter(s => s.status === 'completed').length
+    steps.forEach((step, idx) => {
+      (step.assigned_users || []).forEach(u => {
+        const uid = typeof u === 'object' ? u.id : u
+        if (!uid) return
+        if (!raw[uid]) raw[uid] = []
+        raw[uid].push({ taskId: task.id, taskName: task.task_name, stepId: step.id, stepName: step.step_name, stepOrder: idx + 1, stepStatus: calcStepStatus(step), projectStatuses: step.project_statuses || [] })
+      })
+    })
+  })
+  const result = {}
+  Object.entries(raw).forEach(([uid, items]) => {
+    const groups = {}
+    items.forEach(w => {
+      if (!groups[w.taskId]) groups[w.taskId] = { taskId: w.taskId, taskName: w.taskName, steps: [] }
+      groups[w.taskId].steps.push(w)
+    })
+    result[uid] = Object.values(groups)
+      .map(proj => {
+        const total = totalSteps[proj.taskId] ?? proj.steps.length
+        const done = completedSteps[proj.taskId] ?? proj.steps.filter(s => s.stepStatus === 'completed').length
+        // เรียง steps: active ก่อน completed ท้าย
+        proj.steps.sort((a, b) => (statusOrder[a.stepStatus] ?? 5) - (statusOrder[b.stepStatus] ?? 5))
+        return { ...proj, progress: total > 0 ? Math.round((done / total) * 100) : 0, totalSteps: total, completedSteps: done }
+      })
+      // ตัดโครงการที่ step ของคนนี้เสร็จหมดแล้ว
+      .filter(proj => proj.steps.some(s => s.stepStatus !== 'completed'))
+      .sort((a, b) => (statusOrder[a.steps[0]?.stepStatus] ?? 5) - (statusOrder[b.steps[0]?.stepStatus] ?? 5))
+  })
+  return result
+}
+
 const loadData = async () => {
   loading.value = true
 
   try {
     // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
     // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
-    const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours, userWorkHours] = await Promise.all([
+    const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours, userWorkHours, holidays] = await Promise.all([
       userService.getActiveUsers(true),
       axios.get('/api/leave', { silent: true }).then(r => r.data),
       axios.get('/api/settings/dashboard-summary', { silent: true }).then(r => r.data),
@@ -1042,61 +1188,46 @@ const loadData = async () => {
       axios.get('/api/daily-work/summary', { silent: true }).then(r => r.data),
       axios.get('/api/task-steps/all', { silent: true }).then(r => r.data),
       axios.get('/api/settings/role-work-hours', { silent: true }).then(r => r.data).catch(() => []),
-      axios.get('/api/settings/user-work-hours', { silent: true }).then(r => r.data).catch(() => [])
+      axios.get('/api/settings/user-work-hours', { silent: true }).then(r => r.data).catch(() => []),
+      axios.get('/api/leave/holidays', { silent: true }).then(r => r.data).catch(() => [])
     ])
 
-    // สร้าง map ชั่วโมงทำงานต่อวันตาม role และ lunch break
-    const roleHoursMap = {}
-    const roleLunchMap = {}
-    roleWorkHours.forEach(r => {
-      const start = parseTime(r.start_time)
-      const end = parseTime(r.end_time)
-      const lunchStart = parseTime(r.lunch_start)
-      const lunchEnd = parseTime(r.lunch_end)
-      const lunchBreak = (lunchStart && lunchEnd) ? (lunchEnd - lunchStart) : 1
-      let hours = end - start - lunchBreak
-      roleHoursMap[r.role] = hours
-      roleLunchMap[r.role] = lunchBreak
+    // เวลาทำงานของแต่ละคน: ตั้งรายคน > ตาม role > ค่าเริ่มต้น
+    const fmtT = (t, fallback) => (t ? String(t).slice(0, 5) : fallback)
+    const toWorkHours = (r) => ({
+      start_time: fmtT(r.start_time, DEFAULT_WORK_HOURS.start_time),
+      end_time: fmtT(r.end_time, DEFAULT_WORK_HOURS.end_time),
+      lunch_start: fmtT(r.lunch_start, DEFAULT_WORK_HOURS.lunch_start),
+      lunch_end: fmtT(r.lunch_end, DEFAULT_WORK_HOURS.lunch_end)
+    })
+    const roleHours = {}
+    roleWorkHours.forEach(r => { roleHours[String(r.role || '').toLowerCase()] = toWorkHours(r) })
+    const userHours = {}
+    userWorkHours.forEach(u => { userHours[u.user_id] = toWorkHours(u) })
+    const hoursByUser = {}
+    activeUsers.forEach(u => {
+      hoursByUser[u.id] = userHours[u.id] || roleHours[String(u.role || '').toLowerCase()] || DEFAULT_WORK_HOURS
     })
 
-    // user-level override
-    const userHoursOverride = {}
-    const userLunchOverride = {}
-    userWorkHours.forEach(u => {
-      const start = parseTime(u.start_time)
-      const end = parseTime(u.end_time)
-      const lunchStart = parseTime(u.lunch_start)
-      const lunchEnd = parseTime(u.lunch_end)
-      const lunchBreak = (lunchStart && lunchEnd) ? (lunchEnd - lunchStart) : 1
-      userHoursOverride[u.user_id] = end - start - lunchBreak
-      userLunchOverride[u.user_id] = lunchBreak
-    })
-
-    // จัดกลุ่ม steps ตาม task_id
+    // จัดกลุ่ม steps ตาม task_id แล้วคำนวณสถานะภาพรวมของแต่ละโครงการครั้งเดียว
     const stepsByTask = {}
     allSteps.forEach(step => {
       if (!stepsByTask[step.task_id]) stepsByTask[step.task_id] = []
       stepsByTask[step.task_id].push(step)
     })
-
-    // assign steps ให้แต่ละ task
     tasks.forEach(task => {
       task.steps = stepsByTask[task.id] || []
-    })
-
-    // สร้าง map user -> role hours per day และ lunch break (user-level override role-level)
-    const userRoleHours = {}
-    const userLunchBreak = {}
-    activeUsers.forEach(u => {
-      userRoleHours[u.id] = userHoursOverride[u.id] ?? roleHoursMap[u.role] ?? 7
-      userLunchBreak[u.id] = userLunchOverride[u.id] ?? roleLunchMap[u.role] ?? 1
+      task._state = projectState(task)
     })
 
     // Store for user filter
     allLeaves.value = leaves
     allDailyWork.value = dailyWork
-    allRoleHoursMap.value = userRoleHours
-    allLunchBreakMap.value = userLunchBreak
+    activeUsersList.value = activeUsers
+    workHoursByUser.value = hoursByUser
+    holidaySet.value = new Set(holidays.map(h => String(h.holiday_date || '').slice(0, 10)).filter(Boolean))
+    workloadByUser.value = buildWorkloadByUser(tasks)
+    allTasks.value = tasks
     userOptions.value = activeUsers.map(u => ({
       label: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`,
       value: u.id
@@ -1110,218 +1241,58 @@ const loadData = async () => {
     // Calculate stats
     stats.value.totalUsers = activeUsers.length
 
-    const nowLocal = new Date()
-    const today = `${nowLocal.getFullYear()}-${String(nowLocal.getMonth() + 1).padStart(2, '0')}-${String(nowLocal.getDate()).padStart(2, '0')}`
+    const today = todayKey()
     const todayDate = new Date(today + 'T00:00:00') // Local midnight
     const weekFromNow = new Date(todayDate)
     weekFromNow.setDate(weekFromNow.getDate() + 7)
 
-    // Helper function to parse date as local
-    const parseLocalDate = (dateStr) => {
-      if (!dateStr) return null
-      const datePart = dateStr.split('T')[0]
-      return new Date(datePart + 'T00:00:00')
-    }
-
-    // Get unique user IDs who have approved leave today
+    // ผู้ใช้ที่มีใบลาอนุมัติครอบคลุมวันนี้
     const todayLeavesUsers = leaves.filter(l => {
       if (l.status !== 'approved') return false
       if (!l.start_datetime || !l.end_datetime) return false
-
-      // แปลง UTC เป็น local date
       const startDate = new Date(l.start_datetime)
       const endDate = new Date(l.end_datetime)
-
-      // เปรียบเทียบแบบ local date (ไม่สนเวลา)
       const startLocalDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
       const endLocalDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate())
-
       return startLocalDate <= todayDate && endLocalDate >= todayDate
     })
-
-    // Count unique users (DISTINCT user_id)
     const uniqueUserIds = [...new Set(todayLeavesUsers.map(l => l.user_id))]
     stats.value.todayLeaves = uniqueUserIds.length
 
-    // Engineer ที่ลงงานวันนี้ (ไม่นับคนที่ลาวันนี้)
-    const engineers = activeUsers.filter(u => u.role === 'engineer')
+    // Engineer ที่ลงงานวันนี้ (ไม่นับคนที่ลาวันนี้ และไม่นับรายการที่ยกเลิก)
+    const engineers = activeUsers.filter(isRequiredToLog)
     const availableEngineers = engineers.filter(u => !uniqueUserIds.includes(u.id))
     stats.value.totalEngineers = availableEngineers.length
-
-    const todayWorkUsers = dailyWork.filter(w => {
-      const workDate = w.work_date?.split('T')[0]
-      return workDate === today
-    })
-    const uniqueWorkUserIds = [...new Set(todayWorkUsers.map(w => w.user_id))]
-    
-    // นับเฉพาะ engineer ที่ลงงานแล้ว (ไม่รวมคนที่ลา)
+    const uniqueWorkUserIds = [...new Set(dailyWork
+      .filter(w => String(w.work_date || '').slice(0, 10) === today && w.work_status !== 'cancelled')
+      .map(w => w.user_id))]
     const engineersWorked = availableEngineers.filter(u => uniqueWorkUserIds.includes(u.id))
     stats.value.workingToday = engineersWorked.length
 
     stats.value.activeCars = parseInt(dashSummary.active_cars) || 0
 
-    // Populate data for dialogs - เฉพาะ engineer ที่ไม่ได้ลา
     workingTodayUsers.value = engineersWorked
     notWorkingUsers.value = availableEngineers.filter(u => !uniqueWorkUserIds.includes(u.id))
-    
+
     leavesTodayList.value = todayLeavesUsers.map(l => {
       const user = activeUsers.find(u => u.id === l.user_id) || {}
-      return { ...l, firstname: user.firstname, lastname: user.lastname }
+      return { ...l, firstname: user.firstname, lastname: user.lastname, nickname: user.nickname }
     })
 
-    // นับสถานะโครงการจาก workflow steps
-    stats.value.activeTasks = tasks.filter(t => {
-      // ถ้ามี workflow steps ให้ดูจาก step status
-      if (t.steps && t.steps.length > 0) {
-        const allCompleted = t.steps.every(s => s.status === 'completed')
-        return !allCompleted // ยังไม่เสร็จทุก step = กำลังดำเนินการ
-      }
-      return isActive(t.status)
-    }).length
-
-    stats.value.completedTasks = tasks.filter(t => {
-      if (t.steps && t.steps.length > 0) {
-        return t.steps.every(s => s.status === 'completed')
-      }
-      return isCompleted(t.status)
-    }).length
-
-    // Helper: ตรวจสอบว่างานยังไม่เสร็จ (รวม workflow)
-    const isTaskActive = (t) => {
-      if (t.steps && t.steps.length > 0) {
-        return !t.steps.every(s => s.status === 'completed')
-      }
-      return isActive(t.status)
-    }
-
-    // งานที่ครบกำหนดสัปดาห์นี้
-    stats.value.dueSoon = tasks.filter(t => {
+    // สถานะโครงการ (ดู utils/projectStatus.js)
+    const activeTasks = tasks.filter(t => t._state === 'active')
+    stats.value.activeTasks = activeTasks.length
+    stats.value.activeWithWorkflow = activeTasks.filter(t => t.steps.length > 0).length
+    stats.value.activeWithoutWorkflow = activeTasks.length - stats.value.activeWithWorkflow
+    stats.value.completedTasks = tasks.filter(t => t._state === 'completed').length
+    stats.value.dueSoon = activeTasks.filter(t => {
       if (!t.project_end_date) return false
       const endDate = parseLocalDate(t.project_end_date)
-      return endDate >= todayDate && endDate <= weekFromNow && isTaskActive(t)
+      return endDate >= todayDate && endDate <= weekFromNow
     }).length
+    stats.value.overdue = activeTasks.filter(t => t.project_end_date && parseLocalDate(t.project_end_date) < todayDate).length
 
-    // งานที่เลยกำหนด
-    stats.value.overdue = tasks.filter(t => {
-      if (!t.project_end_date) return false
-      const endDate = parseLocalDate(t.project_end_date)
-      return endDate < todayDate && isTaskActive(t)
-    }).length
-
-    // Work Statistics - คำนวณเวลาทำงานของสแต่ละคน (รายปี)
-    // Build workload per user from task steps assigned_users
-    const userWorkloadMap = {}
-    const taskTotalStepsMap = {}
-    const taskCompletedStepsMap = {}
-    tasks.forEach(task => {
-      const steps = task.steps || []
-      taskTotalStepsMap[task.id] = steps.length
-      taskCompletedStepsMap[task.id] = steps.filter(s => s.status === 'completed').length
-      steps.forEach((step, idx) => {
-        const assignees = step.assigned_users || []
-        assignees.forEach(u => {
-          const uid = typeof u === 'object' ? u.id : u
-          if (!uid) return
-          if (!userWorkloadMap[uid]) userWorkloadMap[uid] = []
-          userWorkloadMap[uid].push({ taskId: task.id, taskName: task.task_name, stepId: step.id, stepName: step.step_name, stepOrder: idx + 1, stepStatus: calcStepStatus(step), projectStatuses: step.project_statuses || [] })
-        })
-      })
-    })
-
-    const userWorkData = {}
-    // Group records by user+year+date to merge overlapping time ranges per day
-    const userDayRecords = {}
-    dailyWork.forEach(w => {
-      const workYear = new Date(w.work_date).getFullYear()
-      const userId = w.user_id
-      if (!userId) return
-      const key = `${userId}_${workYear}`
-      const dayKey = `${userId}_${w.work_date?.split('T')[0]}`
-      if (!userWorkData[key]) {
-        const user = activeUsers.find(u => u.id === userId)
-        if (!user) return
-        userWorkData[key] = { userId, year: workYear, userName: `${user.firstname} ${user.lastname}`, nickname: user.nickname || '', department: user.department || 'N/A', hoursPerDay: userRoleHours[userId] || 7, lunchBreak: userLunchBreak[userId] || 1, totalHours: 0, taskCount: 0, workDays: new Set(), taskHours: {} }
-      }
-      userWorkData[key].workDays.add(w.work_date?.split('T')[0])
-      userWorkData[key].taskCount += 1
-      // Collect time ranges per day for merging
-      if (w.start_time && w.end_time) {
-        if (!userDayRecords[dayKey]) userDayRecords[dayKey] = { key, lunchBreak: userWorkData[key].lunchBreak, ranges: [], taskHoursMap: {} }
-        userDayRecords[dayKey].ranges.push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
-        const taskName = w.task_name || 'ไม่ระบุ'
-        userDayRecords[dayKey].taskHoursMap[taskName] = true
-      }
-    })
-    // Merge overlapping ranges per day and accumulate hours
-    Object.values(userDayRecords).forEach(({ key, lunchBreak, ranges, taskHoursMap }) => {
-      if (!userWorkData[key] || ranges.length === 0) return
-      // Sort and merge overlapping intervals
-      ranges.sort((a, b) => a.start - b.start)
-      const merged = [ranges[0]]
-      for (let i = 1; i < ranges.length; i++) {
-        const last = merged[merged.length - 1]
-        if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
-        else merged.push({ ...ranges[i] })
-      }
-      // Sum hours from merged intervals, deduct lunch break once if spans noon
-      let dayHours = 0
-      merged.forEach(({ start, end }) => {
-        let h = end - start
-        if (start < 13 && end > 12) h -= lunchBreak
-        dayHours += Math.max(0, h)
-      })
-      userWorkData[key].totalHours += dayHours
-      // Distribute hours equally among tasks for that day
-      const taskNames = Object.keys(taskHoursMap)
-      const perTask = taskNames.length > 0 ? dayHours / taskNames.length : 0
-      taskNames.forEach(taskName => {
-        userWorkData[key].taskHours[taskName] = (userWorkData[key].taskHours[taskName] || 0) + perTask
-      })
-    })
-
-    // เพิ่ม user ที่มี workload แต่ไม่มี dailyWork (เช่น pending steps)
-    Object.keys(userWorkloadMap).forEach(uid => {
-      const uidNum = parseInt(uid)
-      const hasData = Object.values(userWorkData).some(d => d.userId === uidNum)
-      if (!hasData) {
-        const user = activeUsers.find(u => u.id === uidNum)
-        if (!user) return
-        const key = `${uidNum}_${new Date().getFullYear()}`
-        userWorkData[key] = { userId: uidNum, year: new Date().getFullYear(), userName: `${user.firstname} ${user.lastname}`, nickname: user.nickname || '', department: user.department || 'N/A', hoursPerDay: userRoleHours[uidNum] || 7, lunchBreak: userLunchBreak[uidNum] || 1, totalHours: 0, taskCount: 0, workDays: new Set(), taskHours: {} }
-      }
-    })
-
-    const statusOrder = { working: 0, in_progress: 1, overdue: 2, pending: 3, completed: 4 }
-    workStatistics.value = Object.values(userWorkData).map(data => {
-      const taskDetails = Object.entries(data.taskHours).map(([taskName, hours]) => ({ taskName, hours, percentage: (hours / data.totalHours) * 100 })).sort((a, b) => b.hours - a.hours)
-      const expectedHours = data.workDays.size * data.hoursPerDay
-      const rawWorkload = userWorkloadMap[data.userId] || []
-      
-      // จัดกลุ่ม workload ตามโครงการ
-      const projectGroups = {}
-      rawWorkload.forEach(w => {
-        if (!projectGroups[w.taskId]) {
-          projectGroups[w.taskId] = { taskId: w.taskId, taskName: w.taskName, steps: [] }
-        }
-        projectGroups[w.taskId].steps.push(w)
-      })
-      
-      // คำนวณ % ความคืบหน้าของแต่ละโครงการ
-      const workload = Object.values(projectGroups).map(proj => {
-        const totalSteps = taskTotalStepsMap[proj.taskId] ?? proj.steps.length
-        const completedSteps = taskCompletedStepsMap[proj.taskId] ?? proj.steps.filter(s => s.stepStatus === 'completed').length
-        const progress = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
-        // เรียง steps: active ก่อน completed ท้าย
-        proj.steps.sort((a, b) => (statusOrder[a.stepStatus] ?? 5) - (statusOrder[b.stepStatus] ?? 5))
-        return { ...proj, progress, totalSteps, completedSteps }
-      })
-      // filter โครงการที่ user's steps ทุก step เสร็จแล้วออก
-      .filter(proj => proj.steps.some(s => s.stepStatus !== 'completed'))
-      .sort((a, b) => (statusOrder[a.steps[0]?.stepStatus] ?? 5) - (statusOrder[b.steps[0]?.stepStatus] ?? 5))
-      
-      return { userId: data.userId, year: data.year, userName: data.userName, nickname: data.nickname || '', department: data.department, totalHours: data.totalHours, expectedHours, percentage: expectedHours > 0 ? Math.round(data.totalHours / expectedHours * 100) : 0, taskCount: data.taskCount, taskDetails, workload }
-    }).sort((a, b) => b.totalHours - a.totalHours)
-
+    lastLoadedAt.value = new Date()
     // ปิด loading ก่อน renderCharts เพื่อให้ canvas แสดง
     loading.value = false
     await nextTick()
@@ -1341,25 +1312,25 @@ const formatHoursMinutes = (hours) => {
   const h = parseFloat(hours) || 0
   const hrs = Math.floor(h)
   const mins = Math.round((h - hrs) * 60)
-  return `${hrs} ชม. ${mins} นาที`
+  return mins === 60 ? `${hrs + 1} ชม. 0 นาที` : `${hrs} ชม. ${mins} นาที`
 }
 
 const renderCharts = (leaves, tasks) => {
   // Leave Chart - แสดงจำนวนวันลาของแต่ละคนแยกตามประเภท (รายปี)
   if (leaveChartInstance) leaveChartInstance.destroy()
+  if (!leaveChart.value || !taskChart.value) return
 
   const currentYear = new Date().getFullYear()
   const users = {}
   const leaveTypes = new Set()
 
-  // รวบรวมข้อมูล
   leaves.forEach(l => {
     if (l.status !== 'approved') return
     const leaveYear = new Date(l.start_datetime).getFullYear()
     if (leaveYear !== currentYear) return
 
     const userId = l.user_id
-    const userName = userNameMap.value[userId] || l.user_name || 'ไม่ระบุ'
+    const userName = userNameMap.value[userId] || l.employee_name || 'ไม่ระบุ'
     const leaveType = l.leave_type || 'อื่นๆ'
     const days = parseFloat(l.total_days) || 0
 
@@ -1385,11 +1356,10 @@ const renderCharts = (leaves, tasks) => {
 
   const labels = sortedUserKeys.map(key => users[key].userName)
 
-  // สร้าง datasets สำหรับแต่ละประเภทการลา
-  const datasets = Array.from(leaveTypes).map(type => ({
+  const datasets = Array.from(leaveTypes).map((type, i) => ({
     label: leaveTypeLabels.value[type] || type,
     data: sortedUserKeys.map(key => users[key][type] || 0),
-    backgroundColor: leaveTypeColors.value[type] || '#' + Math.floor(Math.random() * 16777215).toString(16)
+    backgroundColor: leaveTypeColors.value[type] || FALLBACK_COLORS[i % FALLBACK_COLORS.length]
   }))
 
   leaveChartInstance = new Chart(leaveChart.value, {
@@ -1405,8 +1375,10 @@ const renderCharts = (leaves, tasks) => {
       scales: {
         x: {
           beginAtZero: true,
+          stacked: true,
           title: { display: true, text: 'จำนวนวัน' }
-        }
+        },
+        y: { stacked: true }
       },
       plugins: {
         legend: { display: true, position: 'top' }
@@ -1432,59 +1404,43 @@ const renderCharts = (leaves, tasks) => {
     }
   })
 
-  // Task Chart - store tasks for click event
+  // สถานะโครงการที่กำลังดำเนินการ (สูตรเดียวกับหน้า "โครงการ") — แท่งแนวนอนเรียงจากมากไปน้อย
   if (taskChartInstance) taskChartInstance.destroy()
-
-  allTasks.value = tasks
-  const taskStatus = {}
-
-  // นับสถานะจาก project_statuses ของ workflow steps (รองรับหลายสถานะ)
-  tasks.forEach(t => {
-    if (t.steps && t.steps.length > 0) {
-      // หา step ล่าสุดที่มีการลงงาน
-      const workingSteps = t.steps.filter(s => s.has_work_logged)
-      if (workingSteps.length > 0) {
-        const latestStep = workingSteps.sort((a, b) =>
-          new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
-        )[0]
-        // ใช้ project_statuses (array)
-        if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
-          latestStep.project_statuses.forEach(ps => {
-            taskStatus[ps] = (taskStatus[ps] || 0) + 1
-          })
-        } else {
-          taskStatus['ไม่ระบุ'] = (taskStatus['ไม่ระบุ'] || 0) + 1
-        }
-      } else {
-        // มี workflow แต่ยังไม่มีการลงงาน
-        taskStatus['ไม่ระบุ'] = (taskStatus['ไม่ระบุ'] || 0) + 1
-      }
-    } else {
-      // ไม่มี workflow - ถ้า status เป็น null/undefined หรือ '-' ให้เป็น 'ไม่ระบุ'
-      let status = t.status
-      if (!status || status === '-') status = 'ไม่ระบุ'
-      taskStatus[status] = (taskStatus[status] || 0) + 1
-    }
+  const counts = {}
+  tasks.filter(t => t._state === 'active').forEach(t => {
+    taskStatusKeys(t).forEach(key => { counts[key] = (counts[key] || 0) + 1 })
   })
-
-  const statusLabels = Object.keys(taskStatus)
+  const entries = Object.entries(counts).sort((a, b) => b[1] - a[1])
+  const statusKeys = entries.map(([key]) => key)
+  const isSpecial = (key) => key === STATUS_NO_STATUS || key === STATUS_NO_WORKFLOW
 
   taskChartInstance = new Chart(taskChart.value, {
-    type: 'doughnut',
+    type: 'bar',
     data: {
-      labels: statusLabels,
+      labels: entries.map(([key, n]) => `${statusLabel(key)} (${n})`),
       datasets: [{
-        data: Object.values(taskStatus),
-        backgroundColor: statusLabels.map(s => workStatusColors.value[s] || '#9e9e9e')
+        label: 'จำนวนโครงการ',
+        data: entries.map(([, n]) => n),
+        backgroundColor: statusKeys.map(key => isSpecial(key) ? '#94a3b8' : accessibleBg(workStatusColors.value[key] || '#6c757d'))
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      indexAxis: 'y',
+      scales: {
+        x: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'จำนวนโครงการ' } }
+      },
+      plugins: { legend: { display: false } },
+      onHover: (event, elements) => {
+        const canvas = event?.native?.target
+        if (canvas && canvas.style) {
+          canvas.style.cursor = elements && elements.length ? 'pointer' : 'default'
+        }
+      },
       onClick: (event, elements) => {
         if (elements.length > 0) {
-          const index = elements[0].index
-          selectedTaskStatus.value = statusLabels[index]
+          selectedTaskStatus.value = statusKeys[elements[0].index]
           showTaskStatusDialog.value = true
         }
       }
@@ -1741,6 +1697,126 @@ const renderCharts = (leaves, tasks) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+}
+
+/* คำอธิบายสั้น ๆ ว่าตัวเลขนับอย่างไร */
+.card-hint {
+  display: block;
+  margin-top: 0.2rem;
+  color: #526074;
+  font-size: max(0.75rem, var(--min-fs));
+  line-height: 1.35;
+}
+
+.summary-card.card-alert {
+  border: 1.5px solid #fca5a5;
+  background: #fef2f2;
+}
+
+.data-time {
+  color: #ffffff;
+  font-size: max(0.8rem, var(--min-fs));
+  white-space: nowrap;
+}
+
+.refresh-btn {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.attention-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.attention-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  color: #b91c1c;
+  font-size: max(0.85rem, var(--min-fs));
+}
+
+.attention-chip,
+.attention-more {
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: max(0.8rem, var(--min-fs));
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.attention-chip:hover,
+.attention-more:hover {
+  background: #fee2e2;
+}
+
+.attention-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #047857;
+  font-weight: 700;
+  font-size: max(0.85rem, var(--min-fs));
+}
+
+.attention-meta {
+  margin-left: auto;
+  color: #526074;
+  font-size: max(0.8rem, var(--min-fs));
+}
+
+.chart-sub {
+  font-weight: 500;
+  color: #526074;
+  font-size: max(0.75rem, var(--min-fs));
+}
+
+.calc-note {
+  margin: 0 0 0.75rem;
+  color: #526074;
+  font-size: max(0.78rem, var(--min-fs));
+  line-height: 1.5;
+}
+
+.missing-days {
+  font-weight: 700;
+  color: #b91c1c;
+  cursor: help;
+  border-bottom: 1px dashed #b91c1c;
+}
+
+.late-days {
+  font-weight: 600;
+  color: #b45309;
+}
+
+.ok-days {
+  color: #047857;
+  font-weight: 600;
+}
+
+.user-ts-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.user-ts-head h3 {
+  margin: 0;
 }
 
 /* Charts Container with Swipe */

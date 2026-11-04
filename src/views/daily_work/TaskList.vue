@@ -612,6 +612,7 @@ import WorkflowBuilder from '@/components/WorkflowBuilder.vue'
 import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { accessibleBg } from '@/utils/color'
+import { getCurrentStatusStep } from '@/utils/projectStatus'
 
 export default {
   name: 'TaskList',
@@ -987,24 +988,9 @@ export default {
     statusOptionByKey(key) {
       return this.currentStatusOptions.find(o => o.key === key) || null
     },
+    // สูตรอยู่ที่ utils/projectStatus.js (ใช้ร่วมกับ Dashboard)
     getCurrentStatusStep(steps) {
-      if (!steps || steps.length === 0) return null
-      const today = new Date()
-      today.setHours(23, 59, 59, 999)
-      const toTime = v => { const t = v ? new Date(v).getTime() : NaN; return Number.isFinite(t) ? t : 0 }
-
-      const candidates = steps
-        .filter(s => Array.isArray(s.project_statuses) && s.project_statuses.length > 0)
-        .map(s => {
-          const editedAt = toTime(s.project_status_updated_at)
-          const workedAt = s.has_work_logged && toTime(s.latest_work_date) <= today.getTime() ? toTime(s.latest_work_date) : 0
-          return { step: s, activity: Math.max(editedAt, workedAt) }
-        })
-        .filter(c => c.activity > 0)
-
-      if (candidates.length === 0) return null
-      candidates.sort((x, y) => (y.activity - x.activity) || ((y.step.step_order ?? 0) - (x.step.step_order ?? 0)))
-      return candidates[0].step
+      return getCurrentStatusStep(steps)
     },
     getProjectStatusLabel(status) {
       const found = this.workStatuses.find(s => s.value === status)
