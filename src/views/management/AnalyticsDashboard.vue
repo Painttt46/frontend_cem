@@ -92,6 +92,65 @@
           <Card class="mb-4">
             <template #content>
               <div class="chart-header">
+                <h3>งานที่แต่ละคนถืออยู่ตอนนี้</h3>
+                <InputText v-model="workloadSearch" placeholder="ค้นหา ชื่อ / แผนก / โครงการ..." class="workload-search" aria-label="ค้นหางานที่ถืออยู่" />
+              </div>
+              <p class="workload-note">
+                นับเฉพาะขั้นตอนที่ยังไม่เสร็จของโครงการที่ยังดำเนินการอยู่ · กำลังทำ = มีการลงงานแล้ว · เกินกำหนด = เลยวันสิ้นสุดของขั้นตอน
+                · ชั่วโมงเป็นของเดือน{{ workloadMonthLabel }} {{ selectedYear }} · กดลูกศรเพื่อดูโครงการและขั้นตอน
+              </p>
+              <DataTable v-model:expandedRows="expandedWorkload" :value="currentWorkload" :loading="loading" dataKey="userId"
+                paginator :rows="10" sortField="overdue" :sortOrder="-1" class="p-datatable-sm">
+                <template #empty>ไม่มีข้อมูลงานตามตัวกรองที่เลือก</template>
+                <Column :expander="true" style="width: 3rem" />
+                <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 160px" />
+                <Column field="department" header="แผนก" sortable style="min-width: 100px" />
+                <Column field="projects" header="โครงการ" sortable style="min-width: 80px" />
+                <Column field="working" header="กำลังทำ" sortable style="min-width: 80px" />
+                <Column field="overdue" header="เกินกำหนด" sortable style="min-width: 90px">
+                  <template #body="{ data }">
+                    <span :class="data.overdue > 0 ? 'wl-overdue' : ''">{{ data.overdue }}</span>
+                  </template>
+                </Column>
+                <Column field="dueSoon" header="ครบใน 7 วัน" sortable style="min-width: 90px" />
+                <Column field="pending" header="ยังไม่เริ่ม" sortable style="min-width: 80px" />
+                <Column field="monthHours" :header="`ชั่วโมง ${workloadMonthLabel}`" sortable style="min-width: 110px">
+                  <template #body="{ data }">{{ data.monthHours.toFixed(1) }} ชม.</template>
+                </Column>
+                <Column field="lastDate" header="ลงงานล่าสุด" sortable style="min-width: 170px">
+                  <template #body="{ data }">
+                    <template v-if="data.lastDate">
+                      <div>{{ formatLeaveDate(data.lastDate) }}</div>
+                      <small v-if="data.lastLocation" class="wl-last-place"><i class="pi pi-map-marker"></i> {{ data.lastLocation }}</small>
+                    </template>
+                    <span v-else>-</span>
+                  </template>
+                </Column>
+                <template #expansion="{ data }">
+                  <div class="wl-expansion">
+                    <p v-if="!data.projectList.length" class="wl-empty">ไม่มีขั้นตอนที่ได้รับมอบหมายและยังไม่เสร็จ</p>
+                    <div v-for="proj in data.projectList" :key="proj.taskId" class="wl-project">
+                      <div class="wl-project-name">
+                        <span v-if="proj.soNumber" class="wl-so">{{ proj.soNumber }}</span>{{ proj.taskName }}
+                        <small>คืบหน้า {{ proj.progress }}% ({{ proj.completedSteps }}/{{ proj.totalSteps }})</small>
+                      </div>
+                      <template v-for="step in proj.steps" :key="step.stepId">
+                        <div v-if="step.stepStatus !== 'completed'" class="wl-step">
+                          <span class="wl-dot" :class="`wl-dot-${step.stepStatus}`"></span>
+                          <span class="wl-step-name">{{ step.stepName }}</span>
+                          <span class="wl-step-state" :class="`wl-state-${step.stepStatus}`">{{ STEP_LABELS[step.stepStatus] }}</span>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </DataTable>
+            </template>
+          </Card>
+
+          <Card class="mb-4">
+            <template #content>
+              <div class="chart-header">
                 <h3>Workload รายบุคคล (ชั่วโมง/เดือน)</h3>
                 <Dropdown v-model="workloadMonth" :options="monthOptions" optionLabel="label" optionValue="value" class="month-filter" />
               </div>
@@ -216,7 +275,9 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Chart } from 'chart.js/auto'
 import axios from '@/utils/axiosConfig'
-import { formatLeaveDays } from '@/utils/dateUtils'
+import { formatLeaveDays, toDateKey } from '@/utils/dateUtils'
+import { dayHours } from '@/utils/workTime'
+import { buildWorkloadByUser, workloadSummary } from '@/utils/workload'
 import { useErrorHandler } from '@/composables/useErrorHandler'
 import CountUp from '@/components/CountUp.vue'
 
@@ -232,6 +293,10 @@ const departmentOptions = ref([])
 const activeTab = ref(0)
 
 // Workload
+const STEP_LABELS = { working: 'กำลังทำ', overdue: 'เกินกำหนด', pending: 'ยังไม่เริ่ม' }
+const workloadSearch = ref('')
+const expandedWorkload = ref([])
+const workloadByUser = ref({})
 const workloadMonth = ref(new Date().getMonth())
 const monthOptions = [
   { label: 'มกราคม', value: 0 }, { label: 'กุมภาพันธ์', value: 1 }, { label: 'มีนาคม', value: 2 },
@@ -264,28 +329,47 @@ let charts = {}
 
 // Gantt
 
-// Helper functions
-const parseTime = (timeStr) => {
-  if (!timeStr) return 0
-  const [h, m] = timeStr.split(':').map(Number)
-  return h + (m || 0) / 60
-}
-
-
 // Computed
 const filteredUsers = computed(() => {
   if (!selectedDepartment.value) return users.value
   return users.value.filter(u => u.department === selectedDepartment.value)
 })
 
+// รายการลงงานที่นับ: ไม่รวมที่ยกเลิก และไม่รวมงานที่ลงล่วงหน้า (วันที่ยังมาไม่ถึง)
+const countedWork = computed(() => {
+  const today = toDateKey(new Date())
+  return dailyWork.value.filter(w => w.work_status !== 'cancelled' && w.work_date && String(w.work_date).slice(0, 10) <= today)
+})
+
 const filteredDailyWork = computed(() => {
   const userIds = new Set(filteredUsers.value.map(u => u.id))
-  const filtered = dailyWork.value.filter(w => {
-    const workYear = new Date(w.work_date).getFullYear()
-    return workYear === selectedYear.value && userIds.has(w.user_id)
-  })
-  return filtered
+  const year = String(selectedYear.value)
+  return countedWork.value.filter(w => String(w.work_date).slice(0, 4) === year && userIds.has(w.user_id))
 })
+
+// ชั่วโมงรวมต่อกลุ่ม: รวมรายการของคนเดียววันเดียวกันก่อน (ช่วงเวลาที่ทับกันนับครั้งเดียว, สูตรเดียวกับระบบลงงาน)
+const sumHoursBy = (records, groupOf) => {
+  const days = new Map()
+  records.forEach(w => {
+    const key = `${w.user_id}_${String(w.work_date).slice(0, 10)}`
+    if (!days.has(key)) days.set(key, [])
+    days.get(key).push(w)
+  })
+  const totals = {}
+  days.forEach(list => {
+    const group = groupOf(list[0])
+    if (group === null || group === undefined) return
+    totals[group] = (totals[group] || 0) + dayHours(list).total
+  })
+  return totals
+}
+
+const workloadMonthKey = computed(() => `${selectedYear.value}-${String(workloadMonth.value + 1).padStart(2, '0')}`)
+const workloadMonthLabel = computed(() => monthOptions.find(m => m.value === workloadMonth.value)?.label || '')
+const monthHoursByUser = computed(() => sumHoursBy(
+  filteredDailyWork.value.filter(w => String(w.work_date).slice(0, 7) === workloadMonthKey.value),
+  w => w.user_id
+))
 
 const filteredLeaves = computed(() => {
   const userIds = new Set(filteredUsers.value.map(u => u.id))
@@ -299,37 +383,14 @@ const filteredLeaves = computed(() => {
 
 // Workload Stats
 const workloadStats = computed(() => {
-  let totalHours = 0
-  const userSet = new Set()
-  const daySet = new Set()
-  // Merge ranges per user+day to avoid double-counting same time slot across projects
-  const userDayRanges = {}
-  filteredDailyWork.value.forEach(w => {
-    userSet.add(w.user_id)
-    daySet.add(w.work_date)
-    if (w.start_time && w.end_time) {
-      const dk = `${w.user_id}_${w.work_date}`
-      if (!userDayRanges[dk]) userDayRanges[dk] = []
-      userDayRanges[dk].push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
-    }
-  })
-  Object.values(userDayRanges).forEach(ranges => {
-    ranges.sort((a, b) => a.start - b.start)
-    const merged = [ranges[0]]
-    for (let i = 1; i < ranges.length; i++) {
-      const last = merged[merged.length - 1]
-      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
-      else merged.push({ ...ranges[i] })
-    }
-    merged.forEach(({ start, end }) => {
-      let h = end - start
-      if (start < 13 && end > 12) h -= 1
-      totalHours += Math.max(0, h)
-    })
-  })
-  
-  const avgHours = userSet.size > 0 ? (totalHours / userSet.size / 12).toFixed(1) : '0'
-  
+  const records = filteredDailyWork.value
+  const userSet = new Set(records.map(w => w.user_id))
+  const daySet = new Set(records.map(w => String(w.work_date).slice(0, 10)))
+  const totalHours = Object.values(sumHoursBy(records, () => 'all')).reduce((a, b) => a + b, 0)
+  // เฉลี่ยตามจำนวนเดือนที่ผ่านมาจริง (ปีปัจจุบันยังไม่ครบ 12 เดือน — เดิมหาร 12 เสมอ)
+  const months = selectedYear.value === currentYear ? new Date().getMonth() + 1 : 12
+  const avgHours = userSet.size > 0 ? (totalHours / userSet.size / months).toFixed(1) : '0'
+
   return {
     totalHours: totalHours.toFixed(0) + ' ชม.',
     activeUsers: userSet.size + ' คน',
@@ -338,63 +399,58 @@ const workloadStats = computed(() => {
   }
 })
 
+// งานที่แต่ละคนถืออยู่ตอนนี้ (ไม่ขึ้นกับปี/เดือนที่เลือก ยกเว้นคอลัมน์ชั่วโมง)
+const lastWorkByUser = computed(() => {
+  const map = {}
+  countedWork.value.forEach(w => {
+    const date = String(w.work_date).slice(0, 10)
+    const cur = map[w.user_id]
+    const stamp = `${date} ${w.start_time || ''}`
+    if (!cur || stamp > cur.stamp) map[w.user_id] = { stamp, date, location: (w.location || '').trim() }
+  })
+  return map
+})
+
+const currentWorkload = computed(() => {
+  const q = workloadSearch.value.trim().toLowerCase()
+  return filteredUsers.value
+    .filter(u => u.is_active !== false)
+    .map(u => {
+      const projectList = workloadByUser.value[u.id] || []
+      const last = lastWorkByUser.value[u.id]
+      return {
+        userId: u.id,
+        userName: `${u.firstname} ${u.lastname}${u.nickname ? ` (${u.nickname})` : ''}`,
+        department: u.department || '-',
+        ...workloadSummary(projectList),
+        projectList,
+        monthHours: monthHoursByUser.value[u.id] || 0,
+        lastDate: last?.date || null,
+        lastLocation: last?.location || ''
+      }
+    })
+    .filter(r => r.projects > 0 || r.monthHours > 0)
+    .filter(r => !q || r.userName.toLowerCase().includes(q) || r.department.toLowerCase().includes(q)
+      || r.projectList.some(p => `${p.taskName} ${p.soNumber || ''}`.toLowerCase().includes(q)))
+    .sort((a, b) => (b.overdue - a.overdue) || (b.openSteps - a.openSteps))
+})
+
 // Workload chart data
 const workloadChartData = computed(() => {
-  const userDayRanges = {}
-  filteredDailyWork.value.forEach(w => {
-    const d = new Date(w.work_date)
-    if (d.getMonth() !== workloadMonth.value) return
-    const user = users.value.find(u => u.id === w.user_id)
-    if (!user || !w.start_time || !w.end_time) return
-    const name = `${user.firstname} ${user.lastname}`
-    const dk = `${name}_${w.work_date}`
-    if (!userDayRanges[dk]) userDayRanges[dk] = { name, ranges: [] }
-    userDayRanges[dk].ranges.push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
-  })
-  const monthData = {}
-  Object.values(userDayRanges).forEach(({ name, ranges }) => {
-    ranges.sort((a, b) => a.start - b.start)
-    const merged = [ranges[0]]
-    for (let i = 1; i < ranges.length; i++) {
-      const last = merged[merged.length - 1]
-      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
-      else merged.push({ ...ranges[i] })
-    }
-    merged.forEach(({ start, end }) => {
-      let h = end - start
-      if (start < 13 && end > 12) h -= 1
-      monthData[name] = (monthData[name] || 0) + Math.max(0, h)
-    })
-  })
-  return Object.entries(monthData).sort((a, b) => b[1] - a[1]).slice(0, 15)
+  const names = {}
+  users.value.forEach(u => { names[u.id] = `${u.firstname} ${u.lastname}` })
+  return Object.entries(monthHoursByUser.value)
+    .filter(([id]) => names[id])
+    .map(([id, hours]) => [names[id], hours])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15)
 })
 
 // Team workload data
 const teamWorkloadData = computed(() => {
-  const userDayRanges = {}
-  filteredDailyWork.value.forEach(w => {
-    const user = users.value.find(u => u.id === w.user_id)
-    if (!user?.department || !w.start_time || !w.end_time) return
-    const dk = `${w.user_id}_${w.work_date}`
-    if (!userDayRanges[dk]) userDayRanges[dk] = { dept: user.department, ranges: [] }
-    userDayRanges[dk].ranges.push({ start: parseTime(w.start_time), end: parseTime(w.end_time) })
-  })
-  const deptData = {}
-  Object.values(userDayRanges).forEach(({ dept, ranges }) => {
-    ranges.sort((a, b) => a.start - b.start)
-    const merged = [ranges[0]]
-    for (let i = 1; i < ranges.length; i++) {
-      const last = merged[merged.length - 1]
-      if (ranges[i].start <= last.end) last.end = Math.max(last.end, ranges[i].end)
-      else merged.push({ ...ranges[i] })
-    }
-    merged.forEach(({ start, end }) => {
-      let h = end - start
-      if (start < 13 && end > 12) h -= 1
-      deptData[dept] = (deptData[dept] || 0) + Math.max(0, h)
-    })
-  })
-  return Object.entries(deptData)
+  const deptOf = {}
+  users.value.forEach(u => { deptOf[u.id] = u.department })
+  return Object.entries(sumHoursBy(filteredDailyWork.value, w => deptOf[w.user_id] || null))
 })
 
 // Has leave data
@@ -440,18 +496,23 @@ const loadData = async () => {
   loading.value = true
   try {
     // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
-    const [usersRes, workRes, leavesRes, tasksRes, leaveTypesRes] = await Promise.all([
+    const [usersRes, workRes, leavesRes, tasksRes, leaveTypesRes, stepsRes] = await Promise.all([
       axios.get('/api/users', { silent: true }),
       axios.get('/api/daily-work', { silent: true }),
       axios.get('/api/leave', { silent: true }),
       axios.get('/api/tasks', { silent: true }),
-      axios.get('/api/leave/leave-types', { silent: true })
+      axios.get('/api/leave/leave-types', { silent: true }),
+      axios.get('/api/task-steps/all', { silent: true })
     ])
 
     users.value = usersRes.data // ไม่ filter status เพราะอาจไม่มี field นี้
     dailyWork.value = workRes.data
     leaves.value = leavesRes.data
     tasks.value = tasksRes.data
+
+    const stepsByTask = {}
+    stepsRes.data.forEach(s => { (stepsByTask[s.task_id] = stepsByTask[s.task_id] || []).push(s) })
+    workloadByUser.value = buildWorkloadByUser(tasks.value.map(t => ({ ...t, steps: stepsByTask[t.id] || [] })))
 
     // Department options
     const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))]
@@ -679,6 +740,24 @@ onMounted(loadData)
 .chart-container { position: relative; }
 .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
 .chart-header h3 { margin: 0; color: #1a1a2e; }
+.workload-search { flex: 0 1 18rem; min-width: 0; }
+.workload-note { margin: 0 0 0.75rem; color: #526074; font-size: max(0.78rem, var(--min-fs)); line-height: 1.5; }
+.wl-overdue { font-weight: 700; color: #b91c1c; }
+.wl-last-place { display: block; color: #526074; font-size: max(0.78rem, var(--min-fs)); overflow-wrap: anywhere; }
+.wl-expansion { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 0.75rem; padding: 0.5rem; }
+.wl-empty { margin: 0; color: #526074; }
+.wl-project { min-width: 0; padding: 0.5rem 0.6rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
+.wl-project-name { color: #0f172a; font-weight: 600; font-size: max(0.88rem, var(--min-fs)); overflow-wrap: anywhere; }
+.wl-project-name small { display: block; color: #526074; font-weight: 500; font-size: max(0.75rem, var(--min-fs)); }
+.wl-so { display: inline-block; margin-right: 0.35rem; padding: 0 0.35rem; border-radius: 5px; background: #e0e7ff; color: #3730a3; font-family: monospace; font-size: max(0.75rem, var(--min-fs)); font-weight: 700; }
+.wl-step { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.25rem; font-size: max(0.82rem, var(--min-fs)); color: #334155; }
+.wl-step-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.wl-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #64748b; }
+.wl-dot-working { background: #059669; }
+.wl-dot-overdue { background: #dc2626; }
+.wl-step-state { flex: 0 0 auto; color: #526074; font-size: max(0.75rem, var(--min-fs)); }
+.wl-state-working { color: #047857; font-weight: 600; }
+.wl-state-overdue { color: #b91c1c; font-weight: 700; }
 .chart-row { display: flex; gap: var(--section-gap); align-items: flex-start; }
 
 /* Legend */

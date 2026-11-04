@@ -283,9 +283,14 @@
             +{{ notWorkingUsers.length - 12 }} คน
           </button>
         </template>
-        <span v-else class="attention-ok"><i class="pi pi-check-circle"></i> Engineer ที่ไม่ได้ลาลงงานวันนี้ครบแล้ว</span>
+        <span v-else class="attention-ok"><i class="pi pi-check-circle"></i> {{ isWorkdayToday ? 'Engineer ที่ไม่ได้ลาลงงานวันนี้ครบแล้ว' : 'วันนี้เป็นวันหยุด ไม่ต้องลงงาน' }}</span>
         <span class="attention-meta">ผู้ใช้งานทั้งหมด {{ stats.totalUsers }} คน · รถกำลังใช้งาน {{ stats.activeCars }} คัน</span>
       </div>
+
+      <!-- วันนี้ใครทำอะไร ที่ไหน + งานที่ถืออยู่ -->
+      <TeamTodayBoard v-if="activeUsersList.length" :users="activeUsersList" :workload-by-user="workloadByUser"
+        :leaves="allLeaves" :holidays="holidaySet" :leave-type-labels="leaveTypeLabels" :refresh-key="lastLoadedAt"
+        @select-user="selectedUser = $event" @open-step="goToStepProgress" />
 
       <!-- Charts with Swipe Support -->
       <div class="charts-container mb-4" v-if="!loading">
@@ -330,7 +335,7 @@
             · ไม่นับรายการที่ยกเลิกและงานที่ลงล่วงหน้า · เลื่อนเมาส์ที่ช่อง "ขาด" เพื่อดูวันที่
           </p>
           <DataTable :value="workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="missingDays"
-            :sortOrder="-1" :expandedRows="expandedRows">
+            :sortOrder="-1" v-model:expandedRows="expandedRows" dataKey="userId">
             <Column :expander="true" style="width: 3rem" />
             <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
               <template #body="{ data }">
@@ -571,8 +576,10 @@ import axios from '@/utils/axiosConfig'
 import userService from '@/services/userService'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import CountUp from '@/components/CountUp.vue'
+import TeamTodayBoard from './TeamTodayBoard.vue'
 import { getCurrentStatusStep, projectState } from '@/utils/projectStatus'
 import { recordHours, dayHours, attendance } from '@/utils/workTime'
+import { buildWorkloadByUser, isRequiredToLog } from '@/utils/workload'
 import { toDateKey } from '@/utils/dateUtils'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -600,9 +607,6 @@ const showUserDialog = ref(false)
 const selectedUserId = ref(null)
 
 // ===== กติกาการนับ (ใช้ทั้งภาพรวมและรายคน) =====
-// role ที่ต้องลงงานทุกวันทำงาน (ตรงกับการแจ้งเตือน "ยังไม่ลงงาน" ใน Teams) — role อื่นไม่คิดวันขาด/ชั่วโมงที่ควรทำ
-const REQUIRED_ROLES = ['engineer']
-const isRequiredToLog = (user) => REQUIRED_ROLES.includes(String(user?.role || '').trim().toLowerCase())
 // เวลาทำงานเมื่อไม่ได้ตั้งค่าไว้ (เหมือนหน้าแจ้งลา)
 const DEFAULT_WORK_HOURS = { start_time: '09:00', end_time: '18:00', lunch_start: '12:00', lunch_end: '13:00' }
 const todayKey = () => toDateKey(new Date())
@@ -612,6 +616,7 @@ const pad2 = (n) => String(n).padStart(2, '0')
 const allTasks = ref([])
 const workingTodayUsers = ref([])
 const notWorkingUsers = ref([])
+const isWorkdayToday = ref(true)
 const leavesTodayList = ref([])
 const showTaskStatusDialog = ref(false)
 const showOverdueDialog = ref(false)
@@ -1112,66 +1117,8 @@ const getCategoryColor = (cat) => {
   return accessibleBg(categoryColors.value[cat] || '#6c757d')
 }
 
-const calcStepStatus = (step) => {
-  if (step.status === 'completed') return 'completed'
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  if (step.end_date) {
-    const endDate = new Date(step.end_date)
-    endDate.setHours(0, 0, 0, 0)
-    if (today > endDate) return 'overdue'
-  }
-  if (step.has_work_logged && step.latest_work_date) {
-    const wDate = new Date(step.latest_work_date)
-    wDate.setHours(0, 0, 0, 0)
-    if (wDate <= today) return 'working'
-  }
-  return 'pending'
-}
-
 const getStatusColor = (status) => {
   return accessibleBg(workStatusColors.value[status] || '#6c757d')
-}
-
-// workload ของแต่ละคน (step ที่ได้รับมอบหมาย จัดกลุ่มตามโครงการ) — ไม่ขึ้นกับช่วงเวลาที่เลือก
-const buildWorkloadByUser = (tasks) => {
-  const statusOrder = { working: 0, in_progress: 1, overdue: 2, pending: 3, completed: 4 }
-  const raw = {}
-  const totalSteps = {}
-  const completedSteps = {}
-  tasks.forEach(task => {
-    const steps = task.steps || []
-    totalSteps[task.id] = steps.length
-    completedSteps[task.id] = steps.filter(s => s.status === 'completed').length
-    steps.forEach((step, idx) => {
-      (step.assigned_users || []).forEach(u => {
-        const uid = typeof u === 'object' ? u.id : u
-        if (!uid) return
-        if (!raw[uid]) raw[uid] = []
-        raw[uid].push({ taskId: task.id, taskName: task.task_name, stepId: step.id, stepName: step.step_name, stepOrder: idx + 1, stepStatus: calcStepStatus(step), projectStatuses: step.project_statuses || [] })
-      })
-    })
-  })
-  const result = {}
-  Object.entries(raw).forEach(([uid, items]) => {
-    const groups = {}
-    items.forEach(w => {
-      if (!groups[w.taskId]) groups[w.taskId] = { taskId: w.taskId, taskName: w.taskName, steps: [] }
-      groups[w.taskId].steps.push(w)
-    })
-    result[uid] = Object.values(groups)
-      .map(proj => {
-        const total = totalSteps[proj.taskId] ?? proj.steps.length
-        const done = completedSteps[proj.taskId] ?? proj.steps.filter(s => s.stepStatus === 'completed').length
-        // เรียง steps: active ก่อน completed ท้าย
-        proj.steps.sort((a, b) => (statusOrder[a.stepStatus] ?? 5) - (statusOrder[b.stepStatus] ?? 5))
-        return { ...proj, progress: total > 0 ? Math.round((done / total) * 100) : 0, totalSteps: total, completedSteps: done }
-      })
-      // ตัดโครงการที่ step ของคนนี้เสร็จหมดแล้ว
-      .filter(proj => proj.steps.some(s => s.stepStatus !== 'completed'))
-      .sort((a, b) => (statusOrder[a.steps[0]?.stepStatus] ?? 5) - (statusOrder[b.steps[0]?.stepStatus] ?? 5))
-  })
-  return result
 }
 
 const loadData = async () => {
@@ -1272,7 +1219,9 @@ const loadData = async () => {
     stats.value.activeCars = parseInt(dashSummary.active_cars) || 0
 
     workingTodayUsers.value = engineersWorked
-    notWorkingUsers.value = availableEngineers.filter(u => !uniqueWorkUserIds.includes(u.id))
+    // วันหยุด/เสาร์อาทิตย์ไม่ต้องลงงาน — ไม่ขึ้นเตือนว่า "ยังไม่ลงงาน"
+    isWorkdayToday.value = ![0, 6].includes(todayDate.getDay()) && !holidaySet.value.has(today)
+    notWorkingUsers.value = isWorkdayToday.value ? availableEngineers.filter(u => !uniqueWorkUserIds.includes(u.id)) : []
 
     leavesTodayList.value = todayLeavesUsers.map(l => {
       const user = activeUsers.find(u => u.id === l.user_id) || {}
