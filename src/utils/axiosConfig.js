@@ -27,6 +27,24 @@ function updateLoading(increment) {
   store.dispatch('setLoading', pendingRequests > 0)
 }
 
+// คำขออ่านข้อมูล (GET) ที่ล้มเหลวชั่วคราว เช่น backend กำลัง restart ตอน deploy (502/503/504), เครือข่ายสะดุด, ถูกจำกัดจำนวนคำขอ (429)
+// ลองใหม่อัตโนมัติ — เดิมล้มครั้งเดียวทั้งหน้าไม่มีข้อมูลจนกว่าผู้ใช้จะรีเฟรชเอง
+// ไม่ลองกับคำขอเขียนข้อมูล (POST/PUT/DELETE) เพราะอาจบันทึกซ้ำ และ 500 ลองแค่ครั้งเดียว (ส่วนใหญ่เป็นข้อผิดพลาดจริง)
+const RETRY_DELAYS_MS = [1000, 3000, 6000]
+const RETRY_STATUSES = [429, 502, 503, 504]
+
+function retryDelay(error) {
+  const config = error.config
+  if (!config || (config.method || 'get').toLowerCase() !== 'get') return null
+  if (error.code === 'ECONNABORTED' || error.code === 'ERR_CANCELED') return null
+  const attempt = config._retryCount || 0
+  const status = error.response?.status
+  const transient = !error.response || RETRY_STATUSES.includes(status)
+  if (transient && attempt < RETRY_DELAYS_MS.length) return RETRY_DELAYS_MS[attempt]
+  if (status === 500 && attempt === 0) return RETRY_DELAYS_MS[0]
+  return null
+}
+
 function endRead(config) {
   if (!config?._read) return
   config._read = false // กันนับซ้ำถ้า interceptor ถูกเรียกทั้งสองทาง
@@ -108,6 +126,12 @@ axios.interceptors.response.use(
     endRead(error.config)
     if (error.config?._upload) uploadState.count = Math.max(0, uploadState.count - 1)
     if (error.config?._write) loadingState.writes = Math.max(0, loadingState.writes - 1)
+
+    const delay = retryDelay(error)
+    if (delay !== null) {
+      error.config._retryCount = (error.config._retryCount || 0) + 1
+      return new Promise(resolve => setTimeout(resolve, delay)).then(() => axios(error.config))
+    }
 
     // Handle different error types
     if (error.response) {

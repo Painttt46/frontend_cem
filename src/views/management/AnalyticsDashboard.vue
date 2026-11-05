@@ -21,6 +21,11 @@
       </template>
     </Card>
 
+    <div v-if="loadFailures.length" class="load-error mb-4" role="alert">
+      <span><i class="pi pi-exclamation-triangle"></i> โหลดข้อมูลบางส่วนไม่สำเร็จ: {{ loadFailures.join(', ') }} — ตัวเลขที่เกี่ยวข้องอาจไม่ครบ</span>
+      <Button label="ลองใหม่" icon="pi pi-refresh" size="small" severity="danger" outlined :loading="loading" @click="loadData" />
+    </div>
+
     <!-- Tab Navigation -->
     <TabView v-model:activeIndex="activeTab">
       <!-- Tab 1: Workload -->
@@ -156,6 +161,7 @@
               </div>
               <div class="chart-container" style="height: 400px;">
                 <canvas ref="workloadChart"></canvas>
+                <div v-if="!loading && !workloadChartData.length" class="chart-empty">{{ workDataFailed ? 'โหลดข้อมูลการลงงานไม่สำเร็จ' : `ไม่มีการลงงานในเดือน${workloadMonthLabel} ${selectedYear}` }}</div>
               </div>
             </template>
           </Card>
@@ -165,6 +171,7 @@
               <h3>Workload รายทีม/แผนก</h3>
               <div class="chart-container" style="height: 350px;">
                 <canvas ref="teamWorkloadChart"></canvas>
+                <div v-if="!loading && !teamWorkloadData.length" class="chart-empty">{{ workDataFailed ? 'โหลดข้อมูลการลงงานไม่สำเร็จ' : `ไม่มีการลงงานในปี ${selectedYear}` }}</div>
               </div>
             </template>
           </Card>
@@ -283,6 +290,7 @@ import CountUp from '@/components/CountUp.vue'
 
 const { handleError } = useErrorHandler()
 const loading = ref(true)
+const loadFailures = ref([])
 
 // Filters
 const currentYear = new Date().getFullYear()
@@ -381,8 +389,15 @@ const filteredLeaves = computed(() => {
   return filtered
 })
 
+// โหลดการลงงานไม่สำเร็จและไม่มีข้อมูลเดิม — แยกจากกรณี "ไม่มีการลงงานจริง"
+const workDataFailed = computed(() => loadFailures.value.includes('การลงงาน') && dailyWork.value.length === 0)
+
 // Workload Stats
 const workloadStats = computed(() => {
+  // โหลดการลงงานไม่ได้: แสดง "—" ไม่ใช่ 0
+  if (workDataFailed.value) {
+    return { totalHours: '—', activeUsers: '—', avgHours: '—', workDays: '—' }
+  }
   const records = filteredDailyWork.value
   const userSet = new Set(records.map(w => w.user_id))
   const daySet = new Set(records.map(w => String(w.work_date).slice(0, 10)))
@@ -492,41 +507,63 @@ const leaveByType = computed(() => {
   return data
 })
 // Methods
+let loadRequestId = 0
 const loadData = async () => {
+  const requestId = ++loadRequestId
   loading.value = true
+  // แต่ละแหล่งข้อมูลล้มเหลวแยกกัน: ส่วนที่โหลดได้ยังแสดงปกติ ส่วนที่ล้มเหลวใช้ข้อมูลชุดเดิม (ถ้ามี) และแจ้งบนหน้า
+  const failed = []
+  const fetchOr = (label, url, fallback) => axios.get(url, { silent: true }).then(r => r.data).catch(error => {
+    console.error(`[Analytics] load failed (${label}):`, error)
+    failed.push(label)
+    return fallback
+  })
   try {
     // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
-    const [usersRes, workRes, leavesRes, tasksRes, leaveTypesRes, stepsRes] = await Promise.all([
-      axios.get('/api/users', { silent: true }),
-      axios.get('/api/daily-work', { silent: true }),
-      axios.get('/api/leave', { silent: true }),
-      axios.get('/api/tasks', { silent: true }),
-      axios.get('/api/leave/leave-types', { silent: true }),
-      axios.get('/api/task-steps/all', { silent: true })
+    const [usersData, workData, leavesData, tasksData, leaveTypes, stepsData] = await Promise.all([
+      fetchOr('รายชื่อพนักงาน', '/api/users', users.value),
+      fetchOr('การลงงาน', '/api/daily-work', dailyWork.value),
+      fetchOr('การลา', '/api/leave', leaves.value),
+      fetchOr('โครงการ', '/api/tasks', tasks.value),
+      fetchOr('ประเภทการลา', '/api/leave/leave-types', null),
+      fetchOr('ขั้นตอนโครงการ', '/api/task-steps/all', null)
     ])
+    // กดลองใหม่ซ้อนกัน: ใช้เฉพาะผลของคำขอล่าสุด
+    if (requestId !== loadRequestId) return
 
-    users.value = usersRes.data // ไม่ filter status เพราะอาจไม่มี field นี้
-    dailyWork.value = workRes.data
-    leaves.value = leavesRes.data
-    tasks.value = tasksRes.data
+    users.value = usersData // ไม่ filter status เพราะอาจไม่มี field นี้
+    dailyWork.value = workData
+    leaves.value = leavesData
+    tasks.value = tasksData
 
-    const stepsByTask = {}
-    stepsRes.data.forEach(s => { (stepsByTask[s.task_id] = stepsByTask[s.task_id] || []).push(s) })
-    workloadByUser.value = buildWorkloadByUser(tasks.value.map(t => ({ ...t, steps: stepsByTask[t.id] || [] })))
+    if (stepsData && !failed.includes('โครงการ')) {
+      const stepsByTask = {}
+      stepsData.forEach(s => { (stepsByTask[s.task_id] = stepsByTask[s.task_id] || []).push(s) })
+      workloadByUser.value = buildWorkloadByUser(tasks.value.map(t => ({ ...t, steps: stepsByTask[t.id] || [] })))
+    }
 
     // Department options
     const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))]
     departmentOptions.value = depts.map(d => ({ label: d, value: d }))
 
     // Leave type colors
-    leaveTypesRes.data.forEach(t => { leaveTypeColors.value[t.value] = t.color; leaveTypeLabels.value[t.value] = t.label })
+    if (leaveTypes) leaveTypes.forEach(t => { leaveTypeColors.value[t.value] = t.color; leaveTypeLabels.value[t.value] = t.label })
 
-    await nextTick()
-    renderCharts()
-  } catch (error) {
-    handleError(error, { customMessage: 'ไม่สามารถโหลดข้อมูลได้' })
-  } finally {
+    loadFailures.value = failed
     loading.value = false
+    await nextTick()
+    if (requestId !== loadRequestId) return
+    try {
+      renderCharts()
+    } catch (chartError) {
+      console.error('[Analytics] chart render failed:', chartError)
+    }
+  } catch (error) {
+    if (requestId !== loadRequestId) return
+    loading.value = false
+    console.error('[Analytics] load failed:', error)
+    loadFailures.value = ['ข้อมูลรายงาน']
+    handleError(error, { customMessage: 'ไม่สามารถโหลดข้อมูลได้' })
   }
 }
 
@@ -741,6 +778,8 @@ onMounted(loadData)
 .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
 .chart-header h3 { margin: 0; color: #1a1a2e; }
 .workload-search { flex: 0 1 18rem; min-width: 0; }
+.load-error { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.65rem 0.85rem; border: 1.5px solid #fca5a5; border-radius: 10px; background: #fef2f2; color: #991b1b; font-size: max(0.875rem, var(--min-fs)); font-weight: 600; }
+.chart-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 1rem; color: #526074; font-size: max(0.9rem, var(--min-fs)); text-align: center; }
 .workload-note { margin: 0 0 0.75rem; color: #526074; font-size: max(0.78rem, var(--min-fs)); line-height: 1.5; }
 .wl-overdue { font-weight: 700; color: #b91c1c; }
 .wl-last-place { display: block; color: #526074; font-size: max(0.78rem, var(--min-fs)); overflow-wrap: anywhere; }

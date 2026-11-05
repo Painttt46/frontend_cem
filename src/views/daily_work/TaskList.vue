@@ -471,7 +471,10 @@
             </template>
           </Dropdown>
           <small class="current-status-hint">
-            เลือกจากสถานะที่ตั้งไว้ใน Workflow Steps ด้านล่าง เพื่อตั้งสถานะ ณ ตอนนี้ — ถ้าภายหลังมีการลงงานใน step อื่น สถานะจะเปลี่ยนตาม workflow อัตโนมัติ
+            เลือกจากสถานะที่ตั้งไว้ใน Workflow Steps ด้านล่าง — ขั้นตอนก่อนหน้าจะถูกปิดเป็นเสร็จสิ้นอัตโนมัติ ถ้าเลือกย้อนกลับ ขั้นตอนที่ระบบปิดให้จะเปิดกลับ และเมื่อมีการลงงานใน step อื่น สถานะจะเปลี่ยนตาม workflow
+          </small>
+          <small v-if="statusPickEffect" class="current-status-effect" role="status">
+            <i class="pi pi-info-circle"></i> เมื่อบันทึก: {{ statusPickEffect }}
           </small>
         </div>
         
@@ -613,6 +616,7 @@ import AddTaskForm from '@/views/daily_work/AddTaskForm.vue'
 import { usePermissions } from '@/composables/usePermissions'
 import { accessibleBg } from '@/utils/color'
 import { getCurrentStatusStep } from '@/utils/projectStatus'
+import { isCompleted } from '@/utils/statusHelper'
 
 export default {
   name: 'TaskList',
@@ -735,6 +739,21 @@ export default {
         }))
     },
     // ค่าเริ่มต้น = step ที่กำหนดสถานะปัจจุบันอยู่ (สูตรเดียวกับคอลัมน์สถานะ) จนกว่าผู้ใช้จะเลือกเอง
+    // ผลของสถานะที่เลือก (แสดงก่อนกดบันทึก) — ตรงกับ applyStatusSelection ฝั่ง backend
+    statusPickEffect() {
+      if (!this.manualStatusKey) return ''
+      const steps = this.editFormData.steps || []
+      const index = steps.findIndex((s, i) => this.stepKey(s, i) === this.manualStatusKey)
+      if (index < 0) return ''
+      const finished = (steps[index].project_statuses || []).some(isCompleted)
+      const names = list => list.map(s => s.step_name || 'ไม่มีชื่อ').join(', ')
+      const close = steps.filter((s, i) => s.status !== 'completed' && (i < index || (i === index && finished)))
+      const reopen = steps.filter((s, i) => s.status === 'completed' && s.auto_completed && (i > index || (i === index && !finished)))
+      const parts = []
+      if (close.length) parts.push(`ปิดเป็นเสร็จสิ้น ${close.length} ขั้นตอน (${names(close)})`)
+      if (reopen.length) parts.push(`เปิดกลับ ${reopen.length} ขั้นตอน (${names(reopen)})`)
+      return parts.join(' · ')
+    },
     currentStatusModel: {
       get() {
         if (this.manualStatusKey && this.currentStatusOptions.some(o => o.key === this.manualStatusKey)) return this.manualStatusKey
@@ -1306,6 +1325,7 @@ export default {
           }
         }
         
+        let statusCascade = null
         // Update or create steps
         if (this.editFormData.steps && this.editFormData.steps.length > 0) {
           // step ที่ผู้ใช้เลือกเป็น "สถานะปัจจุบัน" บันทึกเป็นตัวสุดท้าย เพื่อให้เวลาตั้งสถานะใหม่สุด
@@ -1323,10 +1343,12 @@ export default {
             }
             if (step.id && existingIds.includes(step.id)) {
               // Update existing
-              await this.$http.put(`/api/task-steps/${step.id}`, stepData)
+              const saved = await this.$http.put(`/api/task-steps/${step.id}`, stepData)
+              if (isMarked) statusCascade = saved.data?.status_cascade
             } else {
               // Create new
-              await this.$http.post('/api/task-steps', stepData)
+              const saved = await this.$http.post('/api/task-steps', stepData)
+              if (isMarked) statusCascade = saved.data?.status_cascade
             }
           }
         }
@@ -1334,7 +1356,11 @@ export default {
         this.$toast.add({
           severity: 'success',
           summary: 'สำเร็จ',
-          detail: 'แก้ไขงานเรียบร้อยแล้ว',
+          detail: [
+            'แก้ไขงานเรียบร้อยแล้ว',
+            statusCascade?.closed?.length ? `ปิดขั้นตอนอัตโนมัติ ${statusCascade.closed.length} ขั้นตอน` : '',
+            statusCascade?.reopened?.length ? `เปิดขั้นตอนกลับ ${statusCascade.reopened.length} ขั้นตอน` : ''
+          ].filter(Boolean).join(' · '),
           life: 3000
         })
         
@@ -1495,6 +1521,19 @@ export default {
 .current-status-step {
   color: #475569;
   font-size: max(0.85rem, var(--min-fs));
+}
+.current-status-effect {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #d97706;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: max(0.8rem, var(--min-fs));
+  font-weight: 600;
 }
 .current-status-hint {
   display: block;

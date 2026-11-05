@@ -63,7 +63,7 @@
                 <div class="info-item" v-if="step.created_by_name || step.completed_by_name">
                   <span v-if="step.created_by_name"><i class="pi pi-user-plus"></i> สร้างโดย: {{ step.created_by_name }}</span>
                   <span v-if="step.created_by_name && step.status === 'completed' && step.completed_by_name"> | </span>
-                  <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}{{ step.completed_at ? ` (${formatCompletedDate(step.completed_at)})` : '' }}</span>
+                  <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}{{ step.auto_completed ? ' (ปิดอัตโนมัติ)' : '' }}{{ step.completed_at ? ` (${formatCompletedDate(step.completed_at)})` : '' }}</span>
                 </div>
                 
                 <div class="info-item" v-if="step.assigned_users && step.assigned_users.length > 0">
@@ -213,6 +213,7 @@
 import { toDateKey } from '@/utils/dateUtils'
 import axios from '@/utils/axiosConfig'
 import { accessibleBg } from '@/utils/color'
+import { getCurrentStatusStep } from '@/utils/projectStatus'
 
 export default {
   name: 'WorkflowBuilder',
@@ -533,6 +534,9 @@ export default {
         }
       }
       
+      // step ที่กำหนดสถานะปัจจุบันของโครงการ (เลือกเองในหน้าโครงการ) แม้ยังไม่มีการลงงาน
+      if (getCurrentStatusStep(this.steps) === step) return 'กำลังดำเนินการ'
+
       return 'รอดำเนินการ'
     },
     getStepClass(step) {
@@ -559,6 +563,8 @@ export default {
         }
       }
       
+      if (getCurrentStatusStep(this.steps) === step) return 'status-working'
+
       return 'status-pending'
     },
     getProjectStatusLabel(status) {

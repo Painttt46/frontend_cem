@@ -3,9 +3,10 @@ import { isCompleted } from '@/utils/statusHelper'
 // สถานะโครงการ — ใช้ร่วมกันระหว่างหน้า "โครงการ" (TaskList) และ Dashboard ให้นับตรงกัน
 
 // สถานะปัจจุบันของโครงการ = step ที่ "มีความเคลื่อนไหวล่าสุด" ในบรรดา step ที่ตั้งสถานะโครงการไว้
-//   ความเคลื่อนไหว = เวลาที่แก้/เลือกสถานะของ step นั้นล่าสุด (project_status_updated_at) หรือวันที่ลงงานล่าสุดของ step (ไม่เกินวันนี้)
+//   ความเคลื่อนไหว = เวลาที่แก้/เลือกสถานะของ step นั้นล่าสุด (project_status_updated_at) หรือเวลาลงงานล่าสุดของ step (ไม่เกินวันนี้)
+//   project_status_updated_at ที่เท่ากับ created_at คือเวลาตอนสร้าง step (ข้อมูลเก่า) ไม่ได้เลือกจริง → ไม่นับ
 //   เท่ากัน → step ที่อยู่ลำดับหลังกว่า
-// steps ต้องมี project_statuses, project_status_updated_at, has_work_logged, latest_work_date (จาก /api/task-steps/all)
+// steps ต้องมี project_statuses, project_status_updated_at, created_at, has_work_logged, latest_work_date, latest_work_logged_at (จาก /api/task-steps/all)
 export function getCurrentStatusStep(steps) {
   if (!steps || steps.length === 0) return null
   const today = new Date()
@@ -15,8 +16,11 @@ export function getCurrentStatusStep(steps) {
   const candidates = steps
     .filter(s => Array.isArray(s.project_statuses) && s.project_statuses.length > 0)
     .map(s => {
-      const editedAt = toTime(s.project_status_updated_at)
-      const workedAt = s.has_work_logged && toTime(s.latest_work_date) <= today.getTime() ? toTime(s.latest_work_date) : 0
+      const editedAt = s.project_status_updated_at !== s.created_at ? toTime(s.project_status_updated_at) : 0
+      // latest_work_date มีแค่วันที่ — ใช้เวลาที่บันทึกจริงด้วย เพื่อให้ลงงานหลังเลือกสถานะในวันเดียวกันมีผล
+      const workedAt = s.has_work_logged && toTime(s.latest_work_date) <= today.getTime()
+        ? Math.max(toTime(s.latest_work_date), toTime(s.latest_work_logged_at))
+        : 0
       return { step: s, activity: Math.max(editedAt, workedAt) }
     })
     .filter(c => c.activity > 0)

@@ -1,5 +1,5 @@
 import { parseLocalDate, toDateKey } from '@/utils/dateUtils'
-import { projectState } from '@/utils/projectStatus'
+import { getCurrentStatusStep, projectState } from '@/utils/projectStatus'
 
 // งานที่แต่ละคนถืออยู่ — ใช้ร่วมกันระหว่าง Dashboard และ Analytics ให้นับตรงกัน
 
@@ -7,11 +7,12 @@ import { projectState } from '@/utils/projectStatus'
 const REQUIRED_ROLES = ['engineer']
 export const isRequiredToLog = (user) => REQUIRED_ROLES.includes(String(user?.role || '').trim().toLowerCase())
 
-// สถานะของ step: completed | overdue (เลยวันสิ้นสุด) | working (ลงงานแล้ว) | pending (ยังไม่เริ่ม)
-export function stepWorkStatus(step, today = new Date()) {
+// สถานะของ step: completed | overdue (เลยวันสิ้นสุด) | working (ลงงานแล้ว หรือเป็น step ที่กำหนดสถานะปัจจุบันของโครงการ) | pending (ยังไม่เริ่ม)
+export function stepWorkStatus(step, today = new Date(), isCurrentStatus = false) {
   if (step.status === 'completed') return 'completed'
   const todayKey = toDateKey(today)
   if (step.end_date && toDateKey(parseLocalDate(step.end_date)) < todayKey) return 'overdue'
+  if (isCurrentStatus) return 'working'
   if (step.has_work_logged && step.latest_work_date && toDateKey(parseLocalDate(step.latest_work_date)) <= todayKey) return 'working'
   return 'pending'
 }
@@ -27,6 +28,7 @@ export function buildWorkloadByUser(tasks, today = new Date()) {
     if (projectState(task) !== 'active') return
     const steps = task.steps || []
     totals[task.id] = { total: steps.length, done: steps.filter(s => s.status === 'completed').length }
+    const currentStep = getCurrentStatusStep(steps)
     steps.forEach((step, idx) => {
       (step.assigned_users || []).forEach(u => {
         const uid = typeof u === 'object' ? u?.id : u
@@ -38,7 +40,7 @@ export function buildWorkloadByUser(tasks, today = new Date()) {
           stepId: step.id,
           stepName: step.step_name,
           stepOrder: idx + 1,
-          stepStatus: stepWorkStatus(step, today),
+          stepStatus: stepWorkStatus(step, today, step === currentStep),
           endDate: step.end_date || null,
           projectStatuses: step.project_statuses || []
         })

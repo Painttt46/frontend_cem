@@ -21,7 +21,7 @@
         </button>
       </div>
 
-      <div v-if="placeChips.length" class="tt-chips tt-places" role="group" aria-label="กรองตามสถานที่">
+      <div v-if="ready && placeChips.length" class="tt-chips tt-places" role="group" aria-label="กรองตามสถานที่">
         <span class="tt-chips-label"><i class="pi pi-map-marker"></i> สถานที่</span>
         <button v-for="p in visiblePlaces" :key="p.key" type="button" class="tt-chip tt-chip-place" :class="{ active: placeFilter === p.key }"
           :aria-pressed="placeFilter === p.key" @click="placeFilter = placeFilter === p.key ? null : p.key">
@@ -41,14 +41,19 @@
         <i class="pi pi-info-circle"></i> บัญชีนี้ยังไม่มีสิทธิ์ "ดูกิจกรรมเข้าพบลูกค้าของทุกคน" จึงอาจไม่เห็นนัดเข้าพบของคนอื่น
       </p>
 
-      <div v-if="loadError" class="tt-state tt-error" role="alert">
-        <span><i class="pi pi-exclamation-triangle"></i> โหลดข้อมูลการลงงานไม่สำเร็จ</span>
-        <Button label="ลองใหม่" size="small" outlined @click="load" />
-      </div>
-      <div v-else-if="fetching && !rows.length" class="tt-state">กำลังโหลดข้อมูล...</div>
-      <div v-else-if="visibleRows.length === 0" class="tt-state">ไม่พบข้อมูลตามตัวกรองที่เลือก</div>
+      <p v-if="visitsFailed" class="tt-note tt-note-warn" role="alert">
+        <i class="pi pi-exclamation-triangle"></i> โหลดนัดเข้าพบลูกค้าไม่สำเร็จ รายการนัดอาจไม่ครบ
+      </p>
 
-      <div v-else class="tt-grid" :class="{ 'tt-stale': fetching }">
+      <div v-if="loadError" class="tt-state tt-error" role="alert">
+        <span><i class="pi pi-exclamation-triangle"></i>
+          {{ ready ? 'โหลดข้อมูลล่าสุดไม่สำเร็จ กำลังแสดงข้อมูลชุดก่อนหน้า' : 'โหลดข้อมูลการลงงานไม่สำเร็จ' }}</span>
+        <Button label="ลองใหม่" size="small" outlined :loading="fetching" @click="load" />
+      </div>
+      <div v-if="!ready && !loadError" class="tt-state">กำลังโหลดข้อมูล...</div>
+      <div v-else-if="ready && visibleRows.length === 0" class="tt-state">ไม่พบข้อมูลตามตัวกรองที่เลือก</div>
+
+      <div v-else-if="ready" class="tt-grid" :class="{ 'tt-stale': fetching }">
         <article v-for="row in visibleRows" :key="row.id" class="tt-card" :class="`tt-card-${row.state}`">
           <header class="tt-card-head">
             <span class="tt-avatar" aria-hidden="true">{{ row.initial }}</span>
@@ -151,6 +156,9 @@ const records = ref([])
 const visits = ref([])
 const fetching = ref(false)
 const loadError = ref(false)
+const visitsFailed = ref(false)
+// ข้อมูลที่โหลดสำเร็จล่าสุดเป็นของวันไหน — ก่อนข้อมูลมาห้ามสรุปสถานะ (ไม่งั้นทุกคนขึ้น "ยังไม่ลงงาน" ระหว่างรอ)
+const loadedDay = ref(null)
 const search = ref('')
 const statusFilter = ref('all')
 const placeFilter = ref(null)
@@ -168,6 +176,7 @@ const isWorkday = computed(() => {
   const dow = (selectedDate.value || startOfToday()).getDay()
   return dow !== 0 && dow !== 6 && !props.holidays.has(dayKey.value)
 })
+const ready = computed(() => loadedDay.value === dayKey.value)
 const dateLabel = computed(() => (selectedDate.value || startOfToday())
   .toLocaleDateString('th-TH', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
 
@@ -188,16 +197,20 @@ const load = async () => {
     const [workRes, visitRes] = await Promise.all([
       axios.get('/api/daily-work', { params: { date }, silent: true }),
       // role ที่ไม่มีสิทธิ์หน้าเข้าพบลูกค้าจะได้ 403 — บอร์ดยังใช้งานได้โดยไม่มีนัด
-      axios.get('/api/sales-visits', { params: { from_date: date, to_date: date }, silent: true }).catch(() => ({ data: [] }))
+      axios.get('/api/sales-visits', { params: { from_date: date, to_date: date }, silent: true }).catch(err => {
+        if (err.response?.status !== 403) console.error('[TeamToday] sales visits failed:', err)
+        return { data: [], failed: err.response?.status !== 403 }
+      })
     ])
     if (id !== requestId) return
     records.value = workRes.data || []
     visits.value = visitRes.data || []
+    visitsFailed.value = !!visitRes.failed
+    loadedDay.value = date
   } catch (error) {
     if (id !== requestId) return
+    // คงข้อมูลชุดเดิมไว้ถ้าเป็นวันเดียวกัน (ready) — วันอื่นจะขึ้นกล่องแจ้งเตือนแทน
     console.error('[TeamToday] load failed:', error)
-    records.value = []
-    visits.value = []
     loadError.value = true
   } finally {
     if (id === requestId) fetching.value = false
@@ -351,7 +364,7 @@ const matchesStatus = (r, key) => {
 }
 
 const statusChips = computed(() => {
-  const count = (key) => deptRows.value.filter(r => matchesStatus(r, key)).length
+  const count = (key) => (ready.value ? deptRows.value.filter(r => matchesStatus(r, key)).length : '…')
   const chips = [{ key: 'all', label: 'ทั้งหมด', cls: '', count: count('all') }]
   if (isToday.value) chips.push({ key: 'now', label: 'กำลังทำงานตอนนี้', cls: 'tt-chip-now', count: count('now') })
   chips.push({ key: 'working', label: isFuture.value ? 'มีแผนงาน' : 'ลงงาน/มีนัด', cls: 'tt-chip-working', count: count('working') })
@@ -427,8 +440,9 @@ const visibleRows = computed(() => {
 .tt-search { flex: 1 1 16rem; min-width: 0; }
 .tt-dept { flex: 0 1 13rem; min-width: 0; }
 .tt-note { display: flex; gap: 0.35rem; align-items: flex-start; margin: 0 0 0.75rem; color: #526074; font-size: max(0.8rem, var(--min-fs)); }
+.tt-note-warn { color: #92400e; font-weight: 600; }
 .tt-state { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.75rem; padding: 1.5rem; border: 1px dashed #cbd5e1; border-radius: 10px; color: #526074; text-align: center; }
-.tt-error { color: #b91c1c; border-color: #fca5a5; }
+.tt-error { margin-bottom: 0.75rem; color: #b91c1c; border-color: #fca5a5; }
 
 .tt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 0.75rem; align-items: start; }
 .tt-stale { opacity: 0.6; }

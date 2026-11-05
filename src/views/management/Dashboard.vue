@@ -28,6 +28,11 @@
       </template>
     </Card>
 
+    <div v-if="loadFailures.length" class="load-error mb-4" role="alert">
+      <span><i class="pi pi-exclamation-triangle"></i> โหลดข้อมูลบางส่วนไม่สำเร็จ: {{ loadFailures.join(', ') }} — ตัวเลขที่เกี่ยวข้องอาจไม่ครบ</span>
+      <Button label="ลองใหม่" icon="pi pi-refresh" size="small" severity="danger" outlined :loading="loading" @click="loadData" />
+    </div>
+
     <!-- User Dashboard (when user selected) -->
     <template v-if="selectedUser">
       <Card class="mb-4">
@@ -196,7 +201,7 @@
               <div class="summary-content">
                 <i class="pi pi-user-minus summary-icon" :style="{ color: notWorkingUsers.length > 0 ? '#dc2626' : '#047857' }"></i>
                 <div class="summary-info">
-                  <h3><CountUp :value="notWorkingUsers.length" /></h3>
+                  <h3><CountUp :value="workDataUnknown ? '—' : notWorkingUsers.length" /></h3>
                   <p>Engineer ยังไม่ลงงานวันนี้</p>
                   <small class="card-hint">ลงแล้ว {{ stats.workingToday }}/{{ stats.totalEngineers }} คน (ไม่นับคนที่ลา)</small>
                 </div>
@@ -283,7 +288,7 @@
             +{{ notWorkingUsers.length - 12 }} คน
           </button>
         </template>
-        <span v-else class="attention-ok"><i class="pi pi-check-circle"></i> {{ isWorkdayToday ? 'Engineer ที่ไม่ได้ลาลงงานวันนี้ครบแล้ว' : 'วันนี้เป็นวันหยุด ไม่ต้องลงงาน' }}</span>
+        <span v-else-if="!workDataUnknown" class="attention-ok"><i class="pi pi-check-circle"></i> {{ isWorkdayToday ? 'Engineer ที่ไม่ได้ลาลงงานวันนี้ครบแล้ว' : 'วันนี้เป็นวันหยุด ไม่ต้องลงงาน' }}</span>
         <span class="attention-meta">ผู้ใช้งานทั้งหมด {{ stats.totalUsers }} คน · รถกำลังใช้งาน {{ stats.activeCars }} คัน</span>
       </div>
 
@@ -334,8 +339,9 @@
             · ควรทำ = ชั่วโมงทำงานต่อวันของแต่ละคน (หักชั่วโมงลาบางส่วน) · ลงหลัง 10:00 = จำนวนวันที่รายการแรกถูกบันทึกหลัง 10:00 น. ของวันนั้น
             · ไม่นับรายการที่ยกเลิกและงานที่ลงล่วงหน้า · เลื่อนเมาส์ที่ช่อง "ขาด" เพื่อดูวันที่
           </p>
-          <DataTable :value="workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="missingDays"
+          <DataTable :value="workDataUnknown ? [] : workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="missingDays"
             :sortOrder="-1" v-model:expandedRows="expandedRows" dataKey="userId">
+            <template #empty>{{ workDataUnknown ? 'โหลดข้อมูลการลงงานไม่สำเร็จ' : 'ไม่พบข้อมูล' }}</template>
             <Column :expander="true" style="width: 3rem" />
             <Column field="userName" header="ชื่อพนักงาน" sortable style="min-width: 150px">
               <template #body="{ data }">
@@ -599,7 +605,9 @@ const goToStepProgress = (taskId, stepId) => {
   }
   router.push({ path: '/project-progress', query: { taskId, stepId } })
 }
-const loading = ref(false)
+const loading = ref(true) // เริ่มเป็น true: ก่อนข้อมูลมาต้องขึ้นโครงโหลด ไม่ใช่เลข 0
+const loadFailures = ref([])
+const workDataUnknown = ref(false) // โหลดการลงงาน/รายชื่อไม่ได้ → ห้ามสรุปว่าใครยังไม่ลงงานหรือขาดงาน
 const leaveTypeColors = ref({})
 // ค่าที่เก็บในใบลาคือ "รหัส" ประเภท (เช่น sick, vacation) — แสดงเป็นชื่อประเภทที่ตั้งไว้ (ลาป่วย, ลาพักร้อน) ไม่ใช่รหัสดิบ
 const leaveTypeLabels = ref({})
@@ -1015,8 +1023,7 @@ const categoryColors = ref({})
 // สีสำรองเมื่อประเภทลาไม่ได้ตั้งสีไว้ (เดิมสุ่มสีใหม่ทุกครั้งที่โหลด)
 const FALLBACK_COLORS = ['#2563eb', '#d97706', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#db2777', '#4b5563']
 
-onMounted(async () => {
-  await Promise.all([loadLeaveTypeColors(), loadWorkStatusColors(), loadCategoryColors()])
+onMounted(() => {
   loadData()
   document.addEventListener('click', closeWorkloadDropdown)
 })
@@ -1121,23 +1128,44 @@ const getStatusColor = (status) => {
   return accessibleBg(workStatusColors.value[status] || '#6c757d')
 }
 
+let loadRequestId = 0
+let colorsLoaded = null
+
 const loadData = async () => {
+  const requestId = ++loadRequestId
   loading.value = true
+  // แต่ละแหล่งข้อมูลล้มเหลวแยกกัน: ส่วนที่โหลดได้ยังแสดงปกติ ส่วนที่ล้มเหลวใช้ข้อมูลชุดเดิม (ถ้ามี) และแจ้งบนหน้า
+  // เดิม Promise.all ทั้งชุด: API ตัวเดียวล้มครั้งเดียว ทั้งหน้าเป็นเลข 0 และ toast หายไปใน 5 วินาที เหมือนไม่มีข้อมูล
+  const failed = []
+  const fetchOr = (label, request, fallback) => request().catch(error => {
+    console.error(`[Dashboard] load failed (${label}):`, error)
+    failed.push(label)
+    return fallback
+  })
+  const getData = (url) => () => axios.get(url, { silent: true }).then(r => r.data)
+  colorsLoaded = colorsLoaded || Promise.all([loadLeaveTypeColors(), loadWorkStatusColors(), loadCategoryColors()])
 
   try {
     // ใช้ service layer พร้อม cache + โหลด steps ทั้งหมดในครั้งเดียว
     // silent: true - หน้านี้มี skeleton ของตัวเองแล้ว ไม่ต้องซ้อนทับ overlay เต็มจอ
     const [activeUsers, leaves, dashSummary, tasks, dailyWork, allSteps, roleWorkHours, userWorkHours, holidays] = await Promise.all([
-      userService.getActiveUsers(true),
-      axios.get('/api/leave', { silent: true }).then(r => r.data),
-      axios.get('/api/settings/dashboard-summary', { silent: true }).then(r => r.data),
-      axios.get('/api/tasks', { silent: true }).then(r => r.data),
-      axios.get('/api/daily-work/summary', { silent: true }).then(r => r.data),
-      axios.get('/api/task-steps/all', { silent: true }).then(r => r.data),
-      axios.get('/api/settings/role-work-hours', { silent: true }).then(r => r.data).catch(() => []),
-      axios.get('/api/settings/user-work-hours', { silent: true }).then(r => r.data).catch(() => []),
-      axios.get('/api/leave/holidays', { silent: true }).then(r => r.data).catch(() => [])
+      fetchOr('รายชื่อพนักงาน', () => userService.getActiveUsers(true), activeUsersList.value),
+      fetchOr('การลา', getData('/api/leave'), allLeaves.value),
+      fetchOr('จำนวนรถ', getData('/api/settings/dashboard-summary'), null),
+      fetchOr('โครงการ', getData('/api/tasks'), allTasks.value),
+      fetchOr('การลงงาน', getData('/api/daily-work/summary'), allDailyWork.value),
+      fetchOr('ขั้นตอนโครงการ', getData('/api/task-steps/all'), allTasks.value.flatMap(t => t.steps || [])),
+      fetchOr('เวลาทำงาน', getData('/api/settings/role-work-hours'), null),
+      fetchOr('เวลาทำงาน', getData('/api/settings/user-work-hours'), null),
+      fetchOr('วันหยุด', getData('/api/leave/holidays'), null),
+      colorsLoaded
     ])
+    // กดรีเฟรชซ้อนกัน: ใช้เฉพาะผลของคำขอล่าสุด
+    if (requestId !== loadRequestId) return
+
+    const usable = (label, data) => !failed.includes(label) || data.length > 0
+    const worksUsable = usable('การลงงาน', dailyWork) && usable('รายชื่อพนักงาน', activeUsers)
+    workDataUnknown.value = !worksUsable
 
     // เวลาทำงานของแต่ละคน: ตั้งรายคน > ตาม role > ค่าเริ่มต้น
     const fmtT = (t, fallback) => (t ? String(t).slice(0, 5) : fallback)
@@ -1147,14 +1175,17 @@ const loadData = async () => {
       lunch_start: fmtT(r.lunch_start, DEFAULT_WORK_HOURS.lunch_start),
       lunch_end: fmtT(r.lunch_end, DEFAULT_WORK_HOURS.lunch_end)
     })
-    const roleHours = {}
-    roleWorkHours.forEach(r => { roleHours[String(r.role || '').toLowerCase()] = toWorkHours(r) })
-    const userHours = {}
-    userWorkHours.forEach(u => { userHours[u.user_id] = toWorkHours(u) })
-    const hoursByUser = {}
-    activeUsers.forEach(u => {
-      hoursByUser[u.id] = userHours[u.id] || roleHours[String(u.role || '').toLowerCase()] || DEFAULT_WORK_HOURS
-    })
+    if (roleWorkHours && userWorkHours) {
+      const roleHours = {}
+      roleWorkHours.forEach(r => { roleHours[String(r.role || '').toLowerCase()] = toWorkHours(r) })
+      const userHours = {}
+      userWorkHours.forEach(u => { userHours[u.user_id] = toWorkHours(u) })
+      const hoursByUser = {}
+      activeUsers.forEach(u => {
+        hoursByUser[u.id] = userHours[u.id] || roleHours[String(u.role || '').toLowerCase()] || DEFAULT_WORK_HOURS
+      })
+      workHoursByUser.value = hoursByUser
+    }
 
     // จัดกลุ่ม steps ตาม task_id แล้วคำนวณสถานะภาพรวมของแต่ละโครงการครั้งเดียว
     const stepsByTask = {}
@@ -1171,8 +1202,7 @@ const loadData = async () => {
     allLeaves.value = leaves
     allDailyWork.value = dailyWork
     activeUsersList.value = activeUsers
-    workHoursByUser.value = hoursByUser
-    holidaySet.value = new Set(holidays.map(h => String(h.holiday_date || '').slice(0, 10)).filter(Boolean))
+    if (holidays) holidaySet.value = new Set(holidays.map(h => String(h.holiday_date || '').slice(0, 10)).filter(Boolean))
     workloadByUser.value = buildWorkloadByUser(tasks)
     allTasks.value = tasks
     userOptions.value = activeUsers.map(u => ({
@@ -1216,12 +1246,12 @@ const loadData = async () => {
     const engineersWorked = availableEngineers.filter(u => uniqueWorkUserIds.includes(u.id))
     stats.value.workingToday = engineersWorked.length
 
-    stats.value.activeCars = parseInt(dashSummary.active_cars) || 0
+    stats.value.activeCars = dashSummary ? parseInt(dashSummary.active_cars) || 0 : '—'
 
     workingTodayUsers.value = engineersWorked
     // วันหยุด/เสาร์อาทิตย์ไม่ต้องลงงาน — ไม่ขึ้นเตือนว่า "ยังไม่ลงงาน"
     isWorkdayToday.value = ![0, 6].includes(todayDate.getDay()) && !holidaySet.value.has(today)
-    notWorkingUsers.value = isWorkdayToday.value ? availableEngineers.filter(u => !uniqueWorkUserIds.includes(u.id)) : []
+    notWorkingUsers.value = isWorkdayToday.value && worksUsable ? availableEngineers.filter(u => !uniqueWorkUserIds.includes(u.id)) : []
 
     leavesTodayList.value = todayLeavesUsers.map(l => {
       const user = activeUsers.find(u => u.id === l.user_id) || {}
@@ -1241,16 +1271,31 @@ const loadData = async () => {
     }).length
     stats.value.overdue = activeTasks.filter(t => t.project_end_date && parseLocalDate(t.project_end_date) < todayDate).length
 
+    // โหลดไม่ได้และไม่มีข้อมูลเดิม: แสดง "—" ไม่ใช่ 0 (0 แปลว่า "ไม่มีปัญหา" ซึ่งไม่จริง)
+    if (!usable('โครงการ', tasks)) {
+      ['activeTasks', 'activeWithWorkflow', 'activeWithoutWorkflow', 'completedTasks', 'dueSoon', 'overdue'].forEach(key => { stats.value[key] = '—' })
+    }
+    if (!usable('การลา', leaves)) stats.value.todayLeaves = '—'
+
     lastLoadedAt.value = new Date()
+    loadFailures.value = [...new Set(failed)]
     // ปิด loading ก่อน renderCharts เพื่อให้ canvas แสดง
     loading.value = false
     await nextTick()
     await nextTick()
-    renderCharts(leaves, tasks)
+    if (requestId !== loadRequestId) return
+    try {
+      renderCharts(leaves, tasks)
+    } catch (chartError) {
+      // กราฟวาดไม่ได้ไม่ควรทำให้เหมือนโหลดข้อมูลไม่สำเร็จ
+      console.error('[Dashboard] chart render failed:', chartError)
+    }
   } catch (error) {
+    if (requestId !== loadRequestId) return
     loading.value = false
     // บันทึกสาเหตุจริงลง console — เดิมกลืนข้อผิดพลาดไว้หมด เหลือแต่ toast ทั่วไป ทำให้หาต้นเหตุไม่ได้
     console.error('[Dashboard] load failed:', error)
+    loadFailures.value = ['ข้อมูล Dashboard']
     handleError(error, {
       customMessage: 'ไม่สามารถโหลดข้อมูล Dashboard ได้ กรุณาลองใหม่อีกครั้ง'
     })
@@ -1646,6 +1691,21 @@ const renderCharts = (leaves, tasks) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+}
+
+.load-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: max(0.875rem, var(--min-fs));
+  font-weight: 600;
 }
 
 /* คำอธิบายสั้น ๆ ว่าตัวเลขนับอย่างไร */

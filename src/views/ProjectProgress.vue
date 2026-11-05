@@ -1,5 +1,11 @@
 <template>
   <div class="project-progress">
+
+    <div v-if="loadFailed" class="load-error" role="alert">
+      <span><i class="pi pi-exclamation-triangle"></i> โหลดข้อมูลโครงการไม่สำเร็จ</span>
+      <Button label="ลองใหม่" icon="pi pi-refresh" size="small" severity="danger" outlined @click="loadProjects" />
+    </div>
+
     
     <Card class="header-card">
       <template #header>
@@ -122,7 +128,7 @@
                   <i class="pi pi-clock"></i> ลงงานล่าสุด: {{ formatLatestWorkDate(getLatestWorkStep(slotProps.data).latest_work_date) }}
                 </div>
                 <div v-if="getLatestWorkStep(slotProps.data).status === 'completed' && getLatestWorkStep(slotProps.data).completed_by_name" class="latest-work-date latest-completed-info">
-                  <i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ getLatestWorkStep(slotProps.data).completed_by_name }}
+                  <i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ getLatestWorkStep(slotProps.data).completed_by_name }}{{ getLatestWorkStep(slotProps.data).auto_completed ? ' (ปิดอัตโนมัติ)' : '' }}
                   <span v-if="getLatestWorkStep(slotProps.data).completed_at">เมื่อ {{ formatCompletedDate(getLatestWorkStep(slotProps.data).completed_at) }}</span>
                 </div>
                 <div v-if="getLatestWorkStep(slotProps.data).assigned_users && getLatestWorkStep(slotProps.data).assigned_users.length" class="assigned-chips">
@@ -219,7 +225,7 @@
                         <div class="info-item" v-if="step.created_by_name || step.completed_by_name">
                           <span v-if="step.created_by_name"><i class="pi pi-user-plus"></i> สร้างโดย: {{ step.created_by_name }}</span>
                           <span v-if="step.created_by_name && step.status === 'completed' && step.completed_by_name"> | </span>
-                          <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}{{ step.completed_at ? ` (${formatCompletedDate(step.completed_at)})` : '' }}</span>
+                          <span v-if="step.status === 'completed' && step.completed_by_name" class="completed-text"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย: {{ step.completed_by_name }}{{ step.auto_completed ? ' (ปิดอัตโนมัติ)' : '' }}{{ step.completed_at ? ` (${formatCompletedDate(step.completed_at)})` : '' }}</span>
                         </div>
                         <div v-if="step.status === 'completed' && isCompletedLate(step)" class="info-item">
                           <span class="late-badge" @click.stop="showLateReasonPopup(step)">
@@ -308,7 +314,7 @@
           </div>
           <div v-if="selectedStep.status === 'completed' && selectedStep.completed_by_name" class="dlg-grid-item">
             <div class="dlg-label"><i class="pi pi-check-circle"></i> เสร็จสิ้นโดย</div>
-            <div class="dlg-value">{{ selectedStep.completed_by_name }}{{ selectedStep.completed_at ? ` (${formatCompletedDate(selectedStep.completed_at)})` : '' }}</div>
+            <div class="dlg-value">{{ selectedStep.completed_by_name }}{{ selectedStep.auto_completed ? ' (ปิดอัตโนมัติ)' : '' }}{{ selectedStep.completed_at ? ` (${formatCompletedDate(selectedStep.completed_at)})` : '' }}</div>
           </div>
           <div v-if="selectedStep.status === 'completed' && isCompletedLate(selectedStep)" class="dlg-grid-item dlg-grid-item--late">
             <div class="dlg-label"><i class="pi pi-clock"></i> สถานะการส่งมอบ</div>
@@ -499,12 +505,14 @@ import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import Dropdown from 'primevue/dropdown'
 import { isFullAccessRole } from '@/composables/usePermissions'
 import { accessibleBg } from '@/utils/color'
+import { getCurrentStatusStep } from '@/utils/projectStatus'
 
 export default {
   name: 'ProjectProgress',
   components: { UserInfoDialog, Dropdown },
   data() {
     return {
+      loadFailed: false,
       projects: [],
       expandedRows: {},
       paginatorFirst: 0,
@@ -664,31 +672,10 @@ export default {
       this.filterProjectStatus = null
       this.projectFilter = 'all'
     },
+    // สูตรเดียวกับหน้า "โครงการ" (utils/projectStatus.js) — เดิมสูตรแยก: ไม่สนสถานะที่เลือกเอง และเลือก step ตาม updated_at
     getLatestProjectStatuses(project) {
-      if (!project.steps || project.steps.length === 0) return []
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const workingSteps = project.steps.filter(s => {
-        if (!s.has_work_logged) return false
-        const hasStatus = (s.project_statuses && s.project_statuses.length > 0) || s.project_status
-        if (!hasStatus) return false
-        if (s.latest_work_date) {
-          const workDate = new Date(s.latest_work_date)
-          workDate.setHours(0, 0, 0, 0)
-          return workDate <= today
-        }
-        return true
-      })
-
-      if (workingSteps.length === 0) return []
-      const latestStep = workingSteps.sort((a, b) =>
-        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
-      )[0]
-      if (latestStep.project_statuses && latestStep.project_statuses.length > 0) {
-        return latestStep.project_statuses
-      }
-      return []
+      const step = getCurrentStatusStep(project.steps)
+      return step ? step.project_statuses : []
     },
     async loadUsers() {
       try {
@@ -897,26 +884,33 @@ export default {
     // (เลื่อนได้ทั้ง 2 แนว และกดบนข้อความยังเลือก/highlight ได้)
     async loadProjects() {
       try {
-        const response = await this.$http.get('/api/tasks')
-        const tasks = response.data
-        
-        // Load all steps in parallel, then assign projects once to trigger computed correctly
-        await Promise.all(tasks.map(async (project) => {
-          try {
-            const stepsResponse = await this.$http.get(`/api/task-steps/task/${project.id}`, { silent: true })
-            project.steps = (stepsResponse.data || []).map(step => ({
-              ...step,
-              assigned_users: typeof step.assigned_users === 'string' 
-                ? JSON.parse(step.assigned_users) 
-                : (step.assigned_users || [])
-            }))
-          } catch {
-            project.steps = []
-          }
-        }))
+        // ขั้นตอนทุกโครงการในคำขอเดียว — เดิมยิงแยกทีละโครงการ: เปิดหน้า 1 ครั้งใช้หลายร้อยคำขอ (ชนเพดานจำกัดคำขอได้)
+        // และคำขอไหนล้มเหลว ขั้นตอนของโครงการนั้นหายไปเงียบ ๆ เหมือนไม่มีข้อมูล
+        const [tasksResponse, stepsResponse] = await Promise.all([
+          this.$http.get('/api/tasks'),
+          this.$http.get('/api/task-steps/all', { silent: true })
+        ])
+        const stepsByTask = {}
+        stepsResponse.data.forEach(step => {
+          if (!stepsByTask[step.task_id]) stepsByTask[step.task_id] = []
+          stepsByTask[step.task_id].push({
+            ...step,
+            assigned_users: typeof step.assigned_users === 'string'
+              ? JSON.parse(step.assigned_users)
+              : (step.assigned_users || [])
+          })
+        })
+        const tasks = tasksResponse.data
+        tasks.forEach(project => {
+          project.steps = stepsByTask[project.id] || []
+          const current = getCurrentStatusStep(project.steps)
+          if (current) current._isCurrentStatus = true
+        })
         this.projects = tasks
+        this.loadFailed = false
       } catch (error) {
         console.error('Error loading projects:', error)
+        this.loadFailed = true
       }
     },
     async loadCategories() {
@@ -932,6 +926,8 @@ export default {
       } catch { /* ignore */ }
     },
     onRowClick(event) {
+      // คลิกที่ลูกศร DataTable สลับแถวให้แล้ว — ห้ามสลับซ้ำ (ไอคอนถูกเปลี่ยนก่อน event มาถึงแถว จึงต้องดูจาก composedPath)
+      if (event.originalEvent?.composedPath?.().some(el => el.classList?.contains('p-row-toggler'))) return
       const row = event.data
       if (this.expandedRows[row.id]) {
         delete this.expandedRows[row.id]
@@ -947,11 +943,15 @@ export default {
     },
     getLatestWorkStep(project) {
       if (!project.steps || project.steps.length === 0) return null
+      const time = v => { const t = v ? new Date(v).getTime() : NaN; return Number.isFinite(t) ? t : 0 }
       const active = project.steps
         .filter(s => s.latest_work_date)
         .sort((a, b) => new Date(b.latest_work_date) - new Date(a.latest_work_date))
-      if (!active.length) return null
-      const step = active[0]
+      let step = active[0]
+      // เลือกสถานะเองหลังการลงงานล่าสุด → แสดง step ที่เลือก (สูตรเดียวกับสถานะโครงการ)
+      const current = project.steps.find(s => s._isCurrentStatus)
+      if (current && (!step || time(current.project_status_updated_at) > Math.max(time(step.latest_work_date), time(step.latest_work_logged_at)))) step = current
+      if (!step) return null
       const idx = project.steps.findIndex(s => s.id === step.id)
       return { ...step, _index: idx + 1 }
     },
@@ -987,6 +987,9 @@ export default {
         }
       }
       
+      // step ที่กำหนดสถานะปัจจุบันของโครงการ (เลือกเองในหน้าโครงการ) แม้ยังไม่มีการลงงาน
+      if (step._isCurrentStatus) return 'กำลังดำเนินการ'
+
       return 'รอดำเนินการ'
     },
     getStepClass(step) {
@@ -1012,6 +1015,8 @@ export default {
         }
       }
       
+      if (step._isCurrentStatus) return 'status-working'
+
       return 'status-pending'
     },
     hasMyAssignment(project) {
@@ -1105,7 +1110,8 @@ export default {
       await this.completeStep(step, this.lateReason || null)
     },
     isCompletedLate(step) {
-      if (step.status !== 'completed' || !step.end_date || !step.completed_at) return false
+      // ระบบปิดให้ตอนเลือกสถานะโครงการ เวลาปิดไม่ใช่เวลาทำงานเสร็จจริง จึงไม่นับว่าล่าช้า
+      if (step.status !== 'completed' || step.auto_completed || !step.end_date || !step.completed_at) return false
       const toLocalDate = d => { const dt = new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
       return toLocalDate(step.completed_at) > toLocalDate(step.end_date)
     },
@@ -1149,6 +1155,22 @@ export default {
 </script>
 
 <style scoped>
+.load-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: max(0.875rem, var(--min-fs));
+  font-weight: 600;
+}
+
 .project-progress {
   padding: 1rem;
   padding-bottom: 0;

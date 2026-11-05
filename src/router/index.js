@@ -172,6 +172,18 @@ const router = createRouter({
 });
 
 // ✅ Route Guard ตรวจสอบการ Login และสิทธิ์การเข้าถึง
+// หลัง deploy ไฟล์หน้าเว็บ (chunk) เวอร์ชันเก่าถูกแทนที่ แท็บที่เปิดค้างจะโหลดหน้าใหม่ไม่ได้ (ChunkLoadError)
+// เดิมหน้าจอค้างอยู่หน้าเดิมโดยไม่มีข้อความใด ๆ → โหลดเว็บใหม่ไปยังหน้าที่ต้องการ (ครั้งเดียวต่อ 1 นาที กันวนซ้ำถ้าไฟล์หายจริง)
+const CHUNK_LOAD_ERROR = /Loading (CSS )?chunk|ChunkLoadError|dynamically imported module|Importing a module script failed/i
+router.onError((error, to) => {
+  if (!CHUNK_LOAD_ERROR.test(`${error?.name} ${error?.message}`)) return
+  const target = to?.fullPath || window.location.pathname
+  const key = `chunk-reload:${target}`
+  if (Date.now() - Number(sessionStorage.getItem(key) || 0) < 60000) return
+  sessionStorage.setItem(key, String(Date.now()))
+  window.location.assign(target)
+})
+
 router.beforeEach(async (to, from, next) => {
   const userId = localStorage.getItem("soc_user_id");
   const role = localStorage.getItem("soc_role");
