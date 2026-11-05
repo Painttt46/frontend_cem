@@ -91,7 +91,7 @@
 
         <Column v-if="showSensitiveColumns" field="reason" header="เหตุผล" style="min-width: 160px; width: 160px;">
           <template #body="slotProps">
-            <span class="reason-text-wrap">{{ slotProps.data.reason }}</span>
+            <span class="reason-text-wrap">{{ slotProps.data.reason || '-' }}</span>
           </template>
         </Column>
 
@@ -848,6 +848,7 @@ export default {
           detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
           life: 4000
         })
+        if (err.response?.status === 409) this.$emit('request-deleted')
       }
     },
 

@@ -658,13 +658,14 @@ export default {
               detail: newStatus === 'pending_level2' ? 'อนุมัติขั้นที่ 1 เรียบร้อย - รอ HR อนุมัติ' : 'อนุมัติการลาเรียบร้อย',
               life: 3000
             })
-          } catch { // ignore
+          } catch (err) {
             this.$toast.add({
               severity: 'error',
               summary: 'อนุมัติไม่สำเร็จ',
-              detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
-              life: 4000
+              detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+              life: 6000
             })
+            if (err.response?.status === 409) await this.loadLeaveRecords()
           } finally {
             this.approving = false
           }
@@ -707,13 +708,17 @@ export default {
           detail: 'ไม่อนุมัติการลาเรียบร้อย',
           life: 3000
         })
-      } catch { // ignore
+      } catch (err) {
         this.$toast.add({
           severity: 'error',
           summary: 'ปฏิเสธไม่สำเร็จ',
-          detail: 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
-          life: 4000
+          detail: err.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง หรือติดต่อผู้ดูแลระบบ',
+          life: 6000
         })
+        if (err.response?.status === 409) {
+          this.showRejectDialog = false
+          await this.loadLeaveRecords()
+        }
       }
     },
 

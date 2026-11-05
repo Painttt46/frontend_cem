@@ -128,9 +128,13 @@
         <Divider />
         
         <div class="field">
-          <label>โควต้าเริ่มต้น (ชม./ปี)</label>
-          <InputNumber v-model="editingLeaveTypeData.default_quota_hours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" />
-          <small class="field-hint">{{ (editingLeaveTypeData.default_quota_hours / 8).toFixed(1) }} วัน (1 วัน = 8 ชม.)</small>
+          <label>โควต้ามาตรฐาน (ชม./ปี)</label>
+          <InputNumber v-model="editingLeaveTypeData.default_quota_hours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="1" :disabled="!editingLeaveTypeData.overwriteQuota" />
+          <small class="field-hint">{{ (editingLeaveTypeData.default_quota_hours / 8).toFixed(1) }} วัน (1 วัน = 8 ชม.) · ค่าที่พนักงานส่วนใหญ่ได้ พนักงานใหม่จะได้ค่านี้</small>
+          <div class="overwrite-quota-row">
+            <Checkbox v-model="editingLeaveTypeData.overwriteQuota" :binary="true" inputId="overwriteQuota" />
+            <label for="overwriteQuota">ตั้งโควต้าของพนักงานทุกคนเป็นค่านี้ (ทับค่าที่ตั้งรายคน)</label>
+          </div>
         </div>
         <div class="field">
           <label>ต้องลาล่วงหน้า (วัน)</label>
@@ -173,13 +177,13 @@
         <div class="field">
           <label>โควต้าทั้งหมด (ชม./ปี) *</label>
           <InputNumber v-model="newQuotaHours" :min="0" :max="2920" showButtons class="w-full" suffix=" ชม." :step="0.5" />
-          <small class="field-hint">ปัจจุบัน: {{ fmtNum(currentQuota * 8) }} ชม. ({{ fmtNum(currentQuota) }} วัน)</small>
+          <small class="field-hint">ปัจจุบัน: {{ fmtNum(currentQuota * 8) }} ชม. ({{ fmtNum(currentQuota) }} วัน) · แก้ช่องนี้อย่างเดียว วันที่ใช้ไปจะไม่เปลี่ยน</small>
         </div>
         
         <div class="field">
           <label>โควต้าคงเหลือ (ชม.) *</label>
           <InputNumber v-model="newRemainingHours" :min="0" :max="newQuotaHours" showButtons class="w-full" suffix=" ชม." :step="0.5" />
-          <small class="field-hint">ปัจจุบัน: {{ fmtNum(currentRemaining * 8) }} ชม. ({{ fmtNum(currentRemaining) }} วัน)</small>
+          <small class="field-hint">ปัจจุบัน: {{ fmtNum(currentRemaining * 8) }} ชม. ({{ fmtNum(currentRemaining) }} วัน) · ใช้ไปแล้ว {{ fmtNum(currentUsed * 8) }} ชม. ({{ fmtNum(currentUsed) }} วัน)</small>
         </div>
       </div>
       <template #footer>
@@ -221,13 +225,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
 import { usePermissions } from '@/composables/usePermissions'
 import Calendar from 'primevue/calendar'
 import Chip from 'primevue/chip'
+import Checkbox from 'primevue/checkbox'
 import InputNumber from 'primevue/inputnumber'
 import Divider from 'primevue/divider'
 
@@ -280,6 +285,20 @@ const currentRemaining = ref(0)
 const newQuotaHours = ref(0)
 const newRemainingHours = ref(0)
 const addQuotaHours = ref(0)
+const currentUsed = ref(0)
+
+// คงเหลือที่ควรเป็นเมื่อวันที่ใช้ไปไม่เปลี่ยน (คนที่ใช้เกินโควตาแสดง 0)
+const expectedRemainingHours = (quotaHours) => Math.max(0, quotaHours - currentUsed.value * 8)
+// เทียบจากค่า ไม่ดักการพิมพ์ — การวางค่าหรือคีย์บอร์ดมือถือไม่ส่งเหตุการณ์พิมพ์ของช่องตัวเลข
+const remainingEdited = () => Math.abs(newRemainingHours.value - expectedRemainingHours(newQuotaHours.value)) > 0.001
+
+// แก้โควตาทั้งหมดโดยยังไม่ได้แก้คงเหลือ: วันที่ใช้ไปคงเดิม คงเหลือจึงเปลี่ยนตาม
+watch(newQuotaHours, (hours, previous) => {
+  if (addQuotaHours.value > 0) return
+  if (Math.abs(newRemainingHours.value - expectedRemainingHours(previous)) <= 0.001) {
+    newRemainingHours.value = expectedRemainingHours(hours)
+  }
+})
 
 // Computed filtered users
 const filteredUsers = computed(() => {
@@ -470,8 +489,8 @@ const loadUsers = async () => {
         
         return userData
       } catch { // ignore
-        
-        return { ...user }
+        // โหลดไม่สำเร็จ: ห้ามแก้แถวนี้ — ค่าบนหน้าจอเป็น 0 ไม่ใช่ค่าจริง ถ้าแก้จะทับวันที่ใช้ไปของพนักงาน
+        return { ...user, quotaLoadFailed: true }
       }
     }))
     
@@ -498,10 +517,15 @@ const extractFilters = () => {
 }
 
 const editQuota = (user, leaveType) => {
+  if (user.quotaLoadFailed) {
+    toast.add({ severity: 'warn', summary: 'ยังแก้ไม่ได้', detail: 'โหลดโควต้าของพนักงานคนนี้ไม่สำเร็จ กรุณารีเฟรชหน้าแล้วลองใหม่', life: 5000 })
+    return
+  }
   editingUser.value = user
   editingLeaveType.value = leaveType
   currentQuota.value = user[`${leaveType.value}_quota`] || 0
   currentRemaining.value = user[`${leaveType.value}_remaining`] || 0
+  currentUsed.value = user[`${leaveType.value}_used`] || 0
   newQuotaHours.value = currentQuota.value * 8
   newRemainingHours.value = currentRemaining.value * 8
   addQuotaHours.value = 0
@@ -524,6 +548,7 @@ const closeEditDialog = () => {
   editingLeaveType.value = null
   currentQuota.value = 0
   currentRemaining.value = 0
+  currentUsed.value = 0
   newQuotaHours.value = 0
   newRemainingHours.value = 0
   addQuotaHours.value = 0
@@ -533,7 +558,8 @@ const saveQuota = async () => {
   const newQuota = newQuotaHours.value / 8
   const newRemaining = newRemainingHours.value / 8
   
-  if (newQuota === currentQuota.value && newRemaining === currentRemaining.value && addQuotaHours.value === 0) {
+  const editedRemaining = remainingEdited()
+  if (newQuota === currentQuota.value && !editedRemaining && addQuotaHours.value === 0) {
     toast.add({
       severity: 'info',
       summary: 'ไม่มีการเปลี่ยนแปลง',
@@ -543,7 +569,7 @@ const saveQuota = async () => {
     return
   }
 
-  if (newRemainingHours.value > newQuotaHours.value) {
+  if (editedRemaining && newRemainingHours.value > newQuotaHours.value) {
     toast.add({
       severity: 'error',
       summary: 'ข้อผิดพลาด',
@@ -555,11 +581,12 @@ const saveQuota = async () => {
 
   saving.value = true
   try {
-    const payload = addQuotaHours.value > 0 
-      ? { addQuota: addQuotaHours.value / 8 }
-      : { quota: newQuota, remaining: newRemaining }
-    
-    await axios.put(`/api/leave/quota/${editingUser.value.id}/${editingLeaveType.value.value}`, payload)
+    // ส่ง remaining เฉพาะเมื่อ HR ตั้งใจแก้คงเหลือ / expected_used กันบันทึกทับเมื่อหน้าจอเก่ากว่าข้อมูลจริง
+    const payload = addQuotaHours.value > 0
+      ? { addQuota: addQuotaHours.value / 8, expected_used: currentUsed.value }
+      : { quota: newQuota, ...(editedRemaining ? { remaining: newRemaining } : {}), expected_used: currentUsed.value }
+
+    await axios.put(`/api/leave/quota/${editingUser.value.id}/${encodeURIComponent(editingLeaveType.value.value)}`, payload)
 
     toast.add({
       severity: 'success',
@@ -575,8 +602,12 @@ const saveQuota = async () => {
       severity: 'error',
       summary: 'เกิดข้อผิดพลาด',
       detail: err.response?.data?.error || 'ไม่สามารถแก้ไขโควต้าได้',
-      life: 3000
+      life: 5000
     })
+    if (err.response?.status === 409) {
+      closeEditDialog()
+      await loadUsers()
+    }
   } finally {
     saving.value = false
   }
@@ -671,22 +702,42 @@ const editLeaveType = (type) => {
   editingLeaveTypeData.value = { 
     ...type,
     default_quota_hours: (type.default_quota || 0) * 8,
-    addQuotaDays: 0
+    addQuotaDays: 0,
+    overwriteQuota: false
   }
   showEditLeaveTypeDialog.value = true
 }
 
-const saveLeaveType = async () => {
-  if (!editingLeaveTypeData.value) return
+const saveLeaveType = () => {
+  const data = editingLeaveTypeData.value
+  if (!data) return
+  if (!data.overwriteQuota) {
+    submitLeaveType()
+    return
+  }
+  confirm.require({
+    message: `ตั้งโควต้า "${data.label}" ของพนักงานทุกคนเป็น ${(data.default_quota_hours / 8).toFixed(2)} วัน ใช่หรือไม่?\n\nค่าที่ตั้งรายคนไว้จะถูกทับ ส่วนวันที่ใช้ไปไม่เปลี่ยน`,
+    header: 'ยืนยันทับโควต้าทุกคน',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ทับโควต้าทุกคน',
+    rejectLabel: 'ยกเลิก',
+    acceptClass: 'p-button-danger',
+    accept: submitLeaveType
+  })
+}
+
+const submitLeaveType = async () => {
+  const data = editingLeaveTypeData.value
+  if (!data) return
 
   savingLeaveType.value = true
   try {
-    await axios.put(`/api/leave/leave-types/${encodeURIComponent(editingLeaveTypeData.value.value)}`, {
-      display_name: editingLeaveTypeData.value.label,
-      color: editingLeaveTypeData.value.color,
-      advance_days: editingLeaveTypeData.value.advance_days,
-      default_quota: editingLeaveTypeData.value.default_quota_hours / 8,
-      addQuota: (editingLeaveTypeData.value.addQuotaDays || 0) / 8
+    await axios.put(`/api/leave/leave-types/${encodeURIComponent(data.value)}`, {
+      display_name: data.label,
+      color: data.color,
+      advance_days: data.advance_days,
+      addQuota: (data.addQuotaDays || 0) / 8,
+      ...(data.overwriteQuota ? { overwrite_quota: true, default_quota: data.default_quota_hours / 8 } : {})
     })
 
     toast.add({
@@ -968,6 +1019,18 @@ const saveLeaveType = async () => {
 .header-actions {
   display: flex;
   gap: 0.5rem;
+}
+
+.overwrite-quota-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.overwrite-quota-row label {
+  margin: 0;
+  font-weight: 500;
 }
 
 .add-quota-field {
