@@ -588,9 +588,6 @@ export default {
   },
   created() {
     this.$http = axios
-    if (!this.records || this.records.length === 0) {
-      this.loadWorkRecords()
-    }
   },
   mounted() {
     // Load status options from localStorage
@@ -602,16 +599,13 @@ export default {
       this.currentTime = new Date()
     }, 1000)
     
-    this._onTaskUpdated = () => this.$emit('refresh-data')
     this._onStatusesUpdated = () => this.loadStatusOptions()
     this._onCategoriesUpdated = () => this.loadCategoryOptions()
-    window.addEventListener('taskUpdated', this._onTaskUpdated)
     window.addEventListener('statusesUpdated', this._onStatusesUpdated)
     window.addEventListener('categoriesUpdated', this._onCategoriesUpdated)
   },
   beforeUnmount() {
     clearInterval(this._clockInterval)
-    window.removeEventListener('taskUpdated', this._onTaskUpdated)
     window.removeEventListener('statusesUpdated', this._onStatusesUpdated)
     window.removeEventListener('categoriesUpdated', this._onCategoriesUpdated)
   },
@@ -631,8 +625,9 @@ export default {
       const min = entryMinDate(this.editEntryWindow)
       return !min || ymdToDate(this.editOriginalDate) >= min
     },
+    // รายการโหลดที่ DailyWork.vue ที่เดียว (เดิมโหลดทั้งหน้าแม่และหน้านี้ = ยิงทั้งตารางซ้ำ 2 ครั้งทุกครั้งที่เปิด/รีเฟรช)
     workRecords() {
-      return this.records && this.records.length > 0 ? this.records : this.localRecords
+      return this.records
     },
     groupedRecords() {
       const all = this.workRecords
@@ -682,7 +677,6 @@ export default {
   },
   data() {
     return {
-      localRecords: [],
       tasks: [],
       detailDialog: false,
       selectedRecord: null,
@@ -882,38 +876,11 @@ export default {
           life: 3000
         })
         this.$emit('refresh-data')
-        this.loadWorkRecords()
       } catch {
         throw new Error('cancel failed')
       }
     },
 
-    async loadWorkRecords() {
-      try {
-        const response = await this.$http.get('/api/daily-work')
-        this.localRecords = response.data || []
-
-        // ตรวจสอบข้อมูลที่ได้รับ
-
-        if (this.localRecords.length === 0) {
-          this.$toast.add({
-            severity: 'info',
-            summary: 'ไม่มีข้อมูล',
-            detail: 'ยังไม่มีการลงงานรายวัน',
-            life: 3000
-          })
-        }
-      } catch { // ignore
-        this.localRecords = []
-
-        this.$toast.add({
-          severity: 'error',
-          summary: 'เกิดข้อผิดพลาด',
-          detail: 'ไม่สามารถโหลดข้อมูลการลงงานได้',
-          life: 5000
-        })
-      }
-    },
     formatDate(date) {
       if (!date) return '-'
       try {
@@ -1286,9 +1253,6 @@ export default {
 
         this.editDialog = false
 
-        // Auto-refresh data
-        await this.loadWorkRecords()
-
         // Emit event for parent component to refresh
         this.$emit('record-updated')
 
@@ -1327,10 +1291,6 @@ export default {
       if (!text) return '-'
       if (text.length <= maxLength) return text
       return text.substring(0, maxLength) + '...'
-    },
-    // Method สำหรับ refresh ข้อมูลจากภายนอก
-    async refreshData() {
-      await this.loadWorkRecords()
     },
     // Method สำหรับตรวจสอบข้อมูลที่จำเป็น
     validateRecord(record) {
