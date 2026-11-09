@@ -1,7 +1,7 @@
 import axios from '@/utils/axiosConfig'
 
-// กติกาเวลาลงงาน (ตรวจจริงที่ backend: utils/entryWindow.js) — หน้าเว็บใช้จำกัดวันที่ที่เลือกได้และแจ้งเมื่อถูกปิดลงงาน
-// GET .../entry-window → { today, minDate, phase: 'open' | 'locked' | 'future_only', exempt, message }
+// กติกาเวลาลงงาน (ตรวจจริงที่ backend: utils/entryWindow.js) — หน้าเว็บใช้จำกัดวันที่ที่เลือกได้และแจ้งเมื่อลงของวันนี้ไม่ได้แล้ว
+// GET .../entry-window → { today, minDate, phase: 'open' | 'future_only', exempt, message }
 
 // 'YYYY-MM-DD' → Date เที่ยงคืนตามเวลาเครื่อง
 export const ymdToDate = (ymd) => {

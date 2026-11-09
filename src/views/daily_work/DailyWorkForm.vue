@@ -13,7 +13,7 @@
         </div>
         
         <div v-if="entryWindow && entryWindow.message" class="entry-window-msg" :class="'entry-' + entryWindow.phase" role="alert">
-          <i :class="entryWindow.phase === 'locked' ? 'pi pi-lock' : 'pi pi-info-circle'"></i>
+          <i class="pi pi-info-circle"></i>
           <span>{{ entryWindow.message }}</span>
         </div>
         <div v-else-if="entryWindow && !entryWindow.exempt" class="entry-window-hint">
@@ -262,7 +262,7 @@
       <!-- Actions -->
       <div class="form-actions">
         <Button type="button" label="ล้างข้อมูล" icon="pi pi-refresh" severity="secondary" outlined @click="resetForm" />
-        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" :disabled="isSubmitting || entryLocked" :loading="isSubmitting" />
+        <Button type="submit" label="บันทึกงาน" icon="pi pi-check" severity="success" :disabled="isSubmitting" :loading="isSubmitting" />
       </div>
     </form>
   </div>
@@ -315,13 +315,9 @@ export default {
     }
   },
   computed: {
-    // วันแรกที่เลือกได้: วันนี้ (ห้ามย้อนหลัง) หรือพรุ่งนี้ถ้าถูกปิดลงงานของวันนี้ — admin/superadmin ไม่จำกัด
+    // วันแรกที่เลือกได้: วันนี้ (ห้ามย้อนหลัง) หรือพรุ่งนี้ถ้าไม่ได้ลงรายการแรกของวันนี้ก่อน 10:00 — admin/superadmin ไม่จำกัด
     minDate() {
       return entryMinDate(this.entryWindow)
-    },
-    // 10:00–18:00 ของวันที่ไม่ได้ลงรายการแรกก่อน 10:00 → ลงงานไม่ได้เลย
-    entryLocked() {
-      return this.entryWindow?.phase === 'locked'
     },
     dateRangeDays() {
       if (!this.formData.useDateRange || !this.formData.startDate || !this.formData.endDate) return 0
@@ -355,7 +351,7 @@ export default {
   methods: {
     async loadEntryWindow() {
       this.entryWindow = await fetchEntryWindow('/api/daily-work/entry-window')
-      // วันที่ตั้งต้น (วันนี้) เลือกไม่ได้แล้ว (เช่น หลัง 18:00 ของวันที่ถูกปิด) → เลื่อนเป็นวันแรกที่ลงได้
+      // วันที่ตั้งต้น (วันนี้) เลือกไม่ได้แล้ว (หลัง 10:00 ของวันที่ไม่ได้ลงรายการแรกก่อน 10:00) → เลื่อนเป็นวันแรกที่ลงได้
       const min = this.minDate
       if (!min) return
       for (const key of ['workDate', 'startDate', 'endDate']) {
@@ -675,12 +671,7 @@ export default {
         }
       }
 
-      // ห้ามลงย้อนหลัง / ถูกปิดลงงาน (backend ตรวจซ้ำอีกชั้น)
-      if (this.entryLocked) {
-        this.$toast.add({ severity: 'error', summary: 'ปิดการลงงานชั่วคราว', detail: this.entryWindow.message, life: 8000 })
-        this.isSubmitting = false
-        return
-      }
+      // ห้ามลงย้อนหลัง / วันนี้ลงไม่ได้แล้ว (backend ตรวจซ้ำอีกชั้น)
       const firstDate = this.formData.useDateRange ? this.formData.startDate : this.formData.workDate
       if (this.minDate && new Date(firstDate).setHours(0, 0, 0, 0) < this.minDate.getTime()) {
         this.$toast.add({
@@ -916,11 +907,6 @@ export default {
 }
 .entry-window-msg i,
 .entry-window-hint i { margin-top: 0.2rem; }
-.entry-window-msg.entry-locked {
-  background: #fef2f2;
-  border-color: #dc2626;
-  color: #991b1b;
-}
 .entry-window-msg.entry-future_only {
   background: #fffbeb;
   border-color: #d97706;

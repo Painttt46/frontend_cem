@@ -118,10 +118,6 @@
           <!-- Left Column -->
           <div class="form-col">
             <div class="form-section-title"><i class="pi pi-calendar"></i> วันที่ & เวลา</div>
-            <div v-if="!editingVisit && entryWindow && entryWindow.message" class="entry-window-msg" :class="'entry-' + entryWindow.phase" role="alert">
-              <i :class="entryWindow.phase === 'locked' ? 'pi pi-lock' : 'pi pi-info-circle'"></i>
-              <span>{{ entryWindow.message }}</span>
-            </div>
             <div class="field">
               <label>วันที่และเวลาเริ่ม <span class="required">*</span></label>
               <Calendar v-model="form.visit_date" showTime hourFormat="24" dateFormat="dd/mm/yy" showIcon class="w-full" :minDate="visitMinDate" />
@@ -320,7 +316,7 @@
       </div>
       <template #footer>
         <Button label="ยกเลิก" icon="pi pi-times" @click="showFormDialog = false" class="btn-cancel" text />
-        <Button :label="editingVisit ? 'บันทึก' : 'สร้าง Visit'" icon="pi pi-check" @click="saveVisit" :disabled="!form.visit_date || saving || (!editingVisit && entryWindow?.phase === 'locked')" :loading="saving" class="btn-confirm" />
+        <Button :label="editingVisit ? 'บันทึก' : 'สร้าง Visit'" icon="pi pi-check" @click="saveVisit" :disabled="!form.visit_date || saving" :loading="saving" class="btn-confirm" />
       </template>
     </Dialog>
 
@@ -988,16 +984,6 @@ export default {
 .form-section-title:first-child { margin-top: 0; }
 .field { margin-bottom: var(--field-gap); }
 .field-hint { display: block; margin-top: 0.3rem; color: #526074; font-size: max(0.75rem, var(--min-fs)); }
-/* กติกาเวลาลงกิจกรรม */
-.entry-window-msg {
-  display: flex; align-items: flex-start; gap: 0.5rem;
-  padding: 0.6rem 0.8rem; margin-bottom: 0.75rem;
-  border-radius: 8px; border: 1px solid;
-  font-size: max(0.85rem, var(--min-fs)); line-height: 1.5;
-}
-.entry-window-msg i { margin-top: 0.2rem; }
-.entry-window-msg.entry-locked { background: #fef2f2; border-color: #dc2626; color: #991b1b; }
-.entry-window-msg.entry-future_only { background: #fffbeb; border-color: #d97706; color: #92400e; }
 .field label { display: block; font-weight: 600; font-size: max(0.82rem, var(--min-fs)); color: #334155; margin-bottom: 0.5rem; }
 .field-with-action { display: flex; gap: 0.4rem; align-items: center; }
 .flex-1 { flex: 1; min-width: 0; }
