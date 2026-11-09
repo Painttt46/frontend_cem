@@ -453,6 +453,8 @@ const currentWorkload = computed(() => {
 // Workload chart data
 const workloadChartData = computed(() => {
   const names = {}
+  // ใช้ชื่อจากรายการลงงานเป็นค่าตั้งต้น — คนที่ลบบัญชีแล้วไม่อยู่ในรายชื่อผู้ใช้ แต่ชั่วโมงยังต้องนับ
+  dailyWork.value.forEach(w => { if (w.user_id && w.employee_name) names[w.user_id] = w.employee_name })
   users.value.forEach(u => { names[u.id] = `${u.firstname} ${u.lastname}` })
   return Object.entries(monthHoursByUser.value)
     .filter(([id]) => names[id])
@@ -465,7 +467,7 @@ const workloadChartData = computed(() => {
 const teamWorkloadData = computed(() => {
   const deptOf = {}
   users.value.forEach(u => { deptOf[u.id] = u.department })
-  return Object.entries(sumHoursBy(filteredDailyWork.value, w => deptOf[w.user_id] || null))
+  return Object.entries(sumHoursBy(filteredDailyWork.value, w => deptOf[w.user_id] || w.employee_department || null))
 })
 
 // Has leave data
@@ -474,7 +476,7 @@ const hasLeaveData = computed(() => filteredLeaves.value.length > 0)
 const leaveDetailList = computed(() => {
   let list = filteredLeaves.value.map(l => ({
     ...l,
-    employee_name: users.value.find(u => u.id === l.user_id)?.firstname + ' ' + users.value.find(u => u.id === l.user_id)?.lastname || 'ไม่ระบุ'
+    employee_name: l.employee_name || 'ไม่ระบุ'
   }))
   if (leaveFilterType.value) {
     list = list.filter(l => l.leave_type === leaveFilterType.value)

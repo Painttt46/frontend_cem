@@ -108,8 +108,11 @@
           <Column header="จัดการ" class="action-col">
             <template #body="slotProps">
               <div class="action-buttons">
-                <Button icon="pi pi-pencil" size="small" severity="info" 
+                <Button icon="pi pi-pencil" size="small" severity="info"
                         @click="editUser(slotProps.data)" v-tooltip="'แก้ไข'" />
+                <Button v-if="canDeleteUser(slotProps.data)" icon="pi pi-trash" size="small" severity="danger" outlined
+                        :aria-label="`ลบ ${slotProps.data.firstname} ${slotProps.data.lastname}`"
+                        @click="confirmDeleteUser(slotProps.data)" v-tooltip="'ลบ'" />
               </div>
             </template>
           </Column>
@@ -214,10 +217,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import { FilterMatchMode } from 'primevue/api'
 import axios from '@/utils/axiosConfig'
 
 const toast = useToast()
+const confirm = useConfirm()
 
 const users = ref([])
 const loading = ref(false)
@@ -371,6 +376,45 @@ const editUser = (user) => {
   userForm.value = { ...user }
   editMode.value = true
   showAddUser.value = true
+}
+
+const userLabel = (user) => `${user.firstname || ''} ${user.lastname || ''}`.trim() || user.username
+
+// ซ่อนปุ่มให้ตรงกับที่ backend อนุญาต: ลบบัญชีตัวเองไม่ได้ และบัญชีผู้ดูแลลบได้เฉพาะผู้ดูแลระดับเดียวกันขึ้นไป
+const canDeleteUser = (user) => {
+  if (String(user.id) === String(localStorage.getItem('soc_user_id'))) return false
+  const currentRole = (localStorage.getItem('soc_role') || '').toLowerCase()
+  const targetRole = (user.role || '').toLowerCase()
+  if (targetRole === 'superadmin') return currentRole === 'superadmin'
+  if (targetRole === 'admin') return currentRole === 'admin' || currentRole === 'superadmin'
+  return true
+}
+
+const confirmDeleteUser = (user) => {
+  confirm.require({
+    message: `ต้องการลบผู้ใช้ "${userLabel(user)}" ใช่หรือไม่? ผู้ใช้จะ login ไม่ได้และหายจากรายชื่อทันที ส่วนประวัติการลา งานรายวัน และการจองรถยังอยู่ครบ`,
+    header: 'ยืนยันการลบผู้ใช้',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'ลบผู้ใช้',
+    rejectLabel: 'ยกเลิก',
+    acceptClass: 'p-button-danger',
+    accept: () => deleteUser(user)
+  })
+}
+
+const deleteUser = async (user) => {
+  try {
+    await axios.delete(`/api/users/${user.id}`)
+    toast.add({ severity: 'success', summary: 'สำเร็จ', detail: `ลบผู้ใช้ ${userLabel(user)} เรียบร้อย`, life: 3000 })
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'ลบไม่สำเร็จ',
+      detail: error.response?.data?.error || 'กรุณาลองใหม่อีกครั้ง',
+      life: 5000
+    })
+  }
+  loadUsers()
 }
 
 const resetForm = () => {

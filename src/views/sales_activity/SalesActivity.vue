@@ -126,7 +126,7 @@
               <label>วันที่และเวลาเริ่ม <span class="required">*</span></label>
               <Calendar v-model="form.visit_date" showTime hourFormat="24" dateFormat="dd/mm/yy" showIcon class="w-full" :minDate="visitMinDate" />
               <small v-if="entryWindow && !entryWindow.exempt" class="field-hint">
-                {{ editingVisit ? 'เปลี่ยนวันที่ได้เฉพาะวันนี้เป็นต้นไป (อัปเดตผล/สรุปของนัดที่ผ่านไปแล้วได้ตามปกติ)' : `ห้ามลงย้อนหลัง — รายการแรกของแต่ละวันต้องลงก่อน ${entryWindow.cutoff} น.` }}
+                {{ editingVisit ? 'เปลี่ยนวันที่ได้เฉพาะวันนี้เป็นต้นไป (อัปเดตผล/สรุปของนัดที่ผ่านไปแล้วได้ตามปกติ)' : 'ห้ามลงย้อนหลัง — ลงได้ตั้งแต่วันนี้เป็นต้นไป' }}
               </small>
             </div>
             <div class="field">

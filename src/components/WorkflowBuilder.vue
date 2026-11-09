@@ -374,7 +374,12 @@ export default {
         this.currentStep.assigned_users = this.currentStep.assigned_users
           .map(u => {
             const userId = typeof u === 'object' ? u.id : u
-            return this.users.find(user => user.id === userId)
+            const found = this.users.find(user => user.id === userId)
+            if (found || typeof u !== 'object' || !u?.name) return found
+            // บัญชีถูกลบไปแล้ว: เก็บชื่อไว้ในขั้นตอน ไม่ให้หายเพียงเพราะเปิดแก้ และเพิ่มเป็นตัวเลือกให้ dropdown แสดงชื่อได้
+            const kept = { id: userId, name: u.name, position: u.position || '', department: u.department || '' }
+            this.users.push(kept)
+            return kept
           })
           .filter(Boolean)
       }
