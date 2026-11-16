@@ -555,6 +555,11 @@ export default {
       return this.baseFilteredVisits.filter(v => this.matchesKpi(v, this.filterStatus, now))
     },
     visitGroups() {
+      // ดูนัดวันนี้: กลุ่มเดียว เรียงตามเวลาเช้า → เย็น
+      if (this.filterStatus === 'today') {
+        const items = [...this.filteredVisits].sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date))
+        return items.length ? [{ key: 'today', label: 'นัดวันนี้', items }] : []
+      }
       const { upcoming, past } = splitVisits(this.filteredVisits)
       return [
         { key: 'upcoming', label: 'นัดที่จะถึง', items: upcoming },
@@ -567,6 +572,7 @@ export default {
     // KPI ตามวิธีใช้จริง: Sale ลงนัดแล้วจบ — สถานะดูจากวันที่ (ไม่มี "เสร็จสิ้น/เกินกำหนด" ที่ต้องกลับมาแก้)
     kpiCards() {
       return [
+        { key: 'today', label: 'นัดวันนี้', icon: 'pi pi-sun', colorClass: 'kpi-today' },
         { key: 'upcoming', label: 'นัดที่จะถึง', icon: 'pi pi-clock', colorClass: 'kpi-upcoming' },
         { key: 'visited_month', label: 'เข้าพบเดือนนี้', icon: 'pi pi-calendar', colorClass: 'kpi-visited-month' },
         { key: 'visited', label: this.dataScope === 'year' ? 'เข้าพบทั้งปี' : `เข้าพบแล้ว (${this.scopeLabel})`, icon: 'pi pi-check-circle', colorClass: 'kpi-visited' },
@@ -654,6 +660,11 @@ export default {
     stateLabel(visit) { return visitStateLabel(visit) },
     matchesKpi(visit, key, now = new Date()) {
       const state = visitState(visit, now.getTime())
+      // นัดวันนี้: ทั้งที่ยังไม่ถึงเวลาและที่เข้าพบไปแล้ววันนี้ (ไม่รวมที่ยกเลิก)
+      if (key === 'today') {
+        const d = new Date(visit.visit_date)
+        return state !== 'cancelled' && d.toDateString() === now.toDateString()
+      }
       if (key === 'visited_month') {
         const d = new Date(visit.visit_date)
         return state === 'visited' && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
@@ -937,11 +948,12 @@ export default {
 .stat-item { color: rgba(255,255,255,0.85); font-size: max(0.88rem, var(--min-fs)); background: rgba(255,255,255,0.15); padding: 0.4rem 1rem; border-radius: 20px; }
 
 /* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
 .kpi-card { background: #fff; border-radius: var(--radius-lg); padding: 1rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: none; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
 .kpi-card:hover { border-color: #bcd6f6; }
 .kpi-card.kpi-active { border-color: #2563eb; background: #f8fbff; }
 .kpi-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+.kpi-today { background: #fff7ed; color: #c2410c; }
 .kpi-upcoming { background: #eff6ff; color: #1d4ed8; }
 .kpi-visited-month { background: #ecfdf5; color: #047857; }
 .kpi-visited { background: #dcfce7; color: #15803d; }
