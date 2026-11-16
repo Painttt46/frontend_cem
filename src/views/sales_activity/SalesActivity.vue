@@ -13,14 +13,24 @@
       </template>
     </Card>
 
-    <!-- KPI Summary -->
+    <!-- รายการ / ภาพรวม -->
+    <div class="view-tabs" role="tablist" aria-label="มุมมอง">
+      <button type="button" role="tab" class="view-tab" :class="{ active: view === 'list' }" :aria-selected="view === 'list'" @click="view = 'list'">
+        <i class="pi pi-list"></i> รายการ
+      </button>
+      <button type="button" role="tab" class="view-tab" :class="{ active: view === 'overview' }" :aria-selected="view === 'overview'" @click="view = 'overview'">
+        <i class="pi pi-chart-bar"></i> ภาพรวม
+      </button>
+    </div>
+
+    <!-- KPI Summary (กดเพื่อกรองรายการ) -->
     <div class="kpi-row">
-      <div class="kpi-card" v-for="kpi in kpiList" :key="kpi.key"
+      <div class="kpi-card" v-for="kpi in kpiCards" :key="kpi.key"
         :class="{ 'kpi-active': filterStatus === kpi.key }"
-        @click="filterStatus = filterStatus === kpi.key ? null : kpi.key">
+        @click="selectKpi(kpi.key)">
         <div class="kpi-icon" :class="kpi.colorClass"><i :class="kpi.icon"></i></div>
         <div class="kpi-info">
-          <div class="kpi-value">{{ countByStatus(kpi.key) }}</div>
+          <div class="kpi-value">{{ countByKpi(kpi.key) }}</div>
           <div class="kpi-label">{{ kpi.label }}</div>
         </div>
       </div>
@@ -52,22 +62,30 @@
       </div>
     </div>
 
-    <!-- Visit List -->
-    <div class="visits-list" v-if="!loading">
+    <SalesOverview v-if="!loading && view === 'overview'" :visits="baseFilteredVisits" :customers="customers"
+      :scope-label="scopeLabel" @open-customer="openCustomerHistory" />
+
+    <!-- Visit List: นัดที่จะถึง (ใกล้ → ไกล) แล้วตามด้วยกิจกรรมที่ผ่านมา (ล่าสุด → เก่า) -->
+    <div class="visits-list" v-if="!loading && view === 'list'">
       <div v-if="filteredVisits.length === 0" class="empty-state">
         <i class="pi pi-briefcase"></i>
         <p>ยังไม่มีกิจกรรม</p>
         <Button icon="pi pi-plus" label="สร้าง Visit แรก" @click="openCreateDialog" class="add-btn" style="margin-top:1rem" />
       </div>
 
-      <div v-for="visit in filteredVisits" :key="visit.id" class="visit-card" :class="{ 'visit-card-overdue': isVisitOverdue(visit) }" @click="openDetailDialog(visit)">
+      <template v-for="group in visitGroups" :key="group.key">
+      <h3 class="visit-group-title">{{ group.label }} <span>({{ group.items.length }})</span></h3>
+      <div v-for="visit in group.items" :key="visit.id" class="visit-card" @click="openDetailDialog(visit)">
         <div class="visit-left">
           <div class="visit-type-badge" :class="'vtype-' + visit.visit_type">
             <i :class="getVisitTypeIcon(visit.visit_type)"></i>
           </div>
           <div class="visit-info">
             <div class="visit-title">
-              {{ visit.company_name || 'ไม่ระบุลูกค้า' }}
+              <button v-if="visit.customer_id" type="button" class="visit-customer-link"
+                v-tooltip.top="'ดูประวัติการเข้าพบลูกค้ารายนี้'"
+                @click.stop="openCustomerHistory({ id: visit.customer_id, name: visit.company_name })">{{ visit.company_name || 'ไม่ระบุลูกค้า' }}</button>
+              <template v-else>{{ visit.company_name || 'ไม่ระบุลูกค้า' }}</template>
               <span v-if="visit.created_by_name" class="visit-owner"><i class="pi pi-user"></i> {{ visit.created_by_name }}</span>
             </div>
             <div class="visit-meta">
@@ -88,7 +106,7 @@
           </div>
         </div>
         <div class="visit-right">
-          <span class="visit-status-badge" :class="'vstatus-' + visit.status">{{ getStatusLabel(visit.status) }}</span>
+          <span class="visit-status-badge" :class="'vstate-' + stateOf(visit)">{{ stateLabel(visit) }}</span>
           <span class="visit-type-label">{{ getVisitTypeLabel(visit.visit_type) }}</span>
           <div class="visit-actions" @click.stop>
             <Button v-if="visit.next_visit_date && canFollowUp(visit)" icon="pi pi-calendar-plus" v-tooltip.top="'สร้างนัดถัดไปจากวันนัดหมายที่ตั้งไว้'" @click="openNextVisitDialog(visit)" text size="small" />
@@ -98,6 +116,7 @@
           </div>
         </div>
       </div>
+      </template>
     </div>
 
     <div v-if="loading" class="skeleton-list">
@@ -289,22 +308,11 @@
             </div>
             <div class="field-row">
               <div class="field flex-1">
-                <label>สถานะ</label>
-                <Dropdown v-model="form.status" :options="visitStatusOptions" optionLabel="label" optionValue="value" class="w-full">
-                  <template #value="slotProps">
-                    <div v-if="slotProps.value" class="type-status-value">
-                      <span class="ts-badge" :class="'vs-' + slotProps.value"><i :class="getStatusIcon(slotProps.value)"></i></span>
-                      {{ getStatusLabel(slotProps.value) }}
-                    </div>
-                    <span v-else class="task-value-placeholder">{{ slotProps.placeholder }}</span>
-                  </template>
-                  <template #option="slotProps">
-                    <div class="type-status-option">
-                      <span class="ts-badge" :class="'vs-' + slotProps.option.value"><i :class="getStatusIcon(slotProps.option.value)"></i></span>
-                      <span class="ts-label">{{ slotProps.option.label }}</span>
-                    </div>
-                  </template>
-                </Dropdown>
+                <label for="visit-cancelled">ยกเลิกนัดนี้</label>
+                <div class="cancel-switch">
+                  <InputSwitch inputId="visit-cancelled" v-model="formCancelled" />
+                  <small>{{ formCancelled ? 'นัดนี้ถูกยกเลิก' : 'สถานะดูจากวันที่: ยังไม่ถึง = นัดหมาย, ผ่านแล้ว = เข้าพบแล้ว' }}</small>
+                </div>
               </div>
               <div class="field flex-1">
                 <label>นัดครั้งถัดไป</label>
@@ -353,7 +361,7 @@
           <div class="detail-title-group">
             <h2>{{ selectedVisit.company_name || 'ไม่ระบุลูกค้า' }}</h2>
             <div class="detail-meta-row">
-              <span class="visit-status-badge" :class="'vstatus-' + selectedVisit.status">{{ getStatusLabel(selectedVisit.status) }}</span>
+              <span class="visit-status-badge" :class="'vstate-' + stateOf(selectedVisit)">{{ stateLabel(selectedVisit) }}</span>
               <span class="detail-meta-item"><i class="pi pi-calendar"></i> {{ formatVisitDate(selectedVisit.visit_date) }}</span>
               <span v-if="selectedVisit.visit_end_date" class="detail-meta-item">— {{ formatVisitTime(selectedVisit.visit_end_date) }}</span>
               <span class="detail-meta-item visit-type-label">{{ getVisitTypeLabel(selectedVisit.visit_type) }}</span>
@@ -432,6 +440,8 @@
         </div>
       </div>
     </Dialog>
+
+    <CustomerHistoryDialog v-model:visible="showCustomerHistory" :customer="historyCustomer" @open-visit="openDetailDialog" />
   </div>
 </template>
 
@@ -439,9 +449,13 @@
 import axios from '@/utils/axiosConfig'
 import { usePermissions } from '@/composables/usePermissions'
 import { fetchEntryWindow, entryMinDate, dateToYmd } from '@/utils/entryWindow'
+import { visitState, visitStateLabel, splitVisits, visitTypeLabel, visitTypeIcon, teamNames } from '@/utils/salesVisit'
+import SalesOverview from './SalesOverview.vue'
+import CustomerHistoryDialog from './CustomerHistoryDialog.vue'
 
 export default {
   name: 'SalesActivity',
+  components: { SalesOverview, CustomerHistoryDialog },
   setup() {
     const { hasAccess } = usePermissions()
     // $confirm/$toast มาจาก globalProperties ของ PrimeVue (ConfirmationService/ToastService) อยู่แล้ว — คืนค่าที่ขึ้นต้นด้วย $ จาก setup() ไม่ได้ (Vue เตือนและไม่ใส่ให้)
@@ -453,6 +467,7 @@ export default {
       loading: false, saving: false, savingCustomer: false, gettingLocation: false,
       searchQuery: '', filterStatus: null, filterType: null, filterDateRange: null,
       filterUserId: null, userRole: '', dataScope: 'year',
+      view: 'list', showCustomerHistory: false, historyCustomer: null,
       dataScopeOptions: [
         { label: 'เดือนนี้', value: 'month' },
         { label: '3 เดือนล่าสุด', value: 'quarter' },
@@ -473,19 +488,6 @@ export default {
         { label: 'Phone Call', value: 'phone' },
         { label: 'Site Survey', value: 'survey' },
         { label: 'POC / Demo', value: 'demo' }
-      ],
-      visitStatusOptions: [
-        { label: 'กำหนดการ', value: 'scheduled' },
-        { label: 'เสร็จสิ้น', value: 'done' },
-        { label: 'ยกเลิก', value: 'cancelled' },
-        { label: 'Follow-up', value: 'follow_up' }
-      ],
-      kpiList: [
-        { key: 'scheduled', label: 'กำหนดการ', icon: 'pi pi-clock', colorClass: 'kpi-scheduled' },
-        { key: 'done', label: 'เสร็จสิ้น', icon: 'pi pi-check-circle', colorClass: 'kpi-done' },
-        { key: 'follow_up', label: 'Follow-up', icon: 'pi pi-refresh', colorClass: 'kpi-followup' },
-        { key: 'cancelled', label: 'ยกเลิก', icon: 'pi pi-times-circle', colorClass: 'kpi-cancelled' },
-        { key: 'overdue', label: 'เกินกำหนด', icon: 'pi pi-exclamation-circle', colorClass: 'kpi-overdue' }
       ]
     }
   },
@@ -548,13 +550,36 @@ export default {
       return result
     },
     filteredVisits() {
-      let result = [...this.baseFilteredVisits]
-      if (this.filterStatus) {
-        result = this.filterStatus === 'overdue'
-          ? result.filter(v => this.isVisitOverdue(v))
-          : result.filter(v => v.status === this.filterStatus)
+      if (!this.filterStatus) return this.baseFilteredVisits
+      const now = new Date()
+      return this.baseFilteredVisits.filter(v => this.matchesKpi(v, this.filterStatus, now))
+    },
+    visitGroups() {
+      const { upcoming, past } = splitVisits(this.filteredVisits)
+      return [
+        { key: 'upcoming', label: 'นัดที่จะถึง', items: upcoming },
+        { key: 'past', label: 'กิจกรรมที่ผ่านมา', items: past }
+      ].filter(g => g.items.length)
+    },
+    scopeLabel() {
+      return this.dataScopeOptions.find(o => o.value === this.dataScope)?.label || ''
+    },
+    // KPI ตามวิธีใช้จริง: Sale ลงนัดแล้วจบ — สถานะดูจากวันที่ (ไม่มี "เสร็จสิ้น/เกินกำหนด" ที่ต้องกลับมาแก้)
+    kpiCards() {
+      return [
+        { key: 'upcoming', label: 'นัดที่จะถึง', icon: 'pi pi-clock', colorClass: 'kpi-upcoming' },
+        { key: 'visited_month', label: 'เข้าพบเดือนนี้', icon: 'pi pi-calendar', colorClass: 'kpi-visited-month' },
+        { key: 'visited', label: this.dataScope === 'year' ? 'เข้าพบทั้งปี' : `เข้าพบแล้ว (${this.scopeLabel})`, icon: 'pi pi-check-circle', colorClass: 'kpi-visited' },
+        { key: 'cancelled', label: 'ยกเลิก', icon: 'pi pi-times-circle', colorClass: 'kpi-cancelled' }
+      ]
+    },
+    // ช่อง "ยกเลิกนัดนี้" ในฟอร์ม — ปิดสวิตช์แล้วคืนสถานะเดิมของรายการ (ข้อมูลเก่าอาจเป็น done / follow_up)
+    formCancelled: {
+      get() { return this.form.status === 'cancelled' },
+      set(on) {
+        const original = this.editingVisit?.status
+        this.form.status = on ? 'cancelled' : (original && original !== 'cancelled' ? original : 'scheduled')
       }
-      return result
     }
   },
   watch: {
@@ -625,10 +650,29 @@ export default {
       if (to) params.to_date = this.fmtDate(to)
       return params
     },
-    countByStatus(status) {
-      // 'overdue' ไม่ใช่สถานะจริง — นับจากกำหนดการที่เลยเวลาแล้วแต่ยังไม่เสร็จ/ไม่ยกเลิก
-      if (status === 'overdue') return this.baseFilteredVisits.filter(v => this.isVisitOverdue(v)).length
-      return this.baseFilteredVisits.filter(v => v.status === status).length
+    stateOf(visit) { return visitState(visit) },
+    stateLabel(visit) { return visitStateLabel(visit) },
+    matchesKpi(visit, key, now = new Date()) {
+      const state = visitState(visit, now.getTime())
+      if (key === 'visited_month') {
+        const d = new Date(visit.visit_date)
+        return state === 'visited' && d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+      }
+      return state === key
+    },
+    countByKpi(key) {
+      const now = new Date()
+      return this.baseFilteredVisits.filter(v => this.matchesKpi(v, key, now)).length
+    },
+    // กด KPI = กรองรายการ (จากแท็บภาพรวมก็พากลับไปที่รายการ)
+    selectKpi(key) {
+      this.filterStatus = this.filterStatus === key ? null : key
+      if (this.filterStatus) this.view = 'list'
+    },
+    openCustomerHistory(customer) {
+      if (!customer?.id) return
+      this.historyCustomer = customer
+      this.showCustomerHistory = true
     },
     getTaskById(id) { return this.tasks.find(t => t.id === id) || null },
     getCustomerById(id) { return this.customers.find(c => c.id === id) || null },
@@ -839,34 +883,10 @@ export default {
         this.$toast.add({ severity: 'warn', summary: 'ระบุตำแหน่งไม่สำเร็จ', detail, life: 3000 })
       }, { enableHighAccuracy: true, timeout: 10000 })
     },
-    getVisitTypeLabel(t) {
-      const map = { on_site: 'On-site', online: 'Online Meeting', phone: 'Phone Call', survey: 'Site Survey', demo: 'POC/Demo' }
-      return map[t] || t
-    },
+    getVisitTypeLabel(t) { return visitTypeLabel(t) },
+    getVisitTypeIcon(t) { return visitTypeIcon(t) },
     // ชื่อทีมที่ไปเข้าพบ (แสดงสูงสุด 3 คน เกินนั้น +N)
-    getTeamNames(visit) {
-      const list = visit.internal_attendees || []
-      if (!list.length) return ''
-      const names = list.map(u => u.name || u)
-      return names.length <= 3 ? names.join(', ') : names.slice(0, 3).join(', ') + ` +${names.length - 3}`
-    },
-    // กำหนดการที่เลยเวลามาแล้วแต่ยังไม่เสร็จ/ไม่ถูกยกเลิก
-    isVisitOverdue(visit) {
-      if (!visit.visit_date || visit.status === 'done' || visit.status === 'cancelled') return false
-      return new Date(visit.visit_date) < new Date()
-    },
-    getVisitTypeIcon(t) {
-      const map = { on_site: 'pi pi-map-marker', online: 'pi pi-video', phone: 'pi pi-phone', survey: 'pi pi-compass', demo: 'pi pi-desktop' }
-      return map[t] || 'pi pi-calendar'
-    },
-    getStatusLabel(s) {
-      const map = { scheduled: 'กำหนดการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก', follow_up: 'Follow-up' }
-      return map[s] || s
-    },
-    getStatusIcon(s) {
-      const map = { scheduled: 'pi pi-clock', done: 'pi pi-check-circle', cancelled: 'pi pi-times-circle', follow_up: 'pi pi-refresh' }
-      return map[s] || 'pi pi-circle-fill'
-    },
+    getTeamNames(visit) { return teamNames(visit) },
     formatVisitDate(d) {
       if (!d) return ''
       return new Date(d).toLocaleString('th-TH', { day: 'numeric', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -917,16 +937,15 @@ export default {
 .stat-item { color: rgba(255,255,255,0.85); font-size: max(0.88rem, var(--min-fs)); background: rgba(255,255,255,0.15); padding: 0.4rem 1rem; border-radius: 20px; }
 
 /* KPI */
-.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--grid-gap); margin-bottom: var(--section-gap); }
 .kpi-card { background: #fff; border-radius: var(--radius-lg); padding: 1rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: none; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
 .kpi-card:hover { border-color: #bcd6f6; }
 .kpi-card.kpi-active { border-color: #2563eb; background: #f8fbff; }
 .kpi-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-.kpi-scheduled { background: #eff6ff; color: #1d4ed8; }
-.kpi-done { background: #dcfce7; color: #15803d; }
-.kpi-followup { background: #fef3c7; color: #b45309; }
+.kpi-upcoming { background: #eff6ff; color: #1d4ed8; }
+.kpi-visited-month { background: #ecfdf5; color: #047857; }
+.kpi-visited { background: #dcfce7; color: #15803d; }
 .kpi-cancelled { background: #fee2e2; color: #b91c1c; }
-.kpi-overdue { background: #ffedd5; color: #c2410c; }
 .kpi-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
 .kpi-label { font-size: max(0.7rem, var(--min-fs)); color: #526074; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
 
@@ -967,10 +986,22 @@ export default {
 .visit-agenda { font-size: max(0.78rem, var(--min-fs)); color: #526074; margin-top: 0.3rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 500px; }
 .visit-right { display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0; flex-wrap: wrap; }
 .visit-status-badge { padding: 0.25rem 0.65rem; border-radius: 20px; font-size: max(0.72rem, var(--min-fs)); font-weight: 700; }
-.vstatus-scheduled { background: #eff6ff; color: #1d4ed8; }
-.vstatus-done { background: #dcfce7; color: #166534; }
-.vstatus-cancelled { background: #fee2e2; color: #b91c1c; }
-.vstatus-follow_up { background: #fef3c7; color: #92400e; }
+.vstate-upcoming { background: #eff6ff; color: #1d4ed8; }
+.vstate-visited { background: #dcfce7; color: #166534; }
+.vstate-cancelled { background: #fee2e2; color: #b91c1c; }
+.visit-customer-link { padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.visit-customer-link:hover { color: #1d4ed8; text-decoration: underline; }
+.visit-customer-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 3px; }
+.visit-group-title { margin: 0.75rem 0 0.5rem; font-size: max(0.95rem, var(--min-fs)); font-weight: 700; color: #0f172a; }
+.visit-group-title:first-child { margin-top: 0; }
+.visit-group-title span { color: #526074; font-weight: 600; }
+.view-tabs { display: flex; gap: 0.4rem; margin-bottom: var(--section-gap); }
+.view-tab { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.9rem; border: 1.5px solid #cbd5e1; border-radius: 999px; background: #fff; color: #334155; font: inherit; font-weight: 600; font-size: max(0.875rem, var(--min-fs)); cursor: pointer; }
+.view-tab:hover { border-color: #93c5fd; }
+.view-tab.active { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+.view-tab:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+.cancel-switch { display: flex; align-items: center; gap: 0.6rem; min-height: 38px; }
+.cancel-switch small { color: #526074; font-size: max(0.78rem, var(--min-fs)); }
 .visit-type-label { font-size: max(0.72rem, var(--min-fs)); color: #526074; background: #f1f5f9; padding: 0.2rem 0.55rem; border-radius: 8px; }
 .visit-attendees { font-size: max(0.75rem, var(--min-fs)); color: #526074; display: flex; align-items: center; gap: 0.3rem; }
 .visit-actions { display: flex; gap: 0.2rem; }
@@ -1020,11 +1051,6 @@ export default {
 .vt-phone { background: #fef3c7; color: #b45309; }
 .vt-survey { background: #ede9fe; color: #7c3aed; }
 .vt-demo { background: #fce7f3; color: #be185d; }
-/* สถานะ */
-.vs-scheduled { background: #dbeafe; color: #1d4ed8; }
-.vs-done { background: #dcfce7; color: #15803d; }
-.vs-cancelled { background: #fee2e2; color: #b91c1c; }
-.vs-follow_up { background: #fef3c7; color: #b45309; }
 
 /* ===== Task Dropdown: โครงการที่เกี่ยวข้อง ===== */
 .task-value-placeholder { color: #55657a; font-size: max(0.86rem, var(--min-fs)); }
@@ -1126,7 +1152,6 @@ export default {
 .tag-summary { color: #526074; background: #f8fafc; border: 1px solid #f1f5f9; }
 .tag-next { color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; }
 .tag-gps { color: #15803d; background: #f0fdf4; border: 1px solid #dcfce7; }
-.visit-card-overdue { border: 1.5px solid #fecaca; background-color: #fff5f5; }
 .so-tag-sm { font-size: max(0.68rem, var(--min-fs)); color: #4f46e5; background: #eef2ff; padding: 0.1rem 0.4rem; border-radius: 5px; font-weight: 800; font-family: monospace; }
 
 /* Skeleton */
