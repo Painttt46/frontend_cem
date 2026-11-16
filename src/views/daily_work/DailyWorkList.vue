@@ -445,6 +445,7 @@
               :filterFields="['task_name','so_number','display']"
               scrollHeight="300px"
               appendTo="body"
+              @change="onEditTaskChange"
             >
               <template #value="{ value }">
                 <div v-if="value" class="edit-val-row">
@@ -461,6 +462,16 @@
                 </div>
               </template>
             </Dropdown>
+          </div>
+        </div>
+
+        <div v-if="editFormData.task_id" class="edit-row">
+          <div class="edit-field">
+            <label class="edit-label"><i class="pi pi-list"></i> ขั้นตอน (Workflow Steps)</label>
+            <WorkflowStepSelect v-if="editSteps.length || editFormData.step_ids?.length" v-model="editFormData.step_ids" :steps="editSteps" />
+            <small v-if="editStepsLoading" class="edit-date-hint">กำลังโหลดขั้นตอน...</small>
+            <small v-else-if="editStepsError" class="edit-date-hint edit-hint-error">โหลดขั้นตอนของโครงการไม่สำเร็จ — ขั้นตอนเดิมของรายการยังอยู่</small>
+            <small v-else-if="!editSteps.length" class="edit-date-hint">โครงการนี้ยังไม่มี Workflow Step</small>
           </div>
         </div>
 
@@ -559,6 +570,7 @@ import { isImageFile, fileUrlWithToken, downloadBlob, getOriginalFileName } from
 import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
+import WorkflowStepSelect from '@/components/WorkflowStepSelect.vue'
 import Checkbox from 'primevue/checkbox'
 import { usePermissions } from '@/composables/usePermissions'
 import { accessibleBg } from '@/utils/color'
@@ -576,7 +588,8 @@ export default {
   components: {
     UserInfoDialog,
     EnhancedDataTable,
-    Checkbox
+    Checkbox,
+    WorkflowStepSelect
   },
   // $toast/$confirm ใช้จาก globalProperties ของ PrimeVue — ห้าม inject เพราะจะ shadow เป็น undefined
   emits: ['refresh-data', 'add-to-group'],
@@ -715,7 +728,11 @@ export default {
       currentTime: new Date(),
       selectedProjMap: {},  // key = group._key, value = proj object
       openMap: {},           // key = group._key, value = boolean
-      expandedRows: {}
+      expandedRows: {},
+      // ขั้นตอนของโครงการที่กำลังแก้ใน dialog แก้ไขรายการงาน
+      editSteps: [],
+      editStepsLoading: false,
+      editStepsError: false
     }
   },
   methods: {
@@ -1123,11 +1140,14 @@ export default {
       this.editEntryWindow = null
       fetchEntryWindow('/api/daily-work/entry-window').then(win => { this.editEntryWindow = win })
 
+      // step_ids เก่าบางรายการเก็บเป็นข้อความ ('12') — แปลงเป็นเลขให้ตรงกับ id ของตัวเลือก
+      const stepIds = (record.step_ids?.length ? record.step_ids : (record.step_id ? [record.step_id] : []))
+        .map(Number).filter(n => Number.isInteger(n) && n > 0)
       this.editFormData = {
         id: record.id,
         task_id: record.task_id,
         step_id: record.step_id,
-        step_ids: record.step_ids || (record.step_id ? [record.step_id] : []),
+        step_ids: [...new Set(stepIds)],
         work_date: workDate,
         start_time: this.parseTime(record.start_time),
         end_time: this.parseTime(record.end_time),
@@ -1139,7 +1159,28 @@ export default {
         existingFiles: [...(record.files || [])],
         newFiles: []
       }
+      this.loadEditSteps(record.task_id)
       this.editDialog = true
+    },
+    // โหลดขั้นตอนของโครงการ — คำตอบที่มาช้ากว่าการเปลี่ยนโครงการ (เปลี่ยนโครงการระหว่างโหลด) ไม่เอามาใช้
+    async loadEditSteps(taskId) {
+      this.editSteps = []
+      this.editStepsError = false
+      if (!taskId) { this.editStepsLoading = false; return }
+      this.editStepsLoading = true
+      try {
+        const res = await this.$http.get(`/api/task-steps/task/${taskId}`)
+        if (this.editFormData.task_id === taskId) this.editSteps = res.data || []
+      } catch (error) {
+        if (this.editFormData.task_id === taskId) this.editStepsError = true
+      } finally {
+        if (this.editFormData.task_id === taskId) this.editStepsLoading = false
+      }
+    },
+    // เปลี่ยนโครงการ: ขั้นตอนเดิมเป็นของโครงการเก่า ต้องเลือกใหม่
+    onEditTaskChange() {
+      this.editFormData.step_ids = []
+      this.loadEditSteps(this.editFormData.task_id)
     },
     formatTimeInput(field) {
       let value = this.editFormData[field].replace(/\D/g, '')
@@ -1713,6 +1754,7 @@ export default {
   font-size: max(0.85rem, var(--min-fs));
 }
 
+.edit-hint-error { color: #b91c1c; }
 .edit-date-hint {
   color: #92400e;
   font-size: max(0.8rem, var(--min-fs));

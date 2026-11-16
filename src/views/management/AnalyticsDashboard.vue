@@ -135,16 +135,19 @@
                   <div class="wl-expansion">
                     <p v-if="!data.projectList.length" class="wl-empty">ไม่มีขั้นตอนที่ได้รับมอบหมายและยังไม่เสร็จ</p>
                     <div v-for="proj in data.projectList" :key="proj.taskId" class="wl-project">
-                      <div class="wl-project-name">
-                        <span v-if="proj.soNumber" class="wl-so">{{ proj.soNumber }}</span>{{ proj.taskName }}
+                      <button type="button" class="wl-project-name wl-link" @click="goToStepProgress(proj.taskId)"
+                        :aria-label="`เปิดโครงการ ${proj.taskName}`">
+                        <span v-if="proj.soNumber" class="wl-so">{{ proj.soNumber }}</span><span class="wl-link-text">{{ proj.taskName }}</span>
                         <small>คืบหน้า {{ proj.progress }}% ({{ proj.completedSteps }}/{{ proj.totalSteps }})</small>
-                      </div>
+                      </button>
                       <template v-for="step in proj.steps" :key="step.stepId">
-                        <div v-if="step.stepStatus !== 'completed'" class="wl-step">
+                        <button v-if="step.stepStatus !== 'completed'" type="button" class="wl-step wl-link"
+                          @click="goToStepProgress(proj.taskId, step.stepId)" :aria-label="`เปิดขั้นตอน ${step.stepName} ของ ${proj.taskName}`">
                           <span class="wl-dot" :class="`wl-dot-${step.stepStatus}`"></span>
-                          <span class="wl-step-name">{{ step.stepName }}</span>
+                          <span class="wl-step-name wl-link-text">{{ step.stepName }}</span>
                           <span class="wl-step-state" :class="`wl-state-${step.stepStatus}`">{{ STEP_LABELS[step.stepStatus] }}</span>
-                        </div>
+                          <i class="pi pi-angle-right wl-go" aria-hidden="true"></i>
+                        </button>
                       </template>
                     </div>
                   </div>
@@ -286,9 +289,24 @@ import { formatLeaveDays, toDateKey } from '@/utils/dateUtils'
 import { dayHours } from '@/utils/workTime'
 import { buildWorkloadByUser, workloadSummary } from '@/utils/workload'
 import { useErrorHandler } from '@/composables/useErrorHandler'
+import { usePermissions } from '@/composables/usePermissions'
+import { useRouter } from 'vue-router'
+import { useToast } from 'primevue/usetoast'
 import CountUp from '@/components/CountUp.vue'
 
 const { handleError } = useErrorHandler()
+const router = useRouter()
+const toast = useToast()
+const { hasAccess } = usePermissions()
+
+// ไปหน้า "ขั้นตอนการดำเนินการโครงการ" (เปิดโครงการ + เลื่อนไปที่ step) — แบบเดียวกับหน้า Dashboard
+const goToStepProgress = (taskId, stepId) => {
+  if (!hasAccess('/project-progress')) {
+    toast.add({ severity: 'warn', summary: 'ไม่มีสิทธิ์เข้าถึง', detail: 'บัญชีนี้ไม่มีสิทธิ์เปิดหน้า "ขั้นตอนการดำเนินการโครงการ"', life: 3000 })
+    return
+  }
+  router.push({ path: '/project-progress', query: stepId ? { taskId, stepId } : { taskId } })
+}
 const loading = ref(true)
 const loadFailures = ref([])
 
@@ -792,6 +810,13 @@ onMounted(loadData)
 .wl-project-name small { display: block; color: #526074; font-weight: 500; font-size: max(0.75rem, var(--min-fs)); }
 .wl-so { display: inline-block; margin-right: 0.35rem; padding: 0 0.35rem; border-radius: 5px; background: #e0e7ff; color: #3730a3; font-family: monospace; font-size: max(0.75rem, var(--min-fs)); font-weight: 700; }
 .wl-step { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.25rem; font-size: max(0.82rem, var(--min-fs)); color: #334155; }
+/* โครงการ / ขั้นตอนกดได้ */
+.wl-link { width: 100%; padding: 0.2rem 0.3rem; border: 0; border-radius: 6px; background: none; font: inherit; text-align: left; cursor: pointer; }
+.wl-link:hover { background: #eff6ff; }
+.wl-link:hover .wl-link-text { color: #1d4ed8; text-decoration: underline; }
+.wl-link:focus-visible { outline: 2px solid #2563eb; outline-offset: 1px; }
+.wl-project-name.wl-link { display: block; }
+.wl-go { flex: 0 0 auto; color: #526074; font-size: max(0.75rem, var(--min-fs)); }
 .wl-step-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .wl-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: #64748b; }
 .wl-dot-working { background: #059669; }

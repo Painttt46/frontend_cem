@@ -108,43 +108,8 @@
           <!-- Steps -->
           <div v-if="entry.taskId && getStepsForTask(entry.taskId).length > 0" class="field-row">
             <label class="field-label"><i class="pi pi-list"></i> ขั้นตอน</label>
-            <MultiSelect v-model="entry.stepIds" :options="getStepsForTask(entry.taskId)"
-              optionLabel="step_name" optionValue="id" :optionDisabled="isStepCompleted"
-              class="w-full" placeholder="เลือก step (ถ้ามี)"
-              filter filterPlaceholder="ค้นหา step..." scrollHeight="300px" appendTo="body"
-              @update:modelValue="onStepIdsChange(entry)">
-              <template #value="{ value }">
-                <div v-if="value && value.length" class="chips-wrap">
-                  <div v-for="sid in value" :key="sid" class="step-chip"
-                    :style="{ borderColor: getStepStatusColor(getStepByIdFromTask(sid, entry.taskId)) }">
-                    <span class="chip-num" :style="{ background: getStepStatusColor(getStepByIdFromTask(sid, entry.taskId)) }">{{ getStepNumberFromTask(sid, entry.taskId) }}</span>
-                    <span class="chip-name">{{ getStepByIdFromTask(sid, entry.taskId)?.step_name }}</span>
-                    <i class="pi pi-times chip-x" @click.stop="entry.stepIds = entry.stepIds.filter(i => i !== sid)"></i>
-                  </div>
-                </div>
-                <span v-else class="ph">เลือก step (ถ้ามี)</span>
-              </template>
-              <template #option="{ option, index }">
-                <div class="step-opt" :style="{ borderLeftColor: getStepStatusColor(option) }">
-                  <span class="step-num-badge" :style="{ background: getStepStatusColor(option) }">{{ index + 1 }}</span>
-                  <div class="step-opt-body">
-                    <div class="step-opt-top">
-                      <span class="step-opt-name">{{ option.step_name }}</span>
-                      <span class="step-status-tag" :style="{ color: getStepStatusColor(option), borderColor: getStepStatusColor(option) + '40', background: getStepStatusColor(option) + '15' }">
-                        <i class="pi pi-circle-fill" style="font-size:max(0.45rem, var(--min-fs))"></i> {{ getStepStatusLabel(option) }}
-                      </span>
-                    </div>
-                    <div v-if="option.start_date || option.end_date" class="step-opt-dates">
-                      <i class="pi pi-calendar"></i>
-                      <span v-if="option.start_date">{{ new Date(option.start_date).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' }) }}</span>
-                      <span v-if="option.start_date && option.end_date"> – </span>
-                      <span v-if="option.end_date">{{ new Date(option.end_date).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'2-digit' }) }}</span>
-                    </div>
-                    <div v-if="option.description" class="step-opt-desc">{{ option.description }}</div>
-                  </div>
-                </div>
-              </template>
-            </MultiSelect>
+            <WorkflowStepSelect v-model="entry.stepIds" :steps="getStepsForTask(entry.taskId)"
+              @update:modelValue="onStepIdsChange(entry)" />
           </div>
 
           <!-- สถานที่ -->
@@ -273,17 +238,16 @@ import { toDateKey } from '@/utils/dateUtils'
 import axios from '@/utils/axiosConfig'
 import Checkbox from 'primevue/checkbox'
 import Button from 'primevue/button'
-import MultiSelect from 'primevue/multiselect'
 import AutoComplete from 'primevue/autocomplete'
 
 import { isValidTimeRange } from '@/utils/validation'
 import { isActive } from '@/utils/statusHelper'
-import { accessibleBg } from '@/utils/color'
+import WorkflowStepSelect from '@/components/WorkflowStepSelect.vue'
 import { fetchEntryWindow, entryMinDate } from '@/utils/entryWindow'
 
 export default {
   name: 'DailyWorkForm',
-  components: { Checkbox, Button, MultiSelect, AutoComplete },
+  components: { Checkbox, Button, AutoComplete, WorkflowStepSelect },
   // หมายเหตุ: $toast ใช้จาก globalProperties ของ PrimeVue — ห้าม inject เพราะจะ shadow เป็น undefined
   created() {
     this.$http = axios
@@ -531,23 +495,6 @@ export default {
     getStepsForTask(id) { return this.workflowStepsMap[id] || [] },
     getStepByIdFromTask(sid, tid) { return this.getStepsForTask(tid).find(s => s.id === sid) },
     getStepNumberFromTask(sid, tid) { return this.getStepsForTask(tid).findIndex(s => s.id === sid) + 1 },
-    getStepStatusColor(step) {
-      if (!step) return accessibleBg('#9ca3af')
-      if (step.status === 'completed') return accessibleBg('#10b981')
-      const today = new Date(); today.setHours(0,0,0,0)
-      if (step.end_date && today > new Date(step.end_date).setHours(0,0,0,0)) return accessibleBg('#ef4444')
-      if (step.has_work_logged) return accessibleBg('#f59e0b')
-      return accessibleBg('#9ca3af')
-    },
-    getStepStatusLabel(step) {
-      if (!step) return 'รอดำเนินการ'
-      if (step.status === 'completed') return 'เสร็จสิ้น'
-      const today = new Date(); today.setHours(0,0,0,0)
-      if (step.end_date && today > new Date(step.end_date).setHours(0,0,0,0)) return 'เกินกำหนด'
-      if (step.has_work_logged) return 'กำลังดำเนินการ'
-      return 'รอดำเนินการ'
-    },
-    isStepCompleted(step) { return step?.status === 'completed' },
     getTaskSO(id) { return this.tasks.find(t => t.id === id)?.so_number },
     getTaskName(id) { return this.tasks.find(t => t.id === id)?.task_name },
     handleFileUploadEntry(event, entry) {
@@ -1153,24 +1100,6 @@ export default {
 .task-txt { flex: 1; min-width: 0; word-break: break-word; line-height: 1.4; overflow-wrap: anywhere; }
 .ph { color: #55657a; }
 
-/* ── Step chips ── */
-.chips-wrap { display: flex; flex-direction: column; gap: 4px; width: 100%; }
-.step-chip { display: flex; align-items: center; gap: 6px; border-left: 3px solid; border-radius: 4px; padding: 4px 8px; background: #f8fafc; }
-.chip-num { width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: max(0.65rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.chip-name { flex: 1; font-size: max(0.82rem, var(--min-fs)); color: #334155; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chip-x { cursor: pointer; color: #55657a; font-size: max(0.7rem, var(--min-fs)); }
-.chip-x:hover { color: #dc2626; }
-
-/* ── Step option ── */
-.step-opt { display: flex; align-items: flex-start; gap: 8px; border-left: 3px solid; padding: 6px 8px; border-radius: 0 6px 6px 0; background: #f8fafc; }
-.step-num-badge { width: 24px; height: 24px; border-radius: 50%; color: #fff; font-size: max(0.7rem, var(--min-fs)); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
-.step-opt-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.step-opt-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.step-opt-name { flex: 1; font-weight: 600; font-size: max(0.875rem, var(--min-fs)); color: #1e293b; }
-.step-status-tag { font-size: max(0.7rem, var(--min-fs)); font-weight: 600; white-space: nowrap; padding: 1px 7px; border-radius: 10px; border: 1px solid; display: flex; align-items: center; gap: 3px; }
-.step-opt-dates { display: flex; align-items: center; gap: 4px; font-size: max(0.75rem, var(--min-fs)); color: #526074; }
-.step-opt-dates i { font-size: max(0.7rem, var(--min-fs)); }
-.step-opt-desc { font-size: max(0.75rem, var(--min-fs)); color: #55657a; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
 
 /* ── File list ── */
 .file-list { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 4px; }
