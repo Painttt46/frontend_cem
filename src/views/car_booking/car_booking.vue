@@ -431,7 +431,7 @@ export default {
       const day = String(bangkokTime.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
     },
-    async submitBorrow(payload = {}) {
+    async submitBorrow() {
       if (this.submitting) return
       this.submitting = true
       try {
@@ -447,8 +447,6 @@ export default {
           colleagues: this.borrowForm.colleagues || [],
           images,
           user_id: localStorage.getItem('soc_user_id'),
-          fuel_level_borrow: payload.fuelLevelBorrow ?? null,
-          easy_pass_borrow: payload.easyPassBorrow ?? null,
           expected_return_date: this.borrowForm.expected_return_date
             ? this.formatDateForDB(this.borrowForm.expected_return_date)
             : this.formatDateForDB(this.selectedDate),
@@ -489,7 +487,7 @@ export default {
         this.submitting = false
       }
     },
-    async submitReturn(payload = {}) {
+    async submitReturn() {
       const borrowId = this.returnForm.borrowId || this.$refs.bookingForm?.selectedReturnBorrow
 
       if (!borrowId) {
@@ -519,19 +517,12 @@ export default {
           return_description: this.returnForm.discription || this.selectedBorrowDescription || '',
           return_time: currentTime,
           return_date: this.formatDateForDB(bangkokTime),
-          images,
-          fuel_level_return: payload.fuelLevelReturn ?? null,
-          easy_pass_return: payload.easyPassReturn ?? null
+          images
         }
 
         await axios.put(`/api/car-booking/${borrowId}`, returnData)
 
         await this.loadRecords()
-        
-        // Reload fuel level in child component before closing
-        if (this.$refs.bookingForm) {
-          await this.$refs.bookingForm.loadLatestFuelLevel()
-        }
         
         this.closeForm()
 

@@ -272,26 +272,6 @@
 
 
 
-          <div class="input-group full-width">
-
-            <label class="input-label">ระดับน้ำมัน (ก่อนใช้รถ)</label>
-
-            <FuelGauge v-model="fuelLevelBorrow" :disabled="true" />
-
-          </div>
-
-
-
-          <div class="input-group full-width">
-
-            <label class="input-label">Easy Pass (ก่อนใช้รถ)</label>
-
-            <EasyPassCard v-model="easyPassBorrow" :maxAmount="3000" :disabled="true" />
-
-          </div>
-
-
-
           <div class="file-upload-section">
 
             <label class="upload-label">รูปภาพ</label>
@@ -512,26 +492,6 @@
 
 
 
-          <div class="input-group full-width">
-
-            <label class="input-label">ระดับน้ำมัน (หลังใช้รถ) *</label>
-
-            <FuelGauge v-model="fuelLevelReturn" />
-
-          </div>
-
-
-
-          <div class="input-group full-width">
-
-            <label class="input-label">Easy Pass (หลังใช้รถ) *</label>
-
-            <EasyPassCard v-model="easyPassReturn" :maxAmount="3000" />
-
-          </div>
-
-
-
           <div class="file-upload-section">
 
             <label class="upload-label">รูปภาพ</label>
@@ -746,10 +706,6 @@ import axios from '@/utils/axiosConfig'
 
 import { isActive } from '@/utils/statusHelper'
 
-import FuelGauge from '@/components/FuelGauge.vue'
-
-import EasyPassCard from '@/components/EasyPassCard.vue'
-
 
 
 export default {
@@ -760,11 +716,7 @@ export default {
 
     AutoComplete,
 
-    Dropdown,
-
-    FuelGauge,
-
-    EasyPassCard
+    Dropdown
 
   },
 
@@ -820,15 +772,7 @@ export default {
 
       selectedColleague: null,
 
-      projectOptions: [],
-
-      fuelLevelBorrow: 50,
-
-      fuelLevelReturn: 50,
-
-      easyPassBorrow: 500,
-
-      easyPassReturn: 500
+      projectOptions: []
 
     }
 
@@ -844,9 +788,7 @@ export default {
 
       this.loadUsers(),
 
-      this.loadProjects(),
-
-      this.loadLatestFuelLevel()
+      this.loadProjects()
 
     ]);
 
@@ -963,26 +905,6 @@ export default {
 
   watch: {
 
-    showForm(newVal) {
-
-      if (newVal && this.activeForm === 'borrow') {
-
-        this.loadLatestFuelLevel()
-
-      }
-
-    },
-
-    activeForm(newVal) {
-
-      if (newVal === 'borrow' && this.showForm) {
-
-        this.loadLatestFuelLevel()
-
-      }
-
-    },
-
     selectedReturnBorrow(newVal) {
 
       this.$emit('updateReturnForm', 'borrowId', newVal)
@@ -1004,34 +926,6 @@ export default {
   },
 
   methods: {
-
-    async loadLatestFuelLevel() {
-
-      try {
-
-        const response = await this.$http.get('/api/car-booking/latest-fuel')
-
-        this.fuelLevelBorrow = response.data.fuel_level || 50
-
-        this.fuelLevelReturn = response.data.fuel_level || 50
-
-        this.easyPassBorrow = response.data.easy_pass_balance || 500
-
-        this.easyPassReturn = response.data.easy_pass_balance || 500
-
-      } catch {
-
-        this.fuelLevelBorrow = 50
-
-        this.fuelLevelReturn = 50
-
-        this.easyPassBorrow = 500
-
-        this.easyPassReturn = 500
-
-      }
-
-    },
 
     getTaskSO(taskId) {
 
@@ -1488,28 +1382,6 @@ export default {
 
       }
 
-      // Validate fuel level for return form
-
-      if (type === 'return' && (this.fuelLevelReturn === null || this.fuelLevelReturn === undefined)) {
-
-        this.$toast.add({
-
-          severity: 'error',
-
-          summary: 'กรุณาเลือกระดับน้ำมัน',
-
-          detail: 'กรุณาเลือกระดับน้ำมันก่อนบันทึกการคืนรถ',
-
-          life: 3000
-
-        })
-
-        return
-
-      }
-
-
-
       const messages = {
 
         borrow: 'ยืนยันการแจ้งใช้รถ?',
@@ -1540,11 +1412,11 @@ export default {
 
       if (this.pendingAction === 'borrow') {
 
-        this.$emit('submit-borrow', { fuelLevelBorrow: this.fuelLevelBorrow, easyPassBorrow: this.easyPassBorrow })
+        this.$emit('submit-borrow')
 
       } else if (this.pendingAction === 'return') {
 
-        this.$emit('submit-return', { fuelLevelReturn: this.fuelLevelReturn, easyPassReturn: this.easyPassReturn })
+        this.$emit('submit-return')
 
       } else if (this.pendingAction === 'cancel') {
 

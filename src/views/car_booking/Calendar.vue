@@ -27,30 +27,12 @@
         </div>
       </div>
 
-      <!-- Car Status Bar -->
+      <!-- Car Status Bar: การคืนรถครั้งล่าสุดที่มีคนแจ้งเอง (บอกวันที่ไว้ เพราะอาจเป็นข้อมูลเก่า) -->
       <div class="car-status-bar">
         <div class="status-item">
-          <i class="pi pi-bolt" style="color: #b45309;"></i>
-          <span class="status-label">ระดับน้ำมัน</span>
-          <div class="status-fuel">
-            <div class="fuel-segs-bar">
-              <div v-for="seg in 5" :key="seg" class="fuel-seg-bar"
-                :class="seg <= fuelSegments(latestFuel) ? fuelColorClass(latestFuel) : 'seg-empty'"></div>
-            </div>
-            <span class="status-value">{{ latestFuel }}%</span>
-          </div>
-        </div>
-        <div class="status-divider"></div>
-        <div class="status-item">
-          <i class="pi pi-wallet" style="color: #7c3aed;"></i>
-          <span class="status-label">EasyPass</span>
-          <span class="status-value easypass-val">฿{{ formatMoney(latestEasyPass) }}</span>
-        </div>
-        <div class="status-divider"></div>
-        <div class="status-item">
           <i class="pi pi-map-marker" style="color: #15803d;"></i>
-          <span class="status-label">สถานที่คืนรถ</span>
-          <span class="status-value">{{ latestReturnLocation || 'ไม่ระบุ' }}</span>
+          <span class="status-label">คืนล่าสุด</span>
+          <span class="status-value" :title="lastReturnTitle">{{ lastReturnText }}</span>
         </div>
       </div>
 
@@ -172,26 +154,6 @@
               </div>
             </div>
 
-            <div class="detail-row fuel-row">
-              <div class="detail-label">
-                <i class="pi pi-bolt" style="color: #b45309;"></i>
-                ระดับน้ำมัน
-              </div>
-              <div class="detail-value">
-                <div class="fuel-segments">
-                  <div v-for="seg in 5" :key="seg" class="fuel-seg" :class="seg <= fuelSegments(latestFuel) ? fuelColorClass(latestFuel) : 'seg-empty'"></div>
-                </div>
-                <span class="fuel-text">{{ latestFuel }}%</span>
-              </div>
-            </div>
-
-            <div class="detail-row" style="margin-top: 0.5rem;">
-              <div class="detail-label">
-                <i class="pi pi-wallet" style="color: #7c3aed;"></i>
-                Easy Pass
-              </div>
-            </div>
-            <EasyPassCard :modelValue="latestEasyPass" :maxAmount="3000" :disabled="true" />
           </div>
         </div>
 
@@ -278,26 +240,6 @@
               </div>
             </div>
 
-            <div class="detail-row fuel-row">
-              <div class="detail-label">
-                <i class="pi pi-bolt" style="color: #b45309;"></i>
-                ระดับน้ำมัน
-              </div>
-              <div class="detail-value">
-                <div class="fuel-segments">
-                  <div v-for="seg in 5" :key="seg" class="fuel-seg" :class="seg <= fuelSegments(latestFuel) ? fuelColorClass(latestFuel) : 'seg-empty'"></div>
-                </div>
-                <span class="fuel-text">{{ latestFuel }}%</span>
-              </div>
-            </div>
-
-            <div class="detail-row" style="margin-top: 0.5rem;">
-              <div class="detail-label">
-                <i class="pi pi-wallet" style="color: #7c3aed;"></i>
-                Easy Pass
-              </div>
-            </div>
-            <EasyPassCard :modelValue="latestEasyPass" :maxAmount="3000" :disabled="true" />
           </div>
         </div>
 
@@ -312,11 +254,9 @@
 </template>
 
 <script>
-import EasyPassCard from '@/components/EasyPassCard.vue'
 
 export default {
   name: 'CarCalendar',
-  components: { EasyPassCard },
   props: {
     records: Array,
     availableBorrows: Array,
@@ -330,14 +270,32 @@ export default {
       showCarDialog: false,
       showBookingDialog: false,
       selectedCarRecord: null,
-      latestFuel: 50,
-      latestEasyPass: 500,
-      latestReturnLocation: null,
       now: new Date(),
       countdownTimer: null
     }
   },
   computed: {
+    // การคืนรถครั้งล่าสุดที่ผู้ใช้แจ้งเอง — ระบบคืนอัตโนมัติไม่รู้ว่ารถจอดที่ไหน (บันทึกปลายทางของการจองไว้แทน) จึงไม่นับ
+    lastManualReturn() {
+      const list = (this.records || []).filter(r =>
+        r.status === 'returned' && !r.auto_returned && String(r.return_location || '').trim() && r.return_date)
+      const key = (r) => `${String(r.return_date).slice(0, 10)} ${String(r.return_time || '').slice(0, 5).padStart(5, '0')} ${r.updated_at || ''}`
+      return list.reduce((latest, r) => (!latest || key(r) > key(latest) ? r : latest), null)
+    },
+    lastReturnText() {
+      const r = this.lastManualReturn
+      if (!r) return 'ยังไม่มีข้อมูลการคืนรถ'
+      const [y, m, d] = String(r.return_date).slice(0, 10).split('-').map(Number)
+      const date = new Date(y, m - 1, d)
+      const opts = { day: 'numeric', month: 'short' }
+      if (y !== new Date().getFullYear()) opts.year = '2-digit'
+      return `${date.toLocaleDateString('th-TH', opts)} ที่ ${String(r.return_location).trim()}`
+    },
+    lastReturnTitle() {
+      const r = this.lastManualReturn
+      if (!r) return ''
+      return [r.return_name && `คืนโดย ${r.return_name}`, r.return_time && `เวลา ${String(r.return_time).slice(0, 5)} น.`].filter(Boolean).join(' · ')
+    },
     activeBookingInfo() {
       const active = (this.records || []).find(r => r.status === 'active')
       if (!active) return null
@@ -390,7 +348,6 @@ export default {
     }
   },
   mounted() {
-    this.fetchLatestFuel()
     // นาฬิกาสำหรับ countdown เวลาคืนรถ
     this.countdownTimer = setInterval(() => { this.now = new Date() }, 30000)
   },
@@ -401,21 +358,6 @@ export default {
     formatColleagues(colleagues) {
       if (!colleagues?.length) return '-'
       return colleagues.map(c => typeof c === 'object' ? (c.name || c.value) : c).join(', ')
-    },
-    fuelSegments(level) {
-      const n = level || 0
-      if (n >= 80) return 5
-      if (n >= 60) return 4
-      if (n >= 40) return 3
-      if (n >= 20) return 2
-      if (n > 0) return 1
-      return 0
-    },
-    fuelColorClass(level) {
-      const n = level || 0
-      if (n >= 60) return 'seg-high'
-      if (n >= 30) return 'seg-mid'
-      return 'seg-low'
     },
     previousMonth() {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1)
@@ -437,7 +379,6 @@ export default {
       const activeBooking = this.records.find(r => r.status === 'active')
       if (activeBooking) {
         this.selectedCarRecord = activeBooking
-        await this.fetchLatestFuel()
         this.showCarDialog = true
       }
     },
@@ -448,25 +389,8 @@ export default {
 
       if (borrowRecord) {
         this.selectedCarRecord = borrowRecord
-        await this.fetchLatestFuel()
         this.showBookingDialog = true
       }
-    },
-    async fetchLatestFuel() {
-      try {
-        const response = await this.$http.get('/api/car-booking/latest-fuel')
-        this.latestFuel = response.data.fuel_level || 50
-        this.latestEasyPass = response.data.easy_pass_balance || 500
-        this.latestReturnLocation = response.data.return_location || null
-      } catch {
-        this.latestFuel = 50
-        this.latestEasyPass = 500
-        this.latestReturnLocation = null
-      }
-    },
-    formatMoney(val) {
-      if (val == null) return '-'
-      return Number(val).toLocaleString('th-TH')
     },
     formatDate(dateString) {
       const date = new Date(dateString)
@@ -655,38 +579,6 @@ export default {
   color: #333;
 }
 
-.easypass-val {
-  color: #7c3aed;
-}
-
-.status-fuel {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.fuel-segs-bar {
-  display: flex;
-  gap: 2px;
-}
-
-.fuel-seg-bar {
-  width: 12px;
-  height: 10px;
-  border-radius: 2px;
-}
-
-.seg-empty { background: #dee2e6; }
-.seg-high { background: #22c55e; }
-.seg-mid  { background: #f59e0b; }
-.seg-low  { background: #ef4444; }
-
-.status-divider {
-  width: 1px;
-  height: 28px;
-  background: #dee2e6;
-  margin: 0 0.5rem;
-}
 
 .calendar-container {
   background: white;
@@ -1156,37 +1048,4 @@ export default {
   font-weight: bold;
 }
 
-/* 5-segment fuel gauge */
-.fuel-row .detail-value {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.fuel-segments {
-  display: flex;
-  gap: 3px;
-  align-items: flex-end;
-}
-
-.fuel-seg {
-  width: 10px;
-  border-radius: 2px;
-  transition: background 0.3s ease;
-}
-.fuel-seg:nth-child(1) { height: 8px; }
-.fuel-seg:nth-child(2) { height: 12px; }
-.fuel-seg:nth-child(3) { height: 16px; }
-.fuel-seg:nth-child(4) { height: 20px; }
-.fuel-seg:nth-child(5) { height: 24px; }
-
-.fuel-text {
-  font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.easy-pass-value {
-  font-weight: 700;
-  color: #7c3aed !important;
-}
 </style>
