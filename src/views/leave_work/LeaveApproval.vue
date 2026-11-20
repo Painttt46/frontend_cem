@@ -6,7 +6,7 @@
         <p>ไม่มีคำขอลางานที่รอการอนุมัติ</p>
       </div>
 
-      <DataTable v-else :value="records" :paginator="true" :rows="10"
+      <DataTable v-else :value="tableRows" :paginator="true" :rows="10"
         :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="approval-table" stripedRows>
         
         <Column field="id" header="Ticket ID" :sortable="true" style="min-width: 120px;">
@@ -26,25 +26,25 @@
         </Column>
         <Column field="employee_position" header="ตำแหน่ง" :sortable="true" />
         
-        <Column field="leave_type" header="ประเภทการลา" :sortable="true">
+        <Column field="leave_type_label" header="ประเภทการลา" :sortable="true">
           <template #body="slotProps">
             <Badge :value="getLeaveTypeLabel(slotProps.data.leave_type)" :style="{ backgroundColor: $accessibleBg(getLeaveTypeColor(slotProps.data.leave_type)), color: '#fff', fontWeight: 'bold' }" />
           </template>
         </Column>
 
-        <Column header="วันเวลาเริ่มลา" :sortable="false">
+        <Column field="start_datetime" header="วันเวลาเริ่มลา" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.start_datetime) }}
           </template>
         </Column>
 
-        <Column header="วันเวลาสิ้นสุด" :sortable="false">
+        <Column field="end_datetime" header="วันเวลาสิ้นสุด" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.end_datetime) }}
           </template>
         </Column>
 
-        <Column header="จำนวน">
+        <Column field="total_days" header="จำนวน" :sortable="true">
           <template #body="slotProps">
             {{ formatLeaveDays(slotProps.data.total_days) }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
@@ -148,7 +148,7 @@
           </template>
         </Column>
 
-        <Column header="วันที่ส่งคำขอ" :sortable="true">
+        <Column field="created_at" header="วันที่ส่งคำขอ" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.created_at) }}
           </template>
@@ -243,6 +243,12 @@ export default {
   components: {
     AttachmentsDialog,
     UserInfoDialog
+  },
+  computed: {
+    // เรียงประเภทการลาตามชื่อที่แสดง (ข้อมูลเก่าเก็บเป็นรหัส sick / vacation)
+    tableRows() {
+      return (this.records || []).map(r => ({ ...r, leave_type_label: this.getLeaveTypeLabel(r.leave_type) }))
+    }
   },
   props: {
     records: Array,

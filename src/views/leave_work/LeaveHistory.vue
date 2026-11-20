@@ -6,7 +6,7 @@
         <p>ยังไม่มีข้อมูลการลางาน</p>
       </div>
 
-      <EnhancedDataTable v-else :data="dateFilteredRecords" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
+      <EnhancedDataTable v-else :data="tableRows" :paginator="true" :rows="10" :rowsPerPageOptions="[5, 10, 20]"
         responsiveLayout="scroll" class="history-table" stripedRows>
 
         <template #extraControls>
@@ -33,20 +33,20 @@
         </Column>
         <Column field="position" header="ตำแหน่ง" :sortable="true" />
 
-        <Column field="leave_type" header="ประเภทการลา" :sortable="true">
+        <Column field="leave_type_label" header="ประเภทการลา" :sortable="true">
           <template #body="slotProps">
             <Badge :value="getLeaveTypeLabel(slotProps.data.leave_type)"
               :style="{ backgroundColor: $accessibleBg(getLeaveTypeColor(slotProps.data.leave_type)), color: '#fff', fontWeight: 'bold' }" />
           </template>
         </Column>
 
-        <Column header="วันเวลาเริ่มลา" :sortable="false">
+        <Column field="start_datetime" header="วันเวลาเริ่มลา" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.start_datetime) }}
           </template>
         </Column>
 
-        <Column header="วันเวลาสิ้นสุด" :sortable="false">
+        <Column field="end_datetime" header="วันเวลาสิ้นสุด" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.end_datetime) }}
           </template>
@@ -58,7 +58,7 @@
           </template>
         </Column>
 
-        <Column header="ผู้รับผิดชอบแทน" style="min-width: 200px;">
+        <Column field="delegate_name" header="ผู้รับผิดชอบแทน" style="min-width: 200px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.has_delegation" class="delegate-info">
               <div class="delegate-name">
@@ -109,7 +109,7 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="min-width: 200px;">
+        <Column field="status_label" header="สถานะ" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
             <div class="status-container-vertical">
               <Badge
@@ -137,7 +137,7 @@
           </template>
         </Column>
 
-        <Column header="ผู้อนุมัติ" style="min-width: 320px;">
+        <Column field="approvers_text" header="ผู้อนุมัติ" style="min-width: 320px;">
           <template #body="slotProps">
             <div class="approver-container">
               <!-- Step 1: หัวหน้างาน -->
@@ -329,6 +329,15 @@ export default {
     }
   },
   computed: {
+    // ข้อความที่แสดงของประเภทการลาและสถานะ — ใช้เรียงและค้นหาด้วยคำที่เห็นบนจอ (ข้อมูลเก็บเป็นรหัส เช่น sick / pending_level2)
+    tableRows() {
+      return this.dateFilteredRecords.map(r => ({
+        ...r,
+        leave_type_label: this.getLeaveTypeLabel(r.leave_type),
+        status_label: this.getStatusLabel(r.status),
+        approvers_text: [...new Set([r.approved_by_level1, r.approved_by_level2, r.rejected_by].filter(Boolean))].join(', ')
+      }))
+    },
     dateFilteredRecords() {
       let result
       if (!this.dateSearchStart && !this.dateSearchEnd) {
@@ -342,8 +351,9 @@ export default {
         const e = this.dateSearchEnd ? toStr(this.dateSearchEnd) : '9999-12-31'
         result = (this.records || []).filter(r => {
           if (!r.start_datetime) return false
-          const rStart = r.start_datetime.substring(0, 10)
-          const rEnd = (r.end_datetime || r.start_datetime).substring(0, 10)
+          // วันที่ตามเวลาเครื่อง (ค่าจาก API เป็นเวลา UTC — ตัด 10 ตัวแรกตรง ๆ ทำให้ใบลาที่เริ่มก่อน 07:00 เลื่อนไปวันก่อนหน้า)
+          const rStart = toStr(r.start_datetime)
+          const rEnd = toStr(r.end_datetime || r.start_datetime)
           return rStart <= e && rEnd >= s
         })
       }

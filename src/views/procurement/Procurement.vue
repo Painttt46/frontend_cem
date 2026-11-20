@@ -76,7 +76,7 @@
           </div>
           <div class="filter-divider"></div>
           <Dropdown v-model="filterProject" :options="projectOptions" optionLabel="label" optionValue="value"
-            placeholder="ทุกโครงการ" :showClear="true" class="filter-dropdown" filter>
+            placeholder="ทุกโครงการ" :showClear="true" class="filter-dropdown" filter :filterFields="['label', 'so']">
             <template #option="slotProps">
               <div class="project-option">
                 <span v-if="slotProps.option.so" class="project-option-so">{{ slotProps.option.so }}</span>
@@ -921,7 +921,9 @@ export default {
           i.vendor_name?.toLowerCase().includes(q) ||
           i.task_name?.toLowerCase().includes(q) ||
           i.item_description?.toLowerCase().includes(q) ||
-          i.po_number?.toLowerCase().includes(q)
+          i.po_number?.toLowerCase().includes(q) ||
+          i.so_number?.toLowerCase().includes(q) ||
+          i.assigned_user_name?.toLowerCase().includes(q)
         )
       }
       return result

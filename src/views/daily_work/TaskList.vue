@@ -98,26 +98,26 @@
           </template>
         </Column>
 
-        <Column field="so_number" header="เลข SO">
+        <Column field="so_number" :sortable="true" header="เลข SO">
           <template #body="slotProps">
             <div v-if="slotProps.data.so_number" class="so-number">{{ slotProps.data.so_number }}</div>
             <span v-else class="text-muted">-</span>
           </template>
         </Column>
 
-        <Column field="contract_number" header="เลขที่สัญญา" style="min-width: 150px;">
+        <Column field="contract_number" :sortable="true" header="เลขที่สัญญา" style="min-width: 150px;">
           <template #body="slotProps">
             <span v-if="slotProps.data.contract_number" style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:max(0.85rem, var(--min-fs));border:1px solid #e2e8f0"><i class="pi pi-file-edit" style="font-size:max(0.75rem, var(--min-fs));margin-right:3px"></i>{{ slotProps.data.contract_number }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
-        <Column field="customer_info" header="ข้อมูลลูกค้า" style="min-width: 150px;">
+        <Column field="customer_info" :sortable="true" header="ข้อมูลลูกค้า" style="min-width: 150px;">
           <template #body="slotProps">
             <span v-if="slotProps.data.customer_info" style="display:flex;align-items:center;gap:4px"><i class="pi pi-building" style="color:#7c3aed;font-size:max(0.85rem, var(--min-fs))"></i>{{ slotProps.data.customer_info }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
-        <Column field="sale_owner" header="Sale เจ้าของงาน" style="min-width: 150px;">
+        <Column field="sale_owner" :sortable="true" header="Sale เจ้าของงาน" style="min-width: 150px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.sale_owner" class="person-badge sale-badge" @click="showSaleUserInfo(slotProps.data.sale_owner)">
               <i class="pi pi-user"></i>
@@ -127,7 +127,7 @@
           </template>
         </Column>
 
-        <Column field="project_manager" header="Project Manager" style="min-width: 150px;">
+        <Column field="project_manager" :sortable="true" header="Project Manager" style="min-width: 150px;">
           <template #body="slotProps">
             <div v-if="slotProps.data.project_manager" class="person-badge pm-badge" @click="showSaleUserInfo(slotProps.data.project_manager)">
               <i class="pi pi-briefcase"></i>
@@ -137,7 +137,7 @@
           </template>
         </Column>
 
-        <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px; text-align: center;">
+        <Column field="category_label" header="หมวดหมู่" :sortable="true" style="min-width: 120px; text-align: center;">
           <template #body="slotProps">
             <div class="category-badges">
               <Badge v-for="cat in parseCategoryArray(slotProps.data.category)" :key="cat"
@@ -160,7 +160,7 @@
           </template>
         </Column>
 
-        <Column header="รายละเอียด">
+        <Column field="description" header="รายละเอียด">
           <template #body="slotProps">
             <Button 
               label="ดูรายละเอียด" 
@@ -173,7 +173,7 @@
           </template>
         </Column>
 
-        <Column header="สถานะ" style="text-align: center; min-width: 180px;">
+        <Column field="status_label" header="สถานะ" :sortable="true" style="text-align: center; min-width: 180px;">
           <template #body="slotProps">
             <div class="status-badges-column">
               <!-- ถ้า task เสร็จสิ้นแล้ว แสดง completed -->
@@ -825,7 +825,14 @@ export default {
         if (!soMap[so]) { soMap[so] = { ...task, children: [] } }
         else soMap[so].children.push(task)
       })
-      return [...Object.values(soMap), ...noSO].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      return [...Object.values(soMap), ...noSO]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        // ชื่อหมวดหมู่ที่แสดง ไว้เรียง / กรองขั้นสูง (ข้อมูลเก็บเป็นรหัสคั่นด้วย ,)
+        .map(t => ({
+          ...t,
+          category_label: this.parseCategoryArray(t.category).map(c => this.getCategoryLabel(c)).join(', '),
+          status_label: t.status === 'completed' ? 'เสร็จสิ้น' : this.getLatestProjectStatuses(t).map(ps => this.getProjectStatusLabel(ps)).join(', ')
+        }))
     },
     filteredAndSortedWorks() {
       let works = [...this.taskWorks]

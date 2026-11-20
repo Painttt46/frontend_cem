@@ -5,7 +5,7 @@
       <div class="search-box">
         <IconField iconPosition="left">
           <InputIcon class="pi pi-search" />
-          <InputText v-model="localSearch" placeholder="ค้นหาทั่วไป..." class="w-full" />
+          <InputText v-model="localSearch" :placeholder="searchPlaceholder" class="w-full" />
         </IconField>
       </div>
       <slot name="extraControls" />
@@ -66,11 +66,12 @@
 
     <!-- Pass through DataTable with filtered data -->
     <!-- มือถือ (<768px): แถวตารางเปลี่ยนเป็นการ์ด แต่ละช่องมีชื่อคอลัมน์กำกับ (responsiveLayout=stack)
-         ประกาศหลัง v-bind="$attrs" เพื่อทับ responsiveLayout="scroll" ที่แต่ละหน้าส่งมา — เดสก์ท็อปไม่เปลี่ยน -->
+         ประกาศหลัง v-bind="$attrs" เพื่อทับ responsiveLayout="scroll" ที่แต่ละหน้าส่งมา — เดสก์ท็อปไม่เปลี่ยน
+         ตารางแบบเมทริกซ์ (เช่น โควต้าการลา: คอลัมน์ล็อกซ้าย + ปุ่มบนหัวคอลัมน์) ส่ง mobileLayout="scroll" เพื่อเลื่อนแนวนอนแทน -->
     <DataTable
       :value="filteredData"
       v-bind="$attrs"
-      responsiveLayout="stack"
+      :responsiveLayout="mobileLayout"
       breakpoint="768px"
     >
       <slot />
@@ -83,7 +84,7 @@
 
 <script setup>
 /* eslint-disable no-undef */
-import { ref, computed, useSlots, watch } from 'vue'
+import { ref, computed, useSlots, watch, Fragment } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
@@ -107,6 +108,15 @@ const props = defineProps({
   initialSearch: {
     type: String,
     default: ''
+  },
+  searchPlaceholder: {
+    type: String,
+    default: 'ค้นหาทั่วไป...'
+  },
+  // 'stack' = มือถือแสดงแถวเป็นการ์ด, 'scroll' = เลื่อนตารางแนวนอน
+  mobileLayout: {
+    type: String,
+    default: 'stack'
   }
 })
 
@@ -136,39 +146,61 @@ const tableData = computed(() => {
 })
 
 // Normalize text for search
+// 0 ต้องเป็น "0" (เดิม !text ทำให้ 0 กลายเป็นค่าว่าง — กรอง "คงเหลือ น้อยกว่า 1" / "เท่ากับ 0" ไม่เจอ)
 const normalizeText = (text) => {
-  if (!text) return ''
+  if (text === null || text === undefined) return ''
   return String(text).toLowerCase().trim()
 }
 
-// Convert date formats for search (e.g., "16/01/2026" -> matches "2026-01-16")
-const normalizeDateFormats = (text) => {
-  if (!text) return []
-  const str = String(text)
-  const formats = [str]
-  
-  // If it's a date in YYYY-MM-DD format, add DD/MM/YYYY format
-  const isoMatch = str.match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (isoMatch) {
-    formats.push(`${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`)
+// ===== วันที่: ค้นด้วยรูปแบบที่เห็นบนจอได้ =====
+// ข้อมูลเป็น 2026-03-02 หรือเวลา UTC (2026-03-02T01:30:00.000Z) แต่หน้าจอแสดง 02/03/2026, 2 มี.ค. 2569, 08:30
+// จึงสร้างข้อความวันที่หลายรูปแบบ (ค.ศ./พ.ศ., ชื่อเดือนไทย, เวลาตามเครื่อง) ไว้เทียบกับคำค้น
+const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
+const THAI_MONTHS_LONG = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+const pad2 = (n) => String(n).padStart(2, '0')
+
+// คืน { iso, texts } ถ้าค่าเป็นวันที่ / วันเวลา — ไม่ใช่วันที่คืน null
+const dateInfo = (value) => {
+  if (typeof value !== 'string') return null
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/)
+  if (!m) return null
+  let y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]), time = ''
+  if (m[4]) {
+    // มีเวลา: แปลงเป็นเวลาตามเครื่อง (ค่าจาก API เป็น UTC — วันที่อาจเลื่อนถ้าตัดตัวอักษรตรง ๆ)
+    const dt = new Date(value.replace(' ', 'T'))
+    if (isNaN(dt.getTime())) return null
+    y = dt.getFullYear(); mo = dt.getMonth() + 1; d = dt.getDate()
+    time = `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`
   }
-  
-  return formats
+  const be = y + 543
+  const iso = `${y}-${pad2(mo)}-${pad2(d)}`
+  const texts = [
+    iso,
+    `${pad2(d)}/${pad2(mo)}/${y}`, `${d}/${mo}/${y}`,
+    `${pad2(d)}/${pad2(mo)}/${be}`, `${d}/${mo}/${be}`,
+    `${d} ${THAI_MONTHS_SHORT[mo - 1]} ${be}`, `${d} ${THAI_MONTHS_LONG[mo - 1]} ${be}`,
+    `${d} ${THAI_MONTHS_SHORT[mo - 1]} ${String(be).slice(2)}`
+  ]
+  if (time) texts.push(time, ...texts.map(t => `${t} ${time}`))
+  return { iso, texts }
 }
 
 // Check if query matches any date format
 const matchesDateFormat = (value, query) => {
-  const formats = normalizeDateFormats(value)
-  return formats.some(f => normalizeText(f).includes(query))
+  const info = dateInfo(value)
+  return !!info && info.texts.some(t => normalizeText(t).includes(query))
 }
 
-// แปลงข้อความวันที่ → ISO yyyy-mm-dd (รองรับ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd)
+// แปลงข้อความวันที่ → ISO yyyy-mm-dd (รองรับ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd และปี พ.ศ.)
 const toIsoDate = (text) => {
   if (!text) return ''
+  const info = dateInfo(String(text).trim())
+  if (info) return info.iso
   const str = String(text).trim()
   const dmy = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
   if (dmy) {
-    return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`
+    const year = Number(dmy[3]) > 2400 ? Number(dmy[3]) - 543 : Number(dmy[3])
+    return `${year}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`
   }
   const iso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
   if (iso) {
@@ -210,11 +242,13 @@ const searchableColumns = computed(() => {
     return props.columns.filter(col => col.field)
   }
   
-  // Extract from slot children
+  // Extract from slot children — คอลัมน์ที่สร้างด้วย v-for อยู่ใน Fragment ต้องแตกออกก่อน (เดิมหาไม่เจอ)
+  const flatten = (nodes) => (nodes || []).flatMap(vnode =>
+    vnode.type === Fragment && Array.isArray(vnode.children) ? flatten(vnode.children) : [vnode])
   const defaultSlot = slots.default?.()
   if (defaultSlot) {
-    return defaultSlot
-      .filter(vnode => vnode.props?.field)
+    return flatten(defaultSlot)
+      .filter(vnode => typeof vnode.props?.field === 'string' && vnode.props.field)
       .map(vnode => ({
         field: vnode.props.field,
         header: vnode.props.header || vnode.props.field
@@ -239,7 +273,8 @@ const getNestedValue = (obj, path) => {
 
 // Apply single filter
 const applyFilter = (item, filter) => {
-  const fieldValue = normalizeText(getNestedValue(item, filter.column))
+  const rawValue = getNestedValue(item, filter.column)
+  const fieldValue = normalizeText(rawValue)
   const searchValue = normalizeText(filter.value)
 
   // date-aware: ค่าในตารางเป็นวันที่ → เทียบแบบวันที่ (รับ input ได้ทั้ง dd/mm/yyyy และ yyyy-mm-dd)
@@ -262,7 +297,7 @@ const applyFilter = (item, filter) => {
 
   switch (filter.operator) {
     case 'contains':
-      return fieldValue.includes(searchValue)
+      return fieldValue.includes(searchValue) || matchesDateFormat(rawValue, searchValue)
     case 'equals':
       return fieldValue === searchValue
     case 'notEquals':
@@ -280,29 +315,32 @@ const applyFilter = (item, filter) => {
   }
 }
 
-// Filter data based on search mode
+// แถวที่มีรายการย่อย (เช่น โครงการลูกที่ใช้ SO เดียวกัน) — ตรงเงื่อนไขถ้าแถวแม่หรือรายการย่อยตรง
+const rowMatches = (item, filter) =>
+  applyFilter(item, filter) || (Array.isArray(item.children) && item.children.some(child => applyFilter(child, filter)))
+
+// Filter data: ช่องค้นหาทั่วไปใช้เสมอ + ค้นหาขั้นสูงซ้อนอีกชั้นเมื่อเปิดอยู่
+// (เดิมเปิดค้นหาขั้นสูงแล้วคำในช่องค้นหาทั่วไปถูกเมิน ทั้งที่ช่องยังแสดงอยู่)
 const filteredData = computed(() => {
   let result = tableData.value
-  
+
   if (!result || !Array.isArray(result)) return []
 
-  // Advanced mode: column-specific filters with AND/OR
+  if (localSearch.value) {
+    const query = normalizeText(localSearch.value)
+    result = result.filter(record => deepSearch(record, query))
+  }
+
   if (advancedMode.value) {
-    const validFilters = filters.value.filter(f => f.column && f.value)
-    
+    const validFilters = filters.value.filter(f => f.column && String(f.value ?? '').trim() !== '')
     if (validFilters.length > 0) {
       result = result.filter(item => {
         if (filterLogic.value === 'OR') {
-          return validFilters.some(filter => applyFilter(item, filter))
+          return validFilters.some(filter => rowMatches(item, filter))
         }
-        return validFilters.every(filter => applyFilter(item, filter))
+        return validFilters.every(filter => rowMatches(item, filter))
       })
     }
-  } 
-  // Simple mode: global search with deep search
-  else if (localSearch.value) {
-    const query = normalizeText(localSearch.value)
-    result = result.filter(record => deepSearch(record, query))
   }
 
   return result

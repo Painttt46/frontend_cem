@@ -21,41 +21,26 @@
       </template>
     </Card>
 
-    <!-- Search and Filter Card -->
-    <Card class="filter-card mb-4">
-      <template #content>
-        <div class="filter-content">
-          <div class="search-wrapper">
-            <IconField iconPosition="left">
-              <InputIcon class="pi pi-search" />
-              <InputText v-model="filters['global'].value" placeholder="ค้นหาผู้ใช้..." class="search-input" />
-            </IconField>
-          </div>
-          <div class="filter-actions">
-            <Button label="เพิ่มผู้ใช้" icon="pi pi-plus" @click="addUser" class="add-btn" />
-          </div>
-        </div>
-      </template>
-    </Card>
-
-    <!-- Data Table Card -->
+    <!-- Data Table Card: ช่องค้นหา + ค้นหาขั้นสูง + ปุ่มเพิ่มผู้ใช้อยู่ในหัวตาราง (component กลางแบบเดียวกับหน้าอื่น) -->
     <Card class="table-card">
       <template #content>
-        <DataTable :value="users" :loading="loading" paginator :rows="10" 
-                   :globalFilterFields="['firstname', 'lastname', 'username', 'email', 'employee_id', 'position', 'department', 'statusText']"
-                   v-model:filters="filters" filterDisplay="menu"
+        <EnhancedDataTable :data="users" :columns="searchColumns" :loading="loading" paginator :rows="10"
+                   searchPlaceholder="ค้นหาชื่อ ชื่อเล่น รหัสพนักงาน อีเมล ตำแหน่ง แผนก..."
                    :rowsPerPageOptions="[5, 10, 20, 50]"
                    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
                    currentPageReportTemplate="{first} ถึง {last} จาก {totalRecords} รายการ"
                    class="responsive-table">
-          
-          <Column field="employee_id" header="รหัสพนักงาน" sortable :sortFunction="sortByEmployeeId" class="employee-id-col">
+          <template #extraControls>
+            <Button label="เพิ่มผู้ใช้" icon="pi pi-plus" @click="addUser" class="add-btn" />
+          </template>
+
+          <Column field="employee_id" header="รหัสพนักงาน" sortable class="employee-id-col">
             <template #body="slotProps">
               <Badge :value="slotProps.data.employee_id" severity="info" />
             </template>
           </Column>
           
-          <Column field="firstname" header="ชื่อ-นามสกุล" class="name-col">
+          <Column field="full_name" sortable header="ชื่อ-นามสกุล" class="name-col">
             <template #body="slotProps">
               <div class="user-info">
                 <div class="user-name">{{ slotProps.data.firstname }} {{ slotProps.data.lastname }}{{ slotProps.data.nickname ? ` (${slotProps.data.nickname})` : '' }}</div>
@@ -64,7 +49,7 @@
             </template>
           </Column>
           
-          <Column field="email" header="Email" class="email-col">
+          <Column field="email" sortable header="Email" class="email-col">
             <template #body="slotProps">
               <div class="email-wrapper">
                 <i class="pi pi-envelope email-icon"></i>
@@ -73,7 +58,7 @@
             </template>
           </Column>
 
-          <Column field="phone" header="เบอร์โทร">
+          <Column field="phone" sortable header="เบอร์โทร">
             <template #body="slotProps">
               <div v-if="slotProps.data.phone" class="phone-wrapper">
                 <i class="pi pi-phone"></i>
@@ -83,7 +68,7 @@
             </template>
           </Column>
           
-          <Column field="position" header="ตำแหน่ง" class="position-col">
+          <Column field="position" sortable header="ตำแหน่ง" class="position-col">
             <template #body="slotProps">
               <div class="position-info">
                 <div class="position">{{ slotProps.data.position || '-' }}</div>
@@ -92,13 +77,13 @@
             </template>
           </Column>
           
-          <Column field="role" header="Role" class="role-col">
+          <Column field="role" sortable header="Role" class="role-col">
             <template #body="slotProps">
               <span class="role-badge" :style="getRoleStyle(slotProps.data.role)">{{ slotProps.data.role || '-' }}</span>
             </template>
           </Column>
           
-          <Column field="is_active" header="สถานะ" class="status-col">
+          <Column field="is_active" sortable header="สถานะ" class="status-col">
             <template #body="slotProps">
               <Badge :value="slotProps.data.is_active ? 'Active' : 'Inactive'" 
                      :severity="slotProps.data.is_active ? 'success' : 'danger'" />
@@ -116,7 +101,7 @@
               </div>
             </template>
           </Column>
-        </DataTable>
+        </EnhancedDataTable>
       </template>
     </Card>
 
@@ -218,8 +203,8 @@
 import { ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
-import { FilterMatchMode } from 'primevue/api'
 import axios from '@/utils/axiosConfig'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -258,9 +243,19 @@ const statusOptions = [
   { label: 'Inactive', value: false }
 ]
 
-const filters = ref({
-  global: { value: null, matchMode: FilterMatchMode.CONTAINS }
-})
+// ค้นหาขั้นสูง: เลือกค้นทีละช่อง (ตำแหน่ง/แผนกแยกกัน แม้ในตารางจะแสดงรวมช่องเดียว)
+const searchColumns = [
+  { field: 'employee_id', header: 'รหัสพนักงาน' },
+  { field: 'full_name', header: 'ชื่อ-นามสกุล' },
+  { field: 'nickname', header: 'ชื่อเล่น' },
+  { field: 'username', header: 'Username' },
+  { field: 'email', header: 'Email' },
+  { field: 'phone', header: 'เบอร์โทร' },
+  { field: 'position', header: 'ตำแหน่ง' },
+  { field: 'department', header: 'แผนก' },
+  { field: 'role', header: 'Role' },
+  { field: 'statusText', header: 'สถานะ (Active / Inactive)' }
+]
 
 const addNewRole = () => {
   const newRole = newRoleInput.value.trim().toLowerCase()
@@ -300,21 +295,16 @@ const getRoleStyle = (role) => {
   return { backgroundColor: c.bg, color: c.text }
 }
 
-const sortByEmployeeId = (event) => {
-  return event.data.sort((a, b) => {
-    const numA = parseInt(a.employee_id) || 0
-    const numB = parseInt(b.employee_id) || 0
-    return event.order * (numA - numB)
-  })
-}
-
 const loadUsers = async () => {
   loading.value = true
   try {
     const response = await axios.get('/api/users')
     users.value = response.data.map(user => ({
       ...user,
-      statusText: user.status === 'active' ? 'Active' : 'Inactive'
+      // ใช้เรียง/ค้นชื่อเต็ม (เดิมเรียงด้วยชื่อต้นอย่างเดียว)
+      full_name: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+      // ค้นหาสถานะได้ทั้งคำที่แสดงและภาษาไทย (เดิมอ่าน user.status ซึ่งไม่มี — ทุกคนเป็น Inactive)
+      statusText: user.is_active ? 'Active ใช้งานอยู่' : 'Inactive ปิดใช้งาน'
     }))
   } catch (error) {
     toast.add({
@@ -549,46 +539,6 @@ onMounted(() => {
   border-color: #1d4ed8;
 }
 
-/* Filter Card */
-.filter-card {
-  border: 1px solid #e9ecef;
-  box-shadow: none;
-}
-
-.filter-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.search-wrapper {
-  flex: 1;
-  max-width: 400px;
-}
-
-.search-input {
-  width: 100%;
-}
-
-.filter-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.add-btn {
-  background: #2563eb;
-  border: 1px solid #2563eb;
-  color: white;
-}
-
-.add-btn:hover {
-  background: #1d4ed8;
-  border-color: #1d4ed8;
-}
-
 /* Table Styles */
 .table-card {
   border: 1px solid #e9ecef;
@@ -728,33 +678,12 @@ onMounted(() => {
     margin-top: 0.5rem;
   }
 
-  .filter-content {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .search-wrapper {
-    max-width: none;
-  }
-
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  /* Hide less important columns on mobile */
-  .employee-id-col,
-  .email-col,
-  .position-col {
-    display: none;
-  }
-
-  .responsive-table :deep(.p-datatable-wrapper) {
-    overflow-x: auto;
-  }
-
-  .action-buttons {
-    flex-direction: column;
-    gap: 0.25rem;
+  .add-btn {
+    width: 100%;
   }
 }
 
@@ -769,12 +698,6 @@ onMounted(() => {
 
   .dialog-footer {
     flex-direction: column;
-  }
-
-  /* Show only essential columns on very small screens */
-  .role-col,
-  .status-col {
-    display: none;
   }
 }
 

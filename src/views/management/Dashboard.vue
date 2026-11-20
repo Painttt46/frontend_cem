@@ -109,7 +109,7 @@
               <i class="pi pi-briefcase" style="color: #7c3aed"></i>
               <div>
                 <h4>{{ userTimesheetSummary.totalTasks }}</h4>
-                <p>รายการลงงาน<template v-if="userTimesheetSummary.lateDays"> (ลงหลัง 10:00 {{ userTimesheetSummary.lateDays }} วัน)</template></p>
+                <p>รายการลงงาน</p>
               </div>
             </div>
           </div>
@@ -336,7 +336,7 @@
           </div>
           <p class="calc-note">
             คิดวันขาดเฉพาะ Engineer · วันที่ควรลงงาน = จ.–ศ. ไม่รวมวันหยุดและวันลาทั้งวัน นับตั้งแต่วันเริ่มงานถึงเมื่อวาน (วันนี้นับเมื่อลงงานแล้ว)
-            · ควรทำ = ชั่วโมงทำงานต่อวันของแต่ละคน (หักชั่วโมงลาบางส่วน) · ลงหลัง 10:00 = จำนวนวันที่รายการแรกถูกบันทึกหลัง 10:00 น. ของวันนั้น
+            · ควรทำ = ชั่วโมงทำงานต่อวันของแต่ละคน (หักชั่วโมงลาบางส่วน)
             · ไม่นับรายการที่ยกเลิกและงานที่ลงล่วงหน้า · เลื่อนเมาส์ที่ช่อง "ขาด" เพื่อดูวันที่
           </p>
           <DataTable :value="workDataUnknown ? [] : workStatisticsFiltered" :loading="loading" paginator :rows="10" sortField="missingDays"
@@ -362,12 +362,6 @@
                 <span v-if="data.missingDays === null" class="text-muted">—</span>
                 <span v-else-if="data.missingDays > 0" class="missing-days" v-tooltip.top="missingTooltip(data)">{{ data.missingDays }} วัน</span>
                 <span v-else class="ok-days">0</span>
-              </template>
-            </Column>
-            <Column field="lateDays" header="ลงหลัง 10:00" sortable style="min-width: 90px">
-              <template #body="{ data }">
-                <span v-if="data.lateDays === null" class="text-muted">—</span>
-                <span v-else :class="data.lateDays > 0 ? 'late-days' : 'ok-days'">{{ data.lateDays }} วัน</span>
               </template>
             </Column>
             <Column field="totalHours" header="ทำจริง" sortable style="min-width: 100px">
@@ -493,7 +487,7 @@
           {{ data.project_end_date ? formatDate(data.project_end_date) : '-' }}
         </template>
       </Column>
-      <Column header="เกินกำหนด (วัน)" sortable style="min-width: 100px">
+      <Column header="เกินกำหนด (วัน)" sortable :sortField="row => calcOverdueDays(row.project_end_date)" style="min-width: 100px">
         <template #body="{ data }">
           <span class="text-red-500 font-bold">{{ calcOverdueDays(data.project_end_date) }}</span>
         </template>
@@ -736,8 +730,6 @@ const summarizeUser = (user, from, to) => {
   const days = workByUserDay.value.get(user.id) || new Map()
   let totalHours = 0
   let taskCount = 0
-  let lateDays = 0
-  let hasCreatedAt = false
   const taskHours = {}
   const loggedDays = new Set()
   for (const [day, records] of days) {
@@ -750,12 +742,6 @@ const summarizeUser = (user, from, to) => {
       const name = record.task_name || 'ไม่ระบุ'
       taskHours[name] = (taskHours[name] || 0) + hours
     })
-    // ลงหลัง 10:00 = รายการแรกของวันนั้นถูกบันทึกหลัง 10:00 น. ของวันนั้น (รวมการลงย้อนหลัง)
-    const created = records.map(r => new Date(r.created_at).getTime()).filter(Number.isFinite)
-    if (created.length) {
-      hasCreatedAt = true
-      if (Math.min(...created) > new Date(`${day}T10:00:00`).getTime()) lateDays++
-    }
   }
   const att = isRequiredToLog(user)
     ? attendance({
@@ -770,7 +756,6 @@ const summarizeUser = (user, from, to) => {
   const expectedHours = att ? att.expectedHours : null
   return {
     totalHours, taskCount, taskHours, loggedDays, att, expectedHours,
-    lateDays: hasCreatedAt || loggedDays.size === 0 ? lateDays : null,
     percentage: expectedHours > 0 ? Math.round(totalHours / expectedHours * 100) : null
   }
 }
@@ -830,10 +815,10 @@ const userLeaveData = computed(() => {
 
 const userTimesheetSummary = computed(() => {
   const user = selectedUserObj.value
-  if (!user) return { totalHours: 0, expectedHours: null, percentage: null, totalTasks: 0, att: null, lateDays: null }
+  if (!user) return { totalHours: 0, expectedHours: null, percentage: null, totalTasks: 0, att: null }
   const { from, to } = dateRange.value
   const s = summarizeUser(user, from, to)
-  return { totalHours: s.totalHours, expectedHours: s.expectedHours, percentage: s.percentage, totalTasks: s.taskCount, att: s.att, lateDays: s.lateDays }
+  return { totalHours: s.totalHours, expectedHours: s.expectedHours, percentage: s.percentage, totalTasks: s.taskCount, att: s.att }
 })
 
 const userTimesheetDaily = computed(() => {
@@ -990,7 +975,6 @@ const workStatistics = computed(() => {
         loggedDays: s.att ? s.att.loggedDays : s.loggedDays.size,
         missingDays: s.att ? s.att.missingDays : null,
         missingDates: s.att ? s.att.missingDates : [],
-        lateDays: s.lateDays,
         totalHours: s.totalHours,
         expectedHours: s.expectedHours,
         percentage: s.percentage,
@@ -1803,11 +1787,6 @@ const renderCharts = (leaves, tasks) => {
   color: #b91c1c;
   cursor: help;
   border-bottom: 1px dashed #b91c1c;
-}
-
-.late-days {
-  font-weight: 600;
-  color: #b45309;
 }
 
 .ok-days {

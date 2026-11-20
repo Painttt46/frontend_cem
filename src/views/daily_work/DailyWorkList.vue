@@ -61,7 +61,7 @@
           </template>
         </Column>
 
-        <Column header="โครงการ" style="min-width: 280px;">
+        <Column field="projects_text" header="โครงการ" :sortable="true" style="min-width: 280px;">
           <template #body="slotProps">
             <template v-if="slotProps.data.projects.length === 1">
               <div class="task-info">
@@ -88,7 +88,7 @@
           </template>
         </Column>
 
-        <Column field="step_name" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
+        <Column field="steps_text" header="ขั้นตอน" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
             <template v-if="slotProps.data.projects.length === 1">
               <div v-if="slotProps.data.projects[0].steps_data && slotProps.data.projects[0].steps_data.length > 0" class="steps-container">
@@ -116,7 +116,7 @@
           </template>
         </Column>
 
-        <Column field="work_status" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
+        <Column field="status_text" header="สถานะงาน" :sortable="true" style="text-align: center; min-width: 140px;">
           <template #body="slotProps">
             <div class="status-badges-column">
               <template v-if="slotProps.data.projects.length === 1">
@@ -138,14 +138,14 @@
           </template>
         </Column>
 
-        <Column field="location" header="สถานที่" style="min-width: 100px;">
+        <Column field="locations_text" header="สถานที่" :sortable="true" style="min-width: 100px;">
           <template #body="slotProps">
             <span v-if="slotProps.data.projects.length === 1">{{ slotProps.data.projects[0]?.location || '-' }}</span>
             <span v-else class="text-muted"></span>
           </template>
         </Column>
 
-        <Column field="category" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
+        <Column field="categories_text" header="หมวดหมู่งาน" :sortable="true" style="text-align: center; min-width: 100px;">
           <template #body="slotProps">
             <template v-if="slotProps.data.projects.length === 1">
               <div class="badge-container category-badges">
@@ -158,7 +158,7 @@
           </template>
         </Column>
 
-        <Column header="รายละเอียดงาน">
+        <Column field="descriptions_text" header="รายละเอียดงาน">
           <template #body="slotProps">
             <Button v-if="slotProps.data.projects.length === 1" label="ดูรายละเอียด" icon="pi pi-info-circle" size="small" severity="info" outlined
               @click="showDetails(slotProps.data.projects[0], slotProps.data)" />
@@ -169,9 +169,13 @@
         <Column header="จัดการ" style="width: 120px; text-align: center;">
           <template #body="slotProps">
             <template v-if="slotProps.data.projects.length === 1">
-              <div class="action-buttons" v-if="slotProps.data.projects[0] && (isAdmin() || (isOwner(slotProps.data.projects[0]) && !isEditDisabled(slotProps.data.projects[0]))) && slotProps.data.projects[0].work_status !== 'cancelled'">
-                <Button icon="pi pi-pencil" size="small" severity="warning" outlined @click="editRecord(slotProps.data.projects[0])" v-tooltip="'แก้ไข'" />
-                <Button icon="pi pi-times" size="small" severity="danger" outlined @click="confirmCancel(slotProps.data.projects[0])" v-tooltip="'ยกเลิก'" />
+              <div class="action-buttons" v-if="slotProps.data.projects[0] && (canCopy(slotProps.data.projects[0]) || ((isAdmin() || (isOwner(slotProps.data.projects[0]) && !isEditDisabled(slotProps.data.projects[0]))) && slotProps.data.projects[0].work_status !== 'cancelled'))">
+                <Button v-if="canCopy(slotProps.data.projects[0])" icon="pi pi-copy" size="small" severity="secondary" outlined
+                  @click="copyEntry(slotProps.data.projects[0])" v-tooltip="'ลงงานซ้ำ'" aria-label="ลงงานซ้ำจากรายการนี้" />
+                <template v-if="(isAdmin() || (isOwner(slotProps.data.projects[0]) && !isEditDisabled(slotProps.data.projects[0]))) && slotProps.data.projects[0].work_status !== 'cancelled'">
+                  <Button icon="pi pi-pencil" size="small" severity="warning" outlined @click="editRecord(slotProps.data.projects[0])" v-tooltip="'แก้ไข'" />
+                  <Button icon="pi pi-times" size="small" severity="danger" outlined @click="confirmCancel(slotProps.data.projects[0])" v-tooltip="'ยกเลิก'" />
+                </template>
               </div>
               <span v-else style="display:block;text-align:center"></span>
             </template>
@@ -257,6 +261,7 @@
                 <Button v-if="hasFiles(proj)" icon="pi pi-paperclip" size="small" severity="secondary" text @click="downloadFiles(proj)" v-tooltip="`${getFilesCount(proj)} ไฟล์`" />
               </div>
               <div class="exp-cell exp-cell-actions">
+                <Button v-if="canCopy(proj)" icon="pi pi-copy" size="small" severity="secondary" text @click="copyEntry(proj)" v-tooltip="'ลงงานซ้ำ'" aria-label="ลงงานซ้ำจากรายการนี้" />
                 <Button v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))" icon="pi pi-pencil" size="small" severity="warning" text @click="editRecord(proj)" v-tooltip="'แก้ไข'" />
                 <Button v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))" icon="pi pi-times" size="small" severity="danger" text @click="confirmCancel(proj)" v-tooltip="'ยกเลิก'" />
               </div>
@@ -414,6 +419,8 @@
             </div>
           </div>
           <div class="manage-proj-actions">
+            <Button v-if="canCopy(proj)" icon="pi pi-copy" size="small" severity="secondary" text
+              @click="copyEntry(proj); manageGroupDialog = false" v-tooltip="'ลงงานซ้ำ'" aria-label="ลงงานซ้ำจากรายการนี้" />
             <Button icon="pi pi-pencil" size="small" severity="warning" text
               v-if="isAdmin() || (isOwner(proj) && !isEditDisabled(proj))"
               @click="editRecord(proj)" v-tooltip="'แก้ไข'" />
@@ -592,7 +599,7 @@ export default {
     WorkflowStepSelect
   },
   // $toast/$confirm ใช้จาก globalProperties ของ PrimeVue — ห้าม inject เพราะจะ shadow เป็น undefined
-  emits: ['refresh-data', 'add-to-group'],
+  emits: ['refresh-data', 'add-to-group', 'copy-entry'],
   props: {
     records: {
       type: Array,
@@ -664,7 +671,25 @@ export default {
         }
         groups[key].projects.push(r)
       })
-      return Object.values(groups).sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
+      // ข้อความของทั้งกลุ่มไว้เรียง / ค้นหา / กรองขั้นสูง — คอลัมน์โครงการ ขั้นตอน สถานะ หมวดหมู่ แสดงจากรายการย่อย
+      // (เดิมไม่มีค่าในระดับกลุ่ม กดเรียงแล้วไม่เกิดอะไร และกรองขั้นสูงด้วยคอลัมน์เหล่านี้ไม่เจอเลย)
+      const uniq = (list) => [...new Set(list.filter(Boolean))].join(', ')
+      const statusTexts = (p) => {
+        if (p.work_status === 'cancelled') return ['ยกเลิก']
+        const flow = this.getWorkflowStatuses(p)
+        if (flow.length) return flow.map(s => this.getStatusLabel(s))
+        return [p.work_status ? this.getStatusLabel(p.work_status) : '']
+      }
+      return Object.values(groups).map(g => ({
+        ...g,
+        // ชื่อโครงการขึ้นก่อน (เรียงตามชื่อ) แล้วต่อด้วย SO ไว้ค้นหา
+        projects_text: uniq(g.projects.map(p => (p.so_number ? `${p.task_name || ''} (${p.so_number})` : p.task_name))),
+        steps_text: uniq(g.projects.flatMap(p => (p.steps_data?.length ? p.steps_data.map(s => s.step_name) : [p.step_name]))),
+        status_text: uniq(g.projects.flatMap(statusTexts)),
+        categories_text: uniq(g.projects.flatMap(p => this.parseCategoryArray(p.category).map(c => this.getCategoryLabel(c)))),
+        locations_text: uniq(g.projects.map(p => p.location)),
+        descriptions_text: uniq(g.projects.map(p => p.work_description))
+      })).sort((a, b) => new Date(b.work_date) - new Date(a.work_date))
     },
     detailEmployee() {
       if (!this.detailGroup) return ''
@@ -811,6 +836,13 @@ export default {
     isOwner(record) {
       const currentUserId = localStorage.getItem('soc_user_id')
       return record.user_id == currentUserId
+    },
+    // ลงงานซ้ำ: เฉพาะรายการของตัวเอง (รายการใหม่บันทึกในชื่อผู้ลงเสมอ) — ใช้ได้แม้รายการเดิมแก้ไขไม่ได้แล้ว
+    canCopy(record) {
+      return !!record && this.isOwner(record)
+    },
+    copyEntry(record) {
+      this.$emit('copy-entry', record)
     },
     // แก้ไข/ลบงานรายวันของผู้อื่นได้: admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์ "แก้ไข/ลบงานรายวันของผู้อื่น" (เดิมเช็คเฉพาะ role === 'admin' → superadmin ใช้ไม่ได้)
     isAdmin() {

@@ -55,7 +55,7 @@
           </div>
         </div>
       </div>
-      <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" @add-to-group="openAddToGroup" />
+      <DailyWorkList ref="workList" :records="filteredRecords" @refresh-data="loadWorkRecords" @add-to-group="openAddToGroup" @copy-entry="openCopyEntry" />
     </div>
 
     <!-- Work Form Dialog -->
@@ -75,7 +75,7 @@
       <!-- ไม่เว้น padding ด้านล่าง: แถบปุ่ม (sticky) ต้องติดขอบล่างของ dialog พอดี ถ้าเว้นไว้แถบจะลอยสูงจากขอบล่าง
            แล้วเนื้อหาฟอร์มโผล่ผ่านช่องว่างใต้แถบ (ดูเป็นแถบขาวบังเนื้อหา) -->
       <div style="flex: 1; overflow-y: auto; padding: 1.5rem 1.5rem 0;">
-        <DailyWorkForm :key="dialogKey" ref="workForm" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
+        <DailyWorkForm :key="dialogKey" ref="workForm" :copy-from="copySource" @submit-work="handleWorkSubmit" @close-form="showWorkDialog = false" />
       </div>
     </Dialog>
   </div>
@@ -106,6 +106,7 @@ export default {
       loading: false,
       showWorkDialog: false,
       dialogKey: 0,
+      copySource: null, // รายการที่กด "ลงงานซ้ำ" — ฟอร์มใหม่เติมข้อมูลจากรายการนี้ตอนเปิด
       activeFilter: 'all',
       filterTask: null,
       filterStep: null
@@ -138,24 +139,28 @@ export default {
       this.workRecords.forEach(r => {
         if (r.task_id && r.task_name) map[r.task_id] = { name: r.task_name, so: r.so_number || '' }
       })
+      // เรียงตามชื่อโครงการ (เดิมเรียงตามรหัสโครงการ หายากเมื่อมีหลายโครงการ)
       return Object.entries(map).map(([v, d]) => ({
         value: v,
         label: d.so ? `[${d.so}] ${d.name}` : d.name,
         so: d.so,
         name: d.name
-      }))
+      })).sort((a, b) => a.name.localeCompare(b.name, 'th'))
     },
     stepOptions() {
       if (!this.filterTask) return []
       const map = {}
       this.workRecords.filter(r => String(r.task_id) === String(this.filterTask)).forEach(r => {
-        if (r.step_id && r.step_name) map[r.step_id] = r.step_name
+        if (r.step_id && r.step_name) map[r.step_id] = { label: r.step_name, order: r.step_order }
         // รายการแบบหลายขั้นตอน (step_ids) — ดึงชื่อขั้นตอนจาก steps_data ด้วย
         if (Array.isArray(r.steps_data)) {
-          r.steps_data.forEach(s => { if (s.id && s.step_name) map[s.id] = s.step_name })
+          r.steps_data.forEach(s => { if (s.id && s.step_name) map[s.id] = { label: s.step_name, order: s.step_order } })
         }
       })
-      return Object.entries(map).map(([v, l]) => ({ value: v, label: l }))
+      // เรียงตามลำดับขั้นตอนใน workflow (เดิมเรียงตามรหัส step)
+      return Object.entries(map)
+        .map(([v, s]) => ({ value: v, label: s.label, order: Number.isFinite(Number(s.order)) && s.order !== null ? Number(s.order) : Infinity }))
+        .sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, 'th'))
     },
     filteredRecords() {
       let records = this.workRecords
@@ -174,10 +179,18 @@ export default {
   },
   methods: {
     showWorkForm() {
+      this.copySource = null
+      this.dialogKey++
+      this.showWorkDialog = true
+    },
+    // ลงงานซ้ำ: เปิดฟอร์มใหม่ (key ใหม่) ที่เติมโครงการ / step / สถานที่ / เวลา / รายละเอียดจากรายการเดิม
+    openCopyEntry(record) {
+      this.copySource = record
       this.dialogKey++
       this.showWorkDialog = true
     },
     openAddToGroup(workDate) {
+      this.copySource = null
       this.showWorkDialog = true
       this.$nextTick(() => {
         if (this.$refs.workForm) {

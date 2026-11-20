@@ -222,14 +222,14 @@
               </div>
               <DataTable :value="leaveDetailList" :paginator="true" :rows="10" class="leave-detail-table">
                 <Column field="employee_name" header="พนักงาน" sortable />
-                <Column field="leave_type" header="ประเภท" sortable>
+                <Column field="leave_type" :sortField="row => leaveTypeLabels[row.leave_type] || row.leave_type" header="ประเภท" sortable>
                   <template #body="{ data }">
                     <span class="leave-badge" :style="{ background: (leaveTypeColors[data.leave_type] || '#6c757d') + '20', color: $accessibleText(leaveTypeColors[data.leave_type] || '#6c757d') }">
                       {{ leaveTypeLabels[data.leave_type] || data.leave_type }}
                     </span>
                   </template>
                 </Column>
-                <Column header="วันที่" sortable>
+                <Column field="start_datetime" header="วันที่" sortable>
                   <template #body="{ data }">
                     {{ formatLeaveDate(data.start_datetime) }} - {{ formatLeaveDate(data.end_datetime) }}
                   </template>
@@ -563,7 +563,7 @@ const loadData = async () => {
     }
 
     // Department options
-    const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))]
+    const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'))
     departmentOptions.value = depts.map(d => ({ label: d, value: d }))
 
     // Leave type colors

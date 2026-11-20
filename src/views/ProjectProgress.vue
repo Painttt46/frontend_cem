@@ -103,17 +103,19 @@
             </template>
           </Column>
 
-          <Column field="category" header="หมวดหมู่" :sortable="true" style="min-width: 120px;">
+          <Column field="category" :sortField="categorySortValue" header="หมวดหมู่" :sortable="true" style="min-width: 120px;">
             <template #body="slotProps">
-              <span v-if="slotProps.data.category" class="category-badge"
-                :style="{ backgroundColor: getCategoryColor(slotProps.data.category) }">
-                {{ slotProps.data.category }}
-              </span>
+              <template v-if="projectCategories(slotProps.data).length">
+                <span v-for="c in projectCategories(slotProps.data)" :key="c" class="category-badge"
+                  :style="{ backgroundColor: getCategoryColor(c) }">
+                  {{ categoryLabel(c) }}
+                </span>
+              </template>
               <span v-else class="text-muted">-</span>
             </template>
           </Column>
 
-          <Column header="ความคืบหน้า" style="min-width: 240px;">
+          <Column header="ความคืบหน้า" :sortable="true" :sortField="getProjectProgress" style="min-width: 240px;">
             <template #body="slotProps">
               <div class="progress-info" v-memo="[slotProps.data.steps]">
                 <ProgressBar :value="getProjectProgress(slotProps.data)" :showValue="false" style="height: 8px;" />
@@ -141,7 +143,7 @@
             </template>
           </Column>
 
-          <Column header="สถานะโครงการ" style="min-width: 150px;">
+          <Column header="สถานะโครงการ" :sortable="true" :sortField="statusSortValue" style="min-width: 150px;">
             <template #body="slotProps">
               <div class="status-badges-column">
                 <Badge v-if="slotProps.data.status === 'completed'"
@@ -547,14 +549,17 @@ export default {
     }
   },
   computed: {
+    // หมวดหมู่แยกทีละหมวด — โครงการหนึ่งมีได้หลายหมวด (เก็บคั่นด้วย ,) เดิมทั้งชุดกลายเป็นตัวเลือกเดียว
+    // และเลือกหมวดเดี่ยวแล้วไม่เจอโครงการที่มีหลายหมวด
     categoryOptions() {
       const seen = new Set()
       const opts = []
       for (const p of this.projects) {
-        if (p.category && !seen.has(p.category)) {
-          seen.add(p.category)
-          const cat = this.categories.find(c => c.label === p.category || c.value === p.category)
-          opts.push({ label: p.category, value: p.category, color: cat?.color })
+        for (const c of this.projectCategories(p)) {
+          if (seen.has(c)) continue
+          seen.add(c)
+          const cat = this.findCategory(c)
+          opts.push({ label: this.categoryLabel(c), value: c, color: cat?.color })
         }
       }
       return opts.sort((a, b) => a.label.localeCompare(b.label, 'th'))
@@ -606,7 +611,7 @@ export default {
       }
 
       if (this.filterCategory) {
-        projects = projects.filter(p => p.category === this.filterCategory)
+        projects = projects.filter(p => this.projectCategories(p).includes(this.filterCategory))
       }
 
       if (this.filterProjectManager) {
@@ -961,8 +966,25 @@ export default {
       return `${completed}/${project.steps.length} ขั้นตอน`
     },
     getCategoryColor(category) {
-      const cat = this.categories.find(c => c.label === category || c.value === category)
+      const cat = this.findCategory(category)
       return accessibleBg(cat?.color || '#6c757d')
+    },
+    findCategory(category) {
+      return this.categories.find(c => c.label === category || c.value === category)
+    },
+    projectCategories(project) {
+      return String(project?.category || '').split(',').map(c => c.trim()).filter(Boolean)
+    },
+    categoryLabel(category) {
+      const label = this.findCategory(category)?.label || category
+      return String(label).replace(/[\u{1F000}-\u{1FFFF}]|[\u{2600}-\u{27BF}]|[\u{2300}-\u{23FF}]|[\u{2B50}]|[\u{203C}-\u{3299}]/gu, '').trim()
+    },
+    categorySortValue(project) {
+      return this.projectCategories(project).map(c => this.categoryLabel(c)).join(', ')
+    },
+    statusSortValue(project) {
+      if (project.status === 'completed') return 'เสร็จสิ้น'
+      return this.getLatestProjectStatuses(project).map(s => this.getProjectStatusLabel(s)).join(', ')
     },
     getStepStatusLabel(step) {
       if (step.status === 'completed') return 'เสร็จสิ้น'

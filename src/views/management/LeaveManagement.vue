@@ -25,37 +25,33 @@
           </div>
         </div>
         
-        <!-- Search and Filter -->
-        <div class="filters-section">
-          <IconField iconPosition="left" class="search-field">
-            <InputIcon class="pi pi-search" />
-            <InputText v-model="searchQuery" placeholder="ค้นหาชื่อ, แผนก, ตำแหน่ง..." class="w-full" />
-          </IconField>
-          
-          <Dropdown v-model="selectedDepartment" :options="departments" optionLabel="label" optionValue="value" 
-                    placeholder="ทุกแผนก" class="filter-dropdown" showClear />
-          
-          <Dropdown v-model="selectedPosition" :options="positions" optionLabel="label" optionValue="value" 
-                    placeholder="ทุกตำแหน่ง" class="filter-dropdown" showClear />
-        </div>
-        
+        <!-- ช่องค้นหา + ค้นหาขั้นสูง (component กลาง) + ตัวกรองแผนก/ตำแหน่ง -->
         <div class="table-wrapper">
-          <DataTable :value="filteredUsers" :paginator="true" :rows="10" stripedRows class="p-datatable-sm" 
+          <EnhancedDataTable :data="filteredUsers" :columns="searchColumns" mobileLayout="scroll"
+            searchPlaceholder="ค้นหาชื่อ ชื่อเล่น แผนก ตำแหน่ง..."
+            :paginator="true" :rows="10" stripedRows class="p-datatable-sm"
             scrollable scrollHeight="600px" scrollDirection="both">
-            <Column field="firstname" header="ชื่อ" :sortable="true" frozen style="min-width: 150px">
+            <template #extraControls>
+              <Dropdown v-model="selectedDepartment" :options="departments" optionLabel="label" optionValue="value"
+                        placeholder="ทุกแผนก" class="filter-dropdown" showClear />
+              <Dropdown v-model="selectedPosition" :options="positions" optionLabel="label" optionValue="value"
+                        placeholder="ทุกตำแหน่ง" class="filter-dropdown" showClear />
+            </template>
+            <Column field="full_name" header="ชื่อ" :sortable="true" frozen style="min-width: 150px">
               <template #body="{ data }">
                 {{ data.firstname }} {{ data.lastname }}{{ data.nickname ? ` (${data.nickname})` : '' }}
               </template>
             </Column>
             <Column field="department" header="แผนก" :sortable="true" frozen style="min-width: 120px" />
             <Column field="position" header="ตำแหน่ง" :sortable="true" frozen style="min-width: 120px" />
-            <Column v-for="type in leaveTypes" :key="type.value" style="min-width: 180px">
+            <!-- เรียงตามวันคงเหลือ (คลิกหัวคอลัมน์) — ปุ่มแก้/ลบบนหัวใช้ .stop ไม่ให้คลิกแล้วเรียงไปด้วย -->
+            <Column v-for="type in leaveTypes" :key="type.value" :field="`${type.value}_remaining`" sortable style="min-width: 180px">
               <template #header>
                 <div class="leave-type-header">
                   <Badge :value="type.label" :style="{ backgroundColor: $accessibleBg(type.color), color: '#fff', fontWeight: 'bold' }" />
                   <div v-if="canManageLeaveTypes" class="leave-type-actions">
-                    <Button icon="pi pi-pencil" size="small" text severity="info" @click="editLeaveType(type)" v-tooltip="'แก้ไข'" />
-                    <Button icon="pi pi-trash" size="small" text severity="danger" @click="confirmDeleteLeaveType(type)" v-tooltip="'ลบ'" />
+                    <Button icon="pi pi-pencil" size="small" text severity="info" @click.stop="editLeaveType(type)" v-tooltip="'แก้ไข'" :aria-label="`แก้ไขประเภท ${type.label}`" />
+                    <Button icon="pi pi-trash" size="small" text severity="danger" @click.stop="confirmDeleteLeaveType(type)" v-tooltip="'ลบ'" :aria-label="`ลบประเภท ${type.label}`" />
                   </div>
                 </div>
                 <small v-if="type.advance_days > 0" class="advance-days-hint">ลาล่วงหน้า {{ type.advance_days }} วัน</small>
@@ -71,7 +67,7 @@
                 </div>
               </template>
             </Column>
-          </DataTable>
+          </EnhancedDataTable>
         </div>
       </template>
     </Card>
@@ -230,6 +226,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import axios from '@/utils/axiosConfig'
 import { usePermissions } from '@/composables/usePermissions'
+import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import Calendar from 'primevue/calendar'
 import Chip from 'primevue/chip'
 import Checkbox from 'primevue/checkbox'
@@ -268,8 +265,7 @@ const colorOptions = ['#ef4444', '#f59e0b', '#10b981', '#2563eb', '#8b5cf6', '#e
 // Edit leave type states
 const editingLeaveTypeData = ref(null)
 
-// Filter states
-const searchQuery = ref('')
+// Filter states (ช่องค้นหาข้อความอยู่ใน EnhancedDataTable)
 const selectedDepartment = ref(null)
 const selectedPosition = ref(null)
 const departments = ref([])
@@ -300,20 +296,22 @@ watch(newQuotaHours, (hours, previous) => {
   }
 })
 
+// ค้นหาขั้นสูง: ชื่อ/แผนก/ตำแหน่ง + ตัวเลขของแต่ละประเภทการลา (เช่น "ลาพักร้อน — คงเหลือ น้อยกว่า 2")
+const searchColumns = computed(() => [
+  { field: 'full_name', header: 'ชื่อ-นามสกุล' },
+  { field: 'nickname', header: 'ชื่อเล่น' },
+  { field: 'department', header: 'แผนก' },
+  { field: 'position', header: 'ตำแหน่ง' },
+  ...leaveTypes.value.flatMap(type => [
+    { field: `${type.value}_remaining`, header: `${type.label} — คงเหลือ (วัน)` },
+    { field: `${type.value}_used`, header: `${type.label} — ใช้ไป (วัน)` },
+    { field: `${type.value}_quota`, header: `${type.label} — โควต้า (วัน)` }
+  ])
+])
+
 // Computed filtered users
 const filteredUsers = computed(() => {
   let filtered = users.value
-
-  // Search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(user => 
-      user.firstname?.toLowerCase().includes(query) ||
-      user.lastname?.toLowerCase().includes(query) ||
-      user.department?.toLowerCase().includes(query) ||
-      user.position?.toLowerCase().includes(query)
-    )
-  }
 
   // Department filter
   if (selectedDepartment.value) {
@@ -473,12 +471,14 @@ const loadUsers = async () => {
   try {
     const usersRes = await axios.get('/api/users')
     
+    // ชื่อเต็มใช้เรียง/ค้นหา (เดิมเรียงด้วยชื่อต้นอย่างเดียว)
+    const withName = (user) => ({ ...user, full_name: `${user.firstname || ''} ${user.lastname || ''}`.trim() })
     users.value = await Promise.all(usersRes.data.map(async (user) => {
       try {
         const quotaRes = await axios.get(`/api/leave/quota/${user.id}`)
         const quotaData = quotaRes.data
         
-        const userData = { ...user }
+        const userData = withName(user)
         
         // Add quota data for each leave type dynamically
         for (const [leaveType, data] of Object.entries(quotaData)) {
@@ -490,7 +490,7 @@ const loadUsers = async () => {
         return userData
       } catch { // ignore
         // โหลดไม่สำเร็จ: ห้ามแก้แถวนี้ — ค่าบนหน้าจอเป็น 0 ไม่ใช่ค่าจริง ถ้าแก้จะทับวันที่ใช้ไปของพนักงาน
-        return { ...user, quotaLoadFailed: true }
+        return { ...withName(user), quotaLoadFailed: true }
       }
     }))
     
@@ -508,11 +508,11 @@ const loadUsers = async () => {
 
 const extractFilters = () => {
   // Extract unique departments
-  const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))]
+  const depts = [...new Set(users.value.map(u => u.department).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'))
   departments.value = depts.map(d => ({ label: d, value: d }))
   
   // Extract unique positions
-  const pos = [...new Set(users.value.map(u => u.position).filter(Boolean))]
+  const pos = [...new Set(users.value.map(u => u.position).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'th'))
   positions.value = pos.map(p => ({ label: p, value: p }))
 }
 
@@ -829,19 +829,9 @@ const submitLeaveType = async () => {
   color: #2c3e50;
 }
 
-.filters-section {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.search-field {
-  width: 100%;
-}
-
 .filter-dropdown {
-  width: 100%;
+  width: 14rem;
+  max-width: 100%;
 }
 
 .table-wrapper {
@@ -872,6 +862,15 @@ const submitLeaveType = async () => {
 .leave-type-actions {
   display: flex;
   gap: 0;
+}
+
+/* ปุ่มแก้/ลบบนหัวคอลัมน์ (พื้นน้ำเงิน): สีฟ้า/แดงเดิมกลืนกับพื้น (contrast ~1.3:1) — ใช้สีขาว */
+.leave-type-actions .p-button.p-button-text {
+  color: #fff;
+}
+
+.leave-type-actions .p-button.p-button-text:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .advance-days-hint {
@@ -1141,8 +1140,8 @@ const submitLeaveType = async () => {
     width: 100%;
   }
   
-  .filters-section {
-    grid-template-columns: 1fr;
+  .filter-dropdown {
+    width: 100%;
   }
 }
 </style>

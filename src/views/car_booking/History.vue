@@ -28,8 +28,8 @@
           </template>
         </Column>
         <Column field="borrowRecord.time" header="เวลาใช้" />
-        <Column field="borrowRecord.location" header="สถานที่" />
-        <Column field="borrowRecord.project" header="โครงการ" style="min-width: 200px;">
+        <Column field="borrowRecord.location" header="สถานที่" :sortable="true" />
+        <Column field="borrowRecord.project" header="โครงการ" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
             <div class="task-info">
               <div class="task-name">{{ slotProps.data.borrowRecord.project || '-' }}</div>
@@ -39,7 +39,7 @@
           </template>
         </Column>
         
-        <Column header="ผู้ร่วมงาน" style="min-width: 120px;">
+        <Column field="colleagues_text" header="ผู้ร่วมงาน" style="min-width: 120px;">
           <template #body="slotProps">
             <Button 
               v-if="hasColleagues(slotProps.data.borrowRecord)" 
@@ -57,7 +57,7 @@
           </template>
         </Column>
 
-        <Column header="ผู้คืน" style="min-width: 130px;">
+        <Column field="returnRecord.name" header="ผู้คืน" style="min-width: 130px;">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.name" 
                   class="clickable-name" 
@@ -68,7 +68,7 @@
           </template>
         </Column>
 
-        <Column header="วันที่คืน">
+        <Column field="returnRecord.date" header="วันที่คืน" :sortable="true" :sortField="returnSortValue">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.date">
               {{ formatDate(slotProps.data.returnRecord.date) }}
@@ -80,7 +80,7 @@
           </template>
         </Column>
 
-        <Column header="เวลาคืน">
+        <Column field="returnRecord.time" header="เวลาคืน">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned">
               {{ slotProps.data.returnRecord.time || formatTime(slotProps.data.borrowRecord.updated_at) }}
@@ -89,13 +89,13 @@
           </template>
         </Column>
 
-        <Column header="สถานที่คืน">
+        <Column field="returnRecord.location" header="สถานที่คืน">
           <template #body="slotProps">
             {{ slotProps.data.returned ? slotProps.data.returnRecord.location : '-' }}
           </template>
         </Column>
 
-        <Column field="duration" header="ระยะเวลา" />
+        <Column field="duration" sortField="durationMinutes" header="ระยะเวลา" :sortable="true" />
 
         <Column header="รูปภาพ">
           <template #body="slotProps">
@@ -106,7 +106,7 @@
           </template>
         </Column>
 
-        <Column header="ข้อมูลเพิ่มเติม">
+        <Column field="borrowRecord.discription" header="ข้อมูลเพิ่มเติม">
           <template #body="slotProps">
             <Button 
               v-if="slotProps.data.borrowRecord.discription" 
@@ -122,7 +122,7 @@
           </template>
         </Column>
 
-        <Column header="สถานะ">
+        <Column field="status_text" header="สถานะ" :sortable="true">
           <template #body="slotProps">
             <div class="status-cell">
               <Badge v-if="slotProps.data.returned" value="✓ คืนแล้ว" severity="success" />
@@ -226,6 +226,7 @@ export default {
     groupedRecordsWithDuration() {
       return this.groupedRecords.map(group => {
         let duration = group.cancelled || group.borrowRecord.status === 'pending' ? '-' : 'ยังไม่คืน'
+        let durationMinutes = null // ใช้เรียงคอลัมน์ระยะเวลา (ข้อความ "2 ชั่วโมง 5 นาที" เรียงตรง ๆ ไม่ได้)
         if (group.returned) {
           const borrowDate = new Date(group.borrowDate)
           const [borrowHour, borrowMin] = group.borrowRecord.time.split(':').map(Number)
@@ -237,6 +238,7 @@ export default {
 
           const diffMs = returnTime - borrowTime
           if (diffMs > 0) {
+            durationMinutes = Math.round(diffMs / 60000)
             const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
             const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
             if (diffHours > 0) {
@@ -248,11 +250,21 @@ export default {
             duration = 'ข้อมูลเวลาไม่ถูกต้อง'
           }
         }
-        return { ...group, duration }
+        // ข้อความที่แสดงในคอลัมน์ผู้ร่วมงาน / สถานะ — ใช้ค้นหาขั้นสูงและเรียง
+        const colleagues_text = (group.borrowRecord.colleagues || []).map(c => this.getColleagueName(c)).filter(Boolean).join(', ')
+        const status_text = group.returned
+          ? (group.borrowRecord.auto_returned ? 'คืนแล้ว (คืนอัตโนมัติ)' : 'คืนแล้ว')
+          : group.cancelled ? 'ยกเลิก' : this.isWaitingToUse(group) ? 'รอใช้งาน' : 'ยังไม่คืน'
+        return { ...group, duration, durationMinutes, colleagues_text, status_text }
       })
     }
   },
   methods: {
+    // ค่าเรียงคอลัมน์ "วันที่คืน" — วันที่คืนจริง หรือวันที่แก้รายการล่าสุดถ้าไม่มี (ตรงกับที่แสดง)
+    returnSortValue(group) {
+      if (!group.returned) return ''
+      return String(group.returnRecord?.date || group.borrowRecord?.updated_at || '').slice(0, 10)
+    },
     showUserInfo(userId) {
       if (userId) {
         this.selectedUserId = userId

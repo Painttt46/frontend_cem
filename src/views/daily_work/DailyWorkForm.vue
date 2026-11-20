@@ -248,6 +248,10 @@ import { fetchEntryWindow, entryMinDate } from '@/utils/entryWindow'
 export default {
   name: 'DailyWorkForm',
   components: { Checkbox, Button, AutoComplete, WorkflowStepSelect },
+  props: {
+    // "ลงงานซ้ำ": รายการเดิมที่ใช้เติมฟอร์มตอนเปิด (โครงการ / step / สถานที่ / เวลา / รายละเอียด — ไม่รวมวันที่และไฟล์)
+    copyFrom: { type: Object, default: null }
+  },
   // หมายเหตุ: $toast ใช้จาก globalProperties ของ PrimeVue — ห้าม inject เพราะจะ shadow เป็น undefined
   created() {
     this.$http = axios
@@ -304,6 +308,10 @@ export default {
     this.loadEntryWindow()
     await this.loadTasks()
     await this.loadUsers()
+    if (this.copyFrom) {
+      await this.applyCopy(this.copyFrom)
+      return
+    }
     // ตั้งค่าเริ่มต้นเวลาปัจจุบัน
     const now = new Date()
     const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0')
@@ -313,6 +321,38 @@ export default {
     }
   },
   methods: {
+    // ลงงานซ้ำจากรายการเดิม — วันที่ใช้ค่าเริ่มต้นของฟอร์ม (วันนี้ หรือวันแรกที่ลงได้) เพราะวันเดิมมักผ่านไปแล้ว
+    async applyCopy(record) {
+      const entry = this.taskEntries[0]
+      if (!entry || !record) return
+      const hhmm = (t) => String(t || '').slice(0, 5)
+      const notes = []
+      entry.location = record.location || entry.location
+      entry.workDescription = record.work_description || ''
+      entry.startTimeText = hhmm(record.start_time)
+      entry.endTimeText = hhmm(record.end_time)
+      this.parseEntryStartTime(entry)
+      this.parseEntryEndTime(entry)
+      if (record.task_id) {
+        if (this.tasks.some(t => t.id === record.task_id)) {
+          entry.taskId = record.task_id
+          await this.onTaskEntryChange(entry) // โหลด step ของโครงการ + ตั้งหัวข้อนัด
+          const wanted = (record.step_ids?.length ? record.step_ids : (record.step_id ? [record.step_id] : [])).map(Number)
+          const steps = this.getStepsForTask(entry.taskId)
+          entry.stepIds = steps.filter(s => wanted.includes(s.id) && s.status !== 'completed').map(s => s.id)
+          if (entry.stepIds.length < new Set(wanted).size) notes.push('ข้าม step ที่เสร็จแล้วหรือถูกลบไป')
+          if (entry.stepIds.length) this.onStepIdsChange(entry)
+        } else {
+          notes.push('ไม่ได้คัดลอกโครงการ เพราะโครงการนี้ปิดแล้ว')
+        }
+      }
+      this.$toast.add({
+        severity: notes.length ? 'warn' : 'info',
+        summary: 'คัดลอกจากรายการเดิมแล้ว',
+        detail: ['ตรวจวันที่และเวลา แล้วกดบันทึก', ...notes].join(' · '),
+        life: 6000
+      })
+    },
     async loadEntryWindow() {
       this.entryWindow = await fetchEntryWindow('/api/daily-work/entry-window')
       // วันที่ตั้งต้น (วันนี้) เลือกไม่ได้แล้ว (หลัง 10:00 ของวันที่ไม่ได้ลงรายการแรกก่อน 10:00) → เลื่อนเป็นวันแรกที่ลงได้
