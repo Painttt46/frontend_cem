@@ -148,13 +148,13 @@
           </template>
         </Column>
 
-        <Column field="project_start_date" header="วันเริ่มโครงการ" :sortable="true">
+        <Column field="project_start_date" searchType="date" header="วันเริ่มโครงการ" :sortable="true">
           <template #body="slotProps">
             <span v-if="slotProps.data.project_start_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar" style="color:#0e7490;font-size:max(0.85rem, var(--min-fs))"></i>{{ formatDate(slotProps.data.project_start_date) }}</span><span v-else class="text-muted">-</span>
           </template>
         </Column>
 
-        <Column field="project_end_date" header="วันสิ้นสุดโครงการ" :sortable="true">
+        <Column field="project_end_date" searchType="date" header="วันสิ้นสุดโครงการ" :sortable="true">
           <template #body="slotProps">
             <span v-if="slotProps.data.project_end_date" style="display:flex;align-items:center;gap:4px;white-space:nowrap"><i class="pi pi-calendar-times" style="color:#dc2626;font-size:max(0.85rem, var(--min-fs))"></i>{{ formatDate(slotProps.data.project_end_date) }}</span><span v-else class="text-muted">-</span>
           </template>

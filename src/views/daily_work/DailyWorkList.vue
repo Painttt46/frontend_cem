@@ -6,7 +6,7 @@
         <p>ยังไม่มีข้อมูลการลงงาน</p>
       </div>
 
-      <EnhancedDataTable v-else :data="groupedRecords" :paginator="true" :rows="10" 
+      <EnhancedDataTable v-else :data="groupedRecords" subRowsField="projects" :extraColumns="extraSearchColumns" :paginator="true" :rows="10" 
         :rowsPerPageOptions="[5, 10, 20]" responsiveLayout="scroll" class="history-table" stripedRows
         v-model:expandedRows="expandedRows" dataKey="_key">
 
@@ -27,13 +27,13 @@
           </template>
         </Column>
 
-        <Column field="work_date" header="วันที่ลงงาน" :sortable="true">
+        <Column field="work_date" searchType="date" header="วันที่ลงงาน" :sortable="true">
           <template #body="slotProps">
             {{ formatDate(slotProps.data.work_date) }}
           </template>
         </Column>
 
-        <Column field="start_time" header="เวลา" style="min-width: 120px;">
+        <Column field="start_time" searchType="time" header="เวลา" searchHeader="เวลาเริ่ม" style="min-width: 120px;">
           <template #body="slotProps">
             <template v-if="slotProps.data.projects.length === 1">
               {{ formatTime(slotProps.data.projects[0].start_time) }} - {{ formatTime(slotProps.data.projects[0].end_time) }}
@@ -715,6 +715,8 @@ export default {
   },
   data() {
     return {
+      // คอลัมน์ "เวลา" แสดงเริ่ม–สิ้นสุดรวมกัน — ค้นหาขั้นสูงแยกเป็นเวลาเริ่ม / เวลาสิ้นสุด
+      extraSearchColumns: [{ field: 'end_time', header: 'เวลาสิ้นสุด', type: 'time', after: 'start_time' }],
       tasks: [],
       detailDialog: false,
       selectedRecord: null,

@@ -14,7 +14,7 @@
           </template>
         </Column>
 
-        <Column field="borrowDate" header="วันที่" :sortable="true">
+        <Column field="borrowDate" searchType="date" header="วันที่" :sortable="true">
           <template #body="slotProps">
             {{ formatDate(slotProps.data.borrowDate) }}
           </template>
@@ -27,7 +27,7 @@
             </span>
           </template>
         </Column>
-        <Column field="borrowRecord.time" header="เวลาใช้" />
+        <Column field="borrowRecord.time" searchType="time" header="เวลาใช้" :sortable="true" />
         <Column field="borrowRecord.location" header="สถานที่" :sortable="true" />
         <Column field="borrowRecord.project" header="โครงการ" :sortable="true" style="min-width: 200px;">
           <template #body="slotProps">
@@ -68,7 +68,7 @@
           </template>
         </Column>
 
-        <Column field="returnRecord.date" header="วันที่คืน" :sortable="true" :sortField="returnSortValue">
+        <Column field="return_date_value" searchType="date" header="วันที่คืน" :sortable="true">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned && slotProps.data.returnRecord.date">
               {{ formatDate(slotProps.data.returnRecord.date) }}
@@ -80,7 +80,7 @@
           </template>
         </Column>
 
-        <Column field="returnRecord.time" header="เวลาคืน">
+        <Column field="return_time_value" searchType="time" header="เวลาคืน" :sortable="true">
           <template #body="slotProps">
             <span v-if="slotProps.data.returned">
               {{ slotProps.data.returnRecord.time || formatTime(slotProps.data.borrowRecord.updated_at) }}
@@ -95,7 +95,7 @@
           </template>
         </Column>
 
-        <Column field="duration" sortField="durationMinutes" header="ระยะเวลา" :sortable="true" />
+        <Column field="duration" sortField="durationMinutes" searchField="durationMinutes" searchType="duration" header="ระยะเวลา" :sortable="true" />
 
         <Column header="รูปภาพ">
           <template #body="slotProps">
@@ -255,15 +255,22 @@ export default {
         const status_text = group.returned
           ? (group.borrowRecord.auto_returned ? 'คืนแล้ว (คืนอัตโนมัติ)' : 'คืนแล้ว')
           : group.cancelled ? 'ยกเลิก' : this.isWaitingToUse(group) ? 'รอใช้งาน' : 'ยังไม่คืน'
-        return { ...group, duration, durationMinutes, colleagues_text, status_text }
+        // วัน/เวลาคืนตามที่แสดง (วันที่คืนจริง หรือวันเวลาแก้รายการล่าสุดถ้าไม่มี) — ใช้เรียงและค้นหาขั้นสูง
+        // (เดิมกรองด้วย returnRecord.date ตรง ๆ รายการที่แสดงวันจาก updated_at จึงกรองไม่เจอ)
+        const updatedAt = group.borrowRecord.updated_at
+        const return_date_value = group.returned ? (group.returnRecord?.date || this.localDateKey(updatedAt)) : null
+        const return_time_value = group.returned ? (group.returnRecord?.time || (updatedAt ? this.formatTime(updatedAt) : null)) : null
+        return { ...group, duration, durationMinutes, colleagues_text, status_text, return_date_value, return_time_value }
       })
     }
   },
   methods: {
-    // ค่าเรียงคอลัมน์ "วันที่คืน" — วันที่คืนจริง หรือวันที่แก้รายการล่าสุดถ้าไม่มี (ตรงกับที่แสดง)
-    returnSortValue(group) {
-      if (!group.returned) return ''
-      return String(group.returnRecord?.date || group.borrowRecord?.updated_at || '').slice(0, 10)
+    // วันที่ตามเวลาเครื่อง yyyy-mm-dd (ตัด 10 ตัวแรกของเวลา UTC ตรง ๆ จะได้วันก่อนหน้าถ้าเป็นช่วงก่อน 07:00)
+    localDateKey(value) {
+      if (!value) return null
+      const d = new Date(value)
+      if (isNaN(d.getTime())) return null
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     },
     showUserInfo(userId) {
       if (userId) {

@@ -303,9 +303,9 @@ const searchColumns = computed(() => [
   { field: 'department', header: 'แผนก' },
   { field: 'position', header: 'ตำแหน่ง' },
   ...leaveTypes.value.flatMap(type => [
-    { field: `${type.value}_remaining`, header: `${type.label} — คงเหลือ (วัน)` },
-    { field: `${type.value}_used`, header: `${type.label} — ใช้ไป (วัน)` },
-    { field: `${type.value}_quota`, header: `${type.label} — โควต้า (วัน)` }
+    { field: `${type.value}_remaining`, header: `${type.label} — คงเหลือ (วัน)`, type: 'number' },
+    { field: `${type.value}_used`, header: `${type.label} — ใช้ไป (วัน)`, type: 'number' },
+    { field: `${type.value}_quota`, header: `${type.label} — โควต้า (วัน)`, type: 'number' }
   ])
 ])
 

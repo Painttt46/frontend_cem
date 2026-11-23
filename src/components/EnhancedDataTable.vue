@@ -5,17 +5,17 @@
       <div class="search-box">
         <IconField iconPosition="left">
           <InputIcon class="pi pi-search" />
-          <InputText v-model="localSearch" :placeholder="searchPlaceholder" class="w-full" />
+          <InputText v-model="localSearch" :placeholder="searchPlaceholder" :aria-label="searchPlaceholder" class="w-full" />
         </IconField>
       </div>
       <slot name="extraControls" />
       <div class="control-buttons">
-        <Button 
-          :icon="advancedMode ? 'pi pi-times' : 'pi pi-filter'" 
-          :label="advancedMode ? 'ปิด' : 'ค้นหาขั้นสูง'" 
-          @click="advancedMode = !advancedMode" 
-          text 
-          :severity="advancedMode ? 'danger' : 'info'" 
+        <Button
+          :icon="advancedMode ? 'pi pi-times' : 'pi pi-filter'"
+          :label="advancedMode ? 'ปิด' : 'ค้นหาขั้นสูง'"
+          @click="advancedMode = !advancedMode"
+          text
+          :severity="advancedMode ? 'danger' : 'info'"
         />
       </div>
     </div>
@@ -23,40 +23,79 @@
     <!-- Advanced Search Filters -->
     <div v-if="advancedMode" class="advanced-search mb-3">
       <div v-for="(filter, index) in filters" :key="index" class="filter-row">
-        <Dropdown 
-          v-model="filter.column" 
-          :options="searchableColumns" 
-          optionLabel="header" 
-          optionValue="field" 
-          placeholder="เลือก Column" 
-          class="filter-column" 
+        <Dropdown
+          v-model="filter.column"
+          :options="searchableColumns"
+          optionLabel="header"
+          optionValue="field"
+          placeholder="เลือก Column"
+          aria-label="คอลัมน์ที่ต้องการกรอง"
+          class="filter-column"
+          @change="onColumnChange(filter)"
         />
-        <Dropdown 
-          v-model="filter.operator" 
-          :options="operators" 
-          optionLabel="label" 
-          optionValue="value" 
-          placeholder="เงื่อนไข" 
-          class="filter-operator" 
+        <!-- เงื่อนไขเปลี่ยนตามชนิดคอลัมน์: วันที่ / เวลา / ตัวเลข / ข้อความ -->
+        <Dropdown
+          v-model="filter.operator"
+          :options="operatorsFor(filter)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="เงื่อนไข"
+          aria-label="เงื่อนไข"
+          class="filter-operator"
+          @change="onFilterShapeChange(filter)"
         />
-        <InputText 
-          v-model="filter.value" 
-          placeholder="ค่าที่ค้นหา" 
-          class="filter-value" 
+        <!-- คอลัมน์วันที่เลือกจากปฏิทิน (พิมพ์เองก็ได้ ทั้ง ค.ศ./พ.ศ.) คอลัมน์วันเวลามีช่องเวลาให้ใส่เพิ่ม — "ระหว่าง" มี 2 ชุด -->
+        <div class="filter-values">
+          <div v-for="slot in valueSlots(filter)" :key="slot.value" class="value-group">
+            <template v-if="inputKind(filter) === 'date'">
+              <Calendar
+                v-model="filter[slot.value]"
+                dateFormat="dd/mm/yy"
+                showIcon
+                showButtonBar
+                :placeholder="slot.dateLabel"
+                :aria-label="slot.dateLabel"
+                class="filter-value"
+                @input="onDateTyping(filter, slot.value, $event.target.value)"
+                @blur="onDateTyped(filter, slot.value, $event.value)"
+              />
+              <InputText
+                v-if="columnType(filter) === 'datetime'"
+                v-model="filter[slot.time]"
+                placeholder="เวลา"
+                :aria-label="`${slot.dateLabel} เวลา (ไม่บังคับ)`"
+                title="เวลา (ไม่บังคับ) เช่น 08:30"
+                class="filter-time"
+              />
+            </template>
+            <InputText
+              v-else
+              v-model="filter[slot.value]"
+              :placeholder="valuePlaceholder(filter, slot)"
+              :aria-label="valuePlaceholder(filter, slot)"
+              class="filter-value"
+              :class="{ 'p-invalid': problemOf(filter) }"
+            />
+          </div>
+        </div>
+        <Button
+          icon="pi pi-times"
+          severity="danger"
+          text
+          aria-label="ลบเงื่อนไขนี้"
+          @click="removeFilter(index)"
+          :disabled="filters.length === 1"
         />
-        <Button 
-          icon="pi pi-times" 
-          severity="danger" 
-          text 
-          @click="removeFilter(index)" 
-          :disabled="filters.length === 1" 
-        />
+        <!-- พิมพ์ไม่ครบ/ผิดรูปแบบ: บอกวิธีกรอก และยังไม่เอาเงื่อนไขนี้ไปกรอง -->
+        <small v-if="problemOf(filter)" class="filter-problem" role="status">
+          <i class="pi pi-info-circle"></i> {{ problemOf(filter) }}
+        </small>
       </div>
       <div class="filter-actions">
         <div class="logic-toggle">
-          <Button :label="'AND'" :severity="filterLogic === 'AND' ? 'primary' : 'secondary'" 
+          <Button :label="'AND'" :severity="filterLogic === 'AND' ? 'primary' : 'secondary'"
             @click="filterLogic = 'AND'" size="small" />
-          <Button :label="'OR'" :severity="filterLogic === 'OR' ? 'primary' : 'secondary'" 
+          <Button :label="'OR'" :severity="filterLogic === 'OR' ? 'primary' : 'secondary'"
             @click="filterLogic = 'OR'" size="small" />
         </div>
         <Button label="เพิ่มเงื่อนไข" icon="pi pi-plus" @click="addFilter" text size="small" />
@@ -85,11 +124,12 @@
 <script setup>
 /* eslint-disable no-undef */
 import { ref, computed, useSlots, watch, Fragment } from 'vue'
+import {
+  normalizeText, isFilledValue, matchesFilter, filterProblem, joinDateTime, typedDate,
+  makeRowSearcher, detectColumnType, OPERATORS, DEFAULT_OPERATOR
+} from '@/utils/tableFilter'
 
 defineOptions({ inheritAttrs: false })
-
-// Init from attrs once available
-
 
 const props = defineProps({
   data: {
@@ -100,7 +140,15 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  // คอลัมน์ของค้นหาขั้นสูง [{ field, header, type? }] — ไม่ส่งจะอ่านจาก <Column field=...> ในตาราง
+  // type ('date' | 'datetime' | 'time' | 'duration' | 'number' | 'text') ไม่ส่งจะดูจากข้อมูลจริง
+  // ที่ <Column> กำหนดเฉพาะค้นหาขั้นสูงได้: searchField (ฟิลด์ที่ใช้กรองแทน field), searchHeader (ชื่อในรายการ), searchType
   columns: {
+    type: Array,
+    default: () => []
+  },
+  // ช่องที่ค้นได้เพิ่มจากคอลัมน์ในตาราง [{ field, header, type?, after? }] — after = ต่อท้ายฟิลด์ไหนในรายการ
+  extraColumns: {
     type: Array,
     default: () => []
   },
@@ -117,6 +165,12 @@ const props = defineProps({
   mobileLayout: {
     type: String,
     default: 'stack'
+  },
+  // ชื่อฟิลด์ของรายการย่อยในแถว (แถวตรงเงื่อนไขถ้าแถวแม่หรือรายการย่อยตัวใดตรง)
+  // เช่น โครงการลูกที่ใช้ SO เดียวกัน = children, งานหลายโครงการในวันเดียว = projects
+  subRowsField: {
+    type: String,
+    default: 'children'
   }
 })
 
@@ -126,122 +180,22 @@ const localSearch = ref(props.initialSearch)
 watch(() => props.initialSearch, (v) => { localSearch.value = v })
 const advancedMode = ref(false)
 const filterLogic = ref('AND') // AND or OR
-const filters = ref([
-  { column: '', operator: 'contains', value: '' }
-])
-
-const operators = [
-  { label: 'มีคำว่า', value: 'contains' },
-  { label: 'เท่ากับ', value: 'equals' },
-  { label: 'ไม่เท่ากับ', value: 'notEquals' },
-  { label: 'เริ่มต้นด้วย', value: 'startsWith' },
-  { label: 'ลงท้ายด้วย', value: 'endsWith' },
-  { label: 'มากกว่า', value: 'greaterThan' },
-  { label: 'น้อยกว่า', value: 'lessThan' }
-]
+// type = ชนิดคอลัมน์ที่เลือกอยู่, kind = ชนิดช่องกรอกล่าสุด (date = ปฏิทิน, text = พิมพ์) — เปลี่ยนชนิดแล้วล้างค่าเดิม
+// time/time2 = เวลาที่ใส่คู่กับวันที่ (เฉพาะคอลัมน์วันเวลา)
+const newFilter = () => ({ column: '', operator: 'contains', value: null, value2: null, time: null, time2: null, type: 'text', kind: 'text' })
+const filters = ref([newFilter()])
 
 // Get actual data (support both data and value props)
 const tableData = computed(() => {
   return props.data?.length ? props.data : (props.value || [])
 })
 
-// Normalize text for search
-// 0 ต้องเป็น "0" (เดิม !text ทำให้ 0 กลายเป็นค่าว่าง — กรอง "คงเหลือ น้อยกว่า 1" / "เท่ากับ 0" ไม่เจอ)
-const normalizeText = (text) => {
-  if (text === null || text === undefined) return ''
-  return String(text).toLowerCase().trim()
-}
-
-// ===== วันที่: ค้นด้วยรูปแบบที่เห็นบนจอได้ =====
-// ข้อมูลเป็น 2026-03-02 หรือเวลา UTC (2026-03-02T01:30:00.000Z) แต่หน้าจอแสดง 02/03/2026, 2 มี.ค. 2569, 08:30
-// จึงสร้างข้อความวันที่หลายรูปแบบ (ค.ศ./พ.ศ., ชื่อเดือนไทย, เวลาตามเครื่อง) ไว้เทียบกับคำค้น
-const THAI_MONTHS_SHORT = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
-const THAI_MONTHS_LONG = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
-const pad2 = (n) => String(n).padStart(2, '0')
-
-// คืน { iso, texts } ถ้าค่าเป็นวันที่ / วันเวลา — ไม่ใช่วันที่คืน null
-const dateInfo = (value) => {
-  if (typeof value !== 'string') return null
-  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})([T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?)?$/)
-  if (!m) return null
-  let y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]), time = ''
-  if (m[4]) {
-    // มีเวลา: แปลงเป็นเวลาตามเครื่อง (ค่าจาก API เป็น UTC — วันที่อาจเลื่อนถ้าตัดตัวอักษรตรง ๆ)
-    const dt = new Date(value.replace(' ', 'T'))
-    if (isNaN(dt.getTime())) return null
-    y = dt.getFullYear(); mo = dt.getMonth() + 1; d = dt.getDate()
-    time = `${pad2(dt.getHours())}:${pad2(dt.getMinutes())}`
-  }
-  const be = y + 543
-  const iso = `${y}-${pad2(mo)}-${pad2(d)}`
-  const texts = [
-    iso,
-    `${pad2(d)}/${pad2(mo)}/${y}`, `${d}/${mo}/${y}`,
-    `${pad2(d)}/${pad2(mo)}/${be}`, `${d}/${mo}/${be}`,
-    `${d} ${THAI_MONTHS_SHORT[mo - 1]} ${be}`, `${d} ${THAI_MONTHS_LONG[mo - 1]} ${be}`,
-    `${d} ${THAI_MONTHS_SHORT[mo - 1]} ${String(be).slice(2)}`
-  ]
-  if (time) texts.push(time, ...texts.map(t => `${t} ${time}`))
-  return { iso, texts }
-}
-
-// Check if query matches any date format
-const matchesDateFormat = (value, query) => {
-  const info = dateInfo(value)
-  return !!info && info.texts.some(t => normalizeText(t).includes(query))
-}
-
-// แปลงข้อความวันที่ → ISO yyyy-mm-dd (รองรับ dd/mm/yyyy, dd-mm-yyyy, yyyy-mm-dd และปี พ.ศ.)
-const toIsoDate = (text) => {
-  if (!text) return ''
-  const info = dateInfo(String(text).trim())
-  if (info) return info.iso
-  const str = String(text).trim()
-  const dmy = str.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/)
-  if (dmy) {
-    const year = Number(dmy[3]) > 2400 ? Number(dmy[3]) - 543 : Number(dmy[3])
-    return `${year}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`
-  }
-  const iso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
-  if (iso) {
-    return `${iso[1]}-${iso[2].padStart(2, '0')}-${iso[3].padStart(2, '0')}`
-  }
-  return ''
-}
-
-// Deep search in nested objects and arrays
-const deepSearch = (obj, query) => {
-  if (obj === null || obj === undefined) return false
-  
-  // String or number - direct match or date format match
-  if (typeof obj === 'string' || typeof obj === 'number') {
-    if (normalizeText(obj).includes(query) || matchesDateFormat(obj, query)) return true
-    // รองรับค้นด้วยรูปแบบวันที่ที่ต่างจากข้อมูล เช่น พิมพ์ 08/07/2026 เจอ 2026-07-08
-    const objIso = toIsoDate(obj)
-    const queryIso = toIsoDate(query)
-    if (objIso && queryIso) return objIso === queryIso || objIso.startsWith(queryIso)
-    return false
-  }
-  
-  // Array - search each element
-  if (Array.isArray(obj)) {
-    return obj.some(item => deepSearch(item, query))
-  }
-  
-  // Object - search all values
-  if (typeof obj === 'object') {
-    return Object.values(obj).some(value => deepSearch(value, query))
-  }
-  
-  return false
-}
-
 // Get searchable columns from props or slots
-const searchableColumns = computed(() => {
+const baseColumns = computed(() => {
   if (props.columns && props.columns.length > 0) {
     return props.columns.filter(col => col.field)
   }
-  
+
   // Extract from slot children — คอลัมน์ที่สร้างด้วย v-for อยู่ใน Fragment ต้องแตกออกก่อน (เดิมหาไม่เจอ)
   const flatten = (nodes) => (nodes || []).flatMap(vnode =>
     vnode.type === Fragment && Array.isArray(vnode.children) ? flatten(vnode.children) : [vnode])
@@ -250,11 +204,12 @@ const searchableColumns = computed(() => {
     return flatten(defaultSlot)
       .filter(vnode => typeof vnode.props?.field === 'string' && vnode.props.field)
       .map(vnode => ({
-        field: vnode.props.field,
-        header: vnode.props.header || vnode.props.field
+        field: vnode.props.searchField || vnode.props.field,
+        header: vnode.props.searchHeader || vnode.props.header || vnode.props.field,
+        type: vnode.props.searchType
       }))
   }
-  
+
   // Auto-detect from first data item
   if (tableData.value.length > 0) {
     return Object.keys(tableData.value[0]).map(key => ({
@@ -262,8 +217,17 @@ const searchableColumns = computed(() => {
       header: key
     }))
   }
-  
+
   return []
+})
+
+const searchableColumns = computed(() => {
+  const list = [...baseColumns.value]
+  props.extraColumns.forEach(col => {
+    const at = list.findIndex(c => c.field === col.after)
+    list.splice(at === -1 ? list.length : at + 1, 0, col)
+  })
+  return list
 })
 
 // Get nested value by path (e.g., "borrowRecord.name")
@@ -271,68 +235,136 @@ const getNestedValue = (obj, path) => {
   return path.split('.').reduce((acc, part) => acc?.[part], obj)
 }
 
-// Apply single filter
-const applyFilter = (item, filter) => {
-  const rawValue = getNestedValue(item, filter.column)
-  const fieldValue = normalizeText(rawValue)
-  const searchValue = normalizeText(filter.value)
+const subRowsOf = (row) => {
+  const subs = row?.[props.subRowsField]
+  return Array.isArray(subs) ? subs : []
+}
 
-  // date-aware: ค่าในตารางเป็นวันที่ → เทียบแบบวันที่ (รับ input ได้ทั้ง dd/mm/yyyy และ yyyy-mm-dd)
-  const fieldIso = toIsoDate(fieldValue)
-  const searchIso = toIsoDate(searchValue)
-  if (fieldIso !== '' && searchIso !== '') {
-    switch (filter.operator) {
-      case 'equals':
-        return fieldIso === searchIso
-      case 'notEquals':
-        return fieldIso !== searchIso
-      case 'greaterThan':
-        return fieldIso > searchIso
-      case 'lessThan':
-        return fieldIso < searchIso
-      default:
-        return fieldIso.includes(searchIso)
+// ===== ชนิดคอลัมน์: ดูจากค่าจริง (รวมรายการย่อย) เพื่อเลือกช่องกรอกและเงื่อนไขให้ถูก =====
+const columnValues = (field, limit = 50) => {
+  const out = []
+  for (const row of tableData.value) {
+    for (const item of [row, ...subRowsOf(row)]) {
+      const v = getNestedValue(item, field)
+      if (isFilledValue(v)) out.push(v)
     }
+    if (out.length >= limit) break
   }
+  return out
+}
 
-  switch (filter.operator) {
-    case 'contains':
-      return fieldValue.includes(searchValue) || matchesDateFormat(rawValue, searchValue)
-    case 'equals':
-      return fieldValue === searchValue
-    case 'notEquals':
-      return fieldValue !== searchValue
-    case 'startsWith':
-      return fieldValue.startsWith(searchValue)
-    case 'endsWith':
-      return fieldValue.endsWith(searchValue)
-    case 'greaterThan':
-      return parseFloat(fieldValue) > parseFloat(searchValue)
-    case 'lessThan':
-      return parseFloat(fieldValue) < parseFloat(searchValue)
-    default:
-      return true
+const columnTypes = computed(() => Object.fromEntries(
+  searchableColumns.value.map(col => [col.field, col.type || detectColumnType(columnValues(col.field))])
+))
+
+// ตารางว่าง (เช่น สลับแท็บไปช่วงที่ไม่มีข้อมูล) ดูชนิดจากข้อมูลไม่ได้ — ใช้ชนิดตอนเลือกคอลัมน์ไว้ ปฏิทินจะได้ไม่กลายเป็นช่องข้อความ
+const columnType = (filter) => (filter.column && (columnTypes.value[filter.column] || filter.type)) || 'text'
+const operatorsFor = (filter) => OPERATORS[columnType(filter)] || OPERATORS.text
+const isDateType = (type) => type === 'date' || type === 'datetime'
+const inputKind = (filter) => (isDateType(columnType(filter)) && filter.operator !== 'contains' ? 'date' : 'text')
+
+// ช่องค่า: 1 ชุด หรือ 2 ชุดเมื่อเลือก "ระหว่าง"
+const ONE_SLOT = [{ value: 'value', time: 'time', dateLabel: 'เลือกวันที่' }]
+const TWO_SLOTS = [
+  { value: 'value', time: 'time', dateLabel: 'ตั้งแต่วันที่' },
+  { value: 'value2', time: 'time2', dateLabel: 'ถึงวันที่' }
+]
+const valueSlots = (filter) => (filter.operator === 'between' ? TWO_SLOTS : ONE_SLOT)
+
+// เปลี่ยนคอลัมน์/เงื่อนไข: เงื่อนไขที่คอลัมน์ใหม่ไม่มีให้กลับเป็นค่าเริ่มต้น และล้างค่าเมื่อช่องกรอกเปลี่ยนชนิด
+// (เช่น วันที่จากปฏิทินไปโผล่ในช่องข้อความ)
+const onFilterShapeChange = (filter) => {
+  const type = columnType(filter)
+  if (!operatorsFor(filter).some(op => op.value === filter.operator)) filter.operator = DEFAULT_OPERATOR[type] || 'contains'
+  const kind = inputKind(filter)
+  if (kind !== filter.kind) {
+    filter.value = null
+    filter.value2 = null
+    filter.kind = kind
+  }
+  if (kind !== 'date' || type !== 'datetime') {
+    filter.time = null
+    filter.time2 = null
+  }
+  if (filter.operator !== 'between') {
+    filter.value2 = null
+    filter.time2 = null
   }
 }
 
-// แถวที่มีรายการย่อย (เช่น โครงการลูกที่ใช้ SO เดียวกัน) — ตรงเงื่อนไขถ้าแถวแม่หรือรายการย่อยตรง
-const rowMatches = (item, filter) =>
-  applyFilter(item, filter) || (Array.isArray(item.children) && item.children.some(child => applyFilter(child, filter)))
+// พิมพ์วันที่ในช่องปฏิทินเอง: อ่านด้วยตัวอ่านวันที่ของเรา (รับ พ.ศ. / ปี 2 หลัก / ชื่อเดือนไทย) แล้วแปลงเป็น ค.ศ. ให้
+const setTypedDate = (filter, key, text) => {
+  const date = typedDate(text)
+  if (!date) return
+  const current = filter[key]
+  if (current instanceof Date && current.toDateString() === date.toDateString()) return
+  filter[key] = date
+}
+// ระหว่างพิมพ์: เฉพาะรูปแบบที่ปฏิทินอ่านได้ (ไม่งั้นปฏิทินจะเขียนทับข้อความที่ยังพิมพ์ไม่เสร็จ)
+const onDateTyping = (filter, key, text) => {
+  if (/^\s*\d{1,2}\/\d{1,2}\/(\d{2}|\d{4})\s*$/.test(text || '')) setTypedDate(filter, key, text)
+}
+const onDateTyped = (filter, key, text) => setTypedDate(filter, key, text)
+
+// เปลี่ยนไปคอลัมน์คนละชนิด (เช่น ข้อความ → วันที่) เริ่มที่เงื่อนไขหลักของชนิดนั้น
+// (เดิมค้าง "มีคำว่า" ไว้ เลือกคอลัมน์วันที่แล้วไม่ขึ้นปฏิทิน)
+const onColumnChange = (filter) => {
+  const type = columnType(filter)
+  if (type !== filter.type) {
+    filter.type = type
+    filter.operator = DEFAULT_OPERATOR[type] || 'contains'
+  }
+  onFilterShapeChange(filter)
+}
+
+const valuePlaceholder = (filter, slot) => {
+  const type = columnType(filter)
+  const between = filter.operator === 'between'
+  const first = slot.value === 'value'
+  if (type === 'time') return between ? (first ? 'ตั้งแต่ เช่น 08:00' : 'ถึง เช่น 12:00') : 'เวลา เช่น 08:30'
+  if (type === 'duration') return between ? (first ? 'ตั้งแต่ เช่น 30 นาที' : 'ถึง เช่น 2 ชั่วโมง') : 'เช่น 2 ชั่วโมง, 30 นาที, 1:30'
+  if (isDateType(type)) return 'เช่น พ.ย. 2569, 11/2026, 2569'
+  if (between) return first ? 'ตั้งแต่' : 'ถึง'
+  return 'ค่าที่ค้นหา'
+}
+
+// เงื่อนไขที่พร้อมใช้เทียบ: รวมวันที่กับเวลาเป็นคำค้นเดียว — ยังกรอกไม่ครบ/ผิดรูปแบบคืน null (ไม่เอาไปกรอง)
+const typed = (f) => ({ ...f, type: columnType(f) })
+const problemOf = (f) => (f.column ? filterProblem(typed(f)) : '')
+const readyFilter = (f) => {
+  if (!f.column || problemOf(f)) return null
+  const ready = typed(f)
+  if (inputKind(f) === 'date' && ready.type === 'datetime') {
+    ready.value = joinDateTime(f.value, f.time)
+    ready.value2 = joinDateTime(f.value2, f.time2)
+  }
+  return isFilledValue(ready.value) || (f.operator === 'between' && isFilledValue(ready.value2)) ? ready : null
+}
+
+// แถวที่มีรายการย่อย — ตรงเงื่อนไขถ้าแถวแม่หรือรายการย่อยตัวใดตรง
+// รายการย่อยที่ไม่มีฟิลด์นั้นไม่นับ (ไม่งั้น "ไม่เท่ากับ" จะจริงเสมอ และกรองอะไรออกไม่ได้เลย)
+const rowMatches = (item, filter) => {
+  if (matchesFilter(getNestedValue(item, filter.column), filter)) return true
+  return subRowsOf(item).some(sub => {
+    const value = getNestedValue(sub, filter.column)
+    return value !== undefined && matchesFilter(value, filter)
+  })
+}
 
 // Filter data: ช่องค้นหาทั่วไปใช้เสมอ + ค้นหาขั้นสูงซ้อนอีกชั้นเมื่อเปิดอยู่
-// (เดิมเปิดค้นหาขั้นสูงแล้วคำในช่องค้นหาทั่วไปถูกเมิน ทั้งที่ช่องยังแสดงอยู่)
+// การเทียบวันที่/เวลาอยู่ใน utils/tableFilter.js (แปลงเวลา UTC เป็นเวลาไทย, รับวันที่หลายรูปแบบ/ปี พ.ศ.)
 const filteredData = computed(() => {
   let result = tableData.value
 
   if (!result || !Array.isArray(result)) return []
 
-  if (localSearch.value) {
-    const query = normalizeText(localSearch.value)
-    result = result.filter(record => deepSearch(record, query))
+  if (normalizeText(localSearch.value)) {
+    const matches = makeRowSearcher(localSearch.value)
+    result = result.filter(matches)
   }
 
   if (advancedMode.value) {
-    const validFilters = filters.value.filter(f => f.column && String(f.value ?? '').trim() !== '')
+    const validFilters = filters.value.map(readyFilter).filter(Boolean)
     if (validFilters.length > 0) {
       result = result.filter(item => {
         if (filterLogic.value === 'OR') {
@@ -348,7 +380,7 @@ const filteredData = computed(() => {
 
 
 const addFilter = () => {
-  filters.value.push({ column: '', operator: 'contains', value: '' })
+  filters.value.push(newFilter())
 }
 
 const removeFilter = (index) => {
@@ -358,7 +390,7 @@ const removeFilter = (index) => {
 }
 
 const resetFilters = () => {
-  filters.value = [{ column: '', operator: 'contains', value: '' }]
+  filters.value = [newFilter()]
 }
 </script>
 
@@ -376,27 +408,6 @@ const resetFilters = () => {
   min-width: 250px;
 }
 
-.column-options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  min-width: 200px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.column-option {
-  display: flex;
-  align-items: center;
-}
-
-.column-option label {
-  cursor: pointer;
-  user-select: none;
-  font-size: 0.9rem;
-}
-
 .control-buttons {
   display: flex;
   gap: 0.5rem;
@@ -411,7 +422,7 @@ const resetFilters = () => {
 
 .filter-row {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 2fr auto;
+  grid-template-columns: 2fr 1.5fr 3fr auto;
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 0.75rem;
@@ -421,6 +432,44 @@ const resetFilters = () => {
 .filter-operator,
 .filter-value {
   width: 100%;
+}
+
+/* ช่องค่า: 1 ชุด หรือ 2 ชุดเมื่อเลือก "ระหว่าง" — จอแคบขึ้นบรรทัดใหม่แทนการบีบจนอ่านวันที่ไม่ออก */
+.filter-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.value-group {
+  display: flex;
+  flex: 1 1 11rem;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.value-group .filter-value {
+  flex: 1 1 8rem;
+  width: auto;
+  min-width: 0;
+}
+
+.filter-time {
+  flex: 0 0 5rem;
+  width: 5rem;
+  min-width: 0;
+}
+
+.value-group :deep(.p-calendar .p-inputtext) {
+  min-width: 0;
+  width: 100%;
+}
+
+.filter-problem {
+  grid-column: 1 / -1;
+  color: #b91c1c;
+  font-size: max(0.8rem, var(--min-fs));
 }
 
 .filter-actions {
@@ -446,7 +495,7 @@ const resetFilters = () => {
   .search-box {
     width: 100%;
   }
-  
+
   .control-buttons {
     width: 100%;
     justify-content: space-between;
@@ -454,6 +503,10 @@ const resetFilters = () => {
 
   .filter-row {
     grid-template-columns: 1fr;
+  }
+
+  .value-group {
+    flex-basis: 100%;
   }
 
   .filter-actions {

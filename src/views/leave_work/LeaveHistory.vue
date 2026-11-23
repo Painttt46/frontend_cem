@@ -11,9 +11,11 @@
 
         <template #extraControls>
           <div class="date-search-controls">
-            <Calendar v-model="dateSearchStart" dateFormat="dd/mm/yy" placeholder="วันเริ่มต้น" showIcon showButtonBar class="date-search-cal" />
+            <Calendar v-model="dateSearchStart" dateFormat="dd/mm/yy" placeholder="วันเริ่มต้น" showIcon showButtonBar class="date-search-cal"
+              @blur="dateSearchStart = typedDate($event.value) || dateSearchStart" />
             <span class="date-search-sep">—</span>
-            <Calendar v-model="dateSearchEnd" dateFormat="dd/mm/yy" placeholder="วันสิ้นสุด" showIcon showButtonBar class="date-search-cal" />
+            <Calendar v-model="dateSearchEnd" dateFormat="dd/mm/yy" placeholder="วันสิ้นสุด" showIcon showButtonBar class="date-search-cal"
+              @blur="dateSearchEnd = typedDate($event.value) || dateSearchEnd" />
             <Button v-if="dateSearchStart || dateSearchEnd" icon="pi pi-times" size="small" severity="secondary" text rounded @click="dateSearchStart = null; dateSearchEnd = null" v-tooltip="'ล้างการค้นหาวันที่'" />
           </div>
         </template>
@@ -40,19 +42,19 @@
           </template>
         </Column>
 
-        <Column field="start_datetime" header="วันเวลาเริ่มลา" :sortable="true">
+        <Column field="start_datetime" searchType="datetime" header="วันเวลาเริ่มลา" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.start_datetime) }}
           </template>
         </Column>
 
-        <Column field="end_datetime" header="วันเวลาสิ้นสุด" :sortable="true">
+        <Column field="end_datetime" searchType="datetime" header="วันเวลาสิ้นสุด" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.end_datetime) }}
           </template>
         </Column>
 
-        <Column field="total_days" header="จำนวน" :sortable="true">
+        <Column field="total_days" searchType="number" header="จำนวน" :sortable="true">
           <template #body="slotProps">
             {{ formatLeaveDays(slotProps.data.total_days) }} วัน ({{ calculateHours(slotProps.data) }} ชม.)
           </template>
@@ -211,7 +213,7 @@
           </template>
         </Column>
 
-        <Column field="created_at" header="วันที่ส่งคำขอ" :sortable="true">
+        <Column field="created_at" searchType="datetime" header="วันที่ส่งคำขอ" :sortable="true">
           <template #body="slotProps">
             {{ formatDateTime(slotProps.data.created_at) }}
           </template>
@@ -278,6 +280,7 @@ import axios from '@/utils/axiosConfig'
 import UserInfoDialog from '@/components/UserInfoDialog.vue'
 import EnhancedDataTable from '@/components/EnhancedDataTable.vue'
 import { accessibleBg } from '@/utils/color'
+import { parseQueryDate, typedDate } from '@/utils/tableFilter'
 import { formatLeaveDays, formatLeaveHours, workHoursPerDay } from '@/utils/dateUtils'
 
 export default {
@@ -347,8 +350,10 @@ export default {
           const dt = new Date(d)
           return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`
         }
-        const s = this.dateSearchStart ? toStr(this.dateSearchStart) : '0000-00-00'
-        const e = this.dateSearchEnd ? toStr(this.dateSearchEnd) : '9999-12-31'
+        // พิมพ์ปี พ.ศ. / ปี 2 หลักในช่องปฏิทินได้ (01/03/2569) — ใส่สลับต้น-ปลายก็สลับให้
+        let s = parseQueryDate(this.dateSearchStart)?.from || '0000-00-00'
+        let e = parseQueryDate(this.dateSearchEnd)?.to || '9999-12-31'
+        if (s > e) [s, e] = [e, s]
         result = (this.records || []).filter(r => {
           if (!r.start_datetime) return false
           // วันที่ตามเวลาเครื่อง (ค่าจาก API เป็นเวลา UTC — ตัด 10 ตัวแรกตรง ๆ ทำให้ใบลาที่เริ่มก่อน 07:00 เลื่อนไปวันก่อนหน้า)
@@ -407,6 +412,7 @@ export default {
     this.$http = axios
   },
   methods: {
+    typedDate,
     isValidIntId(id) {
       return typeof id === 'number' ? Number.isInteger(id) : /^\d+$/.test(String(id || ''))
     },
