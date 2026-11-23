@@ -329,11 +329,9 @@ const { loadPermissions, hasAccess, isFullAccess } = usePermissions()
 // ประวัติการใช้งานระบบเห็นได้เฉพาะ admin/superadmin หรือ role ที่ถูกติ๊กสิทธิ์นี้ที่หน้า "จัดการสิทธิ์"
 const canViewAuditLogs = computed(() => hasAccess('/management#audit-logs'))
 
-// หน้าลูกที่ปกติเข้าผ่านหน้าแม่ (จัดการงาน → รายการงาน/งานรายวัน, ตั้งค่าระบบ → สิทธิ์/ผู้อนุมัติ/เวลาทำงาน)
+// หน้าลูกที่ปกติเข้าผ่านหน้าแม่ (ตั้งค่าระบบ → สิทธิ์/ผู้อนุมัติ/เวลาทำงาน)
 // ถ้ามีสิทธิ์หน้าลูกแต่ไม่มีสิทธิ์หน้าแม่ ให้มีการ์ดทางลัดตรงนี้แทน
 const CHILD_PAGES = [
-  { parent: '/management/tasks', path: '/management/projects', title: 'รายการงาน', desc: 'รายการงาน/โครงการทั้งหมด', icon: 'pi-list' },
-  { parent: '/management/tasks', path: '/management/daily-work', title: 'งานรายวัน', desc: 'ดูงานรายวันของทุกคน', icon: 'pi-calendar' },
   { parent: '/management/settings', path: '/management/settings/role-permissions', title: 'จัดการสิทธิ์การเข้าถึง', desc: 'กำหนดหน้าที่แต่ละบทบาทเข้าได้', icon: 'pi-shield' },
   { parent: '/management/settings', path: '/management/settings/leave-approval', title: 'ตั้งค่าผู้อนุมัติการลา', desc: 'กำหนดผู้อนุมัติการลาแต่ละระดับ', icon: 'pi-check-square' },
   { parent: '/management/settings', path: '/management/settings/role-work-hours', title: 'เวลาทำงานตามบทบาท', desc: 'กำหนดเวลาเข้า-ออกงานของแต่ละบทบาท', icon: 'pi-clock' }

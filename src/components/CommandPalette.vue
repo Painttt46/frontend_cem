@@ -83,10 +83,10 @@ let tasksLoadedAt = 0
 
 // หน้าที่ค้นหาได้ — สิทธิ์ใช้ตัวเดียวกับเมนูด้านข้าง (หน้าโปรไฟล์ไม่ต้องมีสิทธิ์)
 const PAGES = [
-  { path: '/daily_work', label: 'ลงงานรายวัน', icon: 'pi pi-calendar', words: 'งาน ตารางงาน daily work' },
+  { path: '/daily_work', label: 'ลงงานรายวัน', icon: 'pi pi-calendar', words: 'งาน ตารางงาน daily work งานรายวัน ทุกคน' },
   { path: '/car_booking', label: 'แจ้งใช้รถ', icon: 'pi pi-car', words: 'จองรถ คืนรถ car booking' },
   { path: '/leave_work', label: 'ลางาน', icon: 'pi pi-sign-out', words: 'ลา ลาป่วย ลากิจ พักร้อน leave' },
-  { path: '/projects', label: 'โครงการ', icon: 'pi pi-briefcase', words: 'project โปรเจกต์ so' },
+  { path: '/projects', label: 'โครงการ', icon: 'pi pi-briefcase', words: 'project โปรเจกต์ so รายการงาน' },
   { path: '/project-progress', label: 'ขั้นตอนโครงการ', icon: 'pi pi-chart-line', words: 'progress ความคืบหน้า workflow' },
   { path: '/procurement', label: 'จัดซื้อ', icon: 'pi pi-shopping-cart', words: 'procurement vendor po สั่งซื้อ' },
   { path: '/sales-activity', label: 'Sale (เข้าพบลูกค้า)', icon: 'pi pi-briefcase', words: 'sale ขาย เข้าพบ ลูกค้า visit' },
@@ -96,8 +96,6 @@ const PAGES = [
   { path: '/management/dashboard', label: 'Dashboard', icon: 'pi pi-chart-bar', words: 'รายงาน สถิติ ภาพรวม' },
   { path: '/management/settings', label: 'ตั้งค่าระบบ', icon: 'pi pi-sliders-h', words: 'settings หมวดหมู่ สถานะ สิทธิ์' },
   { path: '/management/tasks', label: 'จัดการงาน', icon: 'pi pi-briefcase', words: 'task หมวดหมู่งาน สถานะงาน' },
-  { path: '/management/projects', label: 'รายการงาน (จัดการระบบ)', icon: 'pi pi-list', words: 'project โครงการ รายการงาน' },
-  { path: '/management/daily-work', label: 'งานรายวันทั้งหมด (จัดการระบบ)', icon: 'pi pi-calendar', words: 'daily work งานรายวัน ทุกคน' },
   { path: '/management/settings/role-permissions', label: 'จัดการสิทธิ์การเข้าถึง', icon: 'pi pi-shield', words: 'permission สิทธิ์ role บทบาท' },
   { path: '/management/settings/leave-approval', label: 'ตั้งค่าผู้อนุมัติการลา', icon: 'pi pi-check-square', words: 'อนุมัติ ลา approver' },
   { path: '/management/settings/role-work-hours', label: 'เวลาทำงานตามบทบาท', icon: 'pi pi-clock', words: 'เวลาทำงาน work hours role' },

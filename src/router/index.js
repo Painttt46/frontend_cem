@@ -14,8 +14,6 @@ const SalesActivity = () => import('../views/sales_activity/SalesActivity.vue')
 const ManagementView = () => import('../views/ManagementView.vue')
 const UserManagement = () => import('../views/management/UserManagement.vue')
 const TaskManagement = () => import('../views/management/TaskManagement.vue')
-const ProjectsView = () => import('../views/management/ProjectsView.vue')
-const DailyWorkManagement = () => import('../views/management/DailyWorkManagement.vue')
 const SystemSettings = () => import('../views/management/SystemSettings.vue')
 const RolePermissions = () => import('../views/management/RolePermissions.vue')
 const LeaveApprovalSettings = () => import('../views/management/LeaveApprovalSettings.vue')
@@ -102,18 +100,9 @@ const routes = [
     component: TaskManagement,
     meta: { requiresAuth: true, requiresPermission: '/management/tasks', title: 'จัดการงาน - Gent-CEM' },
   },
-  {
-    path: '/management/projects',
-    name: 'management-projects',
-    component: ProjectsView,
-    meta: { requiresAuth: true, requiresPermission: '/management/projects', title: 'รายการงาน - Gent-CEM' },
-  },
-  {
-    path: '/management/daily-work',
-    name: 'daily-work-management',
-    component: DailyWorkManagement,
-    meta: { requiresAuth: true, requiresPermission: '/management/daily-work', title: 'งานรายวัน - Gent-CEM' },
-  },
+  // เดิมเป็นหน้าเปล่า "อยู่ระหว่างการพัฒนา" — พาไปหน้าจริง (ลิงก์/บุ๊กมาร์กเก่ายังใช้ได้ สิทธิ์ตรวจตามหน้าปลายทาง)
+  { path: '/management/projects', redirect: '/projects' },
+  { path: '/management/daily-work', redirect: '/daily_work' },
   {
     path: '/management/settings',
     name: 'system-settings',

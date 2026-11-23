@@ -24,14 +24,14 @@
     <!-- Action Cards -->
     <div class="action-grid">
       <!-- All Projects Card -->
-      <Card v-if="hasAccess('/management/projects')" class="action-card" @click="$router.push('/management/projects')">
+      <Card v-if="hasAccess('/projects')" class="action-card" @click="$router.push('/projects')">
         <template #content>
           <div class="action-content">
             <div class="action-header">
               <i class="pi pi-folder action-icon"></i>
-              <h3>รายการงาน</h3>
+              <h3>โครงการ</h3>
             </div>
-            <p>ดูและจัดการรายการงานทั้งหมด</p>
+            <p>ดูและจัดการโครงการทั้งหมด</p>
             <div class="action-stats">
               <span class="stat-label">ดูรายละเอียด</span>
             </div>
@@ -40,14 +40,14 @@
       </Card>
 
       <!-- Daily Work Card -->
-      <Card v-if="hasAccess('/management/daily-work')" class="action-card" @click="$router.push('/management/daily-work')">
+      <Card v-if="hasAccess('/daily_work')" class="action-card" @click="$router.push('/daily_work')">
         <template #content>
           <div class="action-content">
             <div class="action-header">
               <i class="pi pi-calendar action-icon"></i>
               <h3>งานรายวัน</h3>
             </div>
-            <p>ดูและจัดการงานรายวัน</p>
+            <p>ดูงานรายวันของทุกคน</p>
             <div class="action-stats">
               <span class="stat-label">ดูรายละเอียด</span>
             </div>

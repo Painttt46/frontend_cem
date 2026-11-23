@@ -13,7 +13,7 @@ export const isFullAccessRole = (role) => FULL_ACCESS_ROLES.includes(String(role
 // เดิมต้องติ๊ก /management ด้วย — ถ้าติ๊กแค่หน้าย่อย (เช่น /management/leave) ผู้ใช้เข้าหน้านั้นได้แต่ไม่มีเมนูให้กดไปถึง
 export const MANAGEMENT_SECTION_KEYS = [
   '/management/dashboard', '/management/users', '/management/leave',
-  '/management/tasks', '/management/projects', '/management/daily-work',
+  '/management/tasks',
   '/management/settings', '/management/settings/role-permissions',
   '/management/settings/leave-approval', '/management/settings/role-work-hours',
   '/management#audit-logs'

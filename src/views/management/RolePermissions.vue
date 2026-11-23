@@ -129,7 +129,7 @@ const isFixedRole = computed(() => isFullAccessRole(selectedRole.value))
 const ALWAYS_ON_PATHS = ['/profile']
 // สิทธิ์ที่เลิกใช้แล้ว (ระบบไม่ตรวจอีก) แต่อาจยังมีแถวค้างในฐานข้อมูล — ไม่แสดงในตาราง ไม่งั้นจะเป็นสวิตช์ที่กดแล้วไม่มีผล
 // (การจัดการการจองรถของผู้อื่นใช้สิทธิ์ "จองรถ" /car_booking เดียวกัน)
-const RETIRED_PATHS = ['/car_booking#manage']
+const RETIRED_PATHS = ['/car_booking#manage', '/management/projects', '/management/daily-work']
 const isAlwaysOn = (page) => ALWAYS_ON_PATHS.includes(page.path)
 const editingCell = ref(null)
 const showAddDialog = ref(false)
@@ -159,9 +159,6 @@ const pages = ref([
   { id: 16, name: 'ตั้งค่าเวลาทำงานตาม Role', path: '/management/settings/role-work-hours', icon: 'pi pi-clock', hasAccess: false },
   { id: 17, name: 'จัดซื้อ', path: '/procurement', icon: 'pi pi-shopping-cart', hasAccess: false },
   { id: 18, name: 'เข้าพบลูกค้า', path: '/sales-activity', icon: 'pi pi-briefcase', hasAccess: false },
-  // หน้าจัดการระบบที่มี route และตรวจสิทธิ์อยู่แล้ว แต่เดิมไม่อยู่ในรายการ ทำให้ role อื่นนอกจาก superadmin ติ๊กเปิดไม่ได้
-  { id: 19, name: 'รายการงาน (จัดการระบบ)', path: '/management/projects', icon: 'pi pi-list', hasAccess: false },
-  { id: 20, name: 'งานรายวัน (จัดการระบบ)', path: '/management/daily-work', icon: 'pi pi-calendar', hasAccess: false },
   // สิทธิ์รายฟีเจอร์ (ไม่ใช่หน้า): backend ตรวจ path เหล่านี้ใน role_permissions ก่อนให้เพิ่ม/แก้/ลบ — ต้องตรงกับ config/permissionKeys.js ฝั่ง backend
   // role ที่เข้าหน้า "จัดการการลา" ได้อยู่แล้วจะถูก seed ให้สองสิทธิ์นี้เป็นเปิดตอนอัปเดตครั้งแรก
   { id: 21, name: 'จัดการวันหยุดนักขัตฤกษ์ (ในหน้าจัดการการลา)', path: '/management/leave#holidays', icon: 'pi pi-calendar-plus', hasAccess: false },
